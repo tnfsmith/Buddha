@@ -37,7 +37,9 @@ export const TIER_ISLES = [
   { y: [140, 165], list: [[-345, -520, 15], [360, -550, 16], [-455, -440, 13], [468, -470, 14], [-265, -650, 13], [280, -670, 13]] },
   { y: [225, 252], list: [[-330, -720, 15], [342, -740, 16], [-440, -640, 13], [452, -660, 14]] },
 ];
-export const TIER_LABEL = [[-150, 30, 40], [-250, 92, -170], [-345, 172, -520], [-345, 256, -720], [-250, 312, -690]];
+export const TIER_LABEL = [[-150, 30, 40], [-250, 92, -170], [-345, 172, -520], [-292, 256, -720], [-200, 372, -724]];
+// nhãn Tầng 3 và Tầng 4 dóng phải về điểm neo, chữ kéo sang trái để không đè thân Tôn tượng
+export const TIER_LABEL_LEFT = [false, false, false, true, true];
 
 const seatOf = (an) => (an && an.deck !== undefined ? DECKS[an.deck].seat || 0.02 : (an && an.seatH) || 0.02);
 export class World {
@@ -53,8 +55,8 @@ export class World {
     this.camera = new THREE.PerspectiveCamera(52, 1, 0.5, 7000);
     this.controls = new OrbitControls(this.camera, canvas);
     Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.08, enablePan: false, rotateSpeed: 0.45, zoomSpeed: 0.7 });
-    this.controls.target.set(12, 18, 0);
-    this.mode = 'island'; this.time = 0; this.tween = null; this.rnd = rng(7); this.baseFov = 52;
+    this.controls.target.set(12, 36, 0);
+    this.mode = 'island'; this.time = 0; this.tween = null; this.rnd = rng(7); this.baseFov = 58;
     this.fixedQ = quality !== undefined; this.quality = quality !== undefined ? quality : 2; this.acc = 0; this.accN = 0;
     this.u = { uTime: { value: 0 }, uNight: { value: 0 }, uAmber: { value: 0 }, uJade: { value: 0 }, uCalm: { value: 0 }, uCam: { value: V(0, 0, 0) }, uMist: { value: 0.7 },
       uHalo: { value: 1 }, uRainbow: { value: 0.5 }, uHaloWhite: { value: 0 }, uTier2: { value: 0 }, uBud: { value: V(0, 0.2, -1).normalize() }, uB: { value: 0 }, uP: { value: 0 } };
@@ -63,7 +65,7 @@ export class World {
     this._tiers(); this._hall(); this.realm = buildRealm(91); this.scene.add(this.realm.group); this._puffs(); this._fx();
     this.look = { ...defaultLook(), ...look }; this._avatar();
     this._composer(); this.setLimits(); this.resize();
-    this.camera.position.copy(this.islandCam());
+    this.camera.position.copy(this.islandCam()); this.controls.target.copy(this.islandTarget());
   }
 
   _lights() {
@@ -156,10 +158,10 @@ export class World {
       });
     }));
     // Tầng 4: không còn đảo, chỉ Vân Tọa sáng quanh hào quang
-    const T4 = [[-182, 304, -708], [182, 305, -708], [-238, 292, -670], [238, 291, -670]];
-    // Tầng 4 tách hẳn: hai vầng quang nằm ngang ngăn với các tầng dưới
-    [[282, 288, 0.42], [196, 298, 0.26]].forEach(([rad, y, op]) => { const ring = new THREE.Mesh(new THREE.TorusGeometry(rad, 1.5, 6, 180), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.7, 1.45, 0.9), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); ring.rotation.x = Math.PI / 2; ring.position.set(0, y, -742); this.scene.add(ring); });
-    for (let i = 0; i < 36; i++) { const c = T4[i % 4], j = Math.floor(i / 4), a = j * 2.4 + (i % 4), d = 3.4 + Math.sqrt(j) * 4.0, x = c[0] + Math.cos(a) * d * (c[0] < 0 ? 1 : 1) - Math.sign(c[0]) * Math.min(0, Math.cos(a) * d * Math.sign(c[0])) * 0.6, y = c[1] + Math.sin(j * 1.7) * 1.4 + (j ? 0 : 0.6), z = c[2] + Math.sin(a) * d * 0.8; crowd.push({ x, y, z, rot: faceBud(x, z), robe: '#9a7436' }); this.glowSeats.push({ p: V(x, y, z), tier: 4 }); }
+    const T4 = [[-128, 366, -724], [128, 366, -724], [0, 362, -640]];
+    // vầng quang hình bầu dục ngang tai, chạy dưới ba cụm Vân Tọa
+    [[128, 100, 356, 0.42], [178, 142, 362, 0.22]].forEach(([rx, rz, y, op]) => { const g = new THREE.TorusGeometry(1, 0.012, 6, 200); g.scale(rx, rz, 125); const ring = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: new THREE.Color(1.7, 1.45, 0.9), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); ring.rotation.x = Math.PI / 2; ring.position.set(0, y, -738); this.scene.add(ring); });
+    for (let i = 0; i < 36; i++) { const c = T4[i % 3], j = Math.floor(i / 3), a = j * 2.4 + (i % 3) * 1.1, d = j ? 7.5 + Math.sqrt(j) * 7.2 : 0, x = c[0] + Math.cos(a) * d, y = c[1] + Math.sin(j * 1.7) * 1.2 + (j ? 0 : 0.5), z = c[2] + Math.sin(a) * d * 0.75; crowd.push({ x, y, z, rot: faceBud(x, z), robe: '#9a7436', sc: 2.2 }); this.glowSeats.push({ p: V(x, y, z), tier: 4 }); }
     this.tierCrowd = makeCrowd(crowd, 5); this.scene.add(this.tierCrowd);
     // Ba bạn đồng tu ở đảo gần: nhân vật riêng, chào và thăm được
     const fr = rng(21);
@@ -228,7 +230,7 @@ export class World {
     this.isles.forEach((I) => { const n = 7 + Math.floor(I.size / 3); for (let i = 0; i < n; i++) { const a = (i / n) * 6.28 + r(), d = I.size * (0.85 + r() * 0.3); add(I.x + Math.cos(a) * d, I.y - I.size * (0.25 + r() * 0.6), I.z + Math.sin(a) * d * 0.8, I.size * (0.7 + r() * 0.7), 3); }
       if (I.tier > 0) for (let i = 0; i < 3; i++) add(I.x + (r() - 0.5) * I.size * 3, I.y - I.size * 1.6 - r() * 10, I.z + (r() - 0.5) * I.size * 2, I.size * (1.6 + r()), 3); });
     this.bridges.forEach((c) => { for (let i = 0; i <= 44; i++) { const p = c.getPoint(i / 44); add(p.x, p.y - 1.2, p.z, 4.5 + r() * 3.5, 2); } });
-    this.glowSeats.forEach((s) => add(s.p.x, s.p.y - (s.tier === 4 ? 1.1 : 0.1), s.p.z, s.tier === 4 ? 2.6 : s.tier === 3 ? 3.2 : 2.4, 5));
+    this.glowSeats.forEach((s) => add(s.p.x, s.p.y - (s.tier === 4 ? 2.0 : 0.1), s.p.z, s.tier === 4 ? 5.4 : s.tier === 3 ? 3.2 : 2.4, 5));
     this.realm.isles.forEach((I) => { const n = I.size > 40 ? 5 : 3; for (let i = 0; i < n; i++) { const a = (i / n) * 6.28 + r() * 2; add(I.x + Math.cos(a) * I.size * 0.9, I.y - I.size * (0.35 + r() * 0.7), I.z + Math.sin(a) * I.size * 0.7, I.size * (1.1 + r() * 0.9), 3); } });
     for (let i = 0; i < 230; i++) { const x = (r() * 2 - 1) * 1300, z = -1500 + r() * 2100, y = 14 + Math.pow(r(), 1.5) * 330; if (Math.abs(x) < 280 && z < -100 && z > -820 && y < 520) continue; add(x, y, z, 34 + r() * 80, 7); }
     // đài mây nâng Tôn tượng: các lớp mây dày dần từ biển mây lên tới tòa sen
@@ -369,17 +371,19 @@ export class World {
   goHome(done) { if (this.av.where === 'home') return; const w = this.av.where; this.visit(w, done); this.av.dest = 'home'; }
 
   // ───────── Camera ─────────
-  islandCam() { return this.portrait ? V(30, 42, 176) : V(26, 27, 96); }
+  // điện thoại: bảng thu gọn mặc định; lùi xa và ngước lên để thấy cả đảo lẫn trọn Tôn tượng
+  islandCam() { return this.portrait ? V(30, 56, 300) : V(28, 30, 108); }
+  islandTarget() { return this.portrait ? V(6, 153, 40) : V(12, 36, 0); }
   flyTo(p, t, fov = 52, dur = 1.6) { this.tween = { p0: this.camera.position.clone(), t0: this.controls.target.clone(), f0: this.baseFov, p, t, fov, k: this.snap ? 0.999 : 0, dur }; this.controls.enabled = false; }
   setMode(mode, opt = {}) {
     this.mode = mode;
     if (mode === 'hall') { if (this.portrait) this.flyTo(V(0, 60, -250), V(0, 148, -418), 58, 2); else this.flyTo(V(0, 20, -170), V(0, 60, -352), 58, 2); }
     else if (mode === 'overview') this.flyTo(V(180, 262, 520), V(-10, 196, -470), 58, 2.2);
     else if (mode === 'realm') this.flyTo(V(-460, 420, 900), V(40, 210, -450), 60, 3.2);
-    else if (mode === 'tier') { const k = opt.tier; if (k === 4) this.flyTo(V(-236, 312, -652), V(-96, 334, -748), 48, 2.2); else { const I = this.isles.find((x) => x.tier === k), s = I.size / 14; this.flyTo(V(I.x + 20 * s * Math.sign(-I.x), I.y + 9 * s, I.z + 30 * s), V(I.x, I.y + 2.5, I.z), 44, 2.2); } }
+    else if (mode === 'tier') { const k = opt.tier; if (k === 4) this.flyTo(V(-188, 382, -640), V(-30, 366, -742), 52, 2.2); else { const I = this.isles.find((x) => x.tier === k), s = I.size / 14; this.flyTo(V(I.x + 20 * s * Math.sign(-I.x), I.y + 9 * s, I.z + 30 * s), V(I.x, I.y + 2.5, I.z), 44, 2.2); } }
     else if (mode === 'creator') { const a = this.av.pos.clone(); a.y += this.av.where === 'home' ? this.home.group.position.y : 0; this.flyTo(V(a.x + 2.2, a.y + 3.5, a.z + 8.2), V(a.x, a.y + 2.2, a.z), 34, 1.4); }
     else if (mode === 'zone') { const c = ANCHORS[opt.zone].cam, y = this.home.group.position.y; this.flyTo(V(c[0][0], c[0][1] + y, c[0][2]), V(c[1][0], c[1][1] + y, c[1][2]), 48, 1.5); }
-    else this.flyTo(this.islandCam(), V(this.portrait ? 4 : 12, 18, 0), 52, 1.8);
+    else this.flyTo(this.islandCam(), this.islandTarget(), this.portrait ? 64 : 58, 1.8);
   }
   setLimits() {
     const m = this.mode, c = this.controls;
@@ -388,6 +392,7 @@ export class World {
     else if (m === 'creator') Object.assign(c, { minDistance: 5, maxDistance: 18, minPolarAngle: 0.9, maxPolarAngle: 1.75 });
     else if (m === 'realm') Object.assign(c, { minDistance: 60, maxDistance: 1900, minPolarAngle: 0.4, maxPolarAngle: 1.75 });
     else if (m === 'overview' || m === 'tier') Object.assign(c, { minDistance: 30, maxDistance: 900, minPolarAngle: 0.5, maxPolarAngle: 1.75 });
+    else if (m === 'island') Object.assign(c, { minDistance: 14, maxDistance: 380, minPolarAngle: 0.5, maxPolarAngle: this.portrait ? 1.95 : 1.64 });
     else Object.assign(c, { minDistance: 14, maxDistance: 260, minPolarAngle: 0.5, maxPolarAngle: 1.54 });
   }
   applyFov() { const b = (this.baseFov * Math.PI) / 360, k = this.portrait ? 1.5 : 1; this.camera.fov = (Math.atan(Math.tan(b) * k) * 360) / Math.PI; this.camera.updateProjectionMatrix(); }

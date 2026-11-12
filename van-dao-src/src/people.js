@@ -131,7 +131,7 @@ export function makeCrowd(list, seed = 3) {
   const skin = new THREE.InstancedMesh(G.skin, new THREE.MeshStandardMaterial({ map: faceTex({ closed: true, mood: 'hoa' }), roughness: 0.75 }), n);
   const caps = [], buns = [], mats = [];
   list.forEach((p, i) => {
-    d.position.set(p.x, p.y, p.z); d.rotation.set(0, p.rot || 0, 0); d.scale.setScalar(S * (0.95 + r() * 0.1)); d.updateMatrix(); mats.push(d.matrix.clone());
+    d.position.set(p.x, p.y, p.z); d.rotation.set(0, p.rot || 0, 0); d.scale.setScalar(S * (p.sc || 1) * (0.95 + r() * 0.1)); d.updateMatrix(); mats.push(d.matrix.clone());
     cloth.setMatrixAt(i, d.matrix); skin.setMatrixAt(i, d.matrix);
     cloth.setColorAt(i, c.set(p.robe || ROBES[Math.floor(r() * ROBES.length)])); skin.setColorAt(i, c.set(OPTIONS.skin[Math.floor(r() * 5)][1]));
     const h = r(); if (h > 0.34) (h > 0.74 ? buns : caps).push(i);
