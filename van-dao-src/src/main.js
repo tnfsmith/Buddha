@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { World, ANCHORS, TIER_LABEL, TIER_LABEL_LEFT, groundH } from './world.js';
+import { World, ANCHORS, TIER_LABEL, groundH } from './world.js';
 import { Player, TR, EV, offlineProbe } from './audio.js';
 import { DUR, STAGES, TIERS, ZONES, WEEKS, PILLARS, valueAt, breathEnv, stageAt, kusala } from './data.js';
 import { SUTTAS, Sermon } from './sermon.js';
@@ -13,9 +13,9 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 // ───────── Lưu trạng thái trên máy ─────────
 const KEY = 'vandao.v1';
 const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-const fresh = () => ({ v: 1, day: 1, lastDate: null, done: {}, totals: { duc: 0, thien: 0, tue: 0 }, sacca: 0, sessions: 0, completed: false, open: false, name: '', look: defaultLook(), music: { on: false, source: 'time', song: 'van-thuy', mood: 'an', order: 'one', span: 5, vol: 0.6 } });
+const fresh = () => ({ v: 1, day: 1, lastDate: null, done: {}, totals: { duc: 0, thien: 0, tue: 0 }, sacca: 0, sessions: 0, completed: false, open: false, name: '', look: defaultLook(), birds: { n: 6, freq: 1, vol: 0.6 }, music: { on: false, source: 'time', song: 'van-thuy', mood: 'an', order: 'one', span: 5, vol: 0.6 } });
 let S = fresh(), mem = true;
-try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(fresh(), JSON.parse(raw)); S.look = { ...defaultLook(), ...S.look }; S.music = { ...fresh().music, ...S.music }; localStorage.setItem(KEY, JSON.stringify(S)); mem = false; } catch (e) { mem = true; }
+try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(fresh(), JSON.parse(raw)); S.look = { ...defaultLook(), ...S.look }; S.music = { ...fresh().music, ...S.music }; S.birds = { ...fresh().birds, ...S.birds }; localStorage.setItem(KEY, JSON.stringify(S)); mem = false; } catch (e) { mem = true; }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* chỉ giữ trong bộ nhớ */ } };
 const allDone = (d) => { const x = S.done[d]; return !!(x && x.duc && x.thien && x.tue); };
 (function advance() { if (S.lastDate && S.lastDate < today() && allDone(S.day) && S.day < 49) S.day++; if (S.day === 49 && allDone(49)) S.completed = true; save(); })();
@@ -47,7 +47,7 @@ setInterval(() => { if (!amb.on || amb.ducked) return; const M = S.music;
   if (M.order === 'one') { const w = wantSong(); if (M.source !== 'pick' && w !== amb.cur) musicStart(w); } else if (amb.minutes >= M.span) musicNext(); }, 5000);
 window.addEventListener('pointerdown', () => { if (S.music.on && !amb.on) musicStart(); }, { once: true });
 let world = null;
-try { world = new World($('#gl'), S.look, hash.q !== undefined ? +hash.q : undefined, S.pos); world.onChirp = (pan, n, seed) => amb.chirp(pan, n, seed); if (hash.snap) world.snap = true; } catch (e) {
+try { world = new World($('#gl'), S.look, hash.q !== undefined ? +hash.q : undefined, S.pos); world.onChirp = (pan, n, seed) => amb.chirp(pan, n, seed, S.birds.vol); world.birdOpts = S.birds; if (hash.snap) world.snap = true; } catch (e) {
   $('#err').style.display = 'block'; $('#err').textContent = 'Trình duyệt này không mở được WebGL nên chưa dựng được cảnh 3D. Âm thanh và bảng 49 ngày vẫn dùng được. (' + e.message + ')'; console.error(e);
 }
 
@@ -105,7 +105,7 @@ const L = $('#labels'), mkLabel = (cls, fn) => { const b = document.createElemen
 const zoneLb = {}; ZONES.forEach((z) => (zoneLb[z.id] = mkLabel('zl', () => goZone(z.id))));
 const meLb = mkLabel('zl me', () => openCreator());
 const friendLb = world ? world.friends.map((f, i) => mkLabel('zl fr', () => openFriend(i))) : [];
-const tierLb = TIER_LABEL.map((p, i) => mkLabel(TIER_LABEL_LEFT[i] ? 'tl tlr' : 'tl', () => pickTier(i)));
+const tierLb = TIER_LABEL.map((p, i) => mkLabel('tl ladder', () => pickTier(i)));
 function place(el, v, on, margin = 20) {
   const p = on ? world.project(v) : null, ok = !!p && p.vis && p.x > margin && p.x < world.w - margin && p.y > 56 && p.y < world.h - 96;
   el.style.opacity = ok ? '1' : '0'; el.style.pointerEvents = ok ? 'auto' : 'none'; if (ok) { el.style.left = p.x.toFixed(1) + 'px'; el.style.top = p.y.toFixed(1) + 'px'; }
@@ -121,7 +121,18 @@ function updateLabels() {
   const nm = S.name || 'Bạn'; if (meLb.dataset.k !== nm) { meLb.dataset.k = nm; meLb.textContent = nm; }
   place(meLb, world.headPos().add(new THREE.Vector3(0, 0.9, 0)), isl && !creator && world.av.state !== 'travel');
   world.friends.forEach((f, i) => { const el = friendLb[i]; if (!el.dataset.k) { el.dataset.k = '1'; el.textContent = f.name; } place(el, f.head, isl && !creator); });
-  TIER_LABEL.forEach((p, i) => { const el = tierLb[i]; if (!el.dataset.k) { el.dataset.k = '1'; el.textContent = TIERS[i].name.replace(' · ', ': '); } place(el, new THREE.Vector3(p[0], p[1], p[2]), U.mode === 'journey' && !world.tween && world.mode === 'overview', 60); });
+  // Nhãn các tầng xếp bậc thang đều: Sơ nhập dưới cùng, Tầng 1 → Tầng 4 lên dần và thụt đều về phía Tôn tượng
+  tierLb.forEach((el, i) => { if (!el.dataset.k) { el.dataset.k = '1'; el.textContent = TIERS[i].name.replace(' · ', ': '); } });
+  const showT = U.mode === 'journey' && !world.tween && world.mode === 'overview';
+  const pTop = showT ? world.project(new THREE.Vector3(0, 362, -760)) : null, pEdge = showT ? world.project(new THREE.Vector3(-150, 300, -760)) : null, pBot = showT ? world.project(new THREE.Vector3(-150, 30, 40)) : null;
+  if (pTop && pTop.vis && pEdge && pEdge.vis) {
+    const w4 = tierLb[4].offsetWidth || 200, gap = 26, narrow = world.w < 700;
+    let step = narrow ? 14 : Math.min(60, Math.max(24, world.w * 0.03)), x0 = pEdge.x - gap - w4 - 4 * step;
+    if (x0 < 12) { step = Math.max(8, (pEdge.x - gap - w4 - 12) / 4); x0 = 12; }
+    const pr = panel.getBoundingClientRect(), floor = narrow ? Math.min(world.h - 130, pr.top - 26) : world.h - 100;
+    const yTop = Math.max(narrow ? 130 : 90, pTop.y), yBot = Math.max(yTop + 4 * (narrow ? 34 : 46), Math.min(floor, pBot && pBot.vis ? pBot.y : world.h * 0.8)), dy = (yBot - yTop) / 4;
+    tierLb.forEach((el, i) => { el.style.left = (x0 + i * step).toFixed(1) + 'px'; el.style.top = (yBot - i * dy).toFixed(1) + 'px'; el.style.opacity = '1'; el.style.pointerEvents = 'auto'; });
+  } else tierLb.forEach((el) => { el.style.opacity = '0'; el.style.pointerEvents = 'none'; });
 }
 function goZone(id) {
   if (world && world.av.where !== 'home') return toast('Bạn đang ở đảo bạn. Hãy về đảo trước.');
@@ -209,6 +220,11 @@ function render() {
       <label class="fl">Viền và đai</label>${seg('trim', OPTIONS.trim.map((t, i) => [i, t[0]]), k.trim)}
       <label class="fl">Vật tùy thân</label>${seg('acc', OPTIONS.acc, k.acc)}
       <p class="muted">Bảng màu chỉ gồm áo của người tại gia; y vàng dành cho chư Tăng.</p>
+      <h3>Chim cảnh trên Vân Đảo</h3>
+      <label class="fl">Số chim ghé đảo: <strong data-bnv>${S.birds.n}</strong></label><input type="range" data-bn min="0" max="12" step="1" value="${S.birds.n}" aria-label="Số chim ghé đảo">
+      <label class="fl">Tần suất ghé</label>${seg('bfreq', [[0.5, 'Thưa'], [1, 'Vừa'], [2, 'Năng ghé']], S.birds.freq)}
+      <label class="fl">Tiếng hót: <strong data-bvv>${S.birds.vol > 0 ? Math.round(S.birds.vol * 100) + '%' : 'tắt'}</strong></label><input type="range" data-bvol min="0" max="1" step="0.05" value="${S.birds.vol}" aria-label="Âm lượng tiếng chim">
+      <div class="row"><button class="ghost" data-act="chirp">Nghe thử tiếng chim</button></div>
       <h3>Xem tư thế</h3>${seg('pose', [['stand', 'Đứng'], ['anjali', 'Chắp tay'], ['sit', 'Tọa thiền']], U.pose)}
       <div class="row"><button class="btn" data-act="saveLook" ${nb.c.ok ? '' : 'disabled'}>Lưu nhân vật</button><button class="btn alt" data-act="rand">Ngẫu nhiên hài hòa</button><button class="ghost" data-act="home">← Vân Đảo</button></div>`;
   } else if (U.view === 'friend' && world) {
@@ -274,6 +290,8 @@ function applyDraft() { clearTimeout(lookTimer); lookTimer = setTimeout(() => { 
 function closeCreator(saved) { if (!saved && world) { world.setLook(S.look); } if (world) { world.av.hold = 0; if (world.fig.pose === 'anjali') world.fig.setPose('stand'); } U.draft = null; }
 panel.addEventListener('input', (e) => {
   const t = e.target;
+  if (t.dataset.bn !== undefined) { S.birds.n = +t.value; const o = panel.querySelector('[data-bnv]'); if (o) o.textContent = S.birds.n; save(); return; }
+  if (t.dataset.bvol !== undefined) { S.birds.vol = +t.value; const o = panel.querySelector('[data-bvv]'); if (o) o.textContent = S.birds.vol > 0 ? Math.round(S.birds.vol * 100) + '%' : 'tắt'; save(); return; }
   if (t.dataset.tts !== undefined) { S.tts = t.checked; save(); return; }
   if (t.dataset.mvol !== undefined) { S.music.vol = +t.value; amb.setVolume(S.music.vol); save(); return; }
   if (t.id === 'sim') { U.sim = +t.value; U.tier = null; $('#simv').textContent = t.value; $('#simt').textContent = WEEKS[Math.ceil(U.sim / 7) - 1].reward; return; }
@@ -291,6 +309,7 @@ panel.addEventListener('click', (e) => {
   const su = e.target.closest('[data-sut]'); if (su) { U.sutta = su.dataset.sut; if (sermon.on) sermonStart(U.sutta); else render(); return; }
   const sg = e.target.closest('[data-song]'); if (sg) { S.music.source = 'pick'; S.music.song = sg.dataset.song; save(); musicStart(sg.dataset.song); render(); return; }
   const ob = e.target.closest('[data-opt] button');
+  if (ob && ob.parentElement.dataset.opt === 'bfreq') { S.birds.freq = +ob.dataset.v; save(); render(); return; }
   if (ob && ob.parentElement.dataset.opt === 'kface') { S.kface = +ob.dataset.v; save(); if (world) world.setFace(S.kface); render(); setTimeout(savePos, 1200); return; }
   if (ob && ob.parentElement.dataset.opt === 'htab') { if (ob.dataset.v !== 'sermon' && sermon.on) sermonStop(); U.hallTab = ob.dataset.v; if (!U.sutta) U.sutta = SUTTAS[0].id; render(); return; }
   if (ob && ['msrc', 'mmood', 'morder', 'mspan'].includes(ob.parentElement.dataset.opt)) { const k = ob.parentElement.dataset.opt, v = ob.dataset.v, M = S.music;
@@ -306,6 +325,7 @@ panel.addEventListener('click', (e) => {
   const act = b.dataset.act;
   if (act !== 'reset') U.resetArm = false;
   if (act === 'kuti-sit') { if (world) world.goZone('kuti', () => { world.setFace(S.kface || 0); savePos(); }); return; }
+  if (act === 'chirp') { amb.chirp(0, 4, Math.random() * 9, Math.max(0.15, S.birds.vol)); return; }
   if (act === 'sermon-go') { sermonStart(U.sutta || SUTTAS[0].id); return; }
   if (act === 'sermon-stop') { sermonStop(); render(); return; }
   if (act === 'mus-toggle') { if (amb.on) musicStop(); else musicStart(); return; }
@@ -349,7 +369,7 @@ function setMode(m) {
   if (m !== 'hall' && sermon.on) sermon.stop(); U.mode = m; document.body.classList.toggle('hall', m === 'hall');
   document.querySelectorAll('#tabs button').forEach((x) => x.classList.toggle('on', x.dataset.m === m));
   if (m !== 'journey') U.tier = null;
-  if (window.innerWidth <= 820) document.body.classList.toggle('pmin', m === 'hall' || m === 'island');   // điện thoại: mở cảnh trước, bảng thu gọn
+  if (window.innerWidth <= 820) document.body.classList.toggle('pmin', m === 'hall' || m === 'island' || m === 'journey');   // điện thoại: mở cảnh trước, bảng thu gọn
   if (m === 'island') { U.view = world && world.av.where !== 'home' ? 'friend' : 'home'; U.zone = null; }
   if (world) world.setMode(m === 'hall' ? 'hall' : m === 'journey' ? 'overview' : 'island');
   render();

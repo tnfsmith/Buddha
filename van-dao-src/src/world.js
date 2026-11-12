@@ -38,8 +38,6 @@ export const TIER_ISLES = [
   { y: [225, 252], list: [[-330, -720, 15], [342, -740, 16], [-440, -640, 13], [452, -660, 14]] },
 ];
 export const TIER_LABEL = [[-150, 30, 40], [-250, 92, -170], [-345, 172, -520], [-292, 256, -720], [-200, 372, -724]];
-// nhãn Tầng 3 và Tầng 4 dóng phải về điểm neo, chữ kéo sang trái để không đè thân Tôn tượng
-export const TIER_LABEL_LEFT = [false, false, false, true, true];
 
 const seatOf = (an) => (an && an.deck !== undefined ? DECKS[an.deck].seat || 0.02 : (an && an.seatH) || 0.02);
 export class World {
@@ -158,10 +156,10 @@ export class World {
       });
     }));
     // Tầng 4: không còn đảo, chỉ Vân Tọa sáng quanh hào quang
-    const T4 = [[-128, 366, -724], [128, 366, -724], [0, 362, -640]];
-    // vầng quang hình bầu dục ngang tai, chạy dưới ba cụm Vân Tọa
+    const T4 = [[-128, 366, -724], [128, 366, -724], [0, 362, -640], [0, 364, -836]];   // hai bên vai, trước mặt, sau lưng
+    // vầng quang hình bầu dục ngang tai, chạy dưới bốn cụm Vân Tọa
     [[128, 100, 356, 0.42], [178, 142, 362, 0.22]].forEach(([rx, rz, y, op]) => { const g = new THREE.TorusGeometry(1, 0.012, 6, 200); g.scale(rx, rz, 125); const ring = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: new THREE.Color(1.7, 1.45, 0.9), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); ring.rotation.x = Math.PI / 2; ring.position.set(0, y, -738); this.scene.add(ring); });
-    for (let i = 0; i < 36; i++) { const c = T4[i % 3], j = Math.floor(i / 3), a = j * 2.4 + (i % 3) * 1.1, d = j ? 7.5 + Math.sqrt(j) * 7.2 : 0, x = c[0] + Math.cos(a) * d, y = c[1] + Math.sin(j * 1.7) * 1.2 + (j ? 0 : 0.5), z = c[2] + Math.sin(a) * d * 0.75; crowd.push({ x, y, z, rot: faceBud(x, z), robe: '#9a7436', sc: 2.2 }); this.glowSeats.push({ p: V(x, y, z), tier: 4 }); }
+    for (let i = 0; i < 48; i++) { const c = T4[i % 4], j = Math.floor(i / 4), a = j * 2.4 + (i % 4) * 1.1, d = j ? 7.5 + Math.sqrt(j) * 7.2 : 0, x = c[0] + Math.cos(a) * d, y = c[1] + Math.sin(j * 1.7) * 1.2 + (j ? 0 : 0.5), z = c[2] + Math.sin(a) * d * 0.75; crowd.push({ x, y, z, rot: faceBud(x, z), robe: '#9a7436', sc: 2.2 }); this.glowSeats.push({ p: V(x, y, z), tier: 4 }); }
     this.tierCrowd = makeCrowd(crowd, 5); this.scene.add(this.tierCrowd);
     // Ba bạn đồng tu ở đảo gần: nhân vật riêng, chào và thăm được
     const fr = rng(21);
@@ -344,11 +342,11 @@ export class World {
   }
   pickAny(nx, ny) { this.ray = this.ray || new THREE.Raycaster(); this.ray.setFromCamera(new THREE.Vector2(nx, ny), this.camera); const hit = this.ray.intersectObject(this.home.group, true).find((h) => h.object.isMesh && !h.object.isPoints && h.object.material && !h.object.material.transparent); return hit ? hit.point : null; }
   _birds(dt) {
-    if (!this.birds) { this.birds = buildBirds(6); this.scene.add(this.birds.group); const H = this.home, gy = H.group.position.y, bb = new THREE.Box3().setFromObject(H.pv.group), tb = new THREE.Box3().setFromObject(H.tree.group);
+    if (!this.birds) { this.birds = buildBirds(12); this.scene.add(this.birds.group); const H = this.home, gy = H.group.position.y, bb = new THREE.Box3().setFromObject(H.pv.group), tb = new THREE.Box3().setFromObject(H.tree.group);
       this.perchFix = [V(HILL.x + 0.6, bb.max.y - gy - 0.05, HILL.z), V(HILL.x - 5.9, pvFloor() + 1.5, HILL.z + 4.44), V(HILL.x + 5.9, pvFloor() + 1.5, HILL.z - 4.44), V(10.5 + 0.2, groundH(10.5, 10) + 3.42, 10), V(17.13, groundH(15.5, 15.5) + 3.0, 17.13), V(-15.6, groundH(-15.6, 7) + 4.36, 7), V((tb.min.x + tb.max.x) / 2 + 1.2, tb.max.y - gy - 0.5, (tb.min.z + tb.max.z) / 2), V(STAIR.x + STAIR.hw + 0.17, pvFloor() - STAIR.rise + 0.6, STAIR.z0 + STAIR.run * 0.5), V(26.5 - 2.2, DECKS[0].base + 0.9, 3.6)]; }
     const A = this.av, gy = this.home.group.position.y, list = this.perchFix.map((p) => ({ p: V(p.x, p.y + gy, p.z) }));
     if (A.where === 'home' && (A.state === 'sit' || A.state === 'idle')) { const ax = A.pos.x, az = A.pos.z; [[1.25, 0.5], [-1.1, 0.9], [0.3, 1.5]].forEach(([dx, dz]) => { const x = ax + dx * Math.cos(A.rot) + dz * Math.sin(A.rot), z = az - dx * Math.sin(A.rot) + dz * Math.cos(A.rot); list.push({ p: V(x, floorH(x, z) + gy + 0.02, z), moved: () => this.av.state === 'walk' || this.av.state === 'travel' }); }); }
-    this.birds.group.visible = this.mode === 'island' || this.mode === 'zone' || this.mode === 'creator'; this.birds.update(dt, this.time, list, this.camera, this.birds.group.visible ? this.onChirp : null);
+    this.birds.group.visible = this.mode === 'island' || this.mode === 'zone' || this.mode === 'creator'; this.birds.update(dt, this.time, list, this.camera, this.birds.group.visible ? this.onChirp : null, this.birdOpts);
   }
   walkToPoint(x, z) {
     if (this.av.where !== 'home' || this.av.state === 'travel' || this.mode !== 'island') return false;
@@ -378,7 +376,7 @@ export class World {
   setMode(mode, opt = {}) {
     this.mode = mode;
     if (mode === 'hall') { if (this.portrait) this.flyTo(V(0, 60, -250), V(0, 148, -418), 58, 2); else this.flyTo(V(0, 20, -170), V(0, 60, -352), 58, 2); }
-    else if (mode === 'overview') this.flyTo(V(180, 262, 520), V(-10, 196, -470), 58, 2.2);
+    else if (mode === 'overview') { if (this.portrait) this.flyTo(V(60, 262, 560), V(-190, 244, -470), 58, 2.2); else this.flyTo(V(180, 262, 520), V(-10, 196, -470), 58, 2.2); }
     else if (mode === 'realm') this.flyTo(V(-460, 420, 900), V(40, 210, -450), 60, 3.2);
     else if (mode === 'tier') { const k = opt.tier; if (k === 4) this.flyTo(V(-188, 382, -640), V(-30, 366, -742), 52, 2.2); else { const I = this.isles.find((x) => x.tier === k), s = I.size / 14; this.flyTo(V(I.x + 20 * s * Math.sign(-I.x), I.y + 9 * s, I.z + 30 * s), V(I.x, I.y + 2.5, I.z), 44, 2.2); } }
     else if (mode === 'creator') { const a = this.av.pos.clone(); a.y += this.av.where === 'home' ? this.home.group.position.y : 0; this.flyTo(V(a.x + 2.2, a.y + 3.5, a.z + 8.2), V(a.x, a.y + 2.2, a.z), 34, 1.4); }

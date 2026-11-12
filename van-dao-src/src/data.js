@@ -118,7 +118,7 @@ export function stageAt(t) {
 
 // ───────── Hành trình: Giai đoạn 0 + 4 tầng (theo tài liệu dự án) ─────────
 export const TIERS = [
-  { key: 0, name: 'Giai đoạn 0 · Sơ nhập Tịnh Cảnh', pali: 'Kalyāṇa-puthujjana', base: 'Giới tịnh và Chánh kiến nhân quả; nhận diện thiện – bất thiện trong ngày.',
+  { key: 0, name: 'Sơ nhập Tịnh Cảnh', stage: 'Giai đoạn 0', pali: 'Kalyāṇa-puthujjana', base: 'Giới tịnh và Chánh kiến nhân quả; nhận diện thiện – bất thiện trong ngày.',
     tasks: 'Niệm hơi thở 10 phút/ngày · giữ ngũ giới và 1 việc thiện nhỏ · nhật ký quán chiếu cuối ngày.',
     space: 'Vân Đảo tối giản đủ 6 phân khu; sương còn dày, Bồ-đề còn là cây non; ngồi vòng ngoài Đại Thiền Đường.' },
   { key: 1, name: 'Tầng 1 · Nhập Lưu Tịnh Cảnh', pali: 'biểu trưng Sotāpatti', base: 'Kiến tịnh và Độ nghi tịnh: hướng đến tháo gỡ thân kiến, hoài nghi, giới cấm thủ.',

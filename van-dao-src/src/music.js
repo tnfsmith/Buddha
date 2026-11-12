@@ -162,8 +162,8 @@ export class Ambient {
     if (yes) { this._level(0, 2.5); this._sus = setTimeout(() => { if (this.ducked) this.ctx.suspend(); }, 2800); }
     else { clearTimeout(this._sus); this.ctx.resume().then(() => { if (this.voice) this.voice.scheduleUntil(this.ctx.currentTime + 2.5); this._level(this.volume, 4); }); } }
   // tiếng chim: vài tiếng huýt ngắn quét tần số, đi thẳng ra loa (không phụ thuộc nhạc đang bật hay tắt)
-  chirp(pan = 0, n = 3, seed = 1) { try { this.ensure(); const ctx = this.ctx; if (ctx.state !== 'running') { ctx.resume(); if (!this.on) { clearTimeout(this._sus); this._sus = setTimeout(() => { if (!this.on) ctx.suspend(); }, 2600); } }
-      if (!this.fx) { this.fx = ctx.createGain(); this.fx.connect(ctx.destination); } this.fx.gain.value = 0.05 * Math.min(1, this.volume / 0.6);
+  chirp(pan = 0, n = 3, seed = 1, vol = 0.6) { if (vol <= 0.001) return; try { this.ensure(); const ctx = this.ctx; if (ctx.state !== 'running') { ctx.resume(); if (!this.on) { clearTimeout(this._sus); this._sus = setTimeout(() => { if (!this.on) ctx.suspend(); }, 2600); } }
+      if (!this.fx) { this.fx = ctx.createGain(); this.fx.connect(ctx.destination); } this.fx.gain.value = 0.085 * vol;
       let t = ctx.currentTime + 0.06; const base = 2600 + (Math.abs(Math.sin(seed)) * 1700), cv = swellCurve(0.3, 0.45);
       for (let i = 0; i < n; i++) { const d = 0.06 + Math.random() * 0.07, f0 = base * (0.9 + Math.random() * 0.4), f1 = f0 * (Math.random() < 0.5 ? 1.35 : 0.72), o = ctx.createOscillator(), e = ctx.createGain(); e.gain.value = 0; e.gain.setValueCurveAtTime(cv, t, d);
         o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + d); o.connect(e); if (ctx.createStereoPanner) { const pn = ctx.createStereoPanner(); pn.pan.value = pan; e.connect(pn); pn.connect(this.fx); } else e.connect(this.fx); o.start(t); o.stop(t + d + 0.02); t += d + 0.05 + Math.random() * 0.09; } } catch (e) { /* chưa có tương tác: trình duyệt chưa cho phát */ } }
