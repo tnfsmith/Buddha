@@ -21,8 +21,9 @@
      * Tầng 1: Nhập Lưu Tịnh Cảnh (độ cao 62–84)
      * Tầng 2: Nhất Lai Thanh Lương (độ cao 140–165)
      * Tầng 3: Bất Lai Tịnh Quang (độ cao 225–252)
-     * Tầng 4: Vô Học Vô Biên (độ cao 292–305, ngang vai và sát hai bên Tôn tượng; chỉ có Vân Tọa sáng không còn đảo đất).
-   * **Tôn tượng luôn cao hơn mọi tầng:** phóng 1,5 lần (`BS`), ngự trên đài mây cao 75 (`BL`) trong `world.js` — vai ≈ 305, mắt ≈ 370, đỉnh đầu ≈ 460. Không đặt tầng nào cao hơn vai Ngài.
+     * Tầng 4: Vô Học Vô Biên (độ cao 355–372, ngang tầm mắt và tai Tôn tượng; ba cụm Vân Tọa: hai bên vai và trước mặt Ngài; chỉ có Vân Tọa sáng không còn đảo đất).
+   * **Tôn tượng luôn cao hơn mọi tầng:** phóng 1,5 lần (`BS`), ngự trên đài mây cao 75 (`BL`) trong `world.js` — vai ≈ 305, mắt ≈ 370, đỉnh đầu ≈ 460. Không đặt tầng nào cao hơn tầm mắt Ngài.
+   * **Góc nhìn Vân Đảo phải thấy trọn Tôn tượng** (cả đầu) trên máy tính và điện thoại; nhãn Tầng 3, Tầng 4 nằm bên trái, không đè thân tượng.
    * **Vân Đảo 6 phân khu:** Tịnh Thất (có Kinh Đài), Đài Thiền, Vườn Tâm Thức (Hồ Sen + Cây Bồ-đề), Trà Đạo Tỉnh Thức (mở ngày 15), Cổng Vân Môn (mở nửa ngày 29, mở hẳn ngày 43), Bia Tích Lũy.
    * **Đại Thiền Đường:** Trung tâm với Tôn tượng, hào quang, các hàng Vân Tọa quây quần.
 3. **Thời thiền 15 phút (7 mốc chuẩn hóa):**

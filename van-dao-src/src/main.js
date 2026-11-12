@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { World, ANCHORS, TIER_LABEL, groundH } from './world.js';
+import { World, ANCHORS, TIER_LABEL, TIER_LABEL_LEFT, groundH } from './world.js';
 import { Player, TR, EV, offlineProbe } from './audio.js';
 import { DUR, STAGES, TIERS, ZONES, WEEKS, PILLARS, valueAt, breathEnv, stageAt, kusala } from './data.js';
 import { SUTTAS, Sermon } from './sermon.js';
@@ -105,7 +105,7 @@ const L = $('#labels'), mkLabel = (cls, fn) => { const b = document.createElemen
 const zoneLb = {}; ZONES.forEach((z) => (zoneLb[z.id] = mkLabel('zl', () => goZone(z.id))));
 const meLb = mkLabel('zl me', () => openCreator());
 const friendLb = world ? world.friends.map((f, i) => mkLabel('zl fr', () => openFriend(i))) : [];
-const tierLb = TIER_LABEL.map((p, i) => mkLabel('tl', () => pickTier(i)));
+const tierLb = TIER_LABEL.map((p, i) => mkLabel(TIER_LABEL_LEFT[i] ? 'tl tlr' : 'tl', () => pickTier(i)));
 function place(el, v, on, margin = 20) {
   const p = on ? world.project(v) : null, ok = !!p && p.vis && p.x > margin && p.x < world.w - margin && p.y > 56 && p.y < world.h - 96;
   el.style.opacity = ok ? '1' : '0'; el.style.pointerEvents = ok ? 'auto' : 'none'; if (ok) { el.style.left = p.x.toFixed(1) + 'px'; el.style.top = p.y.toFixed(1) + 'px'; }
@@ -349,7 +349,7 @@ function setMode(m) {
   if (m !== 'hall' && sermon.on) sermon.stop(); U.mode = m; document.body.classList.toggle('hall', m === 'hall');
   document.querySelectorAll('#tabs button').forEach((x) => x.classList.toggle('on', x.dataset.m === m));
   if (m !== 'journey') U.tier = null;
-  if (window.innerWidth <= 820) document.body.classList.toggle('pmin', m === 'hall');
+  if (window.innerWidth <= 820) document.body.classList.toggle('pmin', m === 'hall' || m === 'island');   // điện thoại: mở cảnh trước, bảng thu gọn
   if (m === 'island') { U.view = world && world.av.where !== 'home' ? 'friend' : 'home'; U.zone = null; }
   if (world) world.setMode(m === 'hall' ? 'hall' : m === 'journey' ? 'overview' : 'island');
   render();
@@ -429,6 +429,7 @@ function frame(now) {
 window.addEventListener('error', (e) => { const el = $('#err'); el.style.display = 'block'; el.textContent = 'Lỗi: ' + e.message; });
 if (hash.sim) U.sim = +hash.sim;
 if (hash.t !== undefined) player.T0 = +hash.t;
+if (window.innerWidth <= 820 && (!hash.mode || hash.mode === 'island') && !hash.view && !hash.zone) document.body.classList.add('pmin');
 render();
 if (hash.mode && hash.mode !== 'island') setMode(hash.mode);
 if (hash.tier !== undefined) pickTier(+hash.tier);
