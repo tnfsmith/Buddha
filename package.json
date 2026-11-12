@@ -1,0 +1,11 @@
+{
+  "name": "van-dao-workspace",
+  "version": "1.0.0",
+  "description": "Vân Đạo Workspace Root",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix van-dao-src run build",
+    "deploy": "npm --prefix van-dao-src run deploy",
+    "test:shot": "npm --prefix van-dao-src run test:shot"
+  }
+}
