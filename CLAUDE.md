@@ -12,7 +12,7 @@
 * **Trạng thái hiện tại:**
   * Client: Single-player 3D WebGL (Three.js) + Âm thanh sinh trực tiếp (Web Audio API) đóng gói trong 1 file HTML độc lập (`dist/van-dao.html` hoặc `van-dao.html` ~983KB).
   * Hosting & Edge: Triển khai trên **Cloudflare Workers** (Custom domain `vandao.ainextbrain.com`).
-  * Trạng thái roadmap: **Đang hoàn thiện Bước 1 (CI/CD GitHub -> Cloudflare)**.
+  * Trạng thái roadmap: Bước 1 (CI/CD GitHub -> Cloudflare) đã chạy. **Lộ trình hiện hành là `PROJECT_ROADMAP.md` bản 2 (GĐ0–GĐ8)**; lược đồ D1, API, quy trình phân lane Claude/Antigravity ở đó thay thế mục 4 bên dưới.
 
 ### Các nguyên tắc bất di bất dịch (Core Invariants):
 1. **Không thương mại hóa Chánh Pháp:** Hệ thống hướng đến doanh nghiệp xã hội hai động cơ, không bán Pháp.
@@ -105,6 +105,8 @@ npm run deploy
 ---
 
 ## 4. LỘ TRÌNH 3 BƯỚC CHO CÁC BƯỚC TIẾP THEO
+
+> **Đã được thay thế bởi `PROJECT_ROADMAP.md` bản 2 (12/11/2026).** Phần dưới giữ lại để tham khảo lịch sử; khi mâu thuẫn (lược đồ DB, khung 16 byte, quy trình deploy), làm theo `PROJECT_ROADMAP.md`.
 
 ### Bước 1 (HIỆN TẠI): Chuẩn hóa Repo, GitHub & Cloudflare CI/CD
 * Quản lý toàn bộ source code trên GitHub.
