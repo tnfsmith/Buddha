@@ -12,6 +12,8 @@ import { buildFigure, makeCrowd, defaultLook, suggestNames, OPTIONS } from './pe
 
 export { groundH };
 const BUD = new THREE.Vector3(0, 0, -760), SEAT = new THREE.Vector3(0, 3, -256);
+// Tôn tượng phóng 1,5 lần và ngự trên đài mây cao BL: vai ≈ 305, mắt ≈ 370, đỉnh đầu ≈ 460 — luôn cao hơn mọi tầng
+export const BS = 1.5, BL = 75, BUD_EYE = BL + 196 * BS, BUD_SHOULDER = BL + 153 * BS;
 const DAY = new THREE.Color(1.0, 0.95, 0.85), NIGHT = new THREE.Color(0.2, 0.22, 0.36);
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const faceBud = (x, z) => Math.atan2(BUD.x - x, BUD.z - z);
@@ -35,7 +37,7 @@ export const TIER_ISLES = [
   { y: [140, 165], list: [[-345, -520, 15], [360, -550, 16], [-455, -440, 13], [468, -470, 14], [-265, -650, 13], [280, -670, 13]] },
   { y: [225, 252], list: [[-330, -720, 15], [342, -740, 16], [-440, -640, 13], [452, -660, 14]] },
 ];
-export const TIER_LABEL = [[-150, 30, 40], [-250, 102, -170], [-345, 184, -520], [-330, 270, -720], [-175, 428, -770]];
+export const TIER_LABEL = [[-150, 30, 40], [-250, 92, -170], [-345, 172, -520], [-345, 256, -720], [-250, 312, -690]];
 
 const seatOf = (an) => (an && an.deck !== undefined ? DECKS[an.deck].seat || 0.02 : (an && an.seatH) || 0.02);
 export class World {
@@ -120,7 +122,7 @@ export class World {
   }
 
   _buddha() {
-    const g = (this.budGroup = new THREE.Group()); g.position.copy(BUD); this.scene.add(g);
+    const g = (this.budGroup = new THREE.Group()); g.position.set(BUD.x, BL, BUD.z); g.scale.setScalar(BS); this.scene.add(g);
     this.budFig = new THREE.Mesh(new THREE.PlaneGeometry(262, 328), new THREE.MeshBasicMaterial({ map: buddhaTex(), alphaTest: 0.5, fog: false }));
     this.budFig.position.set(0, 148, 0); g.add(this.budFig);
     const halo = new THREE.Mesh(new THREE.PlaneGeometry(1100, 1100), new THREE.ShaderMaterial({ transparent: true, depthWrite: false, fog: false, uniforms: this.u,
@@ -133,9 +135,9 @@ export class World {
         vec3 c6 = 0.55+0.45*cos(ang*3.+uTime*0.03+vec3(0.,2.1,4.2));
         vec3 col = mix(vec3(1.0,0.74,0.34), vec3(1.0,0.88,0.56), glow)*(1.0+0.22*glow+0.45*rings);
         col = mix(col, c6*1.12, clamp(rays*uRainbow*0.9,0.,0.85));
-        col = mix(col, vec3(1.25,1.3,1.45)*(0.8+glow), uHaloWhite*0.8);
+        col = mix(col, vec3(1.0,1.04,1.16)*(0.62+0.55*glow), uHaloWhite*0.8);
         float a = clamp((glow*0.85 + rings*0.30)*min(uHalo,1.6) + rays*(0.16+0.26*uRainbow)*uHalo, 0., 1.)*smoothstep(1.0,0.8,r); ${OUT} }` }));
-    halo.position.set(0, 196, -14); halo.renderOrder = -1; g.add(halo);
+    halo.position.set(0, 196, -14); halo.scale.setScalar(0.8); halo.renderOrder = -1; g.add(halo); this.halo = halo;
     this.waves = [];
     for (let i = 0; i < 4; i++) { const m = new THREE.Mesh(new THREE.RingGeometry(0.975, 1, 160), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.7, 1.4, 0.8), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide })); m.rotation.x = -Math.PI / 2; m.position.set(BUD.x, 7, BUD.z); m.renderOrder = 6; this.scene.add(m); this.waves.push(m); }
   }
@@ -154,10 +156,10 @@ export class World {
       });
     }));
     // Tầng 4: không còn đảo, chỉ Vân Tọa sáng quanh hào quang
-    const T4 = [[-170, 400, -770], [170, 404, -770], [-290, 372, -752], [290, 368, -752]];
+    const T4 = [[-182, 304, -708], [182, 305, -708], [-238, 292, -670], [238, 291, -670]];
     // Tầng 4 tách hẳn: hai vầng quang nằm ngang ngăn với các tầng dưới
-    [[395, 338, 0.5], [300, 352, 0.3]].forEach(([rad, y, op]) => { const ring = new THREE.Mesh(new THREE.TorusGeometry(rad, 1.5, 6, 180), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.7, 1.45, 0.9), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); ring.rotation.x = Math.PI / 2; ring.position.set(0, y, -765); this.scene.add(ring); });
-    for (let i = 0; i < 36; i++) { const c = T4[i % 4], j = Math.floor(i / 4), a = j * 2.4 + (i % 4), d = 3.5 + Math.sqrt(j) * 4.6, x = c[0] + Math.cos(a) * d, y = c[1] + Math.sin(j * 1.7) * 1.4 + (j ? 0 : 0.6), z = c[2] + Math.sin(a) * d * 0.8; crowd.push({ x, y, z, rot: faceBud(x, z), robe: '#dcbf85' }); this.glowSeats.push({ p: V(x, y, z), tier: 4 }); }
+    [[282, 288, 0.42], [196, 298, 0.26]].forEach(([rad, y, op]) => { const ring = new THREE.Mesh(new THREE.TorusGeometry(rad, 1.5, 6, 180), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.7, 1.45, 0.9), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); ring.rotation.x = Math.PI / 2; ring.position.set(0, y, -742); this.scene.add(ring); });
+    for (let i = 0; i < 36; i++) { const c = T4[i % 4], j = Math.floor(i / 4), a = j * 2.4 + (i % 4), d = 3.4 + Math.sqrt(j) * 4.0, x = c[0] + Math.cos(a) * d * (c[0] < 0 ? 1 : 1) - Math.sign(c[0]) * Math.min(0, Math.cos(a) * d * Math.sign(c[0])) * 0.6, y = c[1] + Math.sin(j * 1.7) * 1.4 + (j ? 0 : 0.6), z = c[2] + Math.sin(a) * d * 0.8; crowd.push({ x, y, z, rot: faceBud(x, z), robe: '#9a7436' }); this.glowSeats.push({ p: V(x, y, z), tier: 4 }); }
     this.tierCrowd = makeCrowd(crowd, 5); this.scene.add(this.tierCrowd);
     // Ba bạn đồng tu ở đảo gần: nhân vật riêng, chào và thăm được
     const fr = rng(21);
@@ -206,7 +208,7 @@ export class World {
     const pn = (n + 1) * 3, st = new Float32Array(pn * 3), sd = new Float32Array(pn);
     for (let i = 0; i < pn; i++) { const s = i < n * 3 ? seats[Math.floor(i / 3)] : SEAT; st.set([s.x + (this.rnd() - 0.5) * 2, s.y + 3, s.z + (this.rnd() - 0.5) * 2], i * 3); sd[i] = this.rnd(); }
     const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(st, 3)); pg.setAttribute('aSeed', new THREE.BufferAttribute(sd, 1));
-    this.merit = new THREE.Points(pg, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending, uniforms: { ...this.u, uTarget: { value: V(BUD.x, 70, BUD.z + 10) } },
+    this.merit = new THREE.Points(pg, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending, uniforms: { ...this.u, uTarget: { value: V(BUD.x, BL + 117 * BS, BUD.z + 14) } },
       vertexShader: `attribute float aSeed; uniform float uP,uTime; uniform vec3 uTarget; varying float vA;
       void main(){ float k = clamp(uP*1.7 - aSeed*0.7, 0., 1.); k = k*k*(3.-2.*k); vec3 p = mix(position, uTarget, k); p.y += sin(k*3.14159)*(70.+90.*aSeed); p.x += sin(aSeed*40.+uTime*0.6)*5.*sin(k*3.14159);
         vec4 mv = modelViewMatrix*vec4(p,1.); gl_Position = projectionMatrix*mv; gl_PointSize = (2.2+3.2*aSeed)*220./max(-mv.z,1.) + 1.2; vA = sin(k*3.14159)*0.95; }`,
@@ -226,9 +228,12 @@ export class World {
     this.isles.forEach((I) => { const n = 7 + Math.floor(I.size / 3); for (let i = 0; i < n; i++) { const a = (i / n) * 6.28 + r(), d = I.size * (0.85 + r() * 0.3); add(I.x + Math.cos(a) * d, I.y - I.size * (0.25 + r() * 0.6), I.z + Math.sin(a) * d * 0.8, I.size * (0.7 + r() * 0.7), 3); }
       if (I.tier > 0) for (let i = 0; i < 3; i++) add(I.x + (r() - 0.5) * I.size * 3, I.y - I.size * 1.6 - r() * 10, I.z + (r() - 0.5) * I.size * 2, I.size * (1.6 + r()), 3); });
     this.bridges.forEach((c) => { for (let i = 0; i <= 44; i++) { const p = c.getPoint(i / 44); add(p.x, p.y - 1.2, p.z, 4.5 + r() * 3.5, 2); } });
-    this.glowSeats.forEach((s) => add(s.p.x, s.p.y - (s.tier === 4 ? 0.9 : 0.1), s.p.z, s.tier === 4 ? 4.2 : s.tier === 3 ? 3.2 : 2.4, 5));
+    this.glowSeats.forEach((s) => add(s.p.x, s.p.y - (s.tier === 4 ? 1.1 : 0.1), s.p.z, s.tier === 4 ? 2.6 : s.tier === 3 ? 3.2 : 2.4, 5));
     this.realm.isles.forEach((I) => { const n = I.size > 40 ? 5 : 3; for (let i = 0; i < n; i++) { const a = (i / n) * 6.28 + r() * 2; add(I.x + Math.cos(a) * I.size * 0.9, I.y - I.size * (0.35 + r() * 0.7), I.z + Math.sin(a) * I.size * 0.7, I.size * (1.1 + r() * 0.9), 3); } });
-    for (let i = 0; i < 230; i++) { const x = (r() * 2 - 1) * 1300, z = -1500 + r() * 2100, y = 14 + Math.pow(r(), 1.5) * 330; if (Math.abs(x) < 150 && z < -100 && z > -800 && y < 200) continue; add(x, y, z, 34 + r() * 80, 7); }
+    for (let i = 0; i < 230; i++) { const x = (r() * 2 - 1) * 1300, z = -1500 + r() * 2100, y = 14 + Math.pow(r(), 1.5) * 330; if (Math.abs(x) < 280 && z < -100 && z > -820 && y < 520) continue; add(x, y, z, 34 + r() * 80, 7); }
+    // đài mây nâng Tôn tượng: các lớp mây dày dần từ biển mây lên tới tòa sen
+    for (let i = 0; i < 46; i++) { const k = i / 46, a = r() * Math.PI * 2, rr = Math.sqrt(r()), w = 250 - 110 * k; add(Math.cos(a) * rr * w, 6 + k * (BL - 12) + r() * 6, BUD.z + 26 + Math.sin(a) * rr * 70, 70 + r() * 60 - 25 * k, 2); }
+    for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; add(Math.cos(a) * 168, BL - 8 + r() * 6, BUD.z + 40 + Math.sin(a) * 34, 34 + r() * 16, 5); }
     void home;
     const n = items.length, g = new THREE.InstancedBufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute([-0.5, -0.5, 0, 0.5, -0.5, 0, 0.5, 0.5, 0, -0.5, 0.5, 0], 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 1], 2)); g.setIndex([0, 1, 2, 0, 2, 3]);
@@ -241,7 +246,7 @@ export class World {
         vec2 cell = vec2(mod(iMeta.w,2.), floor(iMeta.w/2.)); vUv = (vec2(sd > 0.5 ? uv.x : 1.-uv.x, uv.y) + cell)*0.5;
         float edge = 1.0;
         if (g < 0.5) { c.x = mod(c.x + uTime*0.9 + 1100., 2200.) - 1100.; edge = smoothstep(1100., 860., abs(c.x)); }
-        else if (g > 6.5) { c.x = mod(c.x + uTime*(1.1 + sd*1.4) + 1300., 2600.) - 1300.; edge = smoothstep(1300., 1000., abs(c.x)); if (c.z < 300.) edge *= smoothstep(170., 420., abs(c.x)); }
+        else if (g > 6.5) { c.x = mod(c.x + uTime*(1.1 + sd*1.4) + 1300., 2600.) - 1300.; edge = smoothstep(1300., 1000., abs(c.x)); if (c.z < 300.) edge *= smoothstep(260., 560., abs(c.x)); }
         else c.x += sin(uTime*0.03+sd*6.28)*(g>3.5&&g<4.5?12.:0.6);
         c.y += sin(uTime*0.07+sd*12.)*(g<0.5 ? 1.3 : (g>6.5 ? 2.4 : (g>2.5&&g<4.5 ? 1.6 : 0.5)));
         vec4 mv = viewMatrix*vec4(c,1.);
@@ -368,17 +373,18 @@ export class World {
   flyTo(p, t, fov = 52, dur = 1.6) { this.tween = { p0: this.camera.position.clone(), t0: this.controls.target.clone(), f0: this.baseFov, p, t, fov, k: this.snap ? 0.999 : 0, dur }; this.controls.enabled = false; }
   setMode(mode, opt = {}) {
     this.mode = mode;
-    if (mode === 'hall') this.flyTo(V(0, 16, -216), V(0, 24, -330), 58, 2);
-    else if (mode === 'overview') this.flyTo(V(170, 255, 500), V(-10, 185, -460), 60, 2.2);
-    else if (mode === 'realm') this.flyTo(V(-440, 400, 880), V(40, 190, -440), 60, 3.2);
-    else if (mode === 'tier') { const k = opt.tier; if (k === 4) this.flyTo(V(-134, 410, -740), V(-172, 399.5, -771), 44, 2.2); else { const I = this.isles.find((x) => x.tier === k), s = I.size / 14; this.flyTo(V(I.x + 20 * s * Math.sign(-I.x), I.y + 9 * s, I.z + 30 * s), V(I.x, I.y + 2.5, I.z), 44, 2.2); } }
+    if (mode === 'hall') { if (this.portrait) this.flyTo(V(0, 60, -250), V(0, 148, -418), 58, 2); else this.flyTo(V(0, 20, -170), V(0, 60, -352), 58, 2); }
+    else if (mode === 'overview') this.flyTo(V(180, 262, 520), V(-10, 196, -470), 58, 2.2);
+    else if (mode === 'realm') this.flyTo(V(-460, 420, 900), V(40, 210, -450), 60, 3.2);
+    else if (mode === 'tier') { const k = opt.tier; if (k === 4) this.flyTo(V(-236, 312, -652), V(-96, 334, -748), 48, 2.2); else { const I = this.isles.find((x) => x.tier === k), s = I.size / 14; this.flyTo(V(I.x + 20 * s * Math.sign(-I.x), I.y + 9 * s, I.z + 30 * s), V(I.x, I.y + 2.5, I.z), 44, 2.2); } }
     else if (mode === 'creator') { const a = this.av.pos.clone(); a.y += this.av.where === 'home' ? this.home.group.position.y : 0; this.flyTo(V(a.x + 2.2, a.y + 3.5, a.z + 8.2), V(a.x, a.y + 2.2, a.z), 34, 1.4); }
     else if (mode === 'zone') { const c = ANCHORS[opt.zone].cam, y = this.home.group.position.y; this.flyTo(V(c[0][0], c[0][1] + y, c[0][2]), V(c[1][0], c[1][1] + y, c[1][2]), 48, 1.5); }
     else this.flyTo(this.islandCam(), V(this.portrait ? 4 : 12, 18, 0), 52, 1.8);
   }
   setLimits() {
     const m = this.mode, c = this.controls;
-    if (m === 'hall') Object.assign(c, { minDistance: 40, maxDistance: 190, minPolarAngle: 1.25, maxPolarAngle: 1.9 });
+    if (m === 'hall' && this.wide) Object.assign(c, { minDistance: 40, maxDistance: 700, minPolarAngle: 1.0, maxPolarAngle: 2.0 });
+    else if (m === 'hall') Object.assign(c, { minDistance: 40, maxDistance: 190, minPolarAngle: 1.25, maxPolarAngle: 2.1 });
     else if (m === 'creator') Object.assign(c, { minDistance: 5, maxDistance: 18, minPolarAngle: 0.9, maxPolarAngle: 1.75 });
     else if (m === 'realm') Object.assign(c, { minDistance: 60, maxDistance: 1900, minPolarAngle: 0.4, maxPolarAngle: 1.75 });
     else if (m === 'overview' || m === 'tier') Object.assign(c, { minDistance: 30, maxDistance: 900, minPolarAngle: 0.5, maxPolarAngle: 1.75 });
@@ -408,12 +414,12 @@ export class World {
       [this.hallCrowd, this.tierCrowd].forEach((c) => { if (c && c.userData.bow) { c.userData.bow.value = this.sBow; c.userData.setAnjali(!!sm.anjali); } }); }
     if (this.tween || !this.controls.enabled) this.camera.lookAt(this.controls.target); else this.controls.update();
     const cam = this.camera.position; u.uCam.value.copy(cam); this.sky.position.copy(cam); this.stars.position.copy(cam);
-    u.uBud.value.set(BUD.x - cam.x, 196 - cam.y, BUD.z - cam.z).normalize();
-    this.budFig.lookAt(cam.x, 148, cam.z); const nb = 1 + 0.45 * v.night; this.budFig.material.color.setRGB(0.96 * nb, 0.88 * nb, 0.74 * nb);
+    u.uBud.value.set(BUD.x - cam.x, BUD_EYE - cam.y, BUD.z - cam.z).normalize();
+    this.budFig.lookAt(cam.x, BL + 148 * BS, cam.z); const nb = 1 + 0.12 * v.night; this.budFig.material.color.setRGB(0.96 * nb, 0.88 * nb, 0.74 * nb);
     u.uNight.value = v.night; u.uAmber.value = v.amber; u.uJade.value = v.jade; u.uCalm.value = v.calm;
     let pulse = 0; s.waves.forEach((age, i) => { const m = this.waves[i]; if (!m) return; const k = age / 14; m.visible = k < 1; m.scale.setScalar(40 + age * 58); m.material.opacity = (1 - k) * 0.6; pulse = Math.max(pulse, Math.exp(-age / 2.5)); });
     for (let i = s.waves.length; i < this.waves.length; i++) this.waves[i].visible = false;
-    u.uHalo.value = 1 + 0.5 * pulse + 0.35 * v.merit; u.uRainbow.value = v.rainbow; u.uHaloWhite.value = v.haloWhite;
+    { const dB = Math.hypot(cam.x - BUD.x, cam.y - BUD_EYE, cam.z - BUD.z), near = Math.min(1, Math.max(0, (dB - 160) / 420)); this.haloK = (this.haloK ?? 1) + ((0.32 + 0.68 * near) - (this.haloK ?? 1)) * Math.min(1, 0.05 * 60 * 0.016 * 4); u.uHalo.value = (1 + 0.5 * pulse + 0.35 * v.merit) * this.haloK; } u.uRainbow.value = v.rainbow; u.uHaloWhite.value = v.haloWhite;
     u.uTier2.value = isl.tier >= 2 ? 1 : isl.sky || 0;
     u.uB.value = 0.1 * v.breath * s.breath; this.seatMat.emissiveIntensity = 0.6 * v.jade * s.breath + 0.25 * v.amber; this.seatMat.emissive.set(v.amber > 0.5 ? '#ffcf8a' : '#bfeee4');
     this.pillarMat.opacity = 0.16 * v.amber; this.filaMat.opacity = 0.5 * v.fila * (0.75 + 0.25 * Math.sin(this.time * 0.8)); this.filaMat.color.setHSL((this.time * 0.02) % 1, 0.55, 0.78).multiplyScalar(1.5);

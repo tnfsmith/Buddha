@@ -1,4 +1,4 @@
-# Vân Đạo — tóm tắt dự án và việc còn lại (cập nhật 2026-11-12, bản 6)
+# Vân Đạo — tóm tắt dự án và việc còn lại (cập nhật 2026-11-12, bản 8)
 
 "Vân Đạo" là tên tạm. Nguồn gốc thiết kế: tệp "chuong trinh thien-1.pdf" (47 trang, toàn bộ cuộc trao đổi) trong thư mục Buddha. Tệp này thay bản tóm tắt cũ, vốn lệch tài liệu ở bốn điểm (xem cuối).
 
@@ -24,7 +24,7 @@
 - Bản 4 (2026-11-12) thêm Vân Nhạc: 7 khúc nhạc nền sinh trực tiếp, cùng hệ âm với thời thiền (Vân Thủy, Sớm Mai, Trà Chiều, Hoàng Hôn, Đêm Tịnh, Phong Linh, Từ Tâm). Chọn khúc theo buổi trong ngày, theo tuần của chuỗi 49 ngày, theo tâm trạng hoặc chọn tay; phát liên tục một khúc, lần lượt hoặc ngẫu nhiên (đổi khúc sau 3/5/10 phút, hòa tan 5 giây). Nhạc nền tự lắng khi vào thời thiền 15 phút và dâng lại sau đó. Đo ngoại tuyến 90 giây mỗi khúc: 0 bước nhảy, đỉnh 0,36–0,45 ở âm lượng mặc định. Chưa ai nghe bằng tai.
 - Bản 4 mở rộng cõi: thêm khoảng 300 đảo xa và 15 bảo tháp ở mọi hướng và độ cao, 4 đàn hạc, góc nhìn "Toàn cõi" trong tab Hành trình. Mây làm lại: họa tiết mịn hơn, mép tan dần, biển mây trôi ngang liên tục, thêm 230 cụm mây phiêu giữa trời.
 - Bản 5 (2026-11-12): nhúng phông Be Vietnam Pro và Noto Serif, chuẩn hóa NFC (hết lỗi rời dấu); bảng rộng hơn, thanh phát thu gọn ngoài Đại Thiền Đường, radar âm thanh ẩn mặc định có nút bật.
-- Bản 5, các tầng: Tầng 1 cao 62–84, Tầng 2 cao 140–165, Tầng 3 cao 225–252, Tầng 4 cao 368–404 phía trên hai vầng quang ngăn cách (trước đó Tầng 3 và 4 chồng độ cao nhau).
+- Các tầng (chỉnh ở bản 8): Tôn tượng phóng 1,5 lần và ngự trên đài mây cao 75, nên luôn cao nhất (vai ≈ 305, mắt ≈ 370, đỉnh đầu ≈ 460). Tầng 1 cao 62–84, Tầng 2 cao 140–165, Tầng 3 cao 225–252 (giãn như bản 5); Tầng 4 cao 292–305, ngang vai và sát hai bên Ngài, trên vầng quang quanh vai.
 - Bản 5, Vân Đảo: chọn một khu thì máy quay bám theo nhân vật suốt đường đi; thềm đá dẫn vào trong Tịnh Thất; Thiền Đài và Trà Đạo là đài đá hai bậc (Trà Đạo có bàn đá, bốn đôn đá); Vườn Tâm Thức có cổng trăng, vòng đá quanh cây Bồ-đề, gương tâm, đèn đá, thêm 5 cây; hồ rộng hơn, có gợn nước và ánh lấp lánh; lưu vị trí gần nhất của nhân vật.
 - Bản 5, Thuyết giảng (trong Đại Thiền Đường): 7 bài tóm lược ý kinh viết lời mới, không phải bản dịch (SN 56.11, SN 22.59, Sn 1.8, Sn 2.4, AN 3.65, MN 10, Dhp 1–5), kèm câu Pāli. Tôn tượng mở mắt, cử động miệng, giơ ấn; hội chúng chắp tay, đảnh lễ lúc mở đầu và ba lần khi kết; sóng hào quang và hồi hướng cuối bài. **Nội dung cần hội đồng cố vấn Pháp học duyệt.**
 - Bài nhạc YouTube Music anh gửi: không xác định được tác giả và giấy phép nên không đưa tệp vào ứng dụng; chỉ thêm đường dẫn mở ngoài trong Vân Nhạc.

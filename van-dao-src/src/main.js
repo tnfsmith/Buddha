@@ -30,11 +30,11 @@ setInterval(savePos, 1500); window.addEventListener('pagehide', savePos); docume
 // ── Thuyết giảng ──
 const sermon = new Sermon();
 sermon.online = (o) => { const el = $('#sub'); if (!el) return; el.innerHTML = o ? `<div class="src">${esc(o.src)}</div><div class="ln">${esc(o.ln)}</div>${o.pl ? `<div class="pl">${esc(o.pl)}</div>` : ''}` : ''; };
-sermon.onend = (done) => { document.body.classList.remove('sermon'); amb.setVolume(S.music.vol); if (done) { S.sermons = (S.sermons || 0) + 1; save(); toast('Bài giảng đã viên mãn. Sādhu!'); } render(); };
+sermon.onend = (done) => { if (world) { world.wide = false; if (U.mode === 'hall') world.setMode('hall'); } document.body.classList.remove('sermon'); amb.setVolume(S.music.vol); if (done) { S.sermons = (S.sermons || 0) + 1; save(); toast('Bài giảng đã viên mãn. Sādhu!'); } render(); };
 function sermonStart(id) { const su = SUTTAS.find((x) => x.id === id) || SUTTAS[0]; U.sutta = su.id; if (player.playing) player.pause(); if (U.mode !== 'hall') setMode('hall'); U.hallTab = 'sermon';
   document.body.classList.add('sermon'); amb.setVolume(S.music.vol * 0.4); if (amb.on && amb.voice && amb.ctx) { try { amb.voice.bowl(amb.ctx.currentTime + 0.1, 136.1, 0.3, 0); } catch (e) { /* bỏ qua */ } }
   sermon.start(su, S.tts !== false); if (world) U.sCam = null; render(); }
-function sermonStop() { sermon.stop(); if (world && U.mode === 'hall') world.setMode('hall'); }
+function sermonStop() { sermon.stop(); if (world) { world.wide = false; if (U.mode === 'hall') world.setMode('hall'); } }
 // ── Vân Nhạc: nhạc nền toàn Vân Đảo ──
 const amb = new Ambient(); amb.volume = S.music.vol;
 const wantSong = () => pickSong(S.music, S.day, new Date().getHours());
@@ -418,7 +418,7 @@ function frame(now) {
   const sm = sermon.tick(dt); if (sm.on || sm.waves.length) { waves = sm.waves; vis = { ...vis, night: 0, amber: 0, haloWhite: 0, beams: Math.max(vis.beams * 0.6, sm.merit), rainbow: Math.max(vis.rainbow * 0.5, sm.merit * 0.9), merit: Math.max(vis.merit, sm.merit) }; }
   // máy quay khi giảng: cận Tôn tượng lúc nói, toàn cảnh hội chúng lúc đảnh lễ
   if (sm.on && world && U.mode === 'hall') { const want = sermon.phase === 'line' || sermon.phase === 'gap' || sermon.phase === 'dedicate' ? 'close' : 'wide';
-    if (U.sCam !== want) { U.sCam = want; const V3 = World.V3; if (want === 'close') world.flyTo(new V3(-16, 44, -70), new V3(0, 128, -740), 58, 2.6); else world.flyTo(new V3(0, 36, -176), new V3(0, 50, -330), 62, 2.6); } }
+    if (U.sCam !== want) { U.sCam = want; const V3 = World.V3; world.wide = true; if (want === 'close') world.flyTo(new V3(-30, 96, -300), new V3(0, 318, -760), 56, 2.6); else world.flyTo(new V3(0, 40, -150), new V3(0, 150, -560), 62, 2.6); } }
   if (world) world.update(dt, { vis, breath: breathEnv(started ? t : now / 1000), waves, isl: islandState(), sermon: sm });
   updateBar(t); updateLabels();
   if (U.mode === 'hall' && S.radar && frames % 2 === 0) { drawRadar(t); drawScope(); }
