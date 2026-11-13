@@ -39,6 +39,18 @@ describe('Vân Đạo API', () => {
     expect((await call('/api/v1/me', {}, 'gia-mao')).status).toBe(401);
   });
 
+  it('PATCH /api/v1/profile nhận múi giờ trình duyệt báo (kể cả UTC, Asia/Saigon), từ chối chuỗi không phải vùng', async () => {
+    for (const tz of ['+07:00', 'Không/Có', '', 'Asia/Khong_Co']) {
+      const { token } = await guest();
+      expect((await call('/api/v1/profile', { method: 'PATCH', body: JSON.stringify({ tz }) }, token)).status, tz).toBe(400);
+    }
+    for (const tz of ['UTC', 'Asia/Saigon', 'America/Argentina/Buenos_Aires']) {
+      const { token } = await guest();
+      const r = await json(await call('/api/v1/profile', { method: 'PATCH', body: JSON.stringify({ tz }) }, token));
+      expect(r.status, tz).toBe(200); expect(r.data.profile.tz).toBe(tz);
+    }
+  });
+
   it('PATCH /api/v1/profile kiểm 4 quy tắc Tịnh danh', async () => {
     const { token } = await guest();
     expect((await call('/api/v1/profile', { method: 'PATCH', body: JSON.stringify({ tinh_danh: 'Đại Đức Minh' }) }, token)).status).toBe(400);

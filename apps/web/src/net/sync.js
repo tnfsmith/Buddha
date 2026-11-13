@@ -1,9 +1,8 @@
 // apps/web/src/net/sync.js
 // Quản lý hàng đợi thao tác ngoại tuyến và tự động đồng bộ (PROJECT_ROADMAP.md §5.1, §12.6)
 import { idbGetAll, idbSet, idbDelete, idbGet } from './idb.js';
-import { postSync, getAuthToken } from './api.js';
+import { postSync } from './api.js';
 
-let isSyncing = false;
 const listeners = new Set();
 
 /**
@@ -43,11 +42,11 @@ export async function getDeviceId() {
 /**
  * Đưa một thao tác mới vào hàng đợi outbox
  */
-export async function enqueueOp(type, payload) {
+export async function enqueueOp(type, payload, at = Date.now()) {
   const op = {
     id: generateClientUlid(),
     type,
-    at: Date.now(),
+    at,
     payload
   };
 
@@ -69,36 +68,50 @@ export function onSyncComplete(fn) {
   return () => listeners.delete(fn);
 }
 
+let enabled = false;
+/** Bật/tắt đồng bộ: chỉ bật khi người dùng đã chọn "Giữ hành trình" (net/account.js). Không tự tạo tài khoản cho người chỉ mở trang. */
+export function setSyncEnabled(on) { enabled = Boolean(on); }
+
+// Máy chủ nhận tối đa 8 thao tác mỗi lần (hạn mức truy vấn D1 gói Free) → gửi theo lô, tối đa 25 lô mỗi lượt
+const CHUNK = 8;
+let running = null, queued = null;
 /**
- * Đồng bộ outbox lên máy chủ. Chỉ chạy khi người dùng đã bật "Giữ hành trình" (đã có phiên đăng nhập, xem T2.3 #12):
- * không tự tạo tài khoản khách cho mọi người mở trang.
+ * Đồng bộ outbox lên máy chủ; trả kết quả lô cuối (có `state`) hoặc undefined nếu chưa gửi được.
+ * Gọi trong lúc một lượt đang chạy thì xếp đúng một lượt nữa ngay sau đó: thao tác vừa vào outbox
+ * có thể không nằm trong lô đang gửi, nếu bỏ qua nó sẽ nằm lại tới lần có mạng/quay lại tab kế tiếp.
  */
-export async function triggerSync() {
-  if (isSyncing || !getAuthToken()) return;
+export function triggerSync() {
+  if (!enabled) return Promise.resolve();
+  if (!running) { running = runSync().finally(() => { running = null; }); return running; }
+  if (!queued) queued = running.then(() => { queued = null; return triggerSync(); });
+  return queued;
+}
+async function runSync() {
   if (typeof navigator !== 'undefined' && !navigator.onLine) return;
-
-  isSyncing = true;
+  let last;
   try {
-    const deviceId = await getDeviceId();
-    const ops = await idbGetAll('outbox');
-    const res = await postSync({ device_id: deviceId, client_now: Date.now(), ops });
-
-    // Đã áp dụng (kể cả gửi lại trùng) và bị từ chối vĩnh viễn (retry: false) thì rời outbox; lỗi tạm thời giữ lại
-    const drop = [...(res.applied || []), ...(res.rejected || []).filter((r) => !r.retry).map((r) => r.id)];
-    for (const opId of drop) await idbDelete('outbox', opId);
-
+    const deviceId = await getDeviceId(), rejected = [];
+    for (let round = 0; round < 25; round++) {
+      const ops = (await idbGetAll('outbox')).sort((a, b) => a.at - b.at).slice(0, CHUNK);
+      if (!ops.length && round > 0) break;
+      const res = await postSync({ device_id: deviceId, client_now: Date.now(), ops });
+      // Đã áp dụng (kể cả gửi lại trùng) và bị từ chối vĩnh viễn (retry: false) thì rời outbox; lỗi tạm thời giữ lại
+      const drop = [...(res.applied || []), ...(res.rejected || []).filter((r) => !r.retry).map((r) => r.id)];
+      for (const opId of drop) await idbDelete('outbox', opId);
+      rejected.push(...(res.rejected || []));
+      last = res;
+      if (ops.length < CHUNK || !drop.length) break;
+    }
     // Bản trạng thái máy chủ để giao diện đối chiếu; không ghi vào store `state` (khóa 'vandao.v1' do state.js giữ)
-    if (res.state) {
-      await idbSet('meta', 'serverState', res.state);
+    if (last && last.state) {
+      await idbSet('meta', 'serverState', last.state);
       for (const fn of listeners) {
-        try { fn(res.state, res); } catch { /* bỏ qua lỗi của bộ lắng nghe */ }
+        try { fn(last.state, { ...last, rejected }); } catch { /* bỏ qua lỗi của bộ lắng nghe */ }
       }
     }
-    return res;
+    return last;
   } catch (err) {
     console.warn('[Sync] Chưa đồng bộ được, giữ thao tác trong outbox:', err.message);
-  } finally {
-    isSyncing = false;
   }
 }
 

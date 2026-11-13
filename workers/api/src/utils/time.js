@@ -42,7 +42,8 @@ export function daysBetween(dateA, dateB) {
  * Kiểm tra tính hợp lệ của chuỗi IANA timezone
  */
 export function isValidTimeZone(tz) {
-  if (typeof tz !== 'string' || !tz.includes('/')) return false;
+  // Nhận mọi tên vùng mà trình duyệt báo qua Intl (kể cả 'UTC' và bí danh cũ như 'Asia/Saigon'); không nhận độ lệch '+07:00'
+  if (typeof tz !== 'string' || !/^[A-Za-z][A-Za-z0-9_+\-/]{1,63}$/.test(tz)) return false;
   try {
     Intl.DateTimeFormat(undefined, { timeZone: tz });
     return true;

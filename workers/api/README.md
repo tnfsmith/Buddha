@@ -33,9 +33,9 @@ Phân hệ API máy chủ và phục vụ tài nguyên tĩnh của dự án Vân
    - **Giới hạn tần suất và Turnstile** (`src/guard.js`): bảng giới hạn ở `docs/infra.md`. Turnstile (header `cf-turnstile-response`) bắt buộc cho `sign-in/recovery-code`, `device-link/start`, `email-otp/send-verification-otp` khi Worker có `TURNSTILE_SECRET`.
    - `GET /api/auth/session`: Lấy thông tin phiên hiện tại.
    - `POST /api/auth/sign-out`: Hủy phiên đăng nhập.
-   - `GET /api/v1/me`: Trả về hồ sơ, hành trình, phân khu mở (dùng `ZONE_UNLOCK` và `gateLevel` từ `@vandao/shared`), và tính tổng Kusala 3 trục (`duc`, `thien`, `tue`).
-   - `PATCH /api/v1/profile`: Cập nhật Tịnh danh (kiểm tra 4 quy tắc qua `@vandao/shared/tinh-danh.js`, giới hạn 30 ngày), múi giờ (giới hạn 7 ngày), diện mạo, cài đặt, quyền hiển thị.
-   - `POST /api/v1/sync`: đồng bộ Offline-first (tối đa 200 thao tác mỗi lần):
+   - `GET /api/v1/me`: Trả về hồ sơ, hành trình, phân khu mở (dùng `ZONE_UNLOCK` và `gateLevel` từ `@vandao/shared`), và tính tổng Kusala 3 trục (`duc`, `thien`, `tue`). Thêm `?entries=1` để lấy các dòng Kusala của chu kỳ hiện tại (không kèm ghi chú); client dùng khi khôi phục hành trình trên máy mới.
+   - `PATCH /api/v1/profile`: Cập nhật Tịnh danh (kiểm tra 4 quy tắc qua `@vandao/shared/tinh-danh.js`, giới hạn 30 ngày), múi giờ (mọi tên vùng `Intl` nhận, kể cả `UTC` và bí danh cũ như `Asia/Saigon`; giới hạn 7 ngày), diện mạo, cài đặt, quyền hiển thị.
+   - `POST /api/v1/sync`: đồng bộ Offline-first (tối đa **8** thao tác mỗi lần: gói Free cho 50 truy vấn D1 mỗi lần gọi Worker; client tự chia lô):
      - Mỗi thao tác ghi trong **một `db.batch`** (giao dịch D1) cùng dấu vết `sync_op`; gửi lại trùng `op.id` được trả trong `applied` để client xóa khỏi outbox.
      - Từ chối kèm `retry`: `false` là vĩnh viễn (client bỏ thao tác), `true` là lỗi tạm (`db_error`, giữ lại gửi sau).
      - Kẹp thời gian `[server_now - 7 ngày, server_now + 2 phút]`; thao tác có ngày trước `started_on` bị từ chối (`before_start`).
@@ -43,6 +43,8 @@ Phân hệ API máy chủ và phục vụ tài nguyên tĩnh của dự án Vân
      - **Khóa ngày một nguồn sự thật**: trước mỗi `kusala.confirm`, gọi `advance()` của `@vandao/shared/schedule.js` với ngày địa phương *của thao tác*; `payload.day` phải bằng ngày hiện tại (`day_locked` nếu vượt, `day_closed` nếu ngày đã qua). Đồng bộ dồn nhiều ngày ngoại tuyến vẫn tiến đúng 1 nấc mỗi ngày. `last_done_on` theo đúng nghĩa `S.lastDate` ở client (ngày xác nhận gần nhất).
      - `GET /api/v1/me` và cuối mỗi lần `sync` tự tiến ngày tới hôm nay theo cùng luật.
      - `journey.reset_cycle` ("Trở về ngày 1") mở chu kỳ mới, giữ Tịnh danh và diện mạo.
+     - `sacca.add` cộng một lời Chân thật (`sacca_count`).
+     - `legacy.import` đưa hành trình đang có trên máy lên lần đầu ("Giữ hành trình", T2.3): chỉ nhận khi hành trình máy chủ còn trống (`not_empty`); các ngày đã qua phải đủ ba trục và hệ số hợp lệ (`invalid_import`); máy chủ đặt `started_on = hôm nay − (day − 1)` và tính lại mọi `e_score`; ghi chú quán chiếu không gửi lên.
    - `GET /api/v1/export`: Xuất dữ liệu cá nhân theo Luật BVDLCN 91/2025 và GDPR.
    - `POST/DELETE /api/v1/account/delete`: Yêu cầu xóa tài khoản với thời gian ân hạn 7 ngày và hủy yêu cầu.
    - `POST /api/v1/rt/ticket`: vé HMAC-SHA256 (60 giây) vào phòng thời gian thực. Cần secret `RT_SECRET` (`npx wrangler secret put RT_SECRET [--env staging]`); thiếu thì trả 503, không có khóa mặc định.
@@ -55,8 +57,10 @@ Phân hệ API máy chủ và phục vụ tài nguyên tĩnh của dự án Vân
 
 4. **Tầng Mạng Client (`apps/web/src/net/`) & IndexedDB v2**:
    - `idb.js`: Đóng gói IndexedDB `vandao` phiên bản 2 thống nhất với các store `state`, `outbox`, `kusala`, `sessions`, `meta`.
-   - `api.js`: Client fetch tự động gán token, lưu trữ bookmark D1 (`x-d1-bookmark`).
-   - `sync.js`: hàng đợi `outbox`. **Chỉ đồng bộ khi đã có phiên** (người dùng bật "Giữ hành trình", T2.3 #12): `startAutoSync()` bật tự đồng bộ khi có mạng lại hoặc quay lại tab; không tự tạo tài khoản khách cho mọi người mở trang. Bản trạng thái máy chủ lưu ở `meta['serverState']`.
+   - `api.js`: gọi API bằng cookie phiên của Better Auth (cùng nguồn gốc): phiên, khách ẩn danh, passkey (WebAuthn), mã khôi phục, liên kết thiết bị, hồ sơ, đồng bộ, xuất/xóa dữ liệu. Lỗi ném `ApiError(status, code, message)`.
+   - `turnstile.js`: lấy token Turnstile (chỉ hiện thử thách khi Cloudflare cần) cho mã khôi phục và liên kết thiết bị.
+   - `account.js`: nối `S` trên máy với tài khoản: `keepJourney` (khách ẩn danh + hồ sơ + `legacy.import`), `afterSignIn` (khôi phục / đẩy lên / xung đột), `useSaved`/`useLocal`, `record`/`recordProfile`. Khi xung đột, đồng bộ chưa bật cho tới lúc người dùng chọn, nên bản trên máy không bị ghi đè.
+   - `sync.js`: hàng đợi `outbox`. **Chỉ đồng bộ khi đã có phiên** (người dùng bật "Giữ hành trình", T2.3 #12): gửi theo lô 8 thao tác; gọi `triggerSync()` trong lúc đang đồng bộ thì xếp thêm đúng một lượt ngay sau (thao tác vừa vào outbox không bị bỏ lại); `startAutoSync()` bật tự đồng bộ khi có mạng lại hoặc quay lại tab; không tự tạo tài khoản khách cho mọi người mở trang. Bản trạng thái máy chủ lưu ở `meta['serverState']`.
    - `apps/web/src/state.js`: `net/idb.js` là chủ lược đồ duy nhất; `state.js` giữ bản sao `S` ở store `state`, khóa `'vandao.v1'`, khôi phục khi localStorage bị xóa (T1.1).
 
 ---

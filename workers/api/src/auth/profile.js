@@ -4,7 +4,8 @@
 import { getLocalDate } from '../utils/time.js';
 
 export const DEFAULT_TZ = 'Asia/Ho_Chi_Minh';
-export const DEFAULT_LOOK = JSON.stringify({ v: 1, robe: 0, hair: 0, tone: 0 });
+// Diện mạo do client định nghĩa (people.js); máy chủ chỉ giữ JSON → mặc định rỗng, client tự điền
+export const DEFAULT_LOOK = '{}';
 export const DEFAULT_SETTINGS = JSON.stringify({ birds: { n: 4, freq: 1, vol: 0.5 }, music: { mode: 'ambient', vol: 0.6 }, tts: { enabled: true, rate: 1.0 }, radar: { enabled: true } });
 
 /** Khóa so trùng Tịnh danh: chữ thường tiếng Việt, NFC (đi cùng `tag` 4 số thành định danh hiển thị duy nhất) */

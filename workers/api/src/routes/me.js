@@ -44,6 +44,10 @@ meApp.get('/', authMiddleware, byUser('RL_API'), async (c) => {
     unlocked_zones: computeUnlockedZones(J ? J.day : 1),
     // khách chưa gắn passkey/mã khôi phục: hạn bị dọn nếu không hoạt động 90 ngày (app báo trước, §6.3)
     guest_purge_after: await guestPurgeAfter(db, user.id),
+    // ?entries=1: chi tiết Kusala của chu kỳ hiện tại, để máy mới dựng lại hành trình (T2.3)
+    entries: J && c.req.query('entries') ? ((await db.prepare(
+      'SELECT day, pillar, pre, during, post, wise, self, e_score, at FROM kusala_entry WHERE user_id = ? AND program = ? AND cycle = ? ORDER BY day',
+    ).bind(user.id, J.program, J.cycle).all()).results || []) : undefined,
     server_now: now,
   });
 });
