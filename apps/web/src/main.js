@@ -7,6 +7,7 @@ import { Ambient, SONGS, SONG, MOODS, pickSong, probeSong } from './music.js';
 import { OPTIONS, PRESETS, checkName, suggestNames } from './people.js';
 import { S, mem, save, allDone, today, resetState, stateReady } from './state.js';
 import { registerPWA, persistStorage } from './boot.js';
+import { startMetrics } from './net/metrics.js';
 import { $, fmt, esc } from './ui/dom.js';
 
 
@@ -455,5 +456,6 @@ if (hash.zone) goZone(hash.zone);
 if (world && world.tween && hash.snap !== undefined) world.tween.k = 0.999;
 window.__app = { player, world, offlineProbe, amb, probeSong, SONGS, state: () => S, U, stateReady };
 registerPWA();
+startMetrics();   // T1.3 (#8): số liệu ẩn danh, chỉ khi chạy qua http(s) và không bật Do Not Track
 if (S.name) persistStorage();
 requestAnimationFrame(frame);
