@@ -11,6 +11,7 @@ import rtApp from './routes/rt.js';
 import contentApp from './routes/content.js';
 import metricsApp from './routes/metrics.js';
 import { byIp, turnstile } from './guard.js';
+import { runCron } from './cron.js';
 
 const app = new Hono();
 
@@ -75,4 +76,8 @@ app.onError((err, c) => {
   return c.json({ error: { code: 'internal_error', message: 'Lỗi xử lý nội bộ máy chủ' } }, 500);
 });
 
+// Cron Trigger (wrangler.jsonc → triggers.crons): dọn dữ liệu hằng đêm
+app.scheduled = (controller, env, ctx) => { ctx.waitUntil(runCron(env, controller.scheduledTime || Date.now())); };
+
+export { app };
 export default app;

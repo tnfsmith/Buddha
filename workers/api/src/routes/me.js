@@ -6,6 +6,7 @@ import { authMiddleware } from '../auth/session.js';
 import { ZONE_UNLOCK, gateLevel } from '@vandao/shared';
 import { getLocalDate } from '../utils/time.js';
 import { bad, currentJourney, kusalaTotals } from '../lib.js';
+import { guestPurgeAfter } from '../cron.js';
 
 const meApp = new Hono();
 
@@ -41,6 +42,8 @@ meApp.get('/', authMiddleware, byUser('RL_API'), async (c) => {
     journey: J,
     totals: J ? await kusalaTotals(db, user.id, J) : { duc: 0, thien: 0, tue: 0, all: 0 },
     unlocked_zones: computeUnlockedZones(J ? J.day : 1),
+    // khách chưa gắn passkey/mã khôi phục: hạn bị dọn nếu không hoạt động 90 ngày (app báo trước, §6.3)
+    guest_purge_after: await guestPurgeAfter(db, user.id),
     server_now: now,
   });
 });
