@@ -1,0 +1,17 @@
+{
+  "name": "@vandao/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vân Đạo API worker (Hono, D1, Sync, Auth)",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy:staging": "wrangler deploy --env staging",
+    "deploy:production": "wrangler deploy"
+  },
+  "dependencies": {
+    "hono": "^4.7.2",
+    "@vandao/shared": "file:../../packages/shared"
+  }
+}

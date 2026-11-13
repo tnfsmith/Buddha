@@ -1,0 +1,52 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "vandao",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "routes": [
+    { "pattern": "vandao.ainextbrain.com", "custom_domain": true }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "vandao-core",
+      "database_id": "placeholder-production-db-id",
+      "migrations_dir": "../../db/migrations"
+    }
+  ],
+  "kv_namespaces": [
+    { "binding": "CONFIG", "id": "placeholder-production-kv-id" }
+  ],
+  "r2_buckets": [
+    { "binding": "MEDIA", "bucket_name": "vandao-media" }
+  ],
+  "observability": { "enabled": true },
+  "env": {
+    "staging": {
+      "name": "vandao-staging",
+      "workers_dev": true,
+      "routes": [],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "vandao-core-staging",
+          "database_id": "a9c4ecd2-2084-4aa8-9a63-a2e716d06044",
+          "migrations_dir": "../../db/migrations"
+        }
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "CONFIG",
+          "id": "52f5a88f999344b5a04ec7aa1ae84325"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "MEDIA",
+          "bucket_name": "vandao-media-staging"
+        }
+      ]
+    }
+  }
+}
