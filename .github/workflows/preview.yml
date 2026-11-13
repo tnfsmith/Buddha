@@ -52,7 +52,11 @@ jobs:
         if: always() && steps.up.outputs.url != ''
         continue-on-error: true
         uses: actions/upload-artifact@v5
-        with: { name: lighthouse-pr-${{ github.event.pull_request.number }}, path: .lighthouseci/, retention-days: 14, if-no-files-found: ignore }
+        with:
+          name: lighthouse-pr-${{ github.event.pull_request.number }}
+          path: .lighthouseci/
+          retention-days: 14
+          if-no-files-found: ignore
       - name: Kiểm khói bản preview
         if: steps.up.outputs.url != ''
         run: npm run e2e:smoke
