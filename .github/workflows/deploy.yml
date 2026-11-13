@@ -31,8 +31,11 @@ jobs:
         id: dep
         working-directory: workers/api
         run: |
+          set -o pipefail   # wrangler lỗi thì bước này phải đỏ (không bị `tee` che mất mã thoát)
           npx wrangler deploy --env staging --message "main ${GITHUB_SHA::7}" | tee /tmp/dep.txt
-          echo "url=$(grep -oE 'https://[^ ]+\.workers\.dev' /tmp/dep.txt | head -1)" >> "$GITHUB_OUTPUT"
+          url=$(grep -oE 'https://[^ ]+\.workers\.dev' /tmp/dep.txt | head -1)
+          [ -n "$url" ] || { echo "Không đọc được URL staging từ wrangler, dừng để kiểm khói không chạy nhầm bản cục bộ"; exit 1; }
+          echo "url=$url" >> "$GITHUB_OUTPUT"
       - name: Kiểm khói staging
         run: npm run e2e:smoke
         env: { E2E_BASE_URL: '${{ steps.dep.outputs.url }}' }
