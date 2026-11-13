@@ -14,12 +14,14 @@ import * as schema from './schema.js';
 import { generateId } from '../utils/crypto.js';
 import { ensureProfile } from './profile.js';
 import { linkGuest } from './link.js';
+import { markSecured } from './secured.js';
+import { freeLogin } from './free-login.js';
+
+export { markSecured };
 
 const DAY = 24 * 60 * 60;
 const DEV_ORIGINS = ['http://127.0.0.1:8787', 'http://localhost:8787', 'http://127.0.0.1:4173', 'http://localhost:4173'];
 
-/** Tài khoản đã có cách đăng nhập lại (passkey…) thì không còn là "khách": không bị cron dọn khách 90 ngày */
-export const markSecured = (db, uid) => db.prepare('UPDATE user SET isAnonymous = 0, updatedAt = ? WHERE id = ?').bind(Date.now(), uid).run();
 
 const secured = (db) => ({
   id: 'vandao-secured',
@@ -40,6 +42,7 @@ export function createAuth(env, request, extraPlugins = []) {
     bearer(),
     passkey({ rpID: url.hostname, rpName: 'Vân Đạo', origin }),
     secured(env.DB),
+    freeLogin(env.DB),
     ...extraPlugins,
   ];
   if (env.EMAIL_OTP === '1' && env.EMAIL) {

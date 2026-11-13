@@ -1,5 +1,6 @@
 // workers/api/src/routes/me.js
 // Trạng thái tổng thể của hành giả (PROJECT_ROADMAP.md §5)
+import { byUser } from '../guard.js';
 import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
 import { ZONE_UNLOCK, gateLevel } from '@vandao/shared';
@@ -26,7 +27,7 @@ export const profileView = (p) => ({
   tz: p.tz, visibility: p.visibility, pref_seat: p.pref_seat, rev: p.rev,
 });
 
-meApp.get('/', authMiddleware, async (c) => {
+meApp.get('/', authMiddleware, byUser('RL_API'), async (c) => {
   const user = c.get('user'), db = c.env.DB, now = Date.now();
   const profileRow = await db.prepare(
     'SELECT tinh_danh, tag, look_json, settings_json, island_json, tz, visibility, pref_seat, rev FROM profile WHERE user_id = ?',

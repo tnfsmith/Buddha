@@ -23,6 +23,14 @@ Phân hệ API máy chủ và phục vụ tài nguyên tĩnh của dự án Vân
      - `/sign-in/social` (Google, khi có secret); `/email-otp/*` (khi `EMAIL_OTP=1`).
      - Tịnh danh để trống tới khi người dùng tự đặt qua `PATCH /api/v1/profile`.
      - Khách đăng nhập vào tài khoản đã có thì dữ liệu được gộp (`src/auth/link.js`).
+     - **Gói Free (§6.4, `src/auth/free-login.js`):**
+       - Mã khôi phục: `POST /recovery-code/generate` hiện mã 26 ký tự một lần (máy chủ chỉ lưu SHA-256); `GET /recovery-code/status`; `POST /sign-in/recovery-code {code}` (gõ thường, có khoảng trắng đều được).
+       - QR liên kết thiết bị:
+         1. Máy mới gọi `POST /device-link/start` → `{code, secret, qr}`; mã sống 2 phút.
+         2. Máy đã đăng nhập xem `GET /device-link/info?code=` rồi `POST /device-link/approve {code}`.
+         3. Máy mới hỏi `POST /sign-in/device-link {code, secret}` mỗi 2 giây: `{status:'pending'}` → `{status:'approved', token, user}`. Mã dùng một lần.
+       - Gắn passkey hoặc tạo mã khôi phục → tài khoản thôi là khách (`isAnonymous = 0`).
+   - **Giới hạn tần suất và Turnstile** (`src/guard.js`): bảng giới hạn ở `docs/infra.md`. Turnstile (header `cf-turnstile-response`) bắt buộc cho `sign-in/recovery-code`, `device-link/start`, `email-otp/send-verification-otp` khi Worker có `TURNSTILE_SECRET`.
    - `GET /api/auth/session`: Lấy thông tin phiên hiện tại.
    - `POST /api/auth/sign-out`: Hủy phiên đăng nhập.
    - `GET /api/v1/me`: Trả về hồ sơ, hành trình, phân khu mở (dùng `ZONE_UNLOCK` và `gateLevel` từ `@vandao/shared`), và tính tổng Kusala 3 trục (`duc`, `thien`, `tue`).

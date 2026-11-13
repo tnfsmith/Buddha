@@ -4,8 +4,11 @@ import app from '../src/index.js';
 
 export { env };
 export const DAY = 24 * 60 * 60 * 1000, TZ = 'Asia/Ho_Chi_Minh';
+// mỗi lần gọi một IP giả khác nhau, để giới hạn 5 lần đăng nhập/phút/IP không chạm vào các ca không kiểm giới hạn
+let ipN = 0;
+export const nextIp = () => `198.51.100.${(ipN = (ipN % 250) + 1)}`;
 export const call = (path, init = {}, token) => app.request(path, {
-  ...init, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(init.headers || {}) },
+  ...init, headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': nextIp(), ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(init.headers || {}) },
 }, env);
 export const json = async (res) => ({ status: res.status, data: await res.json().catch(() => null), headers: res.headers });
 

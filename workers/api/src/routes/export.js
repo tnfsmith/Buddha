@@ -1,11 +1,12 @@
 // workers/api/src/routes/export.js
 // Xuất toàn bộ dữ liệu người dùng (Luật BVDLCN 91/2025, GDPR - PROJECT_ROADMAP.md §5, §15)
+import { perDay } from '../guard.js';
 import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
 
 const exportApp = new Hono();
 
-exportApp.get('/', authMiddleware, async (c) => {
+exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
   const user = c.get('user');
   const db = c.env.DB;
   const now = Date.now();

@@ -15,6 +15,8 @@ export default defineConfig(async () => {
         compatibilityFlags: ['nodejs_compat'],
         d1Databases: ['DB'],
         kvNamespaces: ['CONFIG'],
+        ratelimits: Object.fromEntries([['RL_AUTH', 5], ['RL_POLL', 60], ['RL_OTP', 3], ['RL_SYNC', 30], ['RL_API', 60], ['RL_TICKET', 20]]
+          .map(([n, limit], i) => [n, { namespace_id: String(1001 + i), simple: { limit, period: 60 } }])),
         bindings: { TEST_MIGRATIONS: migrations, BETTER_AUTH_SECRET: 'kiem-thu-khong-dung-o-dau-ca-0123456789', RT_SECRET: 'test-shared-secret-123', ENV_NAME: 'test' },
       },
     })],
