@@ -1,0 +1,48 @@
+# Làn sở hữu (PROJECT_ROADMAP.md §14.2, §14.7): tiền tố nhánh → glob được phép sửa.
+# Tệp thuộc "shared" chỉ qua được khi PR có nhãn `shared-ok`. scripts/lane-guard.mjs đọc tệp này.
+owner:                                  # nhánh owner/ (việc [O] hoặc chủ dự án giao): sửa mọi nơi, vẫn qua PR
+  - '**'
+claude:
+  - apps/web/src/{world,island,people,realm,birds,gfx,audio,music,sermon}.js
+  - apps/web/src/{rt,cong-duc}/**
+  - workers/realtime/**
+  - tests/e2e/**
+antigravity:
+  - workers/api/**
+  - db/**
+  - apps/web/src/net/**
+  - apps/android/**
+  - apps/web/{wrangler.jsonc,worker.js}
+  - .github/**
+  - scripts/**
+  - tests/load/**
+hermes:
+  - content/**
+  - ops/**
+  - docs/reports/**
+deps:                                   # renovate/ và dependabot/: chỉ cập nhật phiên bản
+  - '**/package.json'
+  - package-lock.json
+  - .github/workflows/**
+shared:
+  - packages/shared/**
+  - apps/web/src/{main,boot,state,data}.js
+  - apps/web/src/ui/**
+  - apps/web/src/index.template.html
+  - apps/web/{build.mjs,shot.mjs,package.json,README.md,DEPLOY.md}
+  - package.json
+  - package-lock.json
+  - '*.config.js'
+  - .gitattributes
+  - .editorconfig
+  - .nvmrc
+  - .gitignore
+  - AGENTS.md
+  - CLAUDE.md
+  - PROJECT_ROADMAP.md
+  - van-dao-tom-tat-thiet-ke.md
+  - docs/**
+rules:
+  migrations_only_from: [antigravity, owner]   # tệp mới trong db/migrations
+  migrations_append_only: true                 # sửa/xóa/đổi tên migration đã merge → đỏ
+  hotfix_allows: [claude, antigravity, shared]

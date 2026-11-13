@@ -1,0 +1,50 @@
+# Bản preview cho mỗi PR trên tài khoản Cloudflare staging (PROJECT_ROADMAP.md §14.8). Không đụng production.
+name: preview
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  preview:
+    # chỉ PR từ chính repo mới được dùng secrets
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CF_STAGING_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_STAGING_ACCOUNT_ID }}
+      PR: ${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 26, cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - name: Tạo Worker staging nếu chưa có
+        working-directory: apps/web
+        run: npx wrangler deployments list --env staging >/dev/null 2>&1 || npx wrangler deploy --env staging
+      - name: Tải phiên bản preview (không đổi bản staging đang chạy)
+        id: up
+        working-directory: apps/web
+        run: |
+          npx wrangler versions upload --env staging --preview-alias "pr-$PR" --message "PR #$PR ${GITHUB_SHA::7}" | tee /tmp/up.txt
+          url=$(grep -oE 'https://pr-[^ ]+\.workers\.dev' /tmp/up.txt | head -1)
+          [ -n "$url" ] || url=$(grep -oE 'https://[^ ]+\.workers\.dev' /tmp/up.txt | head -1)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - name: Kiểm khói bản preview
+        if: steps.up.outputs.url != ''
+        run: npm run e2e:smoke
+        env: { E2E_BASE_URL: '${{ steps.up.outputs.url }}' }
+      - name: Bình luận link preview vào PR
+        if: steps.up.outputs.url != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          URL: ${{ steps.up.outputs.url }}
+        run: |
+          body="Preview PR #$PR (tài khoản Cloudflare staging): $URL — commit ${GITHUB_SHA::7}"
+          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --edit-last --body "$body" 2>/dev/null || gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "$body"

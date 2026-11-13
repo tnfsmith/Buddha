@@ -4,7 +4,7 @@ import { Player, TR, EV, offlineProbe } from './audio.js';
 import { DUR, STAGES, TIERS, ZONES, WEEKS, PILLARS, valueAt, breathEnv, stageAt, kusala } from './data.js';
 import { SUTTAS, Sermon } from './sermon.js';
 import { Ambient, SONGS, SONG, MOODS, pickSong, probeSong } from './music.js';
-import { OPTIONS, PRESETS, defaultLook, checkName, suggestNames, tidyName } from './people.js';
+import { OPTIONS, PRESETS, checkName, suggestNames } from './people.js';
 import { S, mem, save, allDone, today, resetState } from './state.js';
 import { $, fmt, esc } from './ui/dom.js';
 
