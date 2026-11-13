@@ -12,7 +12,7 @@
 * **Trạng thái hiện tại:**
   * Client: Single-player 3D WebGL (Three.js) + Âm thanh sinh trực tiếp (Web Audio API) đóng gói trong 1 file HTML độc lập (`dist/van-dao.html` hoặc `van-dao.html` ~983KB).
   * Hosting & Edge: Triển khai trên **Cloudflare Workers** (Custom domain `vandao.ainextbrain.com`).
-  * Trạng thái roadmap: Bước 1 (CI/CD GitHub -> Cloudflare) đã chạy. **Lộ trình hiện hành là `PROJECT_ROADMAP.md` bản 2 (GĐ0–GĐ8)**; lược đồ D1, API, quy trình phân lane Claude/Antigravity ở đó thay thế mục 4 bên dưới.
+  * Trạng thái roadmap: Bước 1 (CI/CD GitHub -> Cloudflare) đã chạy. **Lộ trình hiện hành là `PROJECT_ROADMAP.md` bản 3 (GĐ0–GĐ10, 13/11/2026)**; lược đồ D1, API, Tầng 0, Đại Công Đức, quy trình phân lane Claude/Antigravity/Hermes và deploy theo tag ở đó thay thế mục 4 bên dưới.
 
 ### Các nguyên tắc bất di bất dịch (Core Invariants):
 1. **Không thương mại hóa Chánh Pháp:** Hệ thống hướng đến doanh nghiệp xã hội hai động cơ, không bán Pháp.
@@ -52,7 +52,7 @@ Buddha/ (Root Workspace & Git Repo)
 │       └── deploy.yml              # CI/CD tự động build & deploy lên Cloudflare
 ├── .gitignore                      # Loại trừ node_modules, dist, logs, env
 ├── CLAUDE.md                       # File chỉ dẫn này (Dành cho Claude & AI Agents)
-├── PROJECT_ROADMAP.md              # Kế hoạch chi tiết 3 bước và kiến trúc kỹ thuật
+├── PROJECT_ROADMAP.md              # Lộ trình kỹ thuật hiện hành (bản 3) — đọc trước khi nhận việc
 ├── van-dao-tom-tat-thiet-ke.md     # Bản tóm tắt thiết kế 6 khối (cập nhật bản 10)
 ├── van-dao.html                    # Bản build phân phối độc lập offline
 ├── package.json                    # Workspace root scripts chuyển tiếp
@@ -86,7 +86,7 @@ Buddha/ (Root Workspace & Git Repo)
 Thao tác tại thư mục gốc workspace hoặc trong `van-dao-src/`:
 
 ```bash
-# 1. Cài đặt dependencies (yêu cầu Node.js >= 20):
+# 1. Cài đặt dependencies (chuẩn Node.js 26 LTS; CI được nâng ở nhiệm vụ GĐ0 T0.2):
 cd van-dao-src && npm install
 
 # 2. Dựng bản web đơn (tạo ra dist/van-dao.html):
@@ -106,7 +106,7 @@ npm run deploy
 
 ## 4. LỘ TRÌNH 3 BƯỚC CHO CÁC BƯỚC TIẾP THEO
 
-> **Đã được thay thế bởi `PROJECT_ROADMAP.md` bản 2 (12/11/2026).** Phần dưới giữ lại để tham khảo lịch sử; khi mâu thuẫn (lược đồ DB, khung 16 byte, quy trình deploy), làm theo `PROJECT_ROADMAP.md`.
+> **Đã được thay thế bởi `PROJECT_ROADMAP.md` bản 3 (13/11/2026).** Phần dưới giữ lại để tham khảo lịch sử; khi mâu thuẫn (lược đồ DB, khung 16 byte, quy trình deploy), làm theo `PROJECT_ROADMAP.md`.
 
 ### Bước 1 (HIỆN TẠI): Chuẩn hóa Repo, GitHub & Cloudflare CI/CD
 * Quản lý toàn bộ source code trên GitHub.

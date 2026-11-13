@@ -1,24 +1,29 @@
-# VÂN ĐẠO — LỘ TRÌNH KỸ THUẬT & THIẾT KẾ PRODUCTION (bản 2)
+# VÂN ĐẠO — LỘ TRÌNH KỸ THUẬT & THIẾT KẾ PRODUCTION (bản 3)
 
-> **Ngày lập:** 12/11/2026 · **Thay thế:** bản 1 (3 bước: CI/CD → Auth & D1 → Multiplayer).
-> **Phạm vi:** kiểm định hiện trạng, kiến trúc đích trên hệ sinh thái Cloudflare, lược đồ dữ liệu đầy đủ, đăng nhập đơn giản, đồng bộ offline-first, thời gian thực nhiều người, ứng dụng Android (APK/AAB), quy trình để Claude và Antigravity làm song song không xung đột, và kế hoạch theo giai đoạn.
-> **Thứ tự ưu tiên khi mâu thuẫn:** Các nguyên tắc bất di bất dịch trong `CLAUDE.md` (mục 1) > tài liệu này > `van-dao-tom-tat-thiet-ke.md`. Riêng lộ trình, lược đồ DB và quy trình làm việc thì tài liệu này thay thế mục 4 của `CLAUDE.md`.
-> **Ký hiệu:** `[n]` là nguồn ở Phụ lục F. Các con số chi phí/năng lực là **ước lượng** cần đo lại bằng tải thật.
+> **Ngày lập:** 13/11/2026 · **Thay thế:** bản 2 (12/11/2026). Bản 3 bổ sung: Tầng 0 chuẩn Pháp hành – Ba-la-mật theo hoàn cảnh từng người; theo dõi – nhắc nhở – tích lũy; không gian cộng đồng Hộ Trì & thiện nguyện; khu **Đại Công Đức** (affiliate Shopee/TikTok Shop/WooCommerce, Gieo Duyên, chiến dịch thiện nguyện, Sổ Minh Bạch); đánh giá có số đo và lộ trình hiện đại hóa 3D; chạy trên gói Workers Free rồi nâng Paid khi cần; Node.js 26 LTS; làn việc thứ ba cho **Hermes**; tách dev/staging/production không cần GitHub Pro.
+> **Thứ tự ưu tiên khi mâu thuẫn:** nguyên tắc bất di bất dịch trong `CLAUDE.md` (mục 1) > tài liệu này > `van-dao-tom-tat-thiet-ke.md`. Lộ trình, lược đồ DB, API và quy trình làm việc trong tài liệu này thay thế mục 4 của `CLAUDE.md`.
+> **Ký hiệu:** `[n]` là nguồn ở Phụ lục I. Số chi phí/năng lực là **ước lượng** phải đo lại bằng tải thật. "Tài liệu gốc" = `chuong trinh thien-1.pdf`.
+> **Mục lục:** 0 Tóm tắt · 1 Kiểm định · 2 Nguyên tắc · 3 Kiến trúc Cloudflare · 4 Dữ liệu · 5 API · 6 Tài khoản · 7 Thời gian thực · 8 Tầng 0 Pháp hành · 9 Theo dõi & nhắc nhở · 10 Cộng đồng Hộ Trì · 11 Đại Công Đức · 12 3D & trải nghiệm · 13 Android · 14 Cộng tác 3 agent · 15 Bảo mật & pháp lý · 16 Nội dung · 17 Phiên bản · 18 Cấu trúc repo · 19 Kế hoạch giai đoạn · 20 Vận hành · 21 Quyết định & rủi ro · Phụ lục A–I.
 
 ---
 
 ## 0. TÓM TẮT ĐIỀU HÀNH
 
-**Kết luận kiểm định:** Vân Đạo **chưa đạt mức production** cho một ứng dụng tu tập nhiều người. Hiện tại là một **bản trải nghiệm một người dùng chất lượng cao**, trong đó **Giai đoạn 0 (Sơ nhập Tịnh Cảnh, 49 ngày)** đã hoàn chỉnh ở phía trình duyệt; **Tầng 1–4 mới có không gian 3D và văn mô tả**, chưa có chương trình tu học, điều kiện mở tầng hay các cơ chế cộng đồng mà chính `data.js` mô tả (dẫn dắt người sơ nhập, nhóm đồng tu, điều phối…).
+**Kết luận kiểm định:** mã hiện tại vẫn là bản trải nghiệm một người dùng, **chưa production**. Sau bản 3, **thiết kế** đã có đủ các khối cần cho production (tài khoản, đồng bộ, nhiều người, cộng đồng, Đại Công Đức, Android, vận hành, pháp lý) để bắt tay GĐ0. Chỉ được gọi là production khi qua nghiệm thu GĐ9 (tải, bảo mật, pháp lý, hiệu năng trên máy thật). Ba việc không giải quyết bằng mã và phải có trước khi mở cộng đồng/Đại Công Đức: (1) pháp nhân doanh nghiệp xã hội cùng hồ sơ TMĐT/affiliate, (2) Hội đồng cố vấn Pháp học duyệt nội dung, (3) người trực kiểm duyệt cộng đồng.
 
-**Năm việc chặn production (theo thứ tự rủi ro):**
-1. Toàn bộ hành trình chỉ nằm trong `localStorage` của một trình duyệt: xóa dữ liệu trình duyệt hay đổi máy là mất 49 ngày tu tập.
-2. Khóa "1 nấc mỗi ngày" dựa vào đồng hồ máy người dùng; chỉnh giờ máy là nhảy ngày.
-3. Không có tài khoản, máy chủ, sao lưu, giám sát, kiểm thử tự động hay chính sách dữ liệu cá nhân.
-4. CI đẩy thẳng mọi commit trên `main` lên production; repo commit cả file build ~1 MB (`van-dao.html`) và bỏ qua `package-lock.json` → xung đột merge và bản build không tái lập được khi hai agent cùng làm.
-5. Công cụ đã lỗi thời: `wrangler ^3.114` (v3 hết hỗ trợ sửa lỗi từ Q1/2026, chỉ còn vá bảo mật nghiêm trọng đến Q1/2027 [14]); workflow chạy Node 20 (hết hạn 30/4/2026 [16]) và `actions/*@v4` (GitHub đã gỡ Node 20 khỏi runner từ 23/9/2026 [17]).
+**3D:** chạy ổn định trên máy tính (không lỗi console, có chất lượng thích ứng) nhưng **nặng với điện thoại**: đo ngày 13/11/2026 ở mức chất lượng cao ra 685 lệnh vẽ và ~1,40 triệu tam giác mỗi khung ở Vân Đảo (§1.5). Hướng xử lý: tối ưu WebGL trước (GĐ1), chuyển WebGPURenderer + TSL có dự phòng WebGL2 sau (GĐ7).
 
-**Hướng đi:** giữ nguyên lõi client nhẹ (Three.js + Web Audio, không framework nặng), thêm một Worker API (Hono + Better Auth + D1), một Worker thời gian thực (Durable Objects + WebSocket Hibernation), PWA offline-first, rồi đóng gói Android bằng Capacitor. Toàn bộ chạy trên Cloudflare (gói Workers Paid).
+**Bổ sung chính của bản 3:**
+1. **Tầng 0** dựa trên 10 Phước nghiệp sự như tài liệu gốc, gắn 10 Ba-la-mật; nhiệm vụ có biến thể theo thời gian, hoàn cảnh, khả năng từng người; việc thiện luôn có lựa chọn **không tốn tiền** (§8).
+2. **Theo dõi riêng tư** (không bảng xếp hạng), **nhắc nhở nhẹ** (thông báo cục bộ, Web Push, ngày Bát quan trai theo âm lịch), chứng thực chéo cuối tuần (§9).
+3. **Bảng Hộ Trì:** cần giúp/có thể giúp, hỏi Pháp, sự kiện thiện nguyện; **cấm kêu gọi tiền cá nhân**; kiểm duyệt AI + người (§10).
+4. **Đại Công Đức:** tách hẳn khỏi không gian tu tập; gian hàng Chánh Mạng (affiliate có kiểm duyệt theo AN 5.177), Gieo Duyên vận hành qua VietQR, chiến dịch của đối tác hợp pháp, Sổ Minh Bạch và sổ cái tác động băm chuỗi (§11).
+5. **Gói Free trước:** bảng ngưỡng nâng Paid (§3.3). Khi còn Free không có Email Sending → đăng nhập bằng passkey, Google, mã QR liên kết thiết bị, mã khôi phục (§6.4).
+6. **Node.js 26 LTS** cho mọi công cụ (§17); **Hermes** nhận làn vận hành – danh mục – giám sát; CI **lane-guard** + deploy theo **tag** giữ dev và production tách bạch mà không cần GitHub Pro (§14).
+
+**Về hình mẫu Cấp Cô Độc:** ngài là **cư sĩ tại gia**, không phải vị tăng; Đức Phật tuyên bố ngài đứng đầu các nam cư sĩ về bố thí [46] và ngài chứng Tu-đà-hoàn [46b]. Đại Công Đức theo đúng vai trò đó như tài liệu gốc: người tại gia kinh doanh chân chính để hộ trì; Tăng Ni chỉ cố vấn Pháp học, không tham gia thương mại.
+
+**Bắt đầu GĐ0:** danh sách "Sẵn sàng GĐ0" ở §19.1.
 
 ---
 
@@ -50,12 +55,12 @@ Bốn tầng mang tên biểu trưng của bốn quả Thánh (Nhập Lưu, Nh�
 | 3 · Bất Lai | Thiền từ & thiền quán mỗi ngày; **điều phối, giải đáp, sách tấn nhóm sơ nhập** | Chưa có | Vai trò điều phối, hỏi–đáp có kiểm duyệt |
 | 4 · Vô Học | Chánh niệm mọi oai nghi; **hộ pháp ẩn danh** | Chưa có | Chế độ phụng sự ẩn danh (giúp người khác mà không hiện tên) |
 
-**Thiếu lớn nhất là nội dung**, không phải mã: chương trình tu học của Tầng 1–4 chưa tồn tại (chỉ Giai đoạn 0 có 7 tuần nhiệm vụ). Cần một người hướng dẫn chuyên môn duyệt (xem §11).
+**Thiếu lớn nhất là nội dung**, không phải mã: chương trình tu học của Tầng 1–4 chưa tồn tại (chỉ Giai đoạn 0 có 7 tuần nhiệm vụ). Cần một người hướng dẫn chuyên môn duyệt (xem §16).
 
 **Nguyên tắc đạo đức sản phẩm bổ sung:**
 - Không bảng xếp hạng Kusala, không so sánh điểm giữa người với người; điểm là để tự soi, chỉ chủ nhân thấy. Cộng đồng chỉ thấy số liệu tổng hợp ẩn danh ("hôm nay có N thời thiền được hồi hướng").
 - Không thông báo thúc ép kiểu mạng xã hội; nhắc nhở mặc định tắt, người dùng tự bật và chọn giờ.
-- Nhật ký quán chiếu (`note`) mặc định **chỉ lưu trên máy**; đồng bộ lên máy chủ phải là lựa chọn chủ động (xem §10).
+- Nhật ký quán chiếu (`note`) mặc định **chỉ lưu trên máy**; đồng bộ lên máy chủ phải là lựa chọn chủ động (xem §15).
 
 ### 1.3 Khoảng trống kỹ thuật
 
@@ -68,11 +73,11 @@ Bốn tầng mang tên biểu trưng của bốn quả Thánh (Nhập Lưu, Nh�
 | CI/CD | Mọi push lên `main` → production; không preview, không kiểm thử chặn | Cao | GĐ0 |
 | Repo | Commit file build `van-dao.html` (~0,96 MB), bỏ qua lockfile; người dùng đẩy từ Windows (rủi ro CRLF) | Cao | GĐ0 |
 | Phiên bản | wrangler 3, Node 20, `actions/*@v4` | Cao | GĐ0 |
-| Hiệu năng di động | Cảnh nhiều tam giác và lệnh vẽ; chưa đo FPS trên máy thật | Trung bình | GĐ1, GĐ7 |
+| Hiệu năng di động | Cảnh nhiều tam giác và lệnh vẽ; chưa đo FPS trên máy thật | Trung bình | GĐ1, GĐ7 (§12) |
 | Kiểm thử | Chỉ có `shot.mjs` (Chrome headless) | Cao | GĐ0 |
-| Quan sát | Không log, không số liệu, không cảnh báo | Cao | GĐ2, GĐ7 |
-| Pháp lý | Chưa có điều khoản, đồng ý, xuất/xóa dữ liệu theo Luật BVDLCN 2025 | Chặn trước khi mở đăng ký | GĐ2, GĐ7 |
-| Khả năng tiếp cận | Có đọc giọng nói; thiếu giảm chuyển động, kiểm tra tương phản | Trung bình | GĐ7 |
+| Quan sát | Không log, không số liệu, không cảnh báo | Cao | GĐ2, GĐ9 |
+| Pháp lý | Chưa có điều khoản, đồng ý, xuất/xóa dữ liệu theo Luật BVDLCN 2025 | Chặn trước khi mở đăng ký | GĐ2, GĐ9 |
+| Khả năng tiếp cận | Có đọc giọng nói; thiếu giảm chuyển động, kiểm tra tương phản | Trung bình | GĐ9 |
 
 ### 1.4 Hiệu chỉnh các điểm chưa chính xác của bản 1
 
@@ -86,6 +91,35 @@ Bốn tầng mang tên biểu trưng của bốn quả Thánh (Nhập Lưu, Nh�
 | Khung 16 byte mỗi người | Đúng hướng nhưng thiếu khung gộp, endian, nhịp gửi | Đặc tả đầy đủ ở §7.3 |
 | Deploy mỗi lần push `main` | Không có cổng kiểm soát | Preview mỗi PR → staging khi merge → production khi gắn tag |
 
+### 1.5 Đo hiệu năng 3D (13/11/2026)
+
+Đo bằng Chrome headless (SwiftShader), 1440×757, DPR 1, mức chất lượng 2, đọc `renderer.info` trung bình 2 khung:
+
+| Chế độ | Lệnh vẽ/khung | Tam giác/khung |
+|---|---|---|
+| Vân Đảo | 685 | ~1,40 triệu |
+| Đại Thiền Đường | 356 | ~1,22 triệu |
+| Toàn cảnh | 705 | ~1,41 triệu |
+
+Kèm theo: 448–468 geometry, 32 texture, 52 chương trình shader; bản HTML đơn ~0,97 MB (gồm font và three.js). Headless không đo được FPS trên GPU thật; GĐ1 thêm đo trên máy thật.
+
+**Đánh giá:** các khuyến nghị hiệu năng Three.js 2026 đặt mục tiêu dưới ~100 lệnh vẽ mỗi khung và cho biết instancing/batching có thể giảm hơn 90 % lệnh vẽ [32]. Số hiện tại vượt nhiều lần ngưỡng cho điện thoại tầm trung → **chạy được nhưng chưa đạt chuẩn production trên mobile**. Cảnh có ~15 vật liệu shader tự viết (8 `ShaderMaterial`, 7 `onBeforeCompile`) và `EffectComposer`/`UnrealBloomPass` — đây là phần phải viết lại khi lên WebGPU (§12).
+
+### 1.6 Bảng kiểm production sau bản 3
+
+| Khối | Thiết kế bản 3 | Còn thiếu trước khi gọi là production |
+|---|---|---|
+| Tài khoản, đồng bộ, khóa ngày | Đủ (§4–§6) | Mã + kiểm thử GĐ2 |
+| Tầng 0 Pháp hành, theo dõi, nhắc nhở | Đủ khung (§8–§9) | Nội dung biến thể đã duyệt; thử với nhóm người dùng thật |
+| Nhiều người cùng lúc | Đủ (§7) | Kiểm thử tải §7.6 |
+| Cộng đồng Hộ Trì | Đủ (§10) | Người trực kiểm duyệt; quy chế cộng đồng |
+| Đại Công Đức | Đủ (§11) | Pháp nhân DNXH, tài khoản affiliate, tài khoản ngân hàng + cổng xác nhận chuyển khoản, ý kiến luật sư/kế toán |
+| 3D trên mobile | Có ngân sách & lộ trình (§12) | Đạt ngân sách trên máy thật |
+| Android | Đủ (§13) | Tài khoản Play, khóa ký, thử máy thật |
+| Bảo mật & dữ liệu cá nhân | Đủ (§15) | Đánh giá ASVS L1, đánh giá tác động xử lý dữ liệu, điều khoản |
+| Vận hành | Đủ (§20) | Bảng theo dõi, cảnh báo, diễn tập khôi phục |
+| Quy trình 3 agent | Đủ (§14) | Chạy thử lane-guard và deploy theo tag ở GĐ0 |
+
 ---
 
 ## 2. NGUYÊN TẮC THIẾT KẾ (giữ nguyên CLAUDE.md, bổ sung cho production)
@@ -96,6 +130,10 @@ Bốn tầng mang tên biểu trưng của bốn quả Thánh (Nhập Lưu, Nh�
 4. **Client không framework nặng:** giữ Three.js + JS module; máy chủ tách thư mục, không trộn logic máy chủ vào vòng lặp render.
 5. **Không có file âm thanh lớn trong mã nguồn:** âm thanh sinh bằng thuật toán; bản ghi tham khảo (nếu có) để trên R2, tải theo yêu cầu.
 6. **Một nguồn sự thật cho luật tu tập:** công thức Kusala, luật Tịnh danh, lịch 49 ngày, điều kiện mở tầng nằm trong `packages/shared` và dữ liệu nội dung, không viết lặp ở nhiều nơi.
+7. **Thương mại tách bạch tuyệt đối với Pháp bảo** (tài liệu gốc): không quảng cáo, không gắn sản phẩm vào Kinh Đài, Tịnh Thất, Đài Thiền, Đại Thiền Đường hay thời thiền; mọi giao dịch chỉ ở khu Đại Công Đức; không bán dữ liệu người dùng.
+8. **Công đức không tính theo tiền** (tài liệu gốc): điểm gốc mỗi việc như nhau dù giàu hay nghèo; mua hàng qua affiliate hay Gieo Duyên **không** cộng Kusala, không huy hiệu, không xếp hạng.
+9. **Không thuật toán gây nghiện** (tài liệu gốc): không "chuỗi ngày đứt là mất", không thông báo thúc ép, không bảng tin cuộn vô tận.
+10. **Hoạt động được trên gói Free:** tính năng cần gói Paid đặt sau cờ (feature flag) và có đường dự phòng.
 
 ---
 
@@ -138,14 +176,42 @@ Bốn tầng mang tên biểu trưng của bốn quả Thánh (Nhập Lưu, Nh�
 | Turnstile | Chống bot ở bước gửi OTP | Bắt buộc kiểm token ở máy chủ qua Siteverify [13] |
 | Rate Limiting binding | Giới hạn OTP, sync, mời | Đã GA cho production; khai báo `ratelimits` cần Wrangler ≥ 4.36 [11] |
 | Analytics Engine | Số liệu kỹ thuật ẩn danh (FPS, lỗi sync, thời thiền hoàn tất) | Không chứa dữ liệu định danh |
-| Workers Builds / Previews | Preview mỗi PR | Mỗi PR có URL preview cố định theo nhánh [9] |
+| Workers Builds / Previews | Preview mỗi PR | Mỗi PR có URL preview cố định theo nhánh [9][10] |
 
-**Gói cần dùng:** Workers Paid (5 USD/tháng tối thiểu) — vì Email Sending chỉ có ở gói Paid [12] và để có D1 10 GB, Time Travel 30 ngày [1].
+**Gói:** bắt đầu bằng **Workers Free**; nâng **Workers Paid** (tối thiểu 5 USD/tháng) khi chạm ngưỡng ở §3.3, khi cần Email Sending (chỉ có ở gói Paid [12]) hoặc cần D1 10 GB/CSDL và Time Travel 30 ngày [1].
 
 ### 3.2 Vì sao tách hai Worker
 - Worker `vandao-realtime` có vòng đời triển khai riêng (thay đổi lớp DO cần `migrations` có thẻ), không làm chậm việc phát hành web/API.
 - Tài liệu Workers Builds từng ghi Preview URL không được tạo cho Worker **hiện thực** Durable Object [10b]; để Worker web/API luôn có preview cho mỗi PR, các lớp DO đặt ở Worker riêng và được gọi qua binding liên script (`script_name`). Cần kiểm lại hành vi này với Worker Previews mới khi làm GĐ0.
 - Client chỉ thấy **một nguồn gốc** (`vandao.ainextbrain.com`) → cookie phiên dùng chung, không cần CORS cho web.
+
+### 3.3 Gói Free trước, nâng Paid khi cần
+
+| Dịch vụ | Workers Free | Workers Paid | Cách Vân Đạo dùng khi còn Free |
+|---|---|---|---|
+| Workers | 100.000 yêu cầu/ngày, 10 ms CPU mỗi lần gọi [27] | 10 triệu yêu cầu + 30 triệu ms CPU/tháng, sau đó 0,30 USD/triệu yêu cầu, 0,02 USD/triệu ms CPU [29] | API gọn; không dùng mật khẩu nên không có bước băm chậm; gộp thao tác vào `/sync` |
+| D1 | 5 triệu dòng đọc/ngày, 100.000 dòng ghi/ngày, 5 GB [27b] | Đã gồm 25 tỉ dòng đọc và 50 triệu dòng ghi/tháng [27c] | Ghi theo lô; số liệu cộng đồng tổng hợp định kỳ, không ghi theo lượt xem |
+| Durable Objects | 100.000 yêu cầu/ngày, 13.000 GB-giây/ngày; chỉ lớp SQLite [27][28] | Đã gồm 1 triệu yêu cầu + 400.000 GB-giây/tháng [6] | Phòng ngủ đông khi im lặng; client chỉ gửi khi đổi trạng thái |
+| Workers AI | 10.000 neuron/ngày (cả hai gói) [31] | 0,011 USD/1.000 neuron vượt mức [31] | Sàng lọc bài Hộ Trì bằng Llama Guard 3 8B (~44.003 neuron/1 triệu token vào [31]) → ~227.000 token vào/ngày trong phần miễn phí |
+| Workflows | Có ở cả hai gói; trạng thái giữ 3 ngày [30] | Giữ 30 ngày [30] | Quy trình giải ngân tác động xã hội có bước chờ duyệt |
+| Email Sending | Không có | Có (beta) [12] | Đăng nhập không cần email (§6.4) |
+
+**Sức chứa ước lượng trên gói Free** (giả định ~13 lệnh API và ~10 dòng ghi D1 cho mỗi người hoạt động/ngày; tài sản tĩnh không chạy mã Worker): khoảng **5.000–7.000 người tu tập mỗi ngày**. Phần thời gian thực: 13.000 GB-giây/ngày ÷ 0,128 GB ≈ 101.000 giây ≈ **28 giờ-phòng hoạt động/ngày** (ví dụ 3 shard Đại Thiền Đường mở 9 giờ/ngày).
+
+**Ngưỡng nâng Paid** (bất kỳ điều nào kéo dài 7 ngày ở ≥ 70 % hạn mức): yêu cầu Workers, dòng ghi D1, yêu cầu hoặc thời lượng DO; cần Email OTP hay thư tổng kết tuần; cần CPU > 10 ms (ví dụ tạo ảnh chia sẻ); D1 > 4 GB. Hermes báo cáo hằng ngày (§14.6). Khi nâng: bật cờ `EMAIL_OTP`, `EMAIL_DIGEST`, tăng nhịp phát khung realtime nếu cần.
+
+### 3.4 Dịch vụ bổ sung trong bản 3
+
+| Thành phần | Dùng cho |
+|---|---|
+| Durable Object `ReminderClock` (alarm) | Lịch nhắc theo giờ địa phương, chia 16 shard theo `user_id` |
+| Web Push (VAPID) bằng thư viện chạy được trên Workers, ví dụ PushForge [51] | Nhắc nhở cho PWA |
+| Workers AI (Llama Guard) | Sàng lọc bài viết cộng đồng trước khi hiện |
+| Workflows | Giải ngân tác động xã hội: tạo bút toán → chờ duyệt → đính chứng từ → báo Tùy hỷ |
+| R2 | Chứng từ giải ngân, báo cáo Sổ Minh Bạch, âm thanh tham khảo |
+| Analytics Engine | Lượt bấm affiliate ẩn danh, FPS theo nhóm máy, lỗi sync |
+| Cloudflare Access | Bảo vệ `/admin/*` (duyệt sản phẩm, bài viết, sổ cái) |
+| Cloudflare Web Analytics | Core Web Vitals người dùng thật, không cookie |
 
 ---
 
@@ -155,7 +221,7 @@ Bốn tầng mang tên biểu trưng của bốn quả Thánh (Nhập Lưu, Nh�
 - Thời điểm: `INTEGER` mili-giây Unix (UTC). Ngày tu tập: `TEXT 'YYYY-MM-DD'` theo **múi giờ của người dùng** (`profile.tz`).
 - Khóa chính tự sinh: ULID (sắp xếp theo thời gian, client sinh được khi offline → dùng làm khóa chống trùng).
 - Migration **chỉ tiến**, đánh số `NNNN_ten.sql` trong `db/migrations/`; `wrangler d1 migrations apply` chạy theo thứ tự và ghi lịch sử vào bảng `d1_migrations` [3]. Không bao giờ sửa migration đã merge; không đặt script lùi trong thư mục này.
-- Chỉ **lane Dữ liệu** (xem §9) được tạo migration mới.
+- Chỉ **lane Dữ liệu** (xem §14) được tạo migration mới.
 
 ### 4.2 Bảng của Better Auth (sinh bằng CLI, không viết tay)
 `0001_auth.sql` sinh từ cấu hình Better Auth (`npx @better-auth/cli generate` với Drizzle, dialect SQLite): `user` (thêm cột `isAnonymous` của plugin anonymous [15]), `session`, `account`, `verification`, `passkey` (khi bật). Ứng dụng chỉ tham chiếu `user.id`. Email của khách ẩn danh là địa chỉ giả do plugin sinh, không phải email thật.
@@ -217,6 +283,10 @@ CREATE TABLE kusala_entry (
   wise        INTEGER NOT NULL CHECK (wise IN (0,1)),   -- như lý tác ý ×1,5
   self        INTEGER NOT NULL CHECK (self IN (0,1)),   -- tự giác ×1,25
   e_score     REAL NOT NULL,                   -- MÁY CHỦ tính lại bằng packages/shared/kusala.js
+  variant_id  TEXT,                            -- biến thể nhiệm vụ đã làm (§8.3); NULL với dữ liệu chuyển từ bản cũ
+  punna       TEXT,                            -- mã Phước nghiệp sự (Phụ lục H)
+  parami_json TEXT NOT NULL DEFAULT '[]',      -- mã Ba-la-mật (Phụ lục H)
+  scope       TEXT CHECK (scope IS NULL OR scope IN ('doi_thuc','dong_tu')),  -- việc ngoài đời / trong app (§9.3)
   note        TEXT CHECK (note IS NULL OR length(note) <= 1000),  -- chỉ có khi bật đồng bộ nhật ký
   at          INTEGER NOT NULL,                -- thời điểm xác nhận (client), đã kẹp theo giờ máy chủ
   server_at   INTEGER NOT NULL,
@@ -375,6 +445,234 @@ Ghi chú: tổng Kusala từng trục **không lưu**, tính bằng `SUM(e_score
 
 Lần đầu chạy bản mới: đọc `localStorage['vandao.v1']`, chuyển sang IndexedDB theo bảng ánh xạ ở Phụ lục A, giữ khóa cũ thêm 30 ngày rồi mới xóa.
 
+### 4.6 Bảng bổ sung của bản 3
+
+```sql
+-- 0006_practice_plus.sql
+CREATE TABLE practice_profile (                 -- chỉ thông tin cần cho chọn biến thể; hoàn cảnh riêng tư ở lại trên máy (§8.3)
+  user_id       TEXT PRIMARY KEY REFERENCES user(id) ON DELETE CASCADE,
+  level         TEXT NOT NULL DEFAULT 'vua' CHECK (level IN ('nhe','vua','sau')),
+  minutes       INTEGER NOT NULL DEFAULT 15 CHECK (minutes BETWEEN 5 AND 120),
+  time_window   TEXT NOT NULL DEFAULT 'linh_hoat' CHECK (time_window IN ('sang','trua','toi','linh_hoat')),
+  familiarity   TEXT CHECK (familiarity IN ('moi','da_quy_y','tu_lau')),
+  precepts_json TEXT NOT NULL DEFAULT '[1,2,3,4,5]',   -- giới phát nguyện giữ trong chu kỳ
+  uposatha      TEXT NOT NULL DEFAULT 'vn_4' CHECK (uposatha IN ('vn_2','vn_4','vn_6','vn_10','khong')),
+  no_money      INTEGER NOT NULL DEFAULT 0 CHECK (no_money IN (0,1)),   -- chỉ gợi ý việc thiện không tốn tiền
+  at_home       INTEGER NOT NULL DEFAULT 0 CHECK (at_home IN (0,1)),    -- ưu tiên việc làm được tại nhà/trực tuyến
+  updated_at    INTEGER NOT NULL
+);
+
+CREATE TABLE deed_log (                          -- việc thiện ghi thêm ngoài 3 nhiệm vụ: KHÔNG cộng Kusala, không ghi số tiền
+  id          TEXT PRIMARY KEY,
+  user_id     TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
+  local_date  TEXT NOT NULL,
+  punna       TEXT NOT NULL,                       -- mã Phước nghiệp sự (Phụ lục H)
+  parami_json TEXT NOT NULL DEFAULT '[]',
+  scope       TEXT NOT NULL CHECK (scope IN ('doi_thuc','dong_tu')),
+  shared      INTEGER NOT NULL DEFAULT 0 CHECK (shared IN (0,1)),   -- cho phép hiện ẩn danh ở Tùy hỷ
+  at          INTEGER NOT NULL
+);
+CREATE INDEX deed_user_date ON deed_log(user_id, local_date);   -- máy chủ giới hạn 5 dòng/ngày/người
+
+CREATE TABLE reminder (
+  id        TEXT PRIMARY KEY,
+  user_id   TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
+  kind      TEXT NOT NULL CHECK (kind IN ('thien','nhiem_vu','ghi_nhan','uposatha','tong_ket_tuan','nhom')),
+  local_hm  TEXT NOT NULL CHECK (local_hm GLOB '[0-2][0-9]:[0-5][0-9]'),
+  days_mask INTEGER NOT NULL DEFAULT 127,          -- bit 0 = Chủ nhật
+  channel   TEXT NOT NULL CHECK (channel IN ('push','email','local')),
+  next_at   INTEGER,                               -- UTC ms, ReminderClock tính lại sau mỗi lần gửi
+  active    INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0,1)),
+  paused_until INTEGER,                            -- "Tịnh khẩu" tạm dừng 1–30 ngày
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX reminder_due ON reminder(next_at) WHERE active = 1;
+
+CREATE TABLE push_subscription (
+  id          TEXT PRIMARY KEY,
+  user_id     TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
+  endpoint    TEXT NOT NULL UNIQUE,
+  p256dh      TEXT NOT NULL,
+  auth        TEXT NOT NULL,
+  fail_count  INTEGER NOT NULL DEFAULT 0,          -- 404/410 từ dịch vụ push → xóa
+  created_at  INTEGER NOT NULL,
+  last_ok_at  INTEGER
+);
+
+CREATE TABLE attestation (                       -- chứng thực chéo cuối tuần (ngày 7, 14, … 49), luôn tùy chọn
+  id           TEXT PRIMARY KEY,
+  user_id      TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
+  cycle        INTEGER NOT NULL,
+  week         INTEGER NOT NULL CHECK (week BETWEEN 1 AND 7),
+  attester_id  TEXT REFERENCES user(id) ON DELETE SET NULL,   -- NULL khi là người thân không có tài khoản
+  attester_label TEXT CHECK (attester_label IN ('nguoi_than','dong_tu','ban_be')),
+  token_hash   TEXT UNIQUE,                        -- SHA-256 của liên kết mời dùng một lần
+  note         TEXT CHECK (note IS NULL OR length(note) <= 300),
+  status       TEXT NOT NULL DEFAULT 'cho' CHECK (status IN ('cho','da_xac_nhan','tu_choi','het_han')),
+  created_at   INTEGER NOT NULL,
+  confirmed_at INTEGER
+);
+
+-- 0007_community.sql
+CREATE TABLE partner (                           -- đối tác thiện nguyện/nhà bán đã xác minh; dùng cho sự kiện (0007) và Đại Công Đức (0008)
+  id          TEXT PRIMARY KEY,
+  kind        TEXT NOT NULL CHECK (kind IN ('quy_tu_thien','chua','to_chuc_xa_hoi','doanh_nghiep_xa_hoi','nha_ban')),
+  name        TEXT NOT NULL,
+  legal_ref   TEXT NOT NULL,                       -- mã số thuế/giấy phép/quyết định thành lập
+  public_contact TEXT,
+  verified_at INTEGER,
+  status      TEXT NOT NULL DEFAULT 'cho' CHECK (status IN ('cho','da_xac_minh','tam_dung'))
+);
+CREATE TABLE help_post (
+  id          TEXT PRIMARY KEY,
+  author_id   TEXT REFERENCES user(id) ON DELETE SET NULL,
+  kind        TEXT NOT NULL CHECK (kind IN ('can_giup','co_the_giup','hoi_phap','tuy_hy')),
+  title       TEXT NOT NULL CHECK (length(title) BETWEEN 5 AND 80),
+  body        TEXT NOT NULL CHECK (length(body) <= 1000),
+  area        TEXT,                                -- tỉnh/thành hoặc 'truc_tuyen', không địa chỉ chi tiết
+  anonymous   INTEGER NOT NULL DEFAULT 0 CHECK (anonymous IN (0,1)),
+  status      TEXT NOT NULL DEFAULT 'cho_duyet' CHECK (status IN ('cho_duyet','hien','an','dong')),
+  ai_label    TEXT,                                -- kết quả Llama Guard
+  created_at  INTEGER NOT NULL,
+  expires_at  INTEGER NOT NULL
+);
+CREATE INDEX help_post_list ON help_post(status, kind, created_at);
+CREATE TABLE help_reply (
+  id         TEXT PRIMARY KEY,
+  post_id    TEXT NOT NULL REFERENCES help_post(id) ON DELETE CASCADE,
+  author_id  TEXT REFERENCES user(id) ON DELETE SET NULL,
+  body       TEXT NOT NULL CHECK (length(body) <= 600),
+  source_ref TEXT,                                 -- bắt buộc với trả lời 'hoi_phap' của người hướng dẫn
+  status     TEXT NOT NULL DEFAULT 'cho_duyet' CHECK (status IN ('cho_duyet','hien','an')),
+  created_at INTEGER NOT NULL
+);
+CREATE TABLE help_match (                        -- một người nhận giúp; "xong" khi cả hai xác nhận
+  post_id    TEXT NOT NULL REFERENCES help_post(id) ON DELETE CASCADE,
+  helper_id  TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
+  state      TEXT NOT NULL CHECK (state IN ('de_nghi','nhan','xong','huy')),
+  created_at INTEGER NOT NULL,
+  done_at    INTEGER,
+  PRIMARY KEY (post_id, helper_id)
+);
+CREATE TABLE volunteer_event (
+  id           TEXT PRIMARY KEY,
+  partner_id   TEXT REFERENCES partner(id) ON DELETE SET NULL,
+  group_id     TEXT REFERENCES sangha_group(id) ON DELETE SET NULL,
+  title        TEXT NOT NULL,
+  area         TEXT NOT NULL,
+  starts_at    INTEGER NOT NULL,
+  ends_at      INTEGER NOT NULL,
+  capacity     INTEGER,
+  status       TEXT NOT NULL DEFAULT 'cho_duyet' CHECK (status IN ('cho_duyet','mo','dong','huy')),
+  CHECK (partner_id IS NOT NULL OR group_id IS NOT NULL)
+);
+CREATE TABLE event_rsvp (
+  event_id   TEXT NOT NULL REFERENCES volunteer_event(id) ON DELETE CASCADE,
+  user_id    TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
+  state      TEXT NOT NULL CHECK (state IN ('dang_ky','huy','co_mat')),
+  updated_at INTEGER NOT NULL,
+  PRIMARY KEY (event_id, user_id)
+);
+CREATE TABLE moderation_queue (
+  id          TEXT PRIMARY KEY,
+  target_type TEXT NOT NULL CHECK (target_type IN ('post','reply','name','product','event')),
+  target_id   TEXT NOT NULL,
+  source      TEXT NOT NULL CHECK (source IN ('ai','bao_cao','he_thong')),
+  reason      TEXT,
+  state       TEXT NOT NULL DEFAULT 'mo' CHECK (state IN ('mo','giu','go','bo_qua')),
+  decided_by  TEXT,
+  created_at  INTEGER NOT NULL,
+  decided_at  INTEGER
+);
+
+-- 0008_dai_cong_duc.sql
+CREATE TABLE product (
+  id              TEXT PRIMARY KEY,
+  source          TEXT NOT NULL CHECK (source IN ('shopee','tiktok','woo','khac')),
+  source_ref      TEXT NOT NULL,                   -- itemId/shopId, product id…
+  title           TEXT NOT NULL,
+  image_url       TEXT,
+  price_vnd       INTEGER,
+  category        TEXT NOT NULL,                   -- danh mục nội bộ đã cho phép (Phụ lục G)
+  affiliate_url   TEXT NOT NULL,                   -- chỉ máy chủ dùng ở /go/{id}
+  policy_json     TEXT NOT NULL,                   -- kết quả checklist Chánh Mạng
+  status          TEXT NOT NULL DEFAULT 'ung_vien' CHECK (status IN ('ung_vien','cho_duyet','hien','an')),
+  reviewed_by     TEXT,
+  reviewed_at     INTEGER,
+  refreshed_at    INTEGER,
+  UNIQUE (source, source_ref)
+);
+CREATE INDEX product_list ON product(status, category);
+CREATE TABLE affiliate_click_day (               -- chỉ đếm tổng theo ngày; lượt bấm chi tiết ở Analytics Engine, không user_id
+  product_id TEXT NOT NULL REFERENCES product(id) ON DELETE CASCADE,
+  day        TEXT NOT NULL,
+  clicks     INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (product_id, day)
+);
+CREATE TABLE affiliate_conversion (
+  id             TEXT PRIMARY KEY,                 -- mã đơn/chuyển đổi do nền tảng trả về
+  source         TEXT NOT NULL,
+  product_id     TEXT REFERENCES product(id) ON DELETE SET NULL,
+  order_day      TEXT NOT NULL,
+  commission_vnd INTEGER NOT NULL,
+  status         TEXT NOT NULL CHECK (status IN ('cho','xac_nhan','huy')),
+  imported_at    INTEGER NOT NULL
+);
+CREATE TABLE gieo_receipt (                      -- không lưu số tài khoản người gieo
+  id           TEXT PRIMARY KEY,
+  provider     TEXT NOT NULL CHECK (provider IN ('payos','casso','sepay','thu_cong')),
+  provider_tx  TEXT NOT NULL UNIQUE,               -- chống trùng webhook
+  memo_code    TEXT NOT NULL,                      -- 'VD' + 6 ký tự từ /gieo/intent
+  amount_vnd   INTEGER NOT NULL CHECK (amount_vnd > 0),
+  user_id      TEXT REFERENCES user(id) ON DELETE SET NULL,   -- chỉ khi người gieo chủ động gắn
+  display      TEXT NOT NULL DEFAULT 'an_danh' CHECK (display IN ('an_danh','tinh_danh')),
+  received_at  INTEGER NOT NULL
+);
+CREATE TABLE campaign (
+  id           TEXT PRIMARY KEY,
+  partner_id   TEXT NOT NULL REFERENCES partner(id),
+  title        TEXT NOT NULL,
+  purpose      TEXT NOT NULL,
+  receive_info TEXT NOT NULL,                      -- tài khoản tiếp nhận RIÊNG của đối tác; Vân Đạo không giữ tiền
+  goal_vnd     INTEGER,
+  starts_on    TEXT NOT NULL,
+  ends_on      TEXT NOT NULL,
+  report_r2_key TEXT,
+  status       TEXT NOT NULL DEFAULT 'cho_duyet' CHECK (status IN ('cho_duyet','mo','dong','da_bao_cao'))
+);
+CREATE TABLE pledge (                            -- "tôi đã gieo" do người dùng tự ghi, không số tiền, không kiểm chứng
+  campaign_id TEXT NOT NULL REFERENCES campaign(id) ON DELETE CASCADE,
+  user_id     TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (campaign_id, user_id)
+);
+CREATE TABLE impact_ledger (                     -- sổ cái tác động xã hội, băm chuỗi (tài liệu gốc)
+  seq          INTEGER PRIMARY KEY AUTOINCREMENT,
+  tx_id        TEXT NOT NULL UNIQUE,
+  beneficiary  TEXT NOT NULL,                      -- mã băm ẩn danh của hành giả/nhóm
+  milestone    TEXT NOT NULL CHECK (milestone IN ('hoan_tat_49','nhom_dat_nguyen','khac')),
+  category     TEXT NOT NULL CHECK (category IN ('trong_cay','suat_an','an_tong_kinh','khac')),
+  quantity     INTEGER NOT NULL CHECK (quantity > 0),
+  partner_id   TEXT REFERENCES partner(id),
+  evidence_r2_key TEXT,
+  prev_hash    TEXT NOT NULL,
+  hash         TEXT NOT NULL UNIQUE,               -- SHA-256(prev_hash‖tx_id‖beneficiary‖milestone‖category‖quantity‖created_at)
+  created_at   INTEGER NOT NULL
+);
+CREATE TABLE ledger_month (                      -- Sổ Minh Bạch tháng
+  month        TEXT PRIMARY KEY,                   -- 'YYYY-MM'
+  revenue_json TEXT NOT NULL,
+  cost_json    TEXT NOT NULL,
+  allocation_json TEXT NOT NULL,
+  impact_count INTEGER NOT NULL,
+  head_hash    TEXT NOT NULL,
+  approved_by  TEXT,
+  published_at INTEGER
+);
+```
+
+Ghi chú: `kusala_entry` (0003) được bổ sung cột `variant_id`, `punna`, `parami_json`, `scope` (đã sửa trực tiếp ở §4.3 vì chưa triển khai). Các bảng mới đều nhỏ (dưới vài trăm MB/năm ở 10.000 người hoạt động/ngày) trừ `deed_log`, đã giới hạn 5 dòng/ngày/người.
+
 ---
 
 ## 5. HỢP ĐỒNG API (REST `/api/v1`, JSON, khóa `snake_case`)
@@ -421,6 +719,30 @@ Quy tắc máy chủ (trong một lô D1 `batch()` để nguyên tử):
 6. **"Trở về ngày 1":** tạo chu kỳ mới (`cycle+1`), chu kỳ cũ giữ lịch sử. Thiết bị còn ở chu kỳ cũ nhận `stale_cycle` và nhận trạng thái mới.
 7. Client luôn **nhận `state` của máy chủ làm chuẩn** sau mỗi lần sync, rồi phát lại các thao tác còn trong `outbox`.
 
+### 5.2 Endpoint bổ sung của bản 3
+
+| Phương thức & đường dẫn | Xác thực | Mục đích |
+|---|---|---|
+| `GET /api/v1/practice/today` | phiên | 3 nhiệm vụ trong ngày theo biến thể đã chọn + gợi ý thời thiền |
+| `PUT /api/v1/practice/profile` | phiên | Cập nhật mức độ, thời gian, khung giờ, giới nguyện, cờ `no_money`/`at_home` |
+| `POST /api/v1/practice/swap` | phiên | Đổi biến thể nhiệm vụ của hôm nay (1 lần/trục/ngày) |
+| `POST /api/v1/deeds` | phiên | Ghi việc thiện thêm (≤ 5/ngày, không cộng điểm) |
+| `GET /api/v1/practice/summary?range=week\|cycle` | phiên | Thống kê riêng tư: ba trụ, hoa sen Ba-la-mật, Phước nghiệp sự, nhịp thiền |
+| `POST /api/v1/attest/invite` · `GET/POST /attest/{token}` | phiên · liên kết 1 lần | Mời và nhận chứng thực tuần |
+| `PUT /api/v1/reminders` · `POST/DELETE /api/v1/push/subscription` | phiên | Lịch nhắc, đăng ký Web Push |
+| `GET /api/v1/help?kind=&area=` · `POST /api/v1/help` | công khai · phiên | Bảng Hộ Trì |
+| `POST /api/v1/help/{id}/reply` · `POST /api/v1/help/{id}/match` | phiên | Trả lời, nhận giúp, xác nhận xong |
+| `GET /api/v1/events` · `POST /api/v1/events/{id}/rsvp` | công khai · phiên | Sự kiện thiện nguyện |
+| `GET /api/v1/cong-duc/products?cat=` | công khai (cache KV) | Danh mục Chánh Mạng Thị |
+| `GET /go/{product_id}` | — | Chuyển hướng 302 tới link affiliate, đếm ẩn danh |
+| `POST /api/v1/gieo/intent` | phiên hoặc khách | Trả payload VietQR + mã nội dung `VDxxxxxx` |
+| `POST /hooks/payment/{provider}` | chữ ký cổng | Webhook xác nhận chuyển khoản (payOS/Casso/SePay) |
+| `GET /api/v1/campaigns` · `POST /api/v1/campaigns/{id}/pledge` | công khai · phiên | Chiến dịch đối tác, "tôi đã gieo" |
+| `GET /api/v1/ledger/{YYYY-MM}` · `GET /api/v1/impact?cursor=` | công khai | Sổ Minh Bạch, sổ cái tác động |
+| `/admin/*` | Cloudflare Access | Duyệt sản phẩm, bài viết, sự kiện, đối tác, bút toán |
+
+Thao tác mới đi qua `/sync` khi offline: `deed.add`, `practice.swap`, `profile.practice`, `pledge.add` — cùng quy tắc chống trùng §5.1.
+
 ---
 
 ## 6. TÀI KHOẢN & ĐĂNG NHẬP — ĐƠN GIẢN CHO NGƯỜI DÙNG CUỐI
@@ -442,6 +764,19 @@ Quy tắc máy chủ (trong một lô D1 `batch()` để nguyên tử):
 - OTP hết hạn 10 phút, tối đa 5 lần nhập sai; Turnstile ở bước gửi mã, luôn kiểm token ở máy chủ [13]; `ratelimits` theo IP và theo email [11].
 - Endpoint gửi mail chỉ gửi tới email của chính người đang xác thực (không thành relay thư rác).
 - Cron xóa tài khoản khách không gắn email và không hoạt động sau 90 ngày (báo trước trong app).
+
+### 6.4 Đăng nhập khi còn gói Free (thay bước 3–4 của §6.1 cho đến khi bật `EMAIL_OTP`)
+
+Email Sending của Cloudflare chỉ có ở gói Paid [12], nên khi còn gói Free, nút "Giữ hành trình của tôi" đưa ra bốn cách, cách nào cũng **không cần mật khẩu**:
+
+| Cách | Cách hoạt động | Phù hợp |
+|---|---|---|
+| Passkey | Plugin `passkey` của Better Auth; vân tay/Face ID/PIN máy | Điện thoại và máy tính đời mới |
+| Google | OAuth Google (tùy chọn) | Ai đã có tài khoản Google |
+| Mã QR liên kết thiết bị | Máy mới hiện mã QR chứa mã dùng một lần (sống 2 phút); máy đã đăng nhập quét và bấm đồng ý → máy mới nhận phiên | Chuyển giữa điện thoại và máy tính |
+| Mã khôi phục | 26 ký tự Base32 (128 bit ngẫu nhiên) hiện **một lần**, chia nhóm 4 ký tự; máy chủ chỉ lưu SHA-256 (đủ an toàn vì mã có độ ngẫu nhiên cao, không cần hàm băm chậm vượt 10 ms CPU) | Người cao tuổi, máy không hỗ trợ passkey |
+
+Giới hạn phải nói rõ trong app: mất cả thiết bị mà không có passkey đồng bộ, Google hay mã khôi phục thì không lấy lại được hành trình. Khi nâng Paid, bật Email OTP như §6.1 và vẫn giữ bốn cách trên.
 
 ---
 
@@ -494,13 +829,300 @@ Kịch bản giờ cao điểm: 2.000 người cùng lúc, 10 shard hoạt độ
 ### 7.6 Kiểm thử tải
 - Công cụ: k6 (WebSocket) hoặc script Node `ws` chạy từ GitHub Actions/máy riêng, mô phỏng bot gửi đúng khung 16 byte.
 - Mục tiêu nghiệm thu GĐ4: 200 kết nối/shard ổn định 30 phút; độ trễ p95 < 250 ms trong khu vực; không mất khung; đối tượng ngủ đông khi mọi người ngồi yên (kiểm chỉ số thời lượng); điện thoại tầm trung giữ ≥ 30 FPS với 150 hình người.
-- Mục tiêu GĐ7: 2.000 kết nối đồng thời trên 10 shard; sync 50 yêu cầu/giây trong 10 phút với lỗi < 0,1 %.
+- Mục tiêu GĐ9: 2.000 kết nối đồng thời trên 10 shard; sync 50 yêu cầu/giây trong 10 phút với lỗi < 0,1 %.
+
+### 7.7 Thời gian thực trên gói Free
+
+Hạn mức DO miễn phí (100.000 yêu cầu và 13.000 GB-giây mỗi ngày [27]) với tỉ lệ tính tin WebSocket 20:1 [7] tương đương ~2 triệu tin đến/ngày và ~28 giờ-phòng hoạt động/ngày. Cấu hình mặc định khi còn Free: tối đa 3 shard Đại Thiền Đường, khung gộp 2 lần/giây, IslandRoom chỉ mở khi có khách; vượt hạn mức thì client tự chuyển sang đám đông mô phỏng và ghi "đang đông, hiển thị mô phỏng" — thời thiền không bị ảnh hưởng.
 
 ---
 
-## 8. ỨNG DỤNG ANDROID (APK để thử, AAB để lên Google Play)
+## 8. TẦNG 0 — SƠ NHẬP TỊNH CẢNH CHUẨN PHÁP HÀNH, BA-LA-MẬT VÀ PHỤNG SỰ THEO HOÀN CẢNH TỪNG NGƯỜI
 
-### 8.1 Chọn công nghệ
+### 8.1 Căn cứ
+- Ba trụ **Đức – Thiện – Tuệ** của app tương ứng ba nền tảng làm phước **Trì giới – Bố thí – Tu tập** (sīla, dāna, bhāvanā) có trong Tam tạng; truyền thống Chú giải mở rộng thành **10 Phước nghiệp sự**: bố thí, trì giới, tu tập, cung kính, phục vụ, hồi hướng, tùy hỷ, nghe Pháp, thuyết Pháp, chỉnh trực tri kiến [47]. Tài liệu gốc chọn đúng khung này (Chú giải Atthasālinī) làm nền cho chuỗi 49 ngày.
+- **10 Ba-la-mật** theo Phật Sử (Buddhavaṃsa): bố thí, trì giới, xuất ly, trí tuệ, tinh tấn, nhẫn nại, chân thật, quyết định, tâm từ, xả [48].
+- Pháp hành cốt lõi của người tại gia ở Tầng 0: Tam quy – Ngũ giới, Bát quan trai vào ngày trai; niệm hơi thở (MN 118); tâm từ (Snp 1.8); quán thọ – tâm – pháp ở mức nhập môn (MN 10); nghe và đọc Pháp có trích dẫn; tự vấn chánh kiến nhân quả. Bản dịch dùng trong app do Hội đồng cố vấn chọn.
+- **Giữ nguyên** công thức Kusala, hệ số Tam thời tư tâm sở, Trí tương ưng, Vô trợ, khóa 1 nấc/ngày, 7 tuần nhiệm vụ trong `data.js` và thời thiền 15 phút 7 mốc.
+
+### 8.2 Ánh xạ 7 tuần ↔ Phước nghiệp sự ↔ Ba-la-mật (đề xuất, chờ Hội đồng cố vấn duyệt)
+
+| Tuần | Đức (trì giới) | Thiện (bố thí – phụng sự) | Tuệ (tu tập – chánh kiến) |
+|---|---|---|---|
+| 1 An trú hơi thở | Không làm hại · sīla · *giới, từ* | Bố thí sự hiện diện · dāna · *bố thí, từ* | Niệm hơi thở 10' + đọc Pháp nhân quả · bhāvanā, nghe Pháp · *trí tuệ, tinh tấn* |
+| 2 Tịnh hóa khẩu | Chân ngữ & hòa ngữ · sīla · *chân thật, nhẫn* | Bố thí lời lành · dāna · *từ* | Quán thọ 15' · bhāvanā · *trí tuệ, xả* |
+| 3 Ngũ giới & tri túc | Trọn Ngũ giới, tri túc · sīla · *giới, xuất ly* | San sẻ vật chất (luôn có lựa chọn không tốn tiền) · dāna · *bố thí* | Ngồi Đại Thiền Đường; phước thế gian và Ba-la-mật · bhāvanā, nghe Pháp · *trí tuệ, quyết định* |
+| 4 Xả tài vô cầu | Chánh mạng · sīla · *chân thật* | Phụng sự vô danh · phục vụ · *bố thí, xuất ly* | Quán tâm 20' · bhāvanā · *trí tuệ, tinh tấn* |
+| 5 Khiêm hạ & hộ trì | Đoạn giảm ngã mạn · cung kính · *nhẫn, xả* | Phụng sự cộng đồng + khích lệ 3 người sơ nhập · phục vụ (đời thực/đồng tu) · *tinh tấn, từ* | Thiền tâm từ · bhāvanā · *từ* |
+| 6 Nhẫn trước 8 gió | Nhẫn nhục · sīla · *nhẫn* | Vô úy thí – tha thứ · dāna · *nhẫn, từ* | Quán tam tướng 25–30' · bhāvanā, chỉnh trực tri kiến · *trí tuệ, xả* |
+| 7 Chánh kiến viên mãn | Bát quan trai 1 ngày · sīla · *giới, xuất ly, quyết định* | Hồi hướng & tùy hỷ, chia sẻ Pháp · hồi hướng, tùy hỷ, thuyết Pháp · *bố thí, từ* | Tổng kết 49 ngày, vấn đáp chánh kiến · chỉnh trực tri kiến, nghe Pháp · *trí tuệ, quyết định* |
+
+Mỗi lần xác nhận trục, app gắn mã Phước nghiệp sự và Ba-la-mật vào `kusala_entry` (mã ở Phụ lục H). Thành thật nhận lỗi (Sám hối) gắn thêm *chân thật* như tài liệu gốc, không trừ điểm.
+
+### 8.3 Cá nhân hóa: "Duyên khởi hành trình"
+Hỏi 6 câu khi bắt đầu (bỏ qua được, sửa lại bất cứ lúc nào):
+1. Mỗi ngày dành được bao lâu: 10 · 15 · 20–30 · 45+ phút.
+2. Khung giờ thuận tiện: sáng · trưa · tối · linh hoạt.
+3. Hoàn cảnh: học sinh–sinh viên · đi làm · nội trợ · cha mẹ con nhỏ · nghỉ hưu · khác.
+4. Mức quen thuộc với Phật pháp: mới tìm hiểu · đã quy y · tu tập lâu năm.
+5. Giới nguyện trong chu kỳ: chọn các giới phát nguyện giữ trọn; khuyến khích đủ năm giới (cách diễn đạt do Hội đồng cố vấn chốt).
+6. Giới hạn hiện tại (chỉ lưu trên máy): ít di chuyển · không muốn chi tiền · thời gian bất định · không tham gia nơi đông người.
+
+**Dữ liệu ở đâu:** máy chủ chỉ nhận `level`, `minutes`, `time_window`, `familiarity`, giới nguyện, ngày trai, cờ `no_money`, `at_home` (§4.6). Hoàn cảnh cụ thể (câu 3, 6) ở lại trên máy để tránh thu thập dữ liệu nhạy cảm.
+
+**Biến thể nhiệm vụ:** mỗi ô (tuần, trục) trong `content/program/so-nhap-49/` có 3–6 biến thể với thuộc tính `{level, minutes, money: false|optional, outdoors, needs_others, punna, parami[], scope}`. Bộ chọn trong `packages/shared/variant.js`:
+1. Lọc theo cờ người dùng (ví dụ `no_money=1` loại mọi biến thể `money=optional`).
+2. Chọn tất định theo `(user_id, cycle, day, pillar)` để offline và máy chủ ra cùng kết quả.
+3. Cho đổi một lần mỗi trục mỗi ngày (`/practice/swap`).
+
+**Ví dụ tuần 3 – Thiện "San sẻ vật chất":** nhẹ, không tốn tiền: chia sẻ đồ dùng còn tốt cho người cần · tại nhà: dạy kèm trực tuyến miễn phí 30 phút, gọi hỏi thăm người neo đơn · vừa: góp một suất ăn qua chiến dịch đối tác trên Đại Công Đức (không cộng thêm điểm, điểm gốc như mọi biến thể). App không bao giờ gợi ý số tiền, không gợi ý vay mượn để bố thí, không khuyến khích mua sinh vật để phóng sinh.
+
+**Thời thiền:** thời 15 phút chuẩn giữ nguyên tỉ lệ 7 mốc. Người chọn 10 phút dùng bản 15 phút với lời mời "ngồi tới đâu an tới đó"; người chọn 20–45 phút ngồi 15 phút chuẩn rồi tĩnh tọa tự do, có chuông báo hết giờ — không kéo giãn kịch bản âm thanh.
+
+### 8.4 Một ngày trong app
+- **Sáng:** Bia Tích Lũy hiện 3 việc của ngày và giờ thiền đã chọn.
+- **Trong ngày:** làm ngoài đời thực; có thể ngồi thiền ở Đài Thiền hoặc Đại Thiền Đường.
+- **Tối:** ghi nhận từng trục (thanh trượt tam thời, như lý tác ý, tự giác, 1–2 dòng quán chiếu lưu trên máy); tùy chọn ghi việc thiện thêm (không cộng điểm, ≤ 5/ngày); Sám hối chân thật nếu lỡ phạm.
+- **Cuối tuần:** phản tỉnh tuần (nhận diện tham, sân, si trong tuần) và mời chứng thực (tùy chọn).
+- **Ngày 49:** tổng kết, xét điều kiện Tầng 1, kích hoạt sổ cái tác động (§11.6).
+
+### 8.5 Bốn hàng rào chống "ảo tưởng công đức" (tài liệu gốc) — cách triển khai
+1. **Khóa nhịp thời gian thực:** máy chủ quyết định ngày (§5.1). Xác thực thời thiền bằng nhịp thở qua micro để sau GĐ9, chỉ xử lý trên máy như tài liệu gốc yêu cầu.
+2. **Phản tỉnh có AI:** chỉ chạy khi người dùng bật; gửi câu chữ đã bỏ tên riêng; trả lời dạng câu hỏi gợi mở, có nhãn "gợi ý, không phải lời thầy"; lời nhắc hệ thống do Hội đồng cố vấn duyệt.
+3. **Chứng thực chéo cuối tuần:** §9.4.
+4. **Quy đổi thành hành động xã hội có sổ cái:** §11.6.
+
+### 8.6 Từ Tầng 0 lên Tầng 1
+Điều kiện đề xuất (xem §16): hoàn tất 49 ngày, ≥ 30 thời thiền trọn, bài tự vấn tuần 7, tùy chọn ≥ 1 chứng thực. Giao diện chỉ nói "đã hoàn thành chương trình Sơ nhập", không nói đã chứng đắc.
+
+---
+
+## 9. THEO DÕI TU TẬP, NHẮC NHỞ VÀ TÍCH LŨY
+
+### 9.1 Theo dõi (chỉ chủ nhân xem)
+Bia Tích Lũy có thêm các mặt:
+- **Ba trụ Đức – Thiện – Tuệ** (đã có).
+- **Hoa sen 10 cánh Ba-la-mật:** mỗi cánh sáng theo số lần được rèn trong chu kỳ, chuẩn hóa theo cánh mạnh nhất, để thấy sự cân bằng chứ không phải điểm số.
+- **10 Phước nghiệp sự:** phân bố việc đã làm.
+- **Lịch tu:** tô màu ngày đã làm; ngày trống để trống, không tô đỏ.
+- **Nhịp thiền:** số phút mỗi tuần.
+- **Phản tỉnh tuần:** câu trả lời của chính người dùng.
+
+Một hàm thống kê dùng chung (`packages/shared/stats.js`) chạy được offline trên IndexedDB và trên máy chủ. Không có bảng xếp hạng; cộng đồng chỉ thấy số tổng hợp ẩn danh.
+
+### 9.2 Nhắc nhở
+**Loại nhắc:** giờ thiền · việc của ngày (sáng) · ghi nhận (tối) · ngày Bát quan trai theo âm lịch · tổng kết tuần · lời mời nhóm.
+
+| Nền tảng | Kênh | Ghi chú |
+|---|---|---|
+| App Android | Thông báo cục bộ (Capacitor LocalNotifications) | Chạy cả khi offline, đúng giờ |
+| PWA Android/máy tính | Web Push từ Worker | Cần quyền thông báo |
+| iPhone/iPad | Web Push | Chỉ khi đã "Thêm vào Màn hình chính", iOS/iPadOS 16.4 trở lên [50] |
+| Email | Thư tổng kết tuần | Chỉ khi gói Paid và người dùng bật |
+| Mọi nơi | Thông báo trong app khi mở | Dự phòng |
+
+**Nguyên tắc:** mặc định tắt (chỉ gợi ý bật một nhắc giờ thiền); tối đa 2 nhắc/ngày; giờ yên lặng mặc định 21:30–05:00; nút "Tịnh khẩu" tạm dừng 1–30 ngày; không câu chữ gây áy náy; nội dung nhắc qua duyệt.
+
+**Máy chủ:** `reminder` trong D1 là nguồn chính. Durable Object `ReminderClock` chia 16 shard theo `user_id`; mỗi shard giữ chỉ mục đến hạn trong SQLite và đặt alarm đến lần gửi gần nhất. Khi alarm chạy: gửi Web Push theo lô, tính `next_at` theo múi giờ người dùng, xóa subscription trả 404/410. Âm lịch tính bằng `packages/shared/amlich.js` (thuật toán âm lịch Việt Nam, múi giờ +7, chạy offline) để ra ngày trai theo lựa chọn 2/4/6/10 ngày.
+
+### 9.3 Tích lũy
+- **Kusala** mỗi trục mỗi ngày, công thức không đổi.
+- **Thẻ Ba-la-mật và Phước nghiệp sự** cho cả 3 nhiệm vụ và việc thiện thêm.
+- **Chân thật (Sacca)** khi Sám hối, không trừ điểm (tài liệu gốc).
+- **Cân bằng Thiện 70/30:** tài liệu gốc đặt 70 % Thiện từ việc tử tế ngoài đời và 30 % từ nâng đỡ đồng tu trong app. App hiển thị tỉ lệ trong chu kỳ và gợi ý nhẹ khi phần trong app vượt 30 %; không chặn.
+- **Số liệu cộng đồng** (thời thiền, việc thiện, hồi hướng) tổng hợp mỗi ngày vào `community_day`.
+
+### 9.4 Chứng thực chéo cuối tuần
+Ngày 7, 14, … 49: người dùng có thể mời một người (người thân không cần tài khoản) bằng liên kết dùng một lần (lưu SHA-256, hết hạn sau 7 ngày). Người chứng thực viết ≤ 300 ký tự về thay đổi tích cực họ thấy. Không bắt buộc, không công khai, giới hạn 1 lời mời/tuần.
+
+---
+
+## 10. KHÔNG GIAN CỘNG ĐỒNG HỘ TRÌ & THIỆN NGUYỆN
+
+### 10.1 Mục đích
+Một nơi trao đổi và nâng đỡ nhau, đặt ở **Cổng Vân Môn** của Vân Đảo (nơi gặp gỡ), không đặt trong Đại Công Đức. Bốn loại bài:
+- **Cần giúp** — chỉ giúp không bằng tiền: lời khuyên, đồng hành, kỹ năng, sức lực.
+- **Có thể giúp** — nhận dạy kèm, sửa máy, chở người già đi khám…
+- **Hỏi Pháp** — người hướng dẫn trả lời, bắt buộc kèm trích dẫn (`source_ref`).
+- **Tùy hỷ** — chia sẻ việc thiện, không ghi số tiền, có thể ẩn danh.
+
+Thêm **Sự kiện thiện nguyện** do đối tác đã xác minh hoặc nhóm đồng tu từ Tầng 2 tổ chức.
+
+### 10.2 Quy tắc an toàn
+- **Không kêu gọi tiền hay hiện vật cá nhân.** Cá nhân vận động từ thiện phải mở tài khoản riêng tại ngân hàng cho từng cuộc vận động và công khai theo Nghị định 93/2021/NĐ-CP [43]; nền tảng không kiểm soát được việc đó nên chỉ cho phép chiến dịch của đối tác đã xác minh (§11.5).
+- Không đăng địa chỉ hay số điện thoại; khu vực chỉ tới tỉnh/thành; khuyên gặp ở nơi công cộng; nhắn tin riêng chỉ khi cả hai đồng ý (GĐ5).
+- **Tuổi:** cộng đồng và Đại Công Đức dành cho người từ 18 tuổi (tự xác nhận + điều khoản); người dưới 18 chỉ dùng phần tu tập cá nhân.
+- **Kiểm duyệt ba lớp:**
+  1. Luật từ khóa tiếng Việt.
+  2. Llama Guard trên Workers AI.
+  3. Hàng chờ người duyệt: mọi bài của tài khoản dưới 7 ngày tuổi đều qua người.
+- Báo cáo và chặn có hiệu lực ngay; Hermes gom báo cáo mỗi ngày và đề xuất xử lý, người quyết.
+
+### 10.3 Nối việc giúp với tu tập
+Khi một yêu cầu "Cần giúp" được nhận và cả hai bấm "xong", mỗi bên có thể chọn việc đó làm nhiệm vụ Thiện (phục vụ – veyyāvacca) của ngày, vẫn theo luật 1 nấc/ngày. Giúp ngoài đời → `scope = doi_thuc`; giúp trong app → `scope = dong_tu`.
+
+---
+
+## 11. ĐẠI CÔNG ĐỨC — CHÁNH MẠNG THỊ · GIEO DUYÊN · HỘ TRÌ · MINH BẠCH
+
+### 11.1 Triết lý (theo tài liệu gốc)
+- **Mô hình hai động cơ.** Động cơ 1 là doanh nghiệp Chánh Mạng, tạo dòng tiền và hạ tầng — đúng vai trò của cư sĩ Cấp Cô Độc. Động cơ 2 là hệ sinh thái phụng sự và hoằng pháp phi lợi nhuận: công cụ Pháp học/Pháp hành mở, hộ trì Tứ sự, từ thiện. Không thu phí Kinh điển, không bán khóa học giải thoát, không thương mại hóa tín ngưỡng.
+- **Bốn nguyên tắc đạo đức:**
+  - *Chân thật:* minh bạch 100 % nguồn gốc và chất lượng.
+  - *Phi thương mại trong không gian Pháp:* không quảng cáo, không bán dữ liệu.
+  - *Không buôn thần bán thánh:* không "khai quang, điểm nhãn, cải mệnh, trừ tà".
+  - *Đúng Pháp – đúng Luật:* không hợp tác với hoạt động trái giới luật.
+- **Pháp nhân:** doanh nghiệp xã hội theo Điều 10 Luật Doanh nghiệp 2020 (cam kết dùng ≥ 51 % lợi nhuận sau thuế tái đầu tư cho mục tiêu xã hội), hoặc quỹ công nghệ mở do cư sĩ đứng tên. Tăng Ni chỉ ở Hội đồng cố vấn Pháp học.
+- **Phân bổ thặng dư** lấy cảm hứng từ Kinh Giáo thọ Thi-ca-la-việt (DN 31) — ¼ chi dùng và bổn phận, 2/4 tái đầu tư, ¼ dự trữ (tài liệu gốc). Đề xuất cho Vân Đạo: 2/4 tái đầu tư nền tảng và công cụ Pháp học miễn phí · ¼ Quỹ Phụng Sự (sổ cái tác động) · ¼ dự phòng. Như vậy 75 % dành cho mục tiêu xã hội, vượt ngưỡng 51 %. Chủ đầu tư chốt tỉ lệ.
+
+### 11.2 Không gian 3D "Đại Công Đức Viên"
+- **Vị trí:** một đảo riêng, **thấp hơn Tầng 1**, ở phía sau – bên phải Vân Đảo, xa Đại Thiền Đường; nối bằng vân lộ từ Cổng Vân Môn; không lọt vào camera Đại Thiền Đường hay Đài Thiền. Tôn tượng vẫn là điểm cao nhất.
+- **Kiến trúc:** gợi Kỳ Viên (Jetavana) nhưng không phô vàng bạc. Không đặt tượng Phật hay vật thờ trong khu này để thương mại không gắn với thờ cúng.
+- **Bốn gian:**
+  1. *Chánh Mạng Thị* — gian hàng affiliate và sản phẩm của doanh nghiệp xã hội.
+  2. *Gieo Duyên Đường* — hộ trì vận hành nền tảng.
+  3. *Hộ Trì Đài* — chiến dịch của đối tác và Quỹ Phụng Sự.
+  4. *Bia Minh Bạch* — Sổ Minh Bạch tháng và sổ cái tác động.
+- **Giao diện:** bảng 2D trong suốt theo `CLAUDE.md`; ảnh tải lười; mọi sản phẩm có nhãn "Liên kết tiếp thị".
+
+### 11.3 Chánh Mạng Thị (affiliate)
+
+| Nguồn | Cách tích hợp | Ghi chú |
+|---|---|---|
+| Shopee Affiliate (VN) | Open API trong mục "Open API" của bảng affiliate: lấy danh sách offer (Shopee, thương hiệu, sản phẩm), tạo short link, lấy báo cáo chuyển đổi [36b]; yêu cầu GraphQL ký HMAC-SHA256 bằng App ID/Secret | API chỉ trả thông tin cơ bản: tên, ảnh chính, giá; không có mô tả đầy đủ [36] |
+| TikTok Shop | Affiliate APIs: tìm sản phẩm open collaboration, tạo link quảng bá sản phẩm [37] | Quyền truy cập tùy thị trường và loại tài khoản; chưa được cấp ở VN thì nhập link thủ công |
+| WooCommerce của doanh nghiệp | REST API v3; sản phẩm loại external/affiliate có `external_url`, `button_text` [38]; sản phẩm của chính doanh nghiệp thanh toán trên site Woo | Phù hợp nhóm "sản phẩm có giá trị thực" của tài liệu gốc |
+
+**Quy trình đưa sản phẩm lên:**
+1. Hermes hoặc lịch chạy lấy ứng viên → `product.status = 'ung_vien'`.
+2. Lọc tự động theo danh mục cấm.
+3. Người duyệt chấm checklist Chánh Mạng (Phụ lục G) → `hien`.
+4. Cache vào KV; làm mới giá mỗi ngày; link hỏng thì ẩn.
+
+**Khi người dùng bấm mua:** `/go/{id}` trên Worker đếm lượt bấm ẩn danh (Analytics Engine, không `user_id`) rồi chuyển 302 tới link affiliate có subId theo kênh (web/android). Không gắn danh tính người dùng vào link.
+
+**Danh mục cấm cứng:**
+- Năm nghề cư sĩ không nên làm theo AN 5.177: vũ khí, sinh vật (người, thú), thịt, chất say, chất độc [45] — bao gồm rượu bia, thuốc lá, chất kích thích, thuốc diệt chuột/trừ sâu, đồ săn bắt.
+- Vật phẩm "khai quang, cải mệnh, trừ tà", bùa, phong thủy cải vận (tài liệu gốc).
+- Cờ bạc, xổ số, vay tiêu dùng, tiền mã hóa; thực phẩm chức năng hoặc thuốc không có giấy tờ quảng cáo hợp lệ.
+
+**Ưu tiên:** sách Phật học có bản quyền, đồ thiền (bồ đoàn, tọa cụ), trà, thực phẩm chay, đồ thủ công của doanh nghiệp xã hội, sản phẩm xanh, sản phẩm giá trị thực của doanh nghiệp như tài liệu gốc nêu (trang sức tự nhiên kiểm định minh bạch, ấn phẩm) — định vị là giá trị thẩm mỹ, không công năng tâm linh.
+
+**Công bố và pháp lý:**
+- Mọi sản phẩm mang nhãn "Liên kết tiếp thị — Vân Đạo nhận hoa hồng nếu bạn mua; giá của bạn không đổi", kèm trang chính sách affiliate. Luật Quảng cáo sửa đổi 2025 yêu cầu nội dung quảng cáo có dấu hiệu nhận diện rõ ràng [40].
+- Luật TMĐT 2025, hiệu lực 1/7/2026, lần đầu điều chỉnh tiếp thị liên kết [41]. Người tiếp thị phải cung cấp thông tin xác thực danh tính cho đơn vị cung cấp dịch vụ affiliate, từ chối hàng vi phạm và chủ động gỡ link khi phát hiện vi phạm [42].
+
+**Giai đoạn B (sau, cần luật sư):** cho đồng tu đã xác minh mở "gian hàng Chánh Mạng" dẫn link về Shopee/TikTok/Woo của họ. Khi đó Vân Đạo có thể thành **nền tảng TMĐT trung gian** — nền tảng cho phép người khác đăng ký tài khoản để giới thiệu, bán hàng trên chính nền tảng [41b]. Nghĩa vụ đi kèm: xác thực người bán, kiểm duyệt thông tin sản phẩm, lưu dữ liệu hàng hóa, tiếp nhận khiếu nại [41c]. Không làm ở GĐ6.
+
+### 11.4 Gieo Duyên (hộ trì vận hành nền tảng)
+- **Ý nghĩa:** góp vào chi phí máy chủ, phát triển, kiểm duyệt. Ghi rõ đây không phải cúng dường Tam Bảo và không phải từ thiện. Không đổi lấy quyền lợi, không cộng điểm, không huy hiệu.
+- **Luồng kỹ thuật:**
+  1. `POST /api/v1/gieo/intent` trả mã nội dung `VD` + 6 ký tự và payload VietQR tới tài khoản của pháp nhân.
+  2. Cổng xác nhận chuyển khoản (payOS, Casso hoặc SePay) gọi webhook có chữ ký.
+  3. Worker kiểm chữ ký và chống xử lý trùng theo mã giao dịch — Casso yêu cầu chống trùng để chặn tấn công replay [44].
+  4. Ghi `gieo_receipt`, gửi lời Tùy hỷ.
+  5. Đối soát mỗi ngày bằng API lấy giao dịch để không sót khi webhook lỗi.
+- Mặc định ẩn danh; người gieo có thể cho hiện Tịnh danh trong danh sách tri ân, **không kèm số tiền**. Không lưu số tài khoản của người gieo.
+- **Kế toán:** khoản tài trợ cho doanh nghiệp phải hạch toán và có chứng từ; cần kế toán xác nhận cách ghi nhận.
+- **Android:** bản Play ẩn Gieo Duyên cho tới khi chốt cách tuân thủ chính sách thanh toán của Google Play (§13.4).
+
+### 11.5 Hộ Trì Đài (chiến dịch thiện nguyện)
+- Chỉ đối tác có tư cách pháp lý đã xác minh (quỹ từ thiện được phép hoạt động, tổ chức xã hội, chùa có tài khoản pháp nhân, doanh nghiệp xã hội).
+- Mỗi chiến dịch phải có: mục tiêu, thời hạn, tài khoản tiếp nhận **riêng của đối tác**, cam kết báo cáo.
+- **Vân Đạo không giữ tiền chiến dịch:** người dùng chuyển thẳng cho đối tác; app chỉ hiển thị, nhắc báo cáo, lưu "tôi đã gieo" (tự khai, không số tiền).
+- Báo cáo giải ngân của đối tác lưu ở R2 và hiện trên Bia Minh Bạch.
+
+### 11.6 Quỹ Phụng Sự và sổ cái tác động (Proof-of-Merit, theo tài liệu gốc)
+- **Nguồn quỹ:** phần ¼ thặng dư (§11.1) từ Động cơ 1. Không dùng tiền Gieo Duyên cho quỹ này trừ khi công bố.
+- **Kích hoạt:** hoàn tất 49 ngày; nhóm đạt 100 % nguyện chung.
+- **Hạng mục:** trồng cây, suất ăn, ấn tống kinh (tài liệu gốc).
+- **Ngân sách tháng có trần:** vượt trần thì xếp hàng sang tháng sau và công khai.
+- **Quy trình (Workflows):**
+  1. Tạo bút toán chờ.
+  2. Chủ quỹ duyệt (Workflows hỗ trợ chờ sự kiện bên ngoài, ví dụ một lần phê duyệt [30b]).
+  3. Chuyển khoản thủ công cho đối tác.
+  4. Đính chứng từ lên R2.
+  5. Ghi `impact_ledger` với `hash = SHA-256(prev_hash ‖ tx_id ‖ beneficiary ‖ milestone ‖ category ‖ quantity ‖ created_at)`.
+  6. Báo Tùy hỷ cho hành giả hoặc nhóm.
+- **Công bố hằng tháng:** `head_hash` hiện trên Bia Minh Bạch và đẩy vào một repo **công khai** riêng (ví dụ `tnfsmith/vandao-ledger`) qua PR của Hermes, để ai cũng kiểm được chuỗi không bị sửa.
+- Người hưởng công đức được định danh bằng mã băm ẩn danh; chỉ hiện Tịnh danh khi người đó đồng ý.
+
+### 11.7 Sổ Minh Bạch tháng
+- **Doanh thu theo nguồn:** hoa hồng affiliate đã xác nhận, doanh thu bán hàng của doanh nghiệp xã hội, Gieo Duyên.
+- **Chi phí:** Cloudflare, tên miền, phát triển, AI, kiểm duyệt.
+- Phân bổ thặng dư theo §11.1, số tác động đã giải ngân và `head_hash` của sổ cái.
+- **Quy trình:** Hermes soạn nháp từ dữ liệu → chủ quỹ duyệt → công bố ở `/api/v1/ledger/{YYYY-MM}`.
+
+---
+
+## 12. GIAO DIỆN 3D & TRẢI NGHIỆM — ĐÁNH GIÁ VÀ HIỆN ĐẠI HÓA
+
+### 12.1 Đánh giá
+- **Ổn định chức năng:** đủ các cảnh (Vân Đảo, Đại Thiền Đường, Toàn cảnh, cõi mở rộng, Tịnh Thất), chất lượng thích ứng, không lỗi console trong kiểm thử headless.
+- **Chưa đạt hiệu năng mobile:** số đo ở §1.5.
+- **Nợ kỹ thuật cho WebGPU:** ~15 shader tự viết và `EffectComposer`.
+- **Kết luận:** giữ kiến trúc (Three.js, không framework nặng), tối ưu trước rồi mới đổi renderer.
+
+### 12.2 Ngân sách hiệu năng (dùng làm tiêu chí nghiệm thu)
+
+| Thiết bị | Lệnh vẽ | Tam giác | Khung hình | Ghi chú |
+|---|---|---|---|---|
+| Điện thoại tầm trung (Android 12+, đời 2022) | ≤ 120 | ≤ 400.000 | 30 fps ổn định khi thiền; 45–60 fps khi di chuyển | DPR tối đa 1,5 |
+| Máy tính | ≤ 250 | ≤ 1 triệu | 60 fps | |
+
+**Tải trang trên 4G:** giao diện 2D tương tác < 2,5 giây, cảnh 3D đầu tiên < 5 giây, mở lại khi đã cache < 1,5 giây.
+
+### 12.3 Đợt 1 — Tối ưu WebGL (GĐ1, Claude)
+1. Gộp geometry tĩnh theo vật liệu (`BufferGeometryUtils.mergeGeometries`).
+2. Dùng `InstancedMesh`/`BatchedMesh` cho cây, đá, Vân Tọa, đảo xa; r183 có điều khiển từng instance của BatchedMesh, gồm độ mờ riêng [35].
+3. 300 đảo xa dùng LOD/impostor; frustum culling theo cụm.
+4. Biên dịch shader trước bằng `renderer.compileAsync` để không giật khi chuyển cảnh.
+5. Độ phân giải động theo thời gian khung; bloom nửa độ phân giải trên mobile.
+6. Dừng render khi tab ẩn.
+7. Đo `renderer.info` tự động trong CI (Playwright) và báo vượt ngân sách.
+
+### 12.4 Đợt 2 — WebGPURenderer + TSL (GĐ7, Claude)
+- three.js r182 đã đưa WebGPURenderer lên làm renderer khuyến nghị [33b]; renderer tự lùi về WebGL 2 khi trình duyệt không có WebGPU, không cần viết hai nhánh mã [32].
+- **Hỗ trợ trình duyệt:**
+  - Chrome/Edge 113, Firefox 141, Safari 26 [34].
+  - Android: Chrome 121 trở lên trên Android 12+ với GPU Qualcomm/ARM [34].
+  - Firefox Android dự kiến cuối 2026 [34b].
+- **Việc phải làm:**
+  1. Đổi import sang `three/webgpu`, `await renderer.init()`, `setAnimationLoop` [33].
+  2. Viết lại ~15 shader thành TSL; TSL biên dịch ra cả WGSL và GLSL [32].
+  3. Thay `EffectComposer`/`UnrealBloomPass` bằng `RenderPipeline` (r183 đổi tên PostProcessing thành RenderPipeline [35]).
+  4. Bỏ `onBeforeCompile`.
+- **Triển khai:** chạy song song sau cờ `?r=webgpu`, so ảnh và số đo trên ma trận thiết bị; chỉ đổi mặc định khi đạt cả hình ảnh lẫn hiệu năng.
+- **Lợi ích nhắm tới:** compute shader cho mây, hạt công đức, đám đông; giảm tải CPU khi nhiều người.
+
+### 12.5 Mềm mại, thao tác nhanh
+- **2D trước, 3D sau:** giao diện, Bia Tích Lũy, thời thiền dùng được ngay khi 3D còn đang tải. Đích build `web` tách gói `core`, `island`, `realm`, `cong-duc` và tải lười.
+- **Phản hồi thao tác:** pointer events và listener passive; camera có damping; chuyển cảnh có easing; phản hồi chạm < 100 ms; `prefers-reduced-motion` tắt chuyển động lớn; rung nhẹ trên Android.
+- **Chế độ "Thiền tiết kiệm":** trong thời thiền, giảm còn 30 fps hoặc dừng hẳn render (chỉ giữ âm thanh) — tiết kiệm pin và ít phóng dật.
+
+### 12.6 Offline/online thông minh
+- **Service worker:**
+  - App shell precache, tên tệp băm, `Cache-Control: immutable`.
+  - Nội dung đã duyệt: stale-while-revalidate.
+  - `/api/v1/me`: network-first, dự phòng bằng IndexedDB.
+- Gọi `navigator.storage.persist()` để trình duyệt không tự xóa IndexedDB chứa hành trình.
+- **Đồng bộ khi:** mở app, có mạng trở lại (`online`), app quay lại foreground, Background Sync (Chromium). Luôn idempotent nhờ ULID.
+- Hiển thị trạng thái nhẹ: "đang lưu trên máy · sẽ đồng bộ".
+- **Khi offline:** Đại Thiền Đường dùng đám đông mô phỏng và ghi "ngoại tuyến"; Đại Công Đức chỉ xem danh mục đã cache, không giao dịch.
+
+### 12.7 Tận dụng hạ tầng Cloudflare cho trải nghiệm
+- Static Assets với cache `immutable`.
+- KV cho danh mục và nội dung đã duyệt.
+- D1 bản sao đọc + Sessions API.
+- Durable Objects cho thời gian thực và nhắc nhở.
+- R2 cho âm thanh tham khảo và chứng từ.
+- Web Analytics cho Core Web Vitals; Analytics Engine cho FPS theo nhóm máy.
+
+---
+
+## 13. ỨNG DỤNG ANDROID (APK để thử, AAB để lên Google Play)
+
+### 13.1 Chọn công nghệ
 | Tiêu chí | Capacitor 8 (đề xuất) | TWA + Bubblewrap (phương án nhẹ) |
 |---|---|---|
 | Cách chạy | WebView hệ thống, **đóng gói sẵn tài nguyên trong app** | Mở PWA trong Chrome toàn màn hình [20] |
@@ -511,12 +1133,12 @@ Kịch bản giờ cao điểm: 2.000 người cùng lúc, 10 shard hoạt độ
 
 Đề xuất **Capacitor 8** vì thời thiền cần chạy chắc chắn offline và giữ màn hình sáng; TWA giữ làm phương án dự phòng (cần PWA đạt chuẩn từ GĐ1).
 
-### 8.2 Yêu cầu công cụ (11/2026)
+### 13.2 Yêu cầu công cụ (11/2026)
 - Google Play: **ứng dụng mới và bản cập nhật phải nhắm Android 16 (API 36) từ 31/8/2026** [18].
 - Capacitor 8 cần Android Studio Otter 2025.2.1 trở lên [19]; Node 22+, JDK 21, `compileSdk/targetSdk 36`, `minSdk 24`, AGP 8.13, Gradle 8.14.3 [19b].
 - Hỗ trợ trang bộ nhớ 16 KB cho thư viện native (Play Console sẽ cảnh báo nếu thiếu) [19b].
 
-### 8.3 Cấu trúc & build
+### 13.3 Cấu trúc & build
 ```
 apps/android/
 ├── capacitor.config.ts   # appId: com.ainextbrain.vandao (chốt trước khi lên Play, không đổi được)
@@ -530,17 +1152,26 @@ apps/android/
 - Ký: Play App Signing; **upload key** lưu trong GitHub Secrets (`ANDROID_KEYSTORE_B64`, mật khẩu…); `versionCode` = số lần chạy CI, `versionName` = tag.
 - Workflow `android.yml` (Phụ lục D): chạy khi gắn tag `android-v*`, xuất APK + AAB thành artifact/GitHub Release; giai đoạn đầu tải AAB lên Play Console (kênh Internal testing) thủ công.
 
+### 13.4 Bổ sung bản 3 cho Android
+- Toàn bộ chuỗi build dùng Node 26 LTS; Capacitor 8 chỉ yêu cầu Node 22 trở lên [19b].
+- **Nhắc nhở:** thông báo cục bộ (LocalNotifications), chạy cả khi offline.
+- **Đại Công Đức trong bản Google Play:**
+  - Link affiliate dẫn tới sàn mua hàng hóa vật lý.
+  - Chính sách thanh toán của Google Play chỉ miễn Play Billing cho một số loại thanh toán như quyên góp được miễn thuế [39]. Trong app, nhà phát triển không được dẫn người dùng tới phương thức thanh toán khác Play Billing, trừ khi chính sách cho phép [39b].
+  - Vì vậy bản Play **ẩn Gieo Duyên**, còn chiến dịch đối tác chỉ hiển thị thông tin, cho tới khi có kết luận chính sách (hoặc tích hợp Play Billing cho Gieo Duyên).
+  - Bản web/PWA vẫn có đủ chức năng.
+
 ---
 
-## 9. QUY TRÌNH CỘNG TÁC SONG SONG CLAUDE ↔ ANTIGRAVITY
+## 14. QUY TRÌNH CỘNG TÁC SONG SONG CLAUDE ↔ ANTIGRAVITY ↔ HERMES
 
-### 9.1 Luật dùng chung cho mọi agent
+### 14.1 Luật dùng chung cho mọi agent
 - Tạo **`AGENTS.md`** ở gốc repo làm luật chung; Antigravity đọc `AGENTS.md` và `GEMINI.md`, cùng thư mục `.agents/rules/` [21]. `CLAUDE.md` giữ ngắn: nhập `@AGENTS.md` + phần riêng cho Claude. Antigravity giới hạn 12.000 ký tự mỗi tệp luật [21b] → luật ngắn gọn, chi tiết để trong `docs/`.
-- Mỗi việc = **một GitHub Issue** có: phạm vi thư mục được sửa, tiêu chí nghiệm thu, phụ thuộc. Nhận việc bằng nhãn `lane:claude` / `lane:antigravity` + `status:claimed`. Không dùng tệp "bảng việc" trong repo (chính nó sẽ xung đột).
-- Nhánh ngắn: `claude/<số-issue>-<mô-tả>` hoặc `ag/<số-issue>-<mô-tả>`; rebase lên `main` trước khi mở PR; PR < ~400 dòng thay đổi (không tính tệp sinh); **squash merge**.
-- **Không ai đẩy thẳng lên `main`, kể cả từ máy cá nhân.** Lưu ý: repo private trên GitHub Free **không có** branch protection; tính năng này cần GitHub Pro/Team [22]. Hai lựa chọn: (a) nâng GitHub Pro để bật "require PR + required checks"; (b) giữ Free nhưng production chỉ triển khai từ **tag** đã qua CI (§9.4), nên một lần đẩy nhầm cũng không lên production.
+- Mỗi việc = **một GitHub Issue** có: phạm vi thư mục được sửa, tiêu chí nghiệm thu, phụ thuộc. Nhận việc bằng nhãn `lane:claude` / `lane:antigravity` / `lane:hermes` + `status:claimed`. Không dùng tệp "bảng việc" trong repo (chính nó sẽ xung đột).
+- Nhánh ngắn: `claude/<số-issue>-<mô-tả>`, `ag/<số-issue>-<mô-tả>` hoặc `hermes/<số-issue>-<mô-tả>`; rebase lên `main` trước khi mở PR; PR < ~400 dòng thay đổi (không tính tệp sinh); **squash merge**.
+- **Không ai đẩy thẳng lên `main`, kể cả từ máy cá nhân.** Quyết định ngày 13/11/2026: **không nâng GitHub Pro** (repo private trên gói Free không có branch protection [22]). Thay bằng ba lớp: CI `lane-guard` (§14.7), production chỉ deploy từ **tag** và workflow tag tự chạy lại toàn bộ kiểm thử (§14.8), chỉ chủ dự án tạo tag.
 
-### 9.2 Phân lane theo thư mục (sở hữu chính)
+### 14.2 Phân lane theo thư mục (sở hữu chính)
 | Lane | Agent chính | Thư mục sở hữu |
 |---|---|---|
 | **3D & trải nghiệm** | Claude | `apps/web/src/world.js, island.js, people.js, realm.js, birds.js, gfx.js, audio.js, music.js, sermon.js`, `apps/web/src/rt/` (client thời gian thực) |
@@ -549,10 +1180,11 @@ apps/android/
 | **Hạ tầng & CI** | Antigravity | `.github/workflows/`, `wrangler.jsonc` các Worker, `apps/android/` |
 | **Dùng chung (tuần tự)** | Người tạo Issue chỉ định 1 agent | `packages/shared/` (Kusala, Tịnh danh, giao thức, schema), `apps/web/src/ui/`, `data.js`, `package.json` gốc |
 | **Nội dung** | Người dùng + người duyệt | `content/` (bài giảng, chương trình các tầng) |
+| **Vận hành, danh mục, giám sát** | Hermes | Soạn nháp `content/` (trạng thái `cho_duyet`), `ops/`, `docs/reports/` (§14.6) |
 
 Thay đổi chạm lane khác → mở Issue cho lane đó hoặc ghi rõ trong PR và chờ lane đó xác nhận.
 
-### 9.3 Điểm nóng xung đột và cách khóa
+### 14.3 Điểm nóng xung đột và cách khóa
 1. **File build trong repo:** ngừng commit `van-dao.html`, `dist/`, `public/`; bản HTML đơn để tải offline lấy từ GitHub Release do CI đính kèm.
 2. **Lockfile:** commit `package-lock.json`, CI dùng `npm ci`. Xung đột lockfile → không sửa tay, chạy lại `npm install` sau khi rebase.
 3. **`main.js` (465 dòng, ai cũng sửa):** tách ở GĐ0 thành `state.js`, `ui/panel.js`, `ui/creator.js`, `ui/journey.js`, `ui/account.js`, `boot.js`.
@@ -561,39 +1193,113 @@ Thay đổi chạm lane khác → mở Issue cho lane đó hoặc ghi rõ trong 
 6. **Xuống dòng:** thêm `.gitattributes` (`* text=auto eol=lf`) và `.editorconfig` — người dùng đẩy từ Windows.
 7. **Hợp đồng trước, cài đặt sau:** schema API (`packages/shared/api.ts`) và codec giao thức (`packages/shared/rt-codec.js`) được merge **trước**; sau đó hai lane làm song song với dữ liệu giả (mock) theo cùng hợp đồng.
 
-### 9.4 Dòng chảy từ nhánh đến production
+### 14.4 Dòng chảy từ nhánh đến production
 ```
-nhánh claude/* hoặc ag/*
-   └─ PR ──▶ ci.yml: lint · unit (Vitest) · test Worker (vitest-pool-workers) · build + ngân sách kích thước
+nhánh claude/*, ag/* hoặc hermes/*
+   └─ PR ──▶ ci.yml: lane-guard · lint · unit (Vitest) · test Worker (vitest-pool-workers) · build + ngân sách kích thước
             · e2e khói (Playwright, WebGL headless) · kiểm migration
          └─ preview.yml: `wrangler preview --name pr-N` → URL preview bình luận vào PR [9b]
               (D1/KV riêng cho preview qua khối `previews` trong cấu hình [9])
    └─ squash merge vào main ──▶ deploy.yml: áp migration lên D1 staging → deploy `vandao-staging`
-                                (staging.vandao.ainextbrain.com) → kiểm khói tự động
+                                (tài khoản Cloudflare staging, `*.workers.dev`) → kiểm khói tự động
    └─ gắn tag vX.Y.Z ──▶ deploy.yml (production):
+          0) chạy lại toàn bộ ci.yml trên đúng commit được gắn tag (§14.8)
           1) áp migration production (chỉ kiểu "mở rộng": thêm bảng/cột, không xóa)
           2) deploy realtime (nếu đổi) → deploy web/api
-          3) kiểm khói; lỗi → `wrangler rollback`; dữ liệu → D1 Time Travel (30 ngày ở gói Paid [1])
+          3) kiểm khói; lỗi → `wrangler rollback`; dữ liệu → D1 Time Travel (7 ngày ở gói Free, 30 ngày ở gói Paid [1])
 ```
 - Thay đổi phá vỡ lược đồ làm theo **mở rộng → chuyển → thu hẹp** qua 2 bản phát hành.
 - Secret trong repo GitHub chỉ dùng cho nhánh/tag của repo này; workflow preview kiểm `head.repo == repository` trước khi dùng secret [9b].
 
-### 9.5 Định nghĩa "Xong" (DoD) cho mọi PR
+### 14.5 Định nghĩa "Xong" (DoD) cho mọi PR
 Build xanh · kiểm thử mới cho logic mới · không tăng kích thước HTML đơn quá 3 % nếu không giải thích · không phá invariants trong `CLAUDE.md` · preview đã được mở thử trên điện thoại · cập nhật tài liệu liên quan · commit có dòng ghi công của agent.
+
+### 14.6 Làn Hermes (agent thứ ba)
+- **Hermes Agent** (Nous Research) có:
+  - bộ lập lịch cron chạy việc không cần người trực, gửi kết quả qua cổng nhắn tin (Telegram, Discord, Slack, WhatsApp, Signal, Email) [49];
+  - hỗ trợ MCP để nối thêm công cụ [49b];
+  - danh sách lệnh được phép theo mẫu duyệt [49c].
+- Chạy trên máy chủ homelab của anh.
+
+**Nhiệm vụ của Hermes:**
+
+| Nhóm | Việc |
+|---|---|
+| Giám sát | Báo cáo hằng ngày: hạn mức Free/Paid (§3.3), lỗi 5xx, dung lượng D1, chi phí, PR đã merge khi CI đỏ |
+| Đại Công Đức | Lấy ứng viên sản phẩm từ Shopee/TikTok/Woo, lọc sơ bộ danh mục cấm, mở PR vào `content/catalog/` hoặc gọi API quản trị chỉ ở mức "ứng viên"; soạn nháp Sổ Minh Bạch; nhắc đối tác nộp báo cáo; mở PR công bố `head_hash` vào repo ledger công khai |
+| Cộng đồng | Tóm tắt báo cáo vi phạm và đề xuất xử lý (không tự xử lý) |
+| Nội dung | Soạn nháp lời nhắc và tóm tắt bài giảng kèm trích dẫn → PR `content/` ở trạng thái `cho_duyet` |
+| Kiểm thử | Chạy kiểm thử tải (k6) và đo hiệu năng định kỳ vào **staging** |
+
+**Không được:**
+- sửa `apps/`, `workers/`, `db/`, `.github/`;
+- tạo tag hay deploy;
+- trả lời người dùng về giáo lý;
+- chạm vào tiền.
+
+**Quyền tối thiểu:**
+- GitHub token chỉ cho repo này và repo ledger.
+- Cloudflare API token chỉ đọc số liệu.
+- Service token Cloudflare Access cho API quản trị, phạm vi "ứng viên/nháp".
+- Danh sách lệnh được phép tối thiểu.
+- Nhánh `hermes/<issue>-<mô-tả>`; nhãn Issue `lane:hermes`.
+
+### 14.7 Lane-guard (thay branch protection)
+- `.github/lanes.yml` (mẫu ở Phụ lục F) khai báo glob được phép cho từng tiền tố nhánh: `claude/`, `ag/`, `hermes/`, `hotfix/`, `owner/`.
+- `scripts/lane-guard.mjs` chạy đầu tiên trong `ci.yml`:
+  1. Đọc tiền tố nhánh nguồn.
+  2. Lấy `git diff --name-only origin/main...HEAD`.
+  3. Đánh đỏ CI khi có tệp ngoài làn.
+- **Quy tắc kèm theo:**
+  - Tệp thuộc vùng "dùng chung" chỉ qua được khi PR có nhãn `shared-ok`.
+  - Migration mới chỉ được đến từ nhánh `ag/`.
+  - Sửa migration đã merge luôn bị chặn.
+- Quy ước merge: squash; không merge PR đỏ; Hermes báo cáo mọi vi phạm.
+
+### 14.8 Tách local – preview – staging – production
+
+| Môi trường | Kích hoạt | Worker | Dữ liệu | Người dùng |
+|---|---|---|---|---|
+| Local | `wrangler dev` | Miniflare | D1/KV/DO cục bộ + `db/seed/` | Từng agent, không chia sẻ |
+| Preview | Mỗi PR | Preview Workers của Worker staging theo PR (§14.4) [9b] | Tài khoản staging; bindings khối `previews`: D1 `vandao-core-preview` [9] | Người duyệt PR |
+| Staging | Merge vào `main` | `vandao-staging`, `vandao-realtime-staging` trên **tài khoản Cloudflare staging** (Free, riêng), URL `*.workers.dev` | D1 `vandao-core-staging`, KV/R2 staging | Thử nghiệm, Hermes kiểm thử tải |
+| Production | Tag `vX.Y.Z` | `vandao`, `vandao-realtime` trên tài khoản Cloudflare hiện tại | D1 `vandao-core`… | Người dùng thật |
+
+**Quy tắc vận hành:**
+- `concurrency` trong GitHub Actions: nhóm `deploy-staging` và `deploy-production` (gồm cả bước migration) với `cancel-in-progress: false` → hai agent merge sát nhau thì bản sau xếp hàng, không deploy chồng (mẫu ở Phụ lục C).
+- Workflow tag chạy lại lint, test, build, e2e **trước** migration/deploy → mã đỏ không thể lên production dù đã lỡ merge.
+- **Hai tài khoản Cloudflare:** hạn mức gói Free tính theo tài khoản (ví dụ 100.000 yêu cầu Workers/ngày [27]). Nếu preview, staging và kiểm thử tải dùng chung tài khoản production thì chúng tiêu hạn mức của người dùng thật. Vì vậy preview/staging chạy trên một tài khoản Cloudflare thứ hai (Free); production giữ tài khoản hiện tại. Staging dùng `*.workers.dev` vì tên miền tùy chỉnh phải thuộc zone trong cùng tài khoản.
+- **Secrets khi không có GitHub Pro:** repo private ở gói Free không tạo được GitHub Environments, nên không có secret theo môi trường [52]. Dùng secrets cấp repo, đặt tên theo môi trường: `CF_STAGING_API_TOKEN`/`CF_STAGING_ACCOUNT_ID` và `CF_PROD_API_TOKEN`/`CF_PROD_ACCOUNT_ID`. Token production chỉ có quyền tối thiểu (Workers Scripts, D1, KV, R2; không DNS, không cài đặt zone). Chỉ job production trong `deploy.yml` (chạy theo tag) tham chiếu `CF_PROD_*`.
+- Secrets cấp repo về lý thuyết đọc được từ mọi workflow trong repo, nên thêm ba lớp: chỉ nhánh `ag/` được sửa `.github/` (lane-guard); Hermes báo cáo mọi thay đổi trong `.github/` hằng ngày; bật cảnh báo Audit Log của Cloudflare cho token production và xoay vòng token mỗi quý.
+- Chỉ chủ dự án tạo tag; Claude hoặc Antigravity chỉ tạo tag khi Issue ghi rõ.
+- **Hotfix:** nhánh `hotfix/*` từ tag → PR → merge → tag bản vá.
+- **PR có migration mới:** tạo D1 tạm `vandao-pr-<N>` nếu hạn mức số CSDL cho phép và xóa khi đóng PR; nếu không đủ hạn mức thì kiểm migration bằng Vitest/D1 cục bộ, preview dùng lược đồ của `main`.
 
 ---
 
-## 10. BẢO MẬT, QUYỀN RIÊNG TƯ, TUÂN THỦ
+## 15. BẢO MẬT, QUYỀN RIÊNG TƯ, TUÂN THỦ
 
 - **Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15 có hiệu lực từ 1/1/2026** [23], cùng Nghị định 356/2025/NĐ-CP (thay Nghị định 13) [23b]. Người dùng có quyền được biết, đồng ý, truy cập, chỉnh sửa và yêu cầu xóa dữ liệu [23c]. Đáp ứng bằng: điều khoản + đồng ý có phiên bản (`consent`), xuất dữ liệu, xóa tài khoản, nhật ký mặc định không lên máy chủ.
 - Dữ liệu thực hành tu tập có thể bị xem là thể hiện **niềm tin tôn giáo** (thuộc nhóm nhạy cảm theo quy định trước đây) → cần luật sư xác nhận theo danh mục mới của Nghị định 356 trước khi mở đăng ký rộng; trong lúc chờ, áp dụng mức bảo vệ của dữ liệu nhạy cảm.
 - Máy chủ: secret qua `wrangler secret`; truy vấn tham số hóa; kiểm đầu vào ở biên; tiêu đề CSP, HSTS, `Permissions-Policy`; không ghi email/nhật ký vào log; Analytics Engine chỉ nhận số liệu ẩn danh.
 - Thời gian thực: vé HMAC 60 giây; chặn người bị chặn ngay trong DO; giới hạn tốc độ khung; báo cáo vi phạm có hàng chờ xử lý.
-- Đánh giá theo OWASP ASVS mức 1 trước khi mở công khai (GĐ7).
+- Đánh giá theo OWASP ASVS mức 1 trước khi mở công khai (GĐ9).
+
+### 15.1 Pháp lý cho cộng đồng và Đại Công Đức
+
+| Văn bản | Ảnh hưởng | Thiết kế đáp ứng |
+|---|---|---|
+| Luật Quảng cáo sửa đổi 75/2025/QH15, hiệu lực 1/1/2026 [40] | Nội dung quảng cáo phải có dấu hiệu nhận diện rõ ràng | Nhãn "Liên kết tiếp thị" trên mọi sản phẩm; trang chính sách affiliate |
+| Luật TMĐT 122/2025/QH15, hiệu lực 1/7/2026 [41][42] | Điều chỉnh tiếp thị liên kết; định nghĩa nền tảng trung gian [41b] | Xác thực danh tính với Shopee/TikTok; gỡ link vi phạm; chưa mở gian hàng thành viên (§11.3) |
+| Nghị định 93/2021/NĐ-CP [43] | Cá nhân vận động từ thiện phải có tài khoản riêng theo từng cuộc vận động, công khai | Cấm gây quỹ cá nhân trên Bảng Hộ Trì; chỉ chiến dịch của đối tác; Vân Đạo không giữ tiền chiến dịch |
+| Luật BVDLCN 91/2025/QH15 + NĐ 356/2025 [23][23b] | Đồng ý, quyền truy cập/xóa | Đánh giá tác động xử lý dữ liệu cho cộng đồng và Đại Công Đức; không lưu số tài khoản người gieo; lượt bấm affiliate không gắn danh tính |
+| Chính sách thanh toán Google Play [39][39b] | Hạn chế thanh toán ngoài Play Billing trong app | Bản Play ẩn Gieo Duyên (§13.4) |
+
+Mọi dòng trên cần luật sư/kế toán xác nhận trước GĐ6. Tài liệu này không phải tư vấn pháp lý.
 
 ---
 
-## 11. QUẢN TRỊ NỘI DUNG TU HỌC
+## 16. QUẢN TRỊ NỘI DUNG TU HỌC
 
 - Mọi bài giảng, bài thiền, chương trình tầng nằm trong `content/` (Markdown + front-matter: `id, version, tier, source_ref, status`) → CI nạp vào `content_item`/KV. Chỉ nội dung `da_duyet` được hiển thị.
 - Bảy bài thuyết giảng tóm lược Nikāya hiện có chuyển sang trạng thái `cho_duyet` cho đến khi người hướng dẫn chuyên môn đọc lại.
@@ -605,102 +1311,185 @@ Build xanh · kiểm thử mới cho logic mới · không tăng kích thước 
   - Điều kiện lưu ở dữ liệu nội dung (không viết cứng trong mã); giao diện chỉ nói "đã hoàn thành chương trình Tầng N", **không nói đã chứng đắc**.
 - Không dùng AI sinh nội dung giáo lý hiển thị trực tiếp cho người dùng nếu chưa qua duyệt; nếu sau này có tra cứu kinh bằng AI thì chỉ trả lời kèm trích dẫn nguồn kinh và có nhãn rõ ràng.
 
+### 16.1 Hội đồng cố vấn Pháp học (tài liệu gốc)
+Mời các bậc tôn đức thông suốt Pháp – Luật làm Hội đồng cố vấn **độc lập**, chỉ kiểm duyệt tính chuẩn xác của Kinh – Luật – Luận trên hệ thống, không tham gia thương mại. Hội đồng duyệt:
+1. Biến thể nhiệm vụ Tầng 0 và ánh xạ Phước nghiệp sự/Ba-la-mật (§8.2).
+2. Lời nhắc hệ thống của AI phản tỉnh (§8.5).
+3. Điều kiện mở tầng.
+4. Danh mục sản phẩm nhạy cảm về tâm linh trong Chánh Mạng Thị.
+5. Câu chữ của lời nhắc và thông báo Tùy hỷ.
+
+Hermes chỉ soạn nháp; mọi thứ hiển thị cho người dùng phải ở trạng thái `da_duyet`.
+
 ---
 
-## 12. CÔNG NGHỆ & PHIÊN BẢN CHUẨN (mốc 11/2026)
+## 17. CÔNG NGHỆ & PHIÊN BẢN CHUẨN (mốc 13/11/2026)
 
-| Thành phần | Phiên bản đề xuất | Lý do / ghi chú |
+| Thành phần | Phiên bản | Lý do / ghi chú |
 |---|---|---|
-| Node.js (CI, công cụ) | **24 LTS** | Hỗ trợ đến 30/4/2028; Node 20 đã hết hạn 30/4/2026 [16]. Có thể lên 26 khi đã vào Active LTS |
-| Wrangler | **^4 (bản mới nhất)** | v3 chỉ còn vá bảo mật nghiêm trọng đến Q1/2027 [14]; cần ≥ 4.36 cho `ratelimits` [11] |
-| GitHub Actions | `actions/checkout@v5+`, `actions/setup-node@v5+`, `cloudflare/wrangler-action@v3` | Runner đã bỏ Node 20 từ 23/9/2026 [17] |
-| `compatibility_date` | Cập nhật mỗi quý (hiện `2026-10-01`), cờ `nodejs_compat` cho Better Auth | |
-| three.js | r187 (đang dùng), nâng có kiểm soát | Nhịp phát hành ~8–11 tuần/bản trong 2026, r186 đã gỡ một số định dạng build cũ [24] → nâng bản phải chạy e2e hình ảnh |
-| esbuild | 0.28.x (đang dùng) | Giữ đóng gói nhanh, không thêm bundler nặng |
-| Web Audio, WebGL2 | Giữ | WebGPU để sau, khi cần |
+| **Node.js** (CI, công cụ, build Android) | **26 LTS** (`.nvmrc` = 26, `engines.node` ≥ 26) | Vào Active LTS ngày 28/10/2026, hỗ trợ tới 30/4/2029 [16][26]. 26 là bản cuối theo lịch cũ; từ Node 27, mỗi năm một bản lớn phát hành tháng 4 và lên LTS tháng 10 [25]. Trong GĐ0 chạy thêm một job Node 24 để bắt lỗi tương thích, gỡ khi ổn |
+| Wrangler | ^4, bản mới nhất | v3 chỉ còn vá bảo mật nghiêm trọng đến Q1/2027 [14]; cần ≥ 4.36 cho `ratelimits` [11] |
+| GitHub Actions | `actions/checkout@v5+`, `actions/setup-node@v5+` (`node-version: 26`), `cloudflare/wrangler-action@v3` | Runner đã bỏ Node 20 từ 23/9/2026 [17] |
+| `compatibility_date` | `2026-11-01`, cập nhật mỗi quý; cờ `nodejs_compat` | |
+| three.js | r187 (đang dùng); nâng mỗi 1–2 bản có kiểm thử ảnh | Nhịp 8–11 tuần/bản trong 2026; r186 đã gỡ một số định dạng build cũ [24] |
+| esbuild | 0.28.x | Giữ đóng gói nhanh, không thêm bundler nặng |
+| Renderer | WebGL2 → WebGPURenderer + TSL ở GĐ7 | §12.4 |
 | Hono | 4.x | Router nhẹ cho Workers |
-| Better Auth | Bản **stable** mới nhất (v1.6 đã không còn là stable; v1.8 đang beta) [15] | Plugin `anonymous`, `emailOTP`, `bearer`, `passkey` |
-| Drizzle ORM + drizzle-kit | Bản mới nhất | Better Auth trên D1 cần Drizzle hoặc Kysely, không có adapter D1 riêng [15c] |
-| Valibot | Bản mới nhất | Kiểm schema nhẹ dùng chung client/máy chủ |
-| Vitest + `@cloudflare/vitest-pool-workers` | Bản mới nhất | Kiểm thử chạy trong runtime Workers |
-| Playwright | Bản mới nhất | e2e khói + ảnh chụp WebGL |
-| Capacitor | **8.x**, `targetSdk 36` | Đáp ứng yêu cầu API 36 của Play [18][19] |
-| Bubblewrap (dự phòng TWA) | 1.27+ | Bản 10/2026 nhắm Android 16 [20b] |
+| Better Auth | Bản stable mới nhất (v1.6 không còn là stable; v1.8 đang beta) [15] | Plugin `anonymous`, `passkey`, `bearer`, `emailOTP` (bật khi Paid) |
+| Drizzle ORM + drizzle-kit | Mới nhất | Better Auth trên D1 cần Drizzle hoặc Kysely [15c] |
+| Valibot | Mới nhất | Kiểm schema dùng chung client/máy chủ |
+| Vitest + `@cloudflare/vitest-pool-workers` | Mới nhất | Kiểm thử trong runtime Workers |
+| Playwright | Mới nhất | e2e khói, ảnh WebGL, đo `renderer.info` |
+| Web Push | PushForge hoặc thư viện tương đương chỉ dùng Web Crypto [51] | Thư viện `web-push` gốc dùng API riêng của Node, không chạy trên Workers [51] |
+| Capacitor | 8.x, `targetSdk 36` | Đáp ứng yêu cầu API 36 của Play [18][19] |
+| Bubblewrap (dự phòng TWA) | 1.27+ | [20b] |
 
-Quy tắc cập nhật: Dependabot/Renovate mở PR hằng tuần cho bản vá, hằng tháng cho bản nhỏ; bản lớn cần Issue riêng.
+**Lịch nâng cấp dài hạn** (Renovate mở PR):
+- Bản vá: hằng tuần.
+- Bản nhỏ: hằng tháng.
+- `compatibility_date`: mỗi quý.
+- `targetSdk` Android: mỗi tháng 8.
+- Node: sang Node 28 LTS vào quý 4/2028 (Node 26 hết hạn 4/2029).
 
 ---
 
-## 13. CẤU TRÚC REPO ĐÍCH (npm workspaces)
+## 18. CẤU TRÚC REPO ĐÍCH (npm workspaces)
 
 ```
 Buddha/
 ├── AGENTS.md                  # luật chung mọi agent (≤ 12.000 ký tự)
 ├── CLAUDE.md                  # @AGENTS.md + phần riêng Claude
 ├── PROJECT_ROADMAP.md         # tài liệu này
-├── docs/                      # thiết kế, ADR (quyết định kiến trúc), runbook
-├── content/                   # nội dung tu học có duyệt
+├── .nvmrc  .gitattributes  .editorconfig  package.json  package-lock.json
+├── .github/
+│   ├── lanes.yml              # làn sở hữu (Phụ lục F)
+│   └── workflows/             # ci.yml · preview.yml · deploy.yml · android.yml
+├── scripts/                   # lane-guard.mjs, check-migrations.mjs, size-budget.mjs
+├── docs/                      # thiết kế, ADR, runbook, reports/ (Hermes)
+├── content/                   # nội dung có duyệt
+│   ├── program/so-nhap-49/    # biến thể nhiệm vụ Tầng 0
+│   ├── sermons/  reminders/
+│   └── catalog/               # sản phẩm Chánh Mạng Thị (ứng viên/đã duyệt)
+├── ops/                       # cấu hình Hermes, kịch bản k6
 ├── apps/
-│   ├── web/                   # (dời từ van-dao-src/) src/, build.mjs (đích: single | web | android), tests/
-│   └── android/               # Capacitor 8
+│   ├── web/src/
+│   │   ├── world.js island.js people.js realm.js birds.js gfx.js audio.js music.js sermon.js   # 3D & âm thanh (Claude)
+│   │   ├── cong-duc/          # đảo Đại Công Đức Viên (Claude)
+│   │   ├── rt/                # client thời gian thực (Claude)
+│   │   ├── net/               # sync, IndexedDB, push (Antigravity)
+│   │   ├── ui/                # panel, creator, journey, account, help, cong-duc (dùng chung)
+│   │   └── boot.js state.js data.js
+│   └── android/               # Capacitor 8 (Antigravity)
 ├── workers/
-│   ├── api/                   # Worker "vandao": static assets + Hono + Better Auth + cron + queue consumer
-│   └── realtime/              # Worker "vandao-realtime": Lobby, HallRoom, IslandRoom, GroupRoom
-├── packages/shared/           # kusala.js, tinh-danh.js, schedule.js, api.ts, rt-codec.js, schemas
-├── db/migrations/             # D1, chỉ tiến
-├── tests/e2e/ · tests/load/
-├── .github/workflows/         # ci.yml · preview.yml · deploy.yml · android.yml
-├── .gitattributes · .editorconfig · package.json · package-lock.json
+│   ├── api/src/               # auth/ sync/ practice/ reminders/ community/ congduc/ admin/ hooks/ (Antigravity)
+│   └── realtime/src/          # lobby.js hall.js island.js group.js reminder-clock.js (Claude)
+├── packages/shared/           # kusala.js tinh-danh.js schedule.js variant.js amlich.js parami.js stats.js
+│                              # policy.js (danh mục cấm) api.ts rt-codec.js schemas.js
+├── db/migrations/  db/seed/
+└── tests/e2e/  tests/load/
 ```
-Việc dời `van-dao-src/` → `apps/web/` làm bằng **một PR duy nhất** (`git mv`, không đổi nội dung) trong lúc không có nhánh nào đang mở.
+
+Dời `van-dao-src/` sang `apps/web/` bằng **một PR duy nhất** (`git mv`, không đổi nội dung), làm lúc không có nhánh nào đang mở.
 
 ---
 
-## 14. KẾ HOẠCH THEO GIAI ĐOẠN
+## 19. KẾ HOẠCH THEO GIAI ĐOẠN VÀ NHIỆM VỤ CHO TỪNG AGENT
 
-Thời lượng là ước lượng cho một người điều phối + hai agent; mỗi giai đoạn kết thúc bằng một tag phát hành.
+Ký hiệu: **[C]** Claude · **[AG]** Antigravity · **[H]** Hermes · **[O]** chủ dự án. Thời lượng là ước lượng. Mỗi giai đoạn kết thúc bằng một tag; mỗi nhiệm vụ là một Issue có phạm vi thư mục khớp `lanes.yml`.
 
-### GĐ0 — Nền móng repo & CI (≈ 1 tuần)
-| Việc | Lane | Nghiệm thu |
-|---|---|---|
-| Dời sang monorepo, `.gitattributes`, commit lockfile, ngừng commit build | Antigravity (PR đóng băng) | `npm ci && npm run build` sạch trên Linux và Windows |
-| Nâng Node 24, Wrangler 4, actions v5+, tách ci/preview/deploy, staging + deploy theo tag | Antigravity | PR có URL preview; merge lên staging; tag lên production |
-| Tách `main.js`; tạo `packages/shared` (Kusala, Tịnh danh, lịch 49 ngày) + Vitest | Claude | Kiểm thử công thức và 4 quy tắc tên xanh; giao diện không đổi (so ảnh `shot.mjs`) |
-| Viết `AGENTS.md`, rút gọn `CLAUDE.md`, nhãn Issue, mẫu PR | Claude | Cả hai agent đọc cùng một bộ luật |
+### 19.1 Sẵn sàng GĐ0 (phải xong trước khi mở nhánh đầu tiên)
+- [O] Duyệt tài liệu này; tạo nhãn Issue `lane:claude`, `lane:antigravity`, `lane:hermes`, `shared-ok`, `gd0` … `gd9`.
+- [O] Tạo tài khoản Cloudflare thứ hai (Free) cho preview/staging; tạo hai API token quyền tối thiểu và lưu thành secrets cấp repo `CF_STAGING_*`, `CF_PROD_*` (§14.8). Không dùng GitHub Environments vì repo private gói Free không hỗ trợ [52].
+- [O] Xác nhận cả hai tài khoản Cloudflare đang ở gói Free; nâng riêng tài khoản production khi chạm ngưỡng §3.3.
+- [O] Ngừng đẩy thẳng lên `main` từ máy cá nhân; từ đây mọi thay đổi qua nhánh + PR.
+- [O] Bắt đầu song song các việc không phải mã: chọn pháp nhân DNXH, mời Hội đồng cố vấn, đăng ký Shopee Affiliate/TikTok Shop, cổng xác nhận chuyển khoản, tài khoản Google Play.
+- [O] Gắn tag `v0.10.0` cho `main` hiện tại (mốc bản 10 của web) làm điểm rollback. [AG] đóng hoặc merge các nhánh và thay đổi còn treo trước T0.1.
 
-### GĐ1 — PWA & offline-first (≈ 1 tuần) · Claude
-Manifest + service worker (cache tệp băm tên), build đích `web` tách font/three/app, IndexedDB + `outbox`, chuyển `vandao.v1` → IndexedDB, chế độ chất lượng thấp cho máy yếu. **Nghiệm thu:** tắt mạng vẫn mở app và ngồi thiền đủ 15 phút; Lighthouse PWA đạt; dữ liệu cũ chuyển đủ.
+### GĐ0 — Nền móng repo, CI, Node 26 (≈ 1–1,5 tuần)
 
-### GĐ2 — API, D1, tài khoản (≈ 2 tuần) · song song
-- Antigravity: `workers/api` (Hono, Better Auth khách + Email OTP, Drizzle), migration 0001–0005, `/me`, `/sync`, `/profile`, `/export`, xóa tài khoản, Turnstile, rate limit, cron dọn dẹp, Analytics Engine.
-- Claude: client sync theo hợp đồng (mock trước), màn "Giữ hành trình" / "Tôi đã có hành trình", trang Tài khoản, xử lý xung đột chu kỳ.
-- **Nghiệm thu:** tạo nhân vật trên điện thoại → gắn email → mở laptop → nhập mã → nhân vật, ngày, Kusala, vị trí khôi phục < 10 giây; xác nhận offline 3 ngày rồi online → tiến đúng 3 ngày; đổi giờ máy không nhảy ngày; E máy chủ = E client.
+| ID | Việc | Làn | Nghiệm thu |
+|---|---|---|---|
+| T0.1 | PR đóng băng: `git mv van-dao-src apps/web` và sửa đường dẫn trong `deploy.yml` hiện tại cùng PR; workspaces; `.gitattributes` (`* text=auto eol=lf`), `.editorconfig`, `.nvmrc` 26; commit `package-lock.json`; ngừng commit `van-dao.html`, `dist/`, `public/` | AG | `npm ci && npm run build` sạch trên Linux và Windows |
+| T0.2 | `.github/lanes.yml` (Phụ lục F), `scripts/lane-guard.mjs`, mẫu PR/Issue; `ci.yml`: lane-guard → lint → Vitest → build 3 đích + ngân sách kích thước → kiểm migration → Playwright khói + đo `renderer.info`; ma trận Node 26 (+ job Node 24 tạm) | AG | PR mẫu đỏ khi sửa tệp ngoài làn; xanh khi đúng |
+| T0.3 | `preview.yml` (preview alias theo PR), `deploy.yml` (staging khi merge, production khi tag, `concurrency`), Wrangler 4, actions v5+ | AG | PR có URL preview; merge lên staging; tag `v0.11.0` lên production |
+| T0.4 | Tài nguyên trên **tài khoản staging**: Worker `vandao-staging`/`vandao-realtime-staging`, D1 `vandao-core-staging`/`-preview`, KV, R2; khối `env.staging` trong Wrangler (Phụ lục B) | AG | `wrangler whoami`/`d1 list` của từng tài khoản khớp bảng §14.8 |
+| T0.5 | Tách `main.js` → `boot.js`, `state.js`, `ui/*.js`; tạo `packages/shared` (kusala, tinh-danh, schedule/zones, amlich, parami) + Vitest | C | Ảnh `shot.mjs` trước/sau giống nhau; kiểm thử công thức, tên, âm lịch xanh |
+| T0.6 | `AGENTS.md`, rút gọn `CLAUDE.md` (`@AGENTS.md`), chi tiết luật chuyển vào `docs/` | C | Antigravity và Hermes đọc cùng bộ luật; `AGENTS.md` ≤ 12.000 ký tự |
+| T0.7 | Hermes: skill `vandao-ops` (đọc số liệu Cloudflare, GitHub Issues/PR), báo cáo sáng qua Telegram; thư mục `ops/` | H | Có 3 báo cáo liên tiếp; không token nào có quyền ghi Worker |
 
-### GĐ3 — Nội dung & cơ chế 4 tầng (≈ 2 tuần, song song GĐ2)
-`content/` + quy trình duyệt; bảng `tier_progress`; cấu hình điều kiện mở tầng; giao diện "đủ điều kiện → mở Tầng 1" và biến đổi không gian; chương trình Tầng 1 (khung, chờ nội dung). **Nghiệm thu:** người hoàn tất 49 ngày thấy lộ trình Tầng 1 với nội dung đã duyệt; không có câu chữ khẳng định chứng đắc.
+### GĐ1 — PWA, offline-first, hiệu năng 3D đợt 1 (≈ 2 tuần)
+| ID | Việc | Làn | Nghiệm thu |
+|---|---|---|---|
+| T1.1 | Đích build `single`/`web`/`android`; service worker; IndexedDB + `outbox`; `storage.persist()`; chuyển `vandao.v1` | C | Tắt mạng vẫn mở app và ngồi đủ 15 phút; dữ liệu cũ chuyển đủ |
+| T1.2 | Tối ưu WebGL (§12.3) | C | Mức chất lượng mobile đạt ngân sách §12.2 trong đo tự động |
+| T1.3 | Lighthouse CI, Web Analytics, Analytics Engine (FPS) | AG | Số liệu hiện trên staging |
+| T1.4 | Đo trên máy thật hằng tuần (thiết bị của anh qua Playwright/ADB hoặc thủ công) và báo cáo | H | Báo cáo FPS 3 máy |
+
+### GĐ2 — API, D1, tài khoản, đồng bộ (≈ 2–3 tuần)
+| ID | Việc | Làn | Nghiệm thu |
+|---|---|---|---|
+| T2.1 | `workers/api`: Hono, Better Auth (anonymous, passkey, Google, bearer; emailOTP sau cờ), Drizzle, migration 0001–0005 | AG | Kiểm thử vitest-pool-workers xanh |
+| T2.2 | `/me`, `/sync`, `/profile`, `/export`, xóa tài khoản; QR liên kết thiết bị; mã khôi phục; Turnstile; ratelimits | AG | Bất biến khóa ngày đúng khi chỉnh giờ máy; E máy chủ = E client |
+| T2.3 | Client sync, màn "Giữ hành trình"/"Tôi đã có hành trình", trang Tài khoản, xử lý xung đột chu kỳ | C | Điện thoại → máy tính khôi phục nhân vật < 10 giây |
+| T2.4 | Theo dõi hạn mức Free hằng ngày, cảnh báo ở 70 % | H | Báo cáo đúng số so với dashboard Cloudflare |
+
+### GĐ3 — Tầng 0 chuẩn Pháp hành, theo dõi, nhắc nhở (≈ 3 tuần)
+| ID | Việc | Làn | Nghiệm thu |
+|---|---|---|---|
+| T3.1 | Nội dung biến thể 7 tuần × 3 trục × 3–6 biến thể; ánh xạ §8.2; lời nhắc | O + Hội đồng (H soạn nháp) | Trạng thái `da_duyet` |
+| T3.2 | `variant.js`, "Duyên khởi hành trình", Bia Tích Lũy mới (hoa sen 10 cánh, lịch tu, nhịp thiền, phản tỉnh), chứng thực tuần (UI) | C | Cùng đầu vào → cùng nhiệm vụ trên máy và máy chủ |
+| T3.3 | Migration 0006; API practice/deeds/attest/reminders/push; `ReminderClock` DO + Web Push | AG (DO: C) | Nhắc đúng giờ ±1 phút ở múi +7; 410 xóa subscription |
+| T3.4 | Điều kiện Tầng 0 → 1, `tier_progress` | AG + C | Không câu chữ khẳng định chứng đắc |
 
 ### GĐ4 — Đại Thiền Đường thời gian thực (≈ 2–3 tuần)
-- Claude: `workers/realtime` (Lobby, HallRoom), codec 16 byte, đám đông thật bằng `InstancedMesh`, nội suy, nối lại.
-- Antigravity: `/rt/ticket`, chặn/báo cáo, số liệu shard, kịch bản k6.
-- **Nghiệm thu:** như §7.6 (200/shard, p95 < 250 ms, ngủ đông khi im lặng, ≥ 30 FPS trên máy tầm trung).
+| ID | Việc | Làn | Nghiệm thu |
+|---|---|---|---|
+| T4.1 | `workers/realtime`: Lobby, HallRoom, codec 16 byte, hibernation, giới hạn gói Free (§7.7) | C | §7.6 |
+| T4.2 | Đám đông thật bằng `InstancedMesh`, nội suy, nối lại, dự phòng mô phỏng | C | ≥ 30 fps với 150 hình người trên máy tầm trung |
+| T4.3 | `/rt/ticket`, chặn/báo cáo, số liệu shard | AG | Người bị chặn không thấy nhau |
+| T4.4 | Kịch bản k6 vào staging | H | Báo cáo p95, lỗi, thời lượng DO |
 
-### GĐ5 — Xã hội tu tập cho Tầng 1–3 (≈ 3 tuần)
-Đồng tu, mã mời & dẫn dắt sơ nhập, thăm đảo thật (IslandRoom, cổng mây Độc cư/Nghênh khách), nhóm đồng tu + phòng nhóm, vai trò điều phối, pháp đàm chữ có kiểm duyệt. **Nghiệm thu:** hai người thật thăm đảo nhau, cùng an tọa; nhóm 10 người đặt mục tiêu chung; chặn có hiệu lực tức thì.
+### GĐ5 — Cộng đồng Hộ Trì và xã hội tu tập (≈ 3 tuần)
+| ID | Việc | Làn | Nghiệm thu |
+|---|---|---|---|
+| T5.1 | Migration 0007; API help/events/moderation; Llama Guard; Cloudflare Access cho `/admin` | AG | Bài vi phạm mẫu bị giữ lại; tài khoản mới phải qua duyệt |
+| T5.2 | UI Bảng Hộ Trì ở Cổng Vân Môn, sự kiện, đồng tu, thăm đảo (IslandRoom), nhóm, phòng nhóm | C | Hai người thật thăm đảo nhau, cùng an tọa |
+| T5.3 | Tóm tắt kiểm duyệt hằng ngày; xác minh đối tác sự kiện | H + O | Không việc kiểm duyệt nào tồn quá 24 giờ |
 
-### GĐ6 — Android (≈ 1–2 tuần, có thể bắt đầu sau GĐ2) · Antigravity
-Capacitor 8, build đích `android`, bearer auth, giữ màn hình sáng, nhắc giờ thiền tại máy, `android.yml` ký APK/AAB, kênh Internal testing. **Nghiệm thu:** cài APK trên Android 10–16 thật; thiền offline; đăng nhập bằng email lấy lại hành trình từ web; AAB được Play Console chấp nhận (API 36).
+### GĐ6 — Đại Công Đức (≈ 3 tuần; chỉ mở khi xong các việc pháp lý của [O])
+| ID | Việc | Làn | Nghiệm thu |
+|---|---|---|---|
+| T6.1 | Migration 0008; danh mục, `/go/{id}`, connector Shopee (GraphQL HMAC) và WooCommerce REST, TikTok nếu được cấp quyền; nhập báo cáo chuyển đổi | AG | Link có subId; không lộ danh tính người bấm |
+| T6.2 | `/gieo/intent`, webhook cổng chuyển khoản (chữ ký, chống trùng, đối soát), chiến dịch, pledge, sổ cái băm chuỗi + Workflows duyệt | AG | Webhook gửi lại 3 lần chỉ ghi 1 dòng; chuỗi hash kiểm lại được |
+| T6.3 | Đảo Đại Công Đức Viên (4 gian), UI danh mục, Gieo Duyên (VietQR), Bia Minh Bạch; ẩn Gieo trên bản Play | C | Không thấy từ camera Đại Thiền Đường; nhãn affiliate luôn hiện |
+| T6.4 | Pipeline ứng viên sản phẩm, nháp Sổ Minh Bạch, PR `head_hash` vào repo ledger công khai | H | Không sản phẩm nào lên `hien` mà thiếu người duyệt |
+| T6.5 | Pháp nhân DNXH, tài khoản affiliate, tài khoản ngân hàng + cổng xác nhận, chính sách affiliate/Gieo, ý kiến luật sư/kế toán | O | Có văn bản |
 
-### GĐ7 — Gia cố & ra mắt (≈ 2 tuần)
-Tải 2.000 kết nối, đánh giá ASVS L1, điều khoản + chính sách dữ liệu (rà pháp lý), bảng theo dõi & cảnh báo, sao lưu xuất D1 hằng tuần sang R2 (ngoài Time Travel), runbook sự cố, khả năng tiếp cận (giảm chuyển động, tương phản, nhãn đọc màn hình), ngân sách hiệu năng. **Ra mắt beta kín → công khai.**
+### GĐ7 — 3D đợt 2: WebGPURenderer + TSL (≈ 2–3 tuần; làm song song từ sau GĐ1)
+| ID | Việc | Làn | Nghiệm thu |
+|---|---|---|---|
+| T7.1 | Port ~15 shader sang TSL, `RenderPipeline`, cờ `?r=webgpu` | C | Ảnh so khớp; số đo không kém WebGL |
+| T7.2 | Đổi mặc định sang WebGPU khi đạt trên ma trận thiết bị | C + O | WebGL2 vẫn chạy cho máy không có WebGPU |
 
-### GĐ8 — Sau ra mắt
-iOS (Capacitor), sự kiện hồi hướng chung theo ngày rằm, âm thanh tham khảo trên R2, tra cứu kinh có trích dẫn, phân vùng dữ liệu khi vượt ngưỡng §4.4.
+### GĐ8 — Android (≈ 1–2 tuần; bắt đầu được sau GĐ2)
+| ID | Việc | Làn | Nghiệm thu |
+|---|---|---|---|
+| T8.1 | Capacitor 8, đích `android`, bearer auth, keep-awake, LocalNotifications, `android.yml` ký APK/AAB | AG | Cài APK trên Android 10–16; AAB được Play chấp nhận (API 36) |
+| T8.2 | Ẩn Gieo Duyên trên bản Play; App Links `assetlinks.json` | AG + C | Duyệt Internal testing |
 
-**Song song hóa tóm tắt:** GĐ0 tuần tự → (GĐ1 ∥ chuẩn bị GĐ2) → (GĐ2 ∥ GĐ3) → (GĐ4 ∥ GĐ6) → GĐ5 → GĐ7.
+### GĐ9 — Gia cố và ra mắt (≈ 2 tuần)
+- Tải 2.000 kết nối; đánh giá ASVS L1; điều khoản, chính sách dữ liệu, đánh giá tác động xử lý dữ liệu; bảng theo dõi và cảnh báo.
+- Xuất D1 hằng tuần sang R2 (ngoài Time Travel); diễn tập khôi phục; runbook sự cố.
+- Khả năng tiếp cận; ngân sách hiệu năng trên máy thật; beta kín → công khai.
+
+### GĐ10 — Sau ra mắt
+iOS (Capacitor), sự kiện hồi hướng chung ngày rằm, gian hàng thành viên (giai đoạn B của §11.3, cần luật sư), tra cứu kinh có trích dẫn, xác thực thời thiền bằng nhịp thở trên máy, phân vùng dữ liệu khi vượt ngưỡng §4.4.
+
+**Song song hóa:** GĐ0 (tuần tự) → (GĐ1 ∥ GĐ2) → (GĐ3 ∥ GĐ4 ∥ GĐ8) → (GĐ5 ∥ GĐ7) → GĐ6 → GĐ9. Việc pháp lý của [O] chạy song song từ ngày đầu vì GĐ6 phụ thuộc vào nó.
 
 ---
 
-## 15. VẬN HÀNH & QUAN SÁT
+## 20. VẬN HÀNH & QUAN SÁT
 
 | Chỉ số (SLO) | Mục tiêu |
 |---|---|
@@ -713,23 +1502,44 @@ iOS (Capacitor), sự kiện hồi hướng chung theo ngày rằm, âm thanh th
 - Cảnh báo: tỉ lệ lỗi 5xx, D1 > 6 GB, chi phí DO tăng bất thường, OTP gửi tăng đột biến (dấu hiệu lạm dụng).
 - Runbook: rollback Worker, khôi phục D1 bằng Time Travel, tắt tính năng bằng cờ KV, khóa đăng ký khi bị spam.
 
+**Bổ sung bản 3:**
+- Bảng hạn mức Free (§3.3): Hermes báo mỗi sáng, cảnh báo ở 70 %.
+- Chỉ số Đại Công Đức: webhook lỗi, đối soát lệch, sản phẩm có link hỏng.
+- Sổ cái tác động: kiểm lại chuỗi hash mỗi đêm; phát hiện sai lệch → khóa ghi và báo động.
+
 ---
 
-## 16. RỦI RO & QUYẾT ĐỊNH CẦN ANH CHỐT
+## 21. QUYẾT ĐỊNH ĐÃ CHỐT, QUYẾT ĐỊNH CẦN ANH CHỐT, RỦI RO
 
-| # | Quyết định | Đề xuất |
+**Đã chốt (13/11/2026):**
+- Không nâng GitHub Pro; production deploy theo tag.
+- Dùng gói Workers Free trước, nâng Paid theo ngưỡng §3.3.
+- Node.js 26 LTS.
+- Có làn thứ ba cho Hermes.
+- Preview/staging chạy trên tài khoản Cloudflare thứ hai (Free) để không tiêu hạn mức của production.
+
+| # | Cần chốt | Đề xuất |
 |---|---|---|
-| 1 | Nâng GitHub Pro để có branch protection cho repo private? | Nên nâng; nếu không, chỉ deploy production theo tag |
-| 2 | Người hướng dẫn chuyên môn duyệt nội dung và điều kiện mở tầng | Cần có trước GĐ3 |
-| 3 | Đăng nhập Google ngoài Email OTP? | Để sau GĐ2, chỉ thêm nếu người dùng yêu cầu |
-| 4 | Đồng bộ nhật ký quán chiếu | Mặc định tắt, người dùng tự bật |
-| 5 | Pháp đàm bằng chữ | Chỉ trong nhóm (GĐ5), có kiểm duyệt |
-| 6 | Tên miền staging | `staging.vandao.ainextbrain.com` |
-| 7 | `appId` Android | `com.ainextbrain.vandao` (không đổi được sau khi lên Play) |
-| 8 | Tài khoản Google Play Developer | Cần trước GĐ6 |
-| 9 | Hạ tầng Proxmox đã bàn trước đây | Không cần cho kiến trúc này; chỉ giữ nếu muốn dự phòng tự vận hành |
+| 1 | Pháp nhân cho Đại Công Đức | Doanh nghiệp xã hội (Điều 10 Luật Doanh nghiệp 2020) do cư sĩ đứng tên |
+| 2 | Tỉ lệ phân bổ thặng dư | 2/4 nền tảng · ¼ Quỹ Phụng Sự · ¼ dự phòng (§11.1) |
+| 3 | Hội đồng cố vấn Pháp học | Cần trước GĐ3 |
+| 4 | Người trực kiểm duyệt cộng đồng | Cần trước GĐ5 |
+| 5 | Cổng xác nhận chuyển khoản | payOS hoặc Casso/SePay (chọn theo ngân hàng của pháp nhân) |
+| 6 | TikTok Shop Affiliate API ở VN | Đăng ký; chưa có thì nhập link thủ công |
+| 7 | Gieo Duyên trên Android | Ẩn ở bản Play cho tới khi có kết luận chính sách |
+| 8 | Repo ledger công khai | `tnfsmith/vandao-ledger` |
+| 9 | Đồng bộ nhật ký quán chiếu | Mặc định tắt |
+| 10 | `appId` Android | `com.ainextbrain.vandao` |
+| 11 | Hạ tầng Proxmox trước đây | Không cần cho kiến trúc này; Hermes chạy trên homelab |
 
-Rủi ro chính: Email Sending còn beta [12] (dự phòng: nhà cung cấp gửi mail khác qua Queue); D1 một luồng ghi [1] (giữ truy vấn ngắn, gộp ghi, tổng hợp bằng cron); WebView Android yếu với cảnh 3D (chế độ chất lượng thấp, đo trên máy thật); nội dung giáo lý sai lệch (quy trình duyệt §11).
+**Rủi ro chính:**
+- Email Sending còn beta và chỉ có ở gói Paid [12] — đã có đăng nhập không cần email (§6.4).
+- D1 xử lý tuần tự [1] — giữ truy vấn ngắn, ghi theo lô.
+- Điện thoại yếu với cảnh 3D — có ngân sách hiệu năng và chế độ tiết kiệm.
+- Nội dung giáo lý sai lệch — quy trình duyệt §16.
+- Lừa đảo hoặc gây quỹ trá hình trong cộng đồng — cấm gây quỹ cá nhân, kiểm duyệt ba lớp.
+- Tranh cãi về "thương mại hóa" — tách không gian, công khai Sổ Minh Bạch, không cộng điểm theo tiền.
+- Chính sách affiliate của sàn thay đổi — nguồn hàng đa dạng, có Woo của doanh nghiệp.
 
 ---
 
@@ -747,6 +1557,8 @@ Rủi ro chính: Email Sending còn beta [12] (dự phòng: nhà cung cấp gử
 
 Lần sync đầu của dữ liệu cũ dùng thao tác đặc biệt `legacy.import`: máy chủ chấp nhận ngày hiện tại của người dùng nhưng đặt `started_on = hôm nay − (day − 1)` để bất biến khóa ngày vẫn đúng.
 
+---
+
 ## PHỤ LỤC B — Mẫu cấu hình Wrangler
 
 `workers/api/wrangler.jsonc`
@@ -755,7 +1567,7 @@ Lần sync đầu của dữ liệu cũ dùng thao tác đặc biệt `legacy.im
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "vandao",
   "main": "src/index.ts",
-  "compatibility_date": "2026-10-01",
+  "compatibility_date": "2026-11-01",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": "../../apps/web/dist/web",
@@ -780,42 +1592,71 @@ Lần sync đầu của dữ liệu cũ dùng thao tác đặc biệt `legacy.im
     { "name": "ISLAND", "class_name": "IslandRoom", "script_name": "vandao-realtime" } ] },
   "triggers": { "crons": ["17 19 * * *"] },
   "observability": { "enabled": true },
-  "env": { "staging": { "name": "vandao-staging",
-    "routes": [{ "pattern": "staging.vandao.ainextbrain.com", "custom_domain": true }] } }
+  "env": { "staging": { "name": "vandao-staging", "workers_dev": true, "routes": [],
+    "d1_databases": [{ "binding": "DB", "database_name": "vandao-core-staging", "database_id": "<id-staging>",
+                       "migrations_dir": "../../db/migrations" }],
+    "kv_namespaces": [{ "binding": "CONFIG", "id": "<id-staging>" }],
+    "durable_objects": { "bindings": [
+      { "name": "LOBBY",  "class_name": "Lobby",      "script_name": "vandao-realtime-staging" },
+      { "name": "HALL",   "class_name": "HallRoom",   "script_name": "vandao-realtime-staging" },
+      { "name": "ISLAND", "class_name": "IslandRoom", "script_name": "vandao-realtime-staging" } ] } } }
 }
 ```
-Lưu ý: `period` của rate limit chỉ nhận 10 hoặc 60 giây; giới hạn "3 mã/10 phút/email" phải đếm thêm trong D1/KV.
+Lưu ý:
+- `period` của rate limit chỉ nhận 10 hoặc 60 giây; giới hạn "3 mã/10 phút/email" phải đếm thêm trong D1/KV.
+- Khối `env.staging` phải khai báo lại các binding (binding không kế thừa từ cấu hình gốc); tài khoản đích do biến `CLOUDFLARE_ACCOUNT_ID` của job CI quyết định (§14.8).
+- Khi còn gói Free: bỏ `send_email` (chỉ có ở gói Paid [12]); kiểm lại từng binding với bảng §3.3 trước khi deploy.
 
 `workers/realtime/wrangler.jsonc`
 ```jsonc
 {
   "name": "vandao-realtime",
   "main": "src/index.ts",
-  "compatibility_date": "2026-10-01",
+  "compatibility_date": "2026-11-01",
   "workers_dev": false,
   "durable_objects": { "bindings": [
     { "name": "LOBBY", "class_name": "Lobby" },
     { "name": "HALL", "class_name": "HallRoom" },
     { "name": "ISLAND", "class_name": "IslandRoom" } ] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Lobby", "HallRoom", "IslandRoom"] }],
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  "env": { "staging": { "name": "vandao-realtime-staging",
+    "durable_objects": { "bindings": [
+      { "name": "LOBBY", "class_name": "Lobby" },
+      { "name": "HALL", "class_name": "HallRoom" },
+      { "name": "ISLAND", "class_name": "IslandRoom" } ] } } }
 }
 ```
+
+---
 
 ## PHỤ LỤC C — Khung `ci.yml` / `deploy.yml`
 
 ```yaml
 # .github/workflows/ci.yml
 name: ci
-on: { pull_request: {}, push: { branches: [main] } }
+on:
+  pull_request: {}
+  push: { branches: [main] }
+  workflow_call: {}                               # deploy.yml gọi lại khi gắn tag
+concurrency: { group: ci-${{ github.ref }}, cancel-in-progress: true }
 jobs:
   check:
     runs-on: ubuntu-latest
+    strategy: { matrix: { node: [26, 24] } }      # job Node 24 chỉ giữ trong GĐ0 để bắt lỗi tương thích
     steps:
       - uses: actions/checkout@v5
+        with: { fetch-depth: 0 }                  # lane-guard cần lịch sử để so với main
       - uses: actions/setup-node@v5
-        with: { node-version: 24, cache: npm }
+        with: { node-version: ${{ matrix.node }}, cache: npm }
       - run: npm ci
+      - name: Lane-guard (§14.7)
+        if: github.event_name == 'pull_request'
+        run: node scripts/lane-guard.mjs
+        env:                                      # truyền qua env, không nội suy thẳng vào lệnh
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+          PR_LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
       - run: npm run lint && npm test            # Vitest: shared + workers (vitest-pool-workers)
       - run: npm run build                        # cả 3 đích; kiểm ngân sách kích thước
       - run: npm run check:migrations             # số thứ tự liên tục, không sửa tệp cũ
@@ -823,29 +1664,56 @@ jobs:
 ```
 ```yaml
 # .github/workflows/deploy.yml (rút gọn)
+name: deploy
 on:
   push: { branches: [main], tags: ['v*'] }
 jobs:
-  deploy:
+  staging:                                        # merge vào main → tài khoản Cloudflare staging
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment: ${{ startsWith(github.ref, 'refs/tags/') && 'production' || 'staging' }}
+    concurrency: { group: deploy-staging, cancel-in-progress: false }   # bản sau xếp hàng, không hủy bản đang chạy
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CF_STAGING_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_STAGING_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
-        with: { node-version: 24, cache: npm }
+        with: { node-version: 26, cache: npm }
       - run: npm ci && npm run build
-      - name: Migrate D1
-        run: npx wrangler d1 migrations apply vandao-core --remote ${{ startsWith(github.ref, 'refs/tags/') && '' || '--env staging' }}
+      - run: npx wrangler d1 migrations apply vandao-core-staging --remote --env staging
         working-directory: workers/api
-        env: { CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}, CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }} }
-      - name: Deploy realtime + api
+      - run: |
+          (cd workers/realtime && npx wrangler deploy --env staging)
+          (cd workers/api && npx wrangler deploy --env staging)
+      - run: npm run e2e:smoke -- --base-url=https://vandao-staging.<tai-khoan-staging>.workers.dev
+
+  verify:                                         # tag: chạy lại toàn bộ kiểm thử trên đúng commit được gắn tag
+    if: startsWith(github.ref, 'refs/tags/v')
+    uses: ./.github/workflows/ci.yml
+
+  production:                                     # chỉ job này tham chiếu CF_PROD_*
+    needs: [verify]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    concurrency: { group: deploy-production, cancel-in-progress: false }
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CF_PROD_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_PROD_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 26, cache: npm }
+      - run: npm ci && npm run build
+      - name: Migrate D1 (chỉ kiểu mở rộng)
+        run: npx wrangler d1 migrations apply vandao-core --remote
+        working-directory: workers/api
+      - name: Deploy realtime → api/web
         run: |
           (cd workers/realtime && npx wrangler deploy)
-          (cd workers/api && npx wrangler deploy ${{ startsWith(github.ref, 'refs/tags/') && '' || '--env staging' }})
-        env: { CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}, CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }} }
-      - run: npm run e2e:smoke -- --base-url=${{ startsWith(github.ref, 'refs/tags/') && 'https://vandao.ainextbrain.com' || 'https://staging.vandao.ainextbrain.com' }}
+          (cd workers/api && npx wrangler deploy)
+      - run: npm run e2e:smoke -- --base-url=https://vandao.ainextbrain.com
 ```
-(Staging cần D1 riêng `vandao-core-staging` khai báo trong `env.staging`; realtime staging tương tự. Preview PR theo mẫu chính thức của Cloudflare [9b].)
+(Không dùng khóa `environment:` vì repo private gói Free không có GitHub Environments [52]. Staging dùng D1 `vandao-core-staging` và Worker `vandao-realtime-staging` khai báo trong `env.staging` (Phụ lục B). Preview PR theo mẫu chính thức của Cloudflare [9b], dùng secrets staging. Lỗi sau deploy → `wrangler rollback`; dữ liệu → D1 Time Travel.)
 
 ## PHỤ LỤC D — Khung `android.yml`
 
@@ -858,8 +1726,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
-        with: { node-version: 24, cache: npm }
-      - uses: actions/setup-java@v5          # dùng major mới nhất chạy Node 24
+        with: { node-version: 26, cache: npm }
+      - uses: actions/setup-java@v5          # major mới nhất (runtime Node 24 của Actions)
         with: { distribution: temurin, java-version: '21' }
       - run: npm ci && npm run build -w apps/web -- --target=android
       - run: npx cap sync android
@@ -881,14 +1749,86 @@ jobs:
             apps/android/android/app/build/outputs/bundle/release/*.aab
 ```
 
+---
+
 ## PHỤ LỤC E — Bảng tra nhanh hằng số luật tu tập (phải giống nhau ở client và máy chủ)
 - Kusala: `E = base × (pre + during + post)/3 × (wise ? 1,5 : 1) × (self ? 1,25 : 1)`, `base = 10`, `pre/during/post ∈ [0,5; 1,2]`, làm tròn 2 chữ số.
 - Tiến ngày: `last_done_on < hôm nay` **và** đủ `duc`, `thien`, `tue` của ngày hiện tại; ngày 49 đủ 3 trục → hoàn tất chương trình.
 - Phân khu mở theo `ZONES[].unlock` (Trà Đạo ngày 15; Cổng Vân Môn nửa mở ngày 29, mở hẳn ngày 43).
 - Thời thiền 15 phút: 00:00 · 02:00 · 05:00 · 07:00 · 09:30 · 11:00 · 13:30.
 - Tịnh danh: 2–3 chữ, ≤ 16 ký tự, chữ cái tiếng Việt NFC, có ít nhất một chữ mang nghĩa tu tập, không tự xưng quả vị/giáo phẩm.
+- Mã Phước nghiệp sự / Ba-la-mật và biến thể Tầng 0: Phụ lục H, `packages/shared/parami.js`, `packages/shared/variant.js`.
 
-## PHỤ LỤC F — Nguồn tham khảo (truy cập 11/2026)
+---
+
+## PHỤ LỤC F — Mẫu `.github/lanes.yml`
+
+```yaml
+# Làn sở hữu: tiền tố nhánh → glob được phép sửa. Tệp trong "shared" cần nhãn PR `shared-ok`.
+claude:
+  - apps/web/src/{world,island,people,realm,birds,gfx,audio,music,sermon}.js
+  - apps/web/src/{rt,cong-duc}/**
+  - workers/realtime/**
+  - tests/e2e/**
+antigravity:
+  - workers/api/**
+  - db/**
+  - apps/web/src/net/**
+  - apps/android/**
+  - .github/**
+  - scripts/**
+  - tests/load/**
+hermes:
+  - content/**
+  - ops/**
+  - docs/reports/**
+shared:
+  - packages/shared/**
+  - apps/web/src/{ui/**,boot.js,state.js,data.js,index.template.html}
+  - apps/web/build.mjs
+  - package.json
+  - package-lock.json
+  - AGENTS.md
+  - CLAUDE.md
+  - PROJECT_ROADMAP.md
+rules:
+  migrations_only_from: antigravity     # tệp mới trong db/migrations chỉ từ nhánh ag/
+  migrations_append_only: true          # sửa tệp đã merge → đỏ
+  hotfix_allows: [claude, antigravity, shared]
+```
+
+## PHỤ LỤC G — Checklist Chánh Mạng cho sản phẩm (người duyệt chấm, lưu vào `product.policy_json`)
+
+1. Không thuộc năm nghề cư sĩ không nên làm theo AN 5.177: vũ khí, sinh vật, thịt, chất say, chất độc [45].
+2. Không quảng cáo công năng tâm linh ("khai quang, điểm nhãn, cải mệnh, trừ tà", bùa, phong thủy cải vận).
+3. Không cờ bạc, xổ số, vay tiêu dùng, tiền mã hóa, đa cấp.
+4. Nguồn gốc, chất lượng ghi rõ; nhà bán có đánh giá ổn định; không hàng giả, hàng nhái.
+5. Hàng cần giấy phép (thực phẩm chức năng, mỹ phẩm, thiết bị y tế) phải có giấy tờ quảng cáo hợp lệ; nếu không có thì loại.
+6. Phù hợp tinh thần tri túc: không hàng xa xỉ phô trương; ưu tiên đồ bền, dùng cho tu tập, sống xanh.
+7. Mô tả không thổi phồng; giá khớp với sàn tại thời điểm duyệt.
+8. Link affiliate hoạt động; nhãn "Liên kết tiếp thị" hiển thị.
+9. Người duyệt không có lợi ích riêng với nhà bán (khai báo nếu có).
+
+## PHỤ LỤC H — Mã Phước nghiệp sự và Ba-la-mật (dùng trong `kusala_entry`, `deed_log`, `content/`)
+
+| Mã `punna` | Phước nghiệp sự | Mã `parami` | Ba-la-mật |
+|---|---|---|---|
+| `dana` | Bố thí | `dana` | Bố thí |
+| `sila` | Trì giới | `sila` | Trì giới |
+| `bhavana` | Tu tập (thiền) | `nekkhamma` | Xuất ly |
+| `apacayana` | Cung kính | `panna` | Trí tuệ |
+| `veyyavacca` | Phục vụ | `viriya` | Tinh tấn |
+| `pattidana` | Hồi hướng | `khanti` | Nhẫn nại |
+| `pattanumodana` | Tùy hỷ | `sacca` | Chân thật |
+| `dhammassavana` | Nghe Pháp | `adhitthana` | Quyết định |
+| `dhammadesana` | Thuyết Pháp / chia sẻ Pháp | `metta` | Tâm từ |
+| `ditthujukamma` | Chỉnh trực tri kiến | `upekkha` | Xả |
+
+Nguồn: 10 Phước nghiệp sự theo truyền thống Chú giải [47]; 10 Ba-la-mật theo Buddhavaṃsa [48].
+
+---
+
+## PHỤ LỤC I — Nguồn tham khảo (truy cập 11/2026)
 
 1. Cloudflare D1 — Limits: https://developers.cloudflare.com/d1/platform/limits/
 2. D1 — Global read replication & Sessions API: https://developers.cloudflare.com/d1/best-practices/read-replication/
@@ -914,3 +1854,31 @@ jobs:
 22. GitHub — About protected branches: https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches
 23. Luật BVDLCN 91/2025/QH15: https://thitruongtaichinhtiente.vn/luat-bao-ve-du-lieu-ca-nhan-tao-lap-moi-truong-so-an-toan-bao-ve-quyen-loi-hop-phap-cua-nguoi-dan-75245.html · 23b. Nghị định 356/2025/NĐ-CP: https://thuvienphapluat.vn/documents/law.aspx?id=Q%3DpnM05ESTTm · 23c. Quyền của chủ thể dữ liệu: https://thitruongtaichinhtiente.vn/nhung-diem-chinh-can-luu-y-tai-luat-bao-ve-du-lieu-ca-nhan-chinh-thuc-co-hieu-luc-tu-ngay-1-1-2026-75881.html
 24. three.js — nhịp phát hành 2026 và r186: https://www.mind-verse.de/news/three-js-boom-ki-coding-webgpu-analyse-ed0965d1ad11 · Releases: https://github.com/mrdoob/three.js/releases
+25. Node.js — Evolving the Node.js Release Schedule: https://nodejs.org/en/blog/announcements/evolving-the-nodejs-release-schedule
+26. Node.js 26 vào Active LTS ngày 28/10/2026, EOL 4/2029: https://fireup.pro/news/nodejs-26-lts-whats-new-upgrade · https://www.devx.com/coding/nodejs-26-lts-new-features-release-date/
+27. Cloudflare — Pricing (hạn mức Free của Workers, Durable Objects): https://www.cloudflare.com/pricing/ · 27b. Hạn mức Free của D1/KV/R2: https://dev.to/0012303/cloudflare-workers-has-a-free-tier-100k-requestsday-at-the-edge-with-kv-r2-and-d1-52k9 · 27c. Giá D1 gói Paid: https://toolradar.com/tools/cloudflare-workers/pricing
+28. Durable Objects — Pricing (gói Free chỉ dùng lớp SQLite): https://developers.cloudflare.com/durable-objects/platform/pricing/
+29. Workers — Pricing: https://developers.cloudflare.com/workers/platform/pricing/
+30. Workflows — Limits: https://developers.cloudflare.com/workflows/reference/limits/ · 30b. Workflows GA (waitForEvent): https://blog.cloudflare.com/workflows-ga-production-ready-durable-execution/
+31. Workers AI — Pricing (10.000 neuron/ngày; Llama Guard 3 8B): https://developers.cloudflare.com/workers-ai/platform/pricing/
+32. 100 Three.js Tips (2026) — WebGPU, TSL, lệnh vẽ: https://www.utsubo.com/blog/threejs-best-practices-100-tips
+33. three.js manual — WebGPURenderer: https://threejs.org/manual/en/webgpurenderer.html · 33b. r182 đưa WebGPURenderer lên khuyến nghị: https://www.youngju.dev/blog/culture/2026-05-16-webgpu-webgl-2026-three-js-r3f-babylon-playcanvas-tres-needle-native-webgpu-wgsl-deep-dive.en
+34. web.dev — WebGPU is now supported in major browsers: https://web.dev/blog/webgpu-supported-major-browsers · 34b. Firefox Android dự kiến cuối 2026: https://abratabia.com/webgpu/browser-support.php
+35. three.js r183 — PostProcessing thành RenderPipeline, BatchedMesh theo instance: https://app.cinevva.com/zh-CN/news/2026-03-18-threejs-r183-render-pipeline
+36. Shopee Affiliate API — dữ liệu sản phẩm cơ bản: https://ce-docs.keywordrush.com/modules/affiliate/shopee · 36b. Shopee — API Access (offer list, short link, báo cáo): https://help.shopee.sg/10/article/191702-API-Access
+37. TikTok for Developers — TikTok Shop Affiliate APIs: https://developers.tiktok.com/blog/2024-tiktok-shop-affiliate-apis-launch-developer-opportunity
+38. WooCommerce REST API v3 — Products (external_url, button_text): https://developer.woocommerce.com/docs/apis/rest-api/v3/products/
+39. Google Play — Payments policy: https://play.google.com/about/monetization-ads/payments · 39b. Payments policy clarification: https://support.google.com/googleplay/android-developer/contact/ppa
+40. Luật Quảng cáo sửa đổi 2025 — nhận diện quảng cáo: https://luatvietnam.vn/linh-vuc-khac/kols-quang-cao-san-pham-can-luu-y-04-quy-dinh-moi-tu-01-01-2026-883-106335-article.html
+41. Luật TMĐT 2025 hiệu lực 1/7/2026, điều chỉnh affiliate: https://techcombank.com/thong-tin/blog/luat-thuong-mai-dien-tu · 41b. Định nghĩa nền tảng TMĐT trung gian: https://thuvienphapluat.vn/van-ban/Thuong-mai/Luat-Thuong-mai-dien-tu-2025-so-122-2025-QH15-662035.aspx · 41c. Nghĩa vụ của nền tảng: https://baovanhoa.vn/phap-luat/ban-hang-online-khong-con-duoc-an-danh-nguoi-ban-can-lam-gi-de-khong-vi-pham-242177.html
+42. Trách nhiệm người tiếp thị liên kết (Điều 26 Luật TMĐT 2025): https://hethongphapluat.com/phap-luat/huong-dan/kockol-lam-video-review-gan-link-affiliate-nhung-lan-ranh-do-phap-ly-can-biet-nam-2026.html
+43. Nghị định 93/2021/NĐ-CP — cá nhân vận động từ thiện: https://baophapluat.vn/ca-nhan-lam-tu-thien-tu-bay-gio-phai-dung-luat-post426883.html
+44. Casso — Webhook, chống trùng lặp: https://developer.casso.vn/webhook/thiet-lap-webhook-thu-cong
+45. Vaṇijjā Sutta (AN 5.177): https://www.dhammatalks.org/suttas/AN/AN5_177.html
+46. AN 1.248–257 — các nam cư sĩ đệ tử tối thắng: https://suttafriends.org/?p=5221 · 46b. Anāthapiṇḍika: https://www.encyclopediaofbuddhism.org/wiki/Anathapindika
+47. 10 Phước nghiệp sự (3 trong Tam tạng, 10 theo Chú giải): https://so06.tci-thaijo.org/index.php/tmd/article/download/296883/195597/1373313
+48. 10 Ba-la-mật theo Buddhavaṃsa: https://newworldencyclopedia.org/entry/Paramita
+49. Hermes Agent (cron, cổng nhắn tin): https://agentic-ai.readthedocs.io/en/latest/AgentPlatforms/hermes-agent/ · 49b. Hermes Agent docs (MCP): https://hermes-agent.nousresearch.com/docs · 49c. Hermes Agent README (danh sách lệnh được phép): https://github.com/nousresearch/hermes-agent
+50. PWA push trên iOS 16.4+ chỉ khi đã thêm vào Màn hình chính: https://www.mobiloud.com/blog/pwa-push-notifications
+51. PushForge — Web Push chạy trên Cloudflare Workers: https://github.com/draphy/pushforge
+52. GitHub — Managing environments for deployment (repo private cần GitHub Pro/Team): https://docs.github.com/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment
