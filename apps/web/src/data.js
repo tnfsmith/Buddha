@@ -1,5 +1,6 @@
 // Nguồn sự thật duy nhất cho âm thanh, cảnh và radar: kịch bản 15 phút (900 giây).
-export const DUR = 900;
+import { DUR } from '@vandao/shared/schedule.js';
+export { DUR };
 
 export const STAGES = [
   { id: 's1', t0: 0, t1: 120, name: 'Quy tụ & Xả ly', pali: 'Pubba-kicca', level: 0.85, beat: 12.0, az: 0, el: 0,
@@ -197,7 +198,5 @@ export const PILLARS = [
   { key: 'tue', name: 'Tuệ', sub: 'Bhāvanā · thiền và chánh kiến', color: '#6f7fc4' },
 ];
 
-// Công thức tích lũy theo tài liệu: E = B × (trước + trong + sau)/3 × M_trí × M_tự giác
-export function kusala({ base = 10, pre = 1, during = 1, post = 1, wise = false, self = false }) {
-  return Math.round(base * ((pre + during + post) / 3) * (wise ? 1.5 : 1) * (self ? 1.25 : 1) * 100) / 100;
-}
+// Công thức tích lũy Kusala: nguồn duy nhất ở packages/shared (máy chủ tính lại bằng cùng mã)
+export { kusala } from '@vandao/shared/kusala.js';

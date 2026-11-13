@@ -1,29 +1,24 @@
 {
-  "name": "van-dao",
-  "version": "1.0.0",
+  "name": "@vandao/web",
+  "version": "0.11.0",
   "description": "Vân Đạo - Không gian tu tập 3D WebGL",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "deploy": "node build.mjs && npx wrangler deploy",
-    "test": "node shot.mjs live",
+    "dev": "node build.mjs && wrangler dev",
+    "deploy:staging": "node build.mjs && wrangler deploy --env staging",
     "test:shot": "node shot.mjs live"
   },
-  "keywords": [
-    "meditation",
-    "threejs",
-    "web-audio",
-    "buddhism"
-  ],
-  "author": "",
   "license": "ISC",
   "dependencies": {
     "@fontsource/be-vietnam-pro": "^5.3.0",
     "@fontsource/noto-serif": "^5.3.0",
     "esbuild": "^0.28.2",
-    "three": "^0.187.0"
+    "three": "^0.187.0",
+    "@vandao/shared": "*"
   },
   "devDependencies": {
-    "wrangler": "^3.114.0"
-  }
+    "wrangler": "^4"
+  },
+  "private": true
 }

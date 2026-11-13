@@ -5,10 +5,14 @@ Thư mục này là mã nguồn để dựng lại tệp đó.
 
 ## Dựng lại
 
+Chạy ở thư mục gốc repo (npm workspaces, Node.js 26):
+
 ```
-npm install
-node build.mjs        # tạo dist/van-dao.html
+npm ci
+npm run build         # tạo apps/web/dist/van-dao.html và apps/web/public/index.html
 ```
+
+Luật dùng chung (Kusala, Tịnh danh, lịch thời thiền, âm lịch) nằm ở `packages/shared`; trạng thái trên máy ở `src/state.js`.
 
 ## Cấu trúc
 

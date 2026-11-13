@@ -1,11 +1,33 @@
 {
-  "name": "van-dao-workspace",
-  "version": "1.0.0",
-  "description": "Vân Đạo Workspace Root",
+  "name": "vandao",
   "private": true,
+  "description": "Vân Đạo — không gian 3D tu tập (monorepo npm workspaces)",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=26"
+  },
   "scripts": {
-    "build": "npm --prefix van-dao-src run build",
-    "deploy": "npm --prefix van-dao-src run deploy",
-    "test:shot": "npm --prefix van-dao-src run test:shot"
+    "build": "npm run build -w @vandao/web",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "size": "node scripts/size-budget.mjs",
+    "check:migrations": "node scripts/check-migrations.mjs",
+    "lane-guard": "node scripts/lane-guard.mjs",
+    "e2e:smoke": "playwright test",
+    "deploy:staging": "npm run deploy:staging -w @vandao/web",
+    "test:shot": "npm run test:shot -w @vandao/web"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.0",
+    "eslint": "^10.14.0",
+    "globals": "^17.14.0",
+    "picomatch": "^4.0.7",
+    "vitest": "^5.1.0",
+    "yaml": "^2.9.1"
   }
 }

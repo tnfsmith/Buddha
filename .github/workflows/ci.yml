@@ -1,0 +1,46 @@
+# Kiểm tra mọi PR và mọi lần merge (PROJECT_ROADMAP.md §14.4, Phụ lục C). deploy.yml gọi lại khi gắn tag.
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_call:
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+permissions:
+  contents: read
+jobs:
+  check:
+    name: check (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [26, 24]   # Node 24 chỉ giữ trong GĐ0 để bắt lỗi tương thích; gỡ khi ổn
+    steps:
+      - uses: actions/checkout@v5
+        with: { fetch-depth: 0 }   # lane-guard cần lịch sử để so với nhánh gốc
+      - uses: actions/setup-node@v5
+        with: { node-version: '${{ matrix.node }}', cache: npm }
+      - run: npm ci
+      - name: Lane-guard (§14.7)
+        if: github.event_name == 'pull_request'
+        run: node scripts/lane-guard.mjs
+        env:   # truyền qua env, không nội suy thẳng tên nhánh vào lệnh
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+          PR_LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - run: npm run size
+      - run: npm run check:migrations
+      - name: Kiểm khói Playwright (WebGL SwiftShader)
+        if: matrix.node == 26
+        run: npm run e2e:smoke
+      - name: Lưu bản HTML đơn
+        if: matrix.node == 26
+        uses: actions/upload-artifact@v5
+        with: { name: van-dao-html, path: apps/web/dist/van-dao.html, retention-days: 14 }

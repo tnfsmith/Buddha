@@ -1,0 +1,11 @@
+{
+  "name": "@vandao/shared",
+  "version": "0.11.0",
+  "private": true,
+  "description": "Luật tu tập dùng chung client và máy chủ: Kusala, Tịnh danh, lịch thời thiền, âm lịch, mã Phước nghiệp sự/Ba-la-mật",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./*": "./src/*"
+  }
+}

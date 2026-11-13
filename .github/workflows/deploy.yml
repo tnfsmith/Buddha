@@ -1,48 +1,70 @@
-# Tạm thời đến khi xong GĐ0 T0.2/T0.3 (PROJECT_ROADMAP.md §14.8, Phụ lục C):
-# - PR và push main: chỉ build để kiểm tra, KHÔNG deploy.
-# - Production chỉ deploy khi chủ dự án gắn tag vX.Y.Z.
-name: Triển khai Vân Đạo lên Cloudflare Workers
-
+# Deploy (PROJECT_ROADMAP.md §14.8, Phụ lục C):
+# - merge vào main → staging (tài khoản Cloudflare thứ hai, *.workers.dev)
+# - gắn tag vX.Y.Z  → chạy lại toàn bộ ci.yml → production (vandao.ainextbrain.com) → GitHub Release kèm bản HTML đơn
+# Không dùng khóa `environment:` (repo private gói Free không có GitHub Environments).
+name: deploy
 on:
-  pull_request:
   push:
     branches: [main]
     tags: ['v*']
-
+permissions:
+  contents: read
 jobs:
-  build-deploy:
+  staging:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    name: Build (mọi PR/push) · Deploy production (chỉ tag v*)
-    concurrency:
-      group: ${{ startsWith(github.ref, 'refs/tags/v') && 'deploy-production' || format('build-{0}', github.ref) }}
-      cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+    timeout-minutes: 20
+    concurrency: { group: deploy-staging, cancel-in-progress: false }
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CF_STAGING_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_STAGING_ACCOUNT_ID }}
     steps:
-      - name: Checkout mã nguồn
-        uses: actions/checkout@v5
-
-      - name: Cài đặt Node.js 26 LTS
-        uses: actions/setup-node@v5
-        with:
-          node-version: 26
-          cache: 'npm'
-          cache-dependency-path: 'van-dao-src/package.json'
-
-      - name: Cài đặt Dependencies
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 26, cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - name: Deploy staging
+        id: dep
+        working-directory: apps/web
         run: |
-          cd van-dao-src
-          npm install
+          npx wrangler deploy --env staging --message "main ${GITHUB_SHA::7}" | tee /tmp/dep.txt
+          echo "url=$(grep -oE 'https://[^ ]+\.workers\.dev' /tmp/dep.txt | head -1)" >> "$GITHUB_OUTPUT"
+      - name: Kiểm khói staging
+        run: npm run e2e:smoke
+        env: { E2E_BASE_URL: '${{ steps.dep.outputs.url }}' }
 
-      - name: Đóng gói Vân Đạo (dist/van-dao.html & public/index.html)
+  verify:
+    if: startsWith(github.ref, 'refs/tags/v')
+    uses: ./.github/workflows/ci.yml
+
+  production:
+    needs: [verify]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency: { group: deploy-production, cancel-in-progress: false }
+    permissions:
+      contents: write   # tạo GitHub Release
+    env:
+      # chỉ job này tham chiếu CF_PROD_*; còn secrets cũ CLOUDFLARE_* thì dùng tạm cho tới khi gỡ
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CF_PROD_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_PROD_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 26, cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - name: Deploy production
+        working-directory: apps/web
+        run: npx wrangler deploy --env="" --message "${GITHUB_REF_NAME} ${GITHUB_SHA::7}"
+      - name: Kiểm khói production
+        run: npm run e2e:smoke
+        env: { E2E_BASE_URL: 'https://vandao.ainextbrain.com' }
+      - name: GitHub Release kèm bản HTML đơn chạy offline
+        env: { GH_TOKEN: '${{ github.token }}' }
         run: |
-          cd van-dao-src
-          node build.mjs
-
-      - name: Triển khai production lên Cloudflare Workers (chỉ khi gắn tag v*)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: cloudflare/wrangler-action@v3
-        with:
-          # Ưu tiên secrets mới CF_PROD_*; còn secrets cũ CLOUDFLARE_* thì dùng tạm cho tới khi gỡ.
-          apiToken: ${{ secrets.CF_PROD_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CF_PROD_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: 'van-dao-src'
-          command: deploy
+          cp apps/web/dist/van-dao.html "van-dao-${GITHUB_REF_NAME}.html"
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+          gh release upload "$GITHUB_REF_NAME" "van-dao-${GITHUB_REF_NAME}.html" --clobber
