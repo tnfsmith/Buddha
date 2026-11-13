@@ -1,0 +1,13 @@
+#!/bin/sh
+# Vân Đạo — chặn đẩy thẳng lên main/master (PROJECT_ROADMAP.md §14.1, §19.1).
+# Cài một lần cho mỗi bản clone:  git config core.hooksPath scripts/hooks
+# Đẩy tag và các nhánh khác vẫn bình thường.
+# Khẩn cấp thật sự: git push --no-verify, và ghi lý do vào Issue/PR.
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main|refs/heads/master)
+      echo "Không đẩy thẳng lên ${remote_ref#refs/heads/}. Tạo nhánh claude/, ag/, hermes/ hoặc owner/ rồi mở PR." >&2
+      exit 1 ;;
+  esac
+done
+exit 0

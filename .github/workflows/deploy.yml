@@ -1,24 +1,29 @@
+# Tạm thời đến khi xong GĐ0 T0.2/T0.3 (PROJECT_ROADMAP.md §14.8, Phụ lục C):
+# - PR và push main: chỉ build để kiểm tra, KHÔNG deploy.
+# - Production chỉ deploy khi chủ dự án gắn tag vX.Y.Z.
 name: Triển khai Vân Đạo lên Cloudflare Workers
 
 on:
+  pull_request:
   push:
-    branches:
-      - main
-      - master
-  workflow_dispatch:
+    branches: [main]
+    tags: ['v*']
 
 jobs:
-  deploy:
+  build-deploy:
     runs-on: ubuntu-latest
-    name: Build & Deploy to Cloudflare Workers Static Assets
+    name: Build (mọi PR/push) · Deploy production (chỉ tag v*)
+    concurrency:
+      group: ${{ startsWith(github.ref, 'refs/tags/v') && 'deploy-production' || format('build-{0}', github.ref) }}
+      cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/v') }}
     steps:
       - name: Checkout mã nguồn
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Cài đặt Node.js
-        uses: actions/setup-node@v4
+      - name: Cài đặt Node.js 26 LTS
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 26
           cache: 'npm'
           cache-dependency-path: 'van-dao-src/package.json'
 
@@ -27,15 +32,17 @@ jobs:
           cd van-dao-src
           npm install
 
-      - name: Đóng gói Vân Đạo (Build dist/van-dao.html & public/index.html)
+      - name: Đóng gói Vân Đạo (dist/van-dao.html & public/index.html)
         run: |
           cd van-dao-src
           node build.mjs
 
-      - name: Triển khai lên Cloudflare Workers
+      - name: Triển khai production lên Cloudflare Workers (chỉ khi gắn tag v*)
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Ưu tiên secrets mới CF_PROD_*; còn secrets cũ CLOUDFLARE_* thì dùng tạm cho tới khi gỡ.
+          apiToken: ${{ secrets.CF_PROD_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CF_PROD_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: 'van-dao-src'
           command: deploy
