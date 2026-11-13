@@ -41,7 +41,9 @@ let idbQueue = Promise.resolve();
 let mirrorOn = false;
 const mirror = (force) => { if (!mirrorOn && !force) return idbQueue; const snap = JSON.parse(JSON.stringify(S)); idbQueue = idbQueue.then(() => idbPut('state', KEY, snap)).catch(() => {}); return idbQueue; };
 
-export const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* chỉ giữ trong bộ nhớ */ } mirror(); };
+// Đang khôi phục từ IndexedDB (sắp tải lại trang): không ghi gì nữa, kẻo savePos lúc pagehide chép trạng thái rỗng đè lên bản vừa khôi phục
+let restoring = false;
+export const save = () => { if (restoring) return; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* chỉ giữ trong bộ nhớ */ } mirror(); };
 export const allDone = (d) => allDoneIn(S.done, d);
 
 /** "Trở về ngày 1": giữ Tịnh danh và diện mạo, xóa phần còn lại */
@@ -60,8 +62,9 @@ export const stateReady = (async () => {
   try {
     const stored = await idbGet('state', KEY);
     if (!hadLocal && stored && (stored.name || stored.day > 1) && !sessionStorage.getItem('vandao.restored')) {
-      localStorage.setItem(KEY, JSON.stringify(stored));
+      restoring = true; localStorage.setItem(KEY, JSON.stringify(stored));
       if (localStorage.getItem(KEY)) { sessionStorage.setItem('vandao.restored', '1'); location.reload(); return 'restored'; }
+      restoring = false;
     }
     mirrorOn = true;
     await mirror();

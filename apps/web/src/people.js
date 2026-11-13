@@ -124,27 +124,107 @@ function crowdGeos() {
   AJ = true; const pa = parts('sit', 1); AJ = false;
   const out = { cloth, skin: merge(p.skin), clothA: mergeGeometries([col(merge(pa.cloth), 1), col(merge(pa.trim), 0.62)]), skinA: merge(pa.skin), cap: hairGeo('ngan', p.hc), bun: hairGeo('buicao', p.hc) }; DET = 1; return (crowdCache = out);
 }
+// Hình rút gọn cho người ở xa (LOD): áo, da, tóc gộp một khối, màu lấy theo thuộc tính aPart
+// (0 áo · 2 da · 3 tóc) và màu riêng từng người (aRobe, aSkin, aHair) → mỗi mức chỉ một lần vẽ, không texture.
+// Mức 1 (vừa) ≈ 216 tam giác, giữ dáng tay theo tư thế; mức 2 (xa) ≈ 48 tam giác, chỉ còn bóng dáng.
+function lodBody(level, aj) {
+  const L = [];
+  const add = (g, k) => { const o = g.index ? g.toNonIndexed() : g; o.deleteAttribute('uv'); o.setAttribute('aPart', new THREE.BufferAttribute(new Float32Array(o.attributes.position.count).fill(k), 1)); L.push(o); };
+  const ball = (rx, ry, rz, x, y, z, ws, hs, k) => { const g = new THREE.SphereGeometry(1, ws, hs); g.scale(rx, ry, rz); g.translate(x, y, z); add(g, k); };
+  const tube = (a, b, ra, rb, k) => { const va = new THREE.Vector3(...a), dv = new THREE.Vector3(...b).sub(va), len = dv.length(), g = new THREE.CylinderGeometry(rb, ra, len, 4, 1, true); g.translate(0, len / 2, 0); g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(Y, dv.normalize())); g.translate(va.x, va.y, va.z); add(g, k); };
+  const lathe = (pts, seg, sz) => { const g = new THREE.LatheGeometry(pts.map(([rr, y]) => new THREE.Vector2(rr, y)), seg); g.scale(1, 1, sz); add(g, 0); };
+  if (level === 1) {
+    ball(0.40, 0.12, 0.32, 0, 0.115, 0.06, 7, 4, 0);
+    lathe([[0.21, 0.16], [0.226, 0.45], [0.2, 0.58], [0.1, 0.645], [0.04, 0.665]], 7, 0.68);
+    [-1, 1].forEach((s) => { const el = [s * 0.25, 0.36, 0.05]; tube([s * 0.215, 0.59, 0], el, 0.062, 0.056, 0); tube(el, aj ? [s * 0.04, 0.5, 0.2] : [s * 0.075, 0.215, 0.22], 0.06, aj ? 0.07 : 0.086, 0); });
+    ball(0.108, 0.123, 0.114, 0, 0.80, 0, 7, 5, 2);
+    const cap = new THREE.SphereGeometry(1, 6, 3, 0, Math.PI * 2, 0, 1.62); cap.scale(0.1135, 0.129, 0.1195); cap.rotateX(-0.42); cap.translate(0, 0.80, 0); add(cap, 3);
+  } else {
+    lathe([[0.4, 0.0], [0.4, 0.13], [0.23, 0.28], [0.2, 0.55], [0.05, 0.665]], 4, 0.8);
+    ball(0.11, 0.125, 0.115, 0, 0.8, 0, 4, 3, 2);
+  }
+  return mergeGeometries(L);
+}
+const BEND = '#include <begin_vertex>\n if (transformed.y > 0.2) { float a = uBow*1.0; float cb = cos(a), sb = sin(a); vec3 q = transformed - vec3(0.,0.2,0.04); transformed = vec3(q.x, q.y*cb - q.z*sb, q.y*sb + q.z*cb) + vec3(0.,0.2,0.04); }';
+let lodCache = null;
+const lodGeos = () => lodCache || (lodCache = { mid: lodBody(1, false), midA: lodBody(1, true), far: lodBody(2, false) });
+// Ngưỡng khoảng cách theo mức chất lượng 0/1/2: dưới `near` vẽ đầy đủ, dưới `mid` vẽ mức vừa, xa hơn vẽ mức xa
+export const CROWD_LOD = [{ near: 30, mid: 130 }, { near: 45, mid: 170 }, { near: 60, mid: 220 }];
+
 const ROBES = ['#8a94a8', '#8a94a8', '#b9bcc4', '#8d6548', '#e9e2d0', '#4f5d86', '#75805a', '#9aa3b5'];
 export function makeCrowd(list, seed = 3) {
-  const G = crowdGeos(), r = rng(seed), n = list.length, d = new THREE.Object3D(), c = new THREE.Color(), group = new THREE.Group();
+  const G = crowdGeos(), LG = lodGeos(), r = rng(seed), n = list.length, d = new THREE.Object3D(), c = new THREE.Color(), group = new THREE.Group();
   const cloth = new THREE.InstancedMesh(G.cloth, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92 }), n);
   const skin = new THREE.InstancedMesh(G.skin, new THREE.MeshStandardMaterial({ map: faceTex({ closed: true, mood: 'hoa' }), roughness: 0.75 }), n);
-  const caps = [], buns = [], mats = [];
+  const hairOf = new Int8Array(n), mats = [], robe = new Float32Array(n * 3), skinC = new Float32Array(n * 3), hairC = new Float32Array(n * 3), pos = [];
   list.forEach((p, i) => {
-    d.position.set(p.x, p.y, p.z); d.rotation.set(0, p.rot || 0, 0); d.scale.setScalar(S * (p.sc || 1) * (0.95 + r() * 0.1)); d.updateMatrix(); mats.push(d.matrix.clone());
-    cloth.setMatrixAt(i, d.matrix); skin.setMatrixAt(i, d.matrix);
-    cloth.setColorAt(i, c.set(p.robe || ROBES[Math.floor(r() * ROBES.length)])); skin.setColorAt(i, c.set(OPTIONS.skin[Math.floor(r() * 5)][1]));
-    const h = r(); if (h > 0.34) (h > 0.74 ? buns : caps).push(i);
+    d.position.set(p.x, p.y, p.z); d.rotation.set(0, p.rot || 0, 0); d.scale.setScalar(S * (p.sc || 1) * (0.95 + r() * 0.1)); d.updateMatrix(); mats.push(d.matrix.clone()); pos.push(new THREE.Vector3(p.x, p.y + 0.8 * S, p.z));
+    c.set(p.robe || ROBES[Math.floor(r() * ROBES.length)]).toArray(robe, i * 3); c.set(OPTIONS.skin[Math.floor(r() * 5)][1]).toArray(skinC, i * 3);
+    const h = r(); hairOf[i] = h > 0.34 ? (h > 0.74 ? 2 : 1) : 0;
   });
+  // màu tóc rút theo đúng thứ tự cũ (hết tóc ngắn rồi tới búi) để giữ nguyên diện mạo hội chúng
+  for (let i = 0; i < n * 3; i++) hairC[i] = skinC[i];
+  [1, 2].forEach((kind) => { for (let i = 0; i < n; i++) if (hairOf[i] === kind) c.set(OPTIONS.hairColor[r() < 0.6 ? 0 : Math.floor(r() * 4)][1]).toArray(hairC, i * 3); });
   const hairMat = new THREE.MeshStandardMaterial({ roughness: 0.6 });
-  const mk = (geo, ids) => { const m = new THREE.InstancedMesh(geo, hairMat, Math.max(1, ids.length)); m.count = ids.length; ids.forEach((id, k) => { m.setMatrixAt(k, mats[id]); m.setColorAt(k, c.set(OPTIONS.hairColor[r() < 0.6 ? 0 : Math.floor(r() * 4)][1])); }); return m; };
+  const caps = new THREE.InstancedMesh(G.cap, hairMat, n), buns = new THREE.InstancedMesh(G.bun, hairMat, n);
   // cúi lạy: phần thân trên gập về trước quanh hông; chắp tay: đổi sang bộ hình ngồi chắp tay
-  const bow = { value: 0 }, bend = (m) => { m.onBeforeCompile = (sh) => { sh.uniforms.uBow = bow; sh.vertexShader = 'uniform float uBow;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n if (transformed.y > 0.2) { float a = uBow*1.0; float cb = cos(a), sb = sin(a); vec3 q = transformed - vec3(0.,0.2,0.04); transformed = vec3(q.x, q.y*cb - q.z*sb, q.y*sb + q.z*cb) + vec3(0.,0.2,0.04); }'); }; };
+  const bow = { value: 0 }, bend = (m) => { m.onBeforeCompile = (sh) => { sh.uniforms.uBow = bow; sh.vertexShader = 'uniform float uBow;\n' + sh.vertexShader.replace('#include <begin_vertex>', BEND); }; };
   [cloth.material, skin.material, hairMat].forEach(bend);
-  group.userData.bow = bow; group.userData.setAnjali = (on) => { if (group.userData.aj === on) return; group.userData.aj = on; cloth.geometry = on ? G.clothA : G.cloth; skin.geometry = on ? G.skinA : G.skin; };
-  [cloth, skin, mk(G.cap, caps), mk(G.bun, buns)].forEach((m) => { m.frustumCulled = false; group.add(m); });
+  const lodMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
+  lodMat.onBeforeCompile = (sh) => {
+    sh.uniforms.uBow = bow;
+    sh.vertexShader = 'uniform float uBow;\nattribute float aPart;\nattribute vec3 aRobe;\nattribute vec3 aSkin;\nattribute vec3 aHair;\n' + sh.vertexShader.replace('#include <begin_vertex>', BEND)
+      .replace('#include <color_vertex>', '#include <color_vertex>\n vColor.rgb = aPart < 0.5 ? aRobe : aPart < 2.5 ? aSkin : aHair;');
+  };
+  // mỗi mức có hình riêng (bản sao để gắn thuộc tính màu theo từng người), dùng chung thuộc tính màu cho cả hình ngồi thường lẫn chắp tay
+  const lodMesh = (geos) => {
+    const attrs = ['aRobe', 'aSkin', 'aHair'].map((k) => [k, new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3)]);
+    const gs = geos.map((g) => { const o = g.clone(); attrs.forEach(([k, a]) => o.setAttribute(k, a)); return o; });
+    const m = new THREE.InstancedMesh(gs[0], lodMat, n); m.userData.geos = gs; m.userData.attrs = attrs.map((a) => a[1]); return m;
+  };
+  const mid = lodMesh([LG.mid, LG.midA]), far = lodMesh([LG.far, LG.far]);
+  const nearSet = [cloth, skin, caps, buns], all = [...nearSet, mid, far];
+  nearSet.forEach((m) => m.setColorAt(0, c.set('#ffffff')));   // tạo sẵn màu từng người để shader không phải dựng lại khi có người lại gần
+  all.forEach((m) => { m.count = 0; m.visible = false; group.add(m); });
+  group.userData.bow = bow;
+  group.userData.setAnjali = (on) => { if (group.userData.aj === on) return; group.userData.aj = on; cloth.geometry = on ? G.clothA : G.cloth; skin.geometry = on ? G.skinA : G.skin; [mid, far].forEach((m) => { m.geometry = m.userData.geos[on ? 1 : 0]; }); };
+  // Chia hội chúng theo khoảng cách tới máy quay; có độ trễ 8% để người đứng sát ngưỡng không nhấp nháy giữa hai mức
+  const lv = new Int8Array(n).fill(-1), wp = new THREE.Vector3(), last = new THREE.Vector3(1e9, 0, 0);
+  let lastQ = -1;
+  group.userData.lod = (cam, q = 2, force = false) => {
+    if (!force && q === lastQ && cam.distanceToSquared(last) < 4) return false;
+    last.copy(cam); lastQ = q; group.updateWorldMatrix(true, false);
+    const T = CROWD_LOD[q] ?? CROWD_LOD[2]; let changed = force;
+    for (let i = 0; i < n; i++) {
+      const dd = wp.copy(pos[i]).applyMatrix4(group.matrixWorld).distanceTo(cam), cur = lv[i];
+      const edge = (t, inside) => (inside ? t * 1.08 : t / 1.08);   // đang ở phía gần ngưỡng thì phải ra xa hơn 8% mới đổi
+      const nv = dd < edge(T.near, cur === 0) ? 0 : dd < edge(T.mid, cur === 0 || cur === 1) ? 1 : 2;
+      if (nv !== cur) { lv[i] = nv; changed = true; }
+    }
+    if (!changed) return false;
+    const k = [0, 0, 0, 0, 0, 0];   // cloth, skin, caps, buns, mid, far
+    for (let i = 0; i < n; i++) {
+      if (lv[i] === 0) {
+        cloth.setMatrixAt(k[0], mats[i]); cloth.setColorAt(k[0]++, c.fromArray(robe, i * 3));
+        skin.setMatrixAt(k[1], mats[i]); skin.setColorAt(k[1]++, c.fromArray(skinC, i * 3));
+        if (hairOf[i]) { const hm = hairOf[i] === 1 ? caps : buns, j = hairOf[i] === 1 ? k[2]++ : k[3]++; hm.setMatrixAt(j, mats[i]); hm.setColorAt(j, c.fromArray(hairC, i * 3)); }
+      } else {
+        const m = lv[i] === 1 ? mid : far, j = lv[i] === 1 ? k[4]++ : k[5]++, [aR, aS, aH] = m.userData.attrs;
+        m.setMatrixAt(j, mats[i]); aR.array.set(robe.subarray(i * 3, i * 3 + 3), j * 3); aS.array.set(skinC.subarray(i * 3, i * 3 + 3), j * 3); aH.array.set(hairC.subarray(i * 3, i * 3 + 3), j * 3);
+      }
+    }
+    all.forEach((m, idx) => {
+      m.count = k[idx]; m.visible = m.count > 0; if (!m.visible) return;
+      m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; (m.userData.attrs || []).forEach((a) => (a.needsUpdate = true));
+      m.computeBoundingSphere(); m.boundingSphere.radius += 3;   // chừa chỗ cho động tác cúi lạy
+    });
+    return true;
+  };
+  group.userData.lodStats = () => ({ near: k0(lv, 0), mid: k0(lv, 1), far: k0(lv, 2) });
+  group.userData.lod(new THREE.Vector3(0, 0, 0), 2, true);
   return group;
 }
+const k0 = (a, v) => { let s = 0; for (let i = 0; i < a.length; i++) if (a[i] === v) s++; return s; };
 
 // ───────── Tịnh danh: luật nằm ở packages/shared (dùng chung client và máy chủ) ─────────
 export { VOCAB, tidyName, checkName, suggestNames } from '@vandao/shared/tinh-danh.js';

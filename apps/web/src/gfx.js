@@ -11,6 +11,25 @@ export const OUT = `gl_FragColor = vec4(pow(max(col, 0.), vec3(2.2)), a);
 #include <tonemapping_fragment>
 #include <colorspace_fragment>`;
 
+// LOD hai mức cho một tập instance tĩnh: `hi` (gần) và `lo` (xa) dùng chung ma trận `mats`; điểm `pts[i]` cách máy quay
+// dưới ngưỡng T[mức chất lượng] (trừ bán kính `pad[i]` nếu có) thì vào `hi`. Độ trễ 8% để không nhấp nháy ở sát ngưỡng.
+// Trả về hàm gọi mỗi khung: lod(cam, q); chỉ ghi lại ma trận khi có instance đổi mức.
+export function lodPair(hi, lo, mats, pts, T, pad = null) {
+  const near = new Uint8Array(mats.length).fill(2), last = new THREE.Vector3(1e9, 0, 0); let lastQ = -1;
+  [hi, lo].forEach((m) => { m.count = 0; m.visible = false; });
+  const lod = (cam, q = 2, force = false) => {
+    if (!force && q === lastQ && cam.distanceToSquared(last) < 4) return false;
+    last.copy(cam); lastQ = q; const t = T[q] ?? T[T.length - 1]; let ch = force;
+    for (let i = 0; i < pts.length; i++) { const d = pts[i].distanceTo(cam) - (pad ? pad[i] : 0), nv = d < (near[i] === 1 ? t * 1.08 : t / 1.08) ? 1 : 0; if (nv !== near[i]) { near[i] = nv; ch = true; } }
+    if (!ch) return false; let a = 0, b = 0;
+    for (let i = 0; i < pts.length; i++) { if (near[i]) hi.setMatrixAt(a++, mats[i]); else lo.setMatrixAt(b++, mats[i]); }
+    [[hi, a], [lo, b]].forEach(([m, c]) => { m.count = c; m.visible = c > 0; if (c) { m.instanceMatrix.needsUpdate = true; m.computeBoundingSphere(); m.boundingSphere.radius *= 1.1; } });
+    return true;
+  };
+  lod.stats = () => ({ near: hi.count, far: lo.count });
+  return lod;
+}
+
 export function rng(seed) { let s = seed >>> 0; return () => { s = (s + 0x6d2b79f5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
 export function makeNoise(seed = 1) {

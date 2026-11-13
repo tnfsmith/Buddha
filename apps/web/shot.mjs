@@ -32,7 +32,8 @@ for (const job of jobs) {
     console.log('PROBE', res);
     continue;
   }
-  if (name === 'eval') {
+  if (name === 'eval' || name === 'm_eval') {   // m_eval: cùng phép đo nhưng giả lập điện thoại dọc 390×800, DPR 2
+    await send('Emulation.setDeviceMetricsOverride', name === 'm_eval' ? { width: 390, height: 800, deviceScaleFactor: 2, mobile: true } : { width: 1440, height: 757, deviceScaleFactor: 1, mobile: false });
     await send('Page.navigate', { url: 'about:blank' }); await sleep(100);
     await send('Page.navigate', { url: file + '#' + hash }); await sleep(9000);
     console.log('EVAL', JSON.stringify(await evalJS(wait)));
