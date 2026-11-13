@@ -2,6 +2,8 @@
 name: ci
 on:
   pull_request:
+    # labeled/unlabeled: gắn nhãn shared-ok sau khi mở PR thì lane-guard chạy lại ngay (lần chạy cũ tự hủy)
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches: [main]
   workflow_call:
