@@ -36,8 +36,14 @@ export function openIdb() {
       }
     };
 
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onsuccess = () => {
+      const db = req.result;
+      // tab khác (bản mới hơn) cần nâng lược đồ: đóng kết nối này để không chặn nâng cấp, lần gọi sau mở lại
+      db.onversionchange = () => { db.close(); dbPromise = null; };
+      resolve(db);
+    };
+    req.onerror = () => { dbPromise = null; reject(req.error); };
+    req.onblocked = () => { dbPromise = null; reject(new Error('IndexedDB đang bị tab cũ giữ, chưa nâng cấp được')); };
   });
 
   return dbPromise;
@@ -60,8 +66,10 @@ export async function idbSet(storeName, key, value) {
     const tx = db.transaction(storeName, 'readwrite');
     const store = tx.objectStore(storeName);
     const req = key !== undefined ? store.put(value, key) : store.put(value);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    // chỉ báo xong khi giao dịch đã ghi (complete), không phải khi yêu cầu put vừa được nhận
+    tx.oncomplete = () => resolve(req.result);
+    tx.onerror = () => reject(tx.error || req.error);
+    tx.onabort = () => reject(tx.error || new Error('IndexedDB: giao dịch bị hủy'));
   });
 }
 
@@ -81,8 +89,9 @@ export async function idbDelete(storeName, key) {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, 'readwrite');
     const store = tx.objectStore(storeName);
-    const req = store.delete(key);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
+    store.delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error || new Error('IndexedDB: giao dịch bị hủy'));
   });
 }

@@ -2,8 +2,9 @@
 -- Hồ sơ hành giả và hành trình tu tập (PROJECT_ROADMAP.md §4.3)
 CREATE TABLE profile (
   user_id         TEXT PRIMARY KEY REFERENCES user(id) ON DELETE CASCADE,
-  tinh_danh       TEXT NOT NULL CHECK (length(tinh_danh) BETWEEN 2 AND 16),
-  tinh_danh_key   TEXT NOT NULL,
+  -- NULL cho tới khi người dùng tự chọn Tịnh danh (AGENTS.md §1.4); máy chủ không tự đặt tên thay
+  tinh_danh       TEXT CHECK (tinh_danh IS NULL OR length(tinh_danh) BETWEEN 2 AND 16),
+  tinh_danh_key   TEXT,
   tag             TEXT NOT NULL,
   look_json       TEXT NOT NULL,
   settings_json   TEXT NOT NULL DEFAULT '{}',

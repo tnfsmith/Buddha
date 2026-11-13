@@ -68,7 +68,7 @@ describe('Vân Đạo API & D1 Database Test Suite', () => {
     expect(meData.profile.tinh_danh).toBe('Chánh Tâm');
     expect(meData.journey.day).toBe(1);
     expect(meData.totals).toEqual({ duc: 0, thien: 0, tue: 0, all: 0 });
-    expect(meData.unlocked_zones.tra_dao).toBe(false);
+    expect(meData.unlocked_zones.tea).toBe(false);
   });
 
   it('PATCH /api/v1/profile kiểm tra quy tắc Tịnh danh và múi giờ', async () => {
@@ -136,8 +136,8 @@ describe('Vân Đạo API & D1 Database Test Suite', () => {
       const sync1Data = await sync1.json();
       expect(sync1Data.applied).toContain('01TEST_KUSALA_OP_001');
 
-      // Máy chủ tính lại: 10 * ((1.0 + 1.2 + 0.8) / 3) * 1.5 * 1.25 = 10 * 1.0 * 1.875 = 18.75 -> 18.8
-      expect(sync1Data.state.totals.duc).toBeCloseTo(18.8, 1);
+      // Máy chủ tính lại: 10 * ((1.0 + 1.2 + 0.8) / 3) * 1.5 * 1.25 = 18.75 (làm tròn 2 chữ số như client)
+      expect(sync1Data.state.totals.duc).toBe(18.75);
 
       // Gửi lại cùng op.id (idempotency check)
       const sync2 = await app.request('/api/v1/sync', {
@@ -146,10 +146,11 @@ describe('Vân Đạo API & D1 Database Test Suite', () => {
         body: JSON.stringify({ ops: [op1] })
       }, env);
 
+      // gửi lại sau mất mạng: coi là đã áp dụng để client xóa khỏi outbox, không ghi thêm lần nữa
       const sync2Data = await sync2.json();
-      expect(sync2Data.rejected).toEqual(
-        expect.arrayContaining([expect.objectContaining({ id: '01TEST_KUSALA_OP_001', code: 'exists' })])
-      );
+      expect(sync2Data.applied).toContain('01TEST_KUSALA_OP_001');
+      expect(sync2Data.rejected).toEqual([]);
+      expect(sync2Data.state.totals.duc).toBe(18.75);
     });
 
     it('Bất biến khóa ngày: Người dùng không thể nhảy ngày tu', async () => {
@@ -184,7 +185,7 @@ describe('Vân Đạo API & D1 Database Test Suite', () => {
       expect(syncRes.status).toBe(200);
       const syncData = await syncRes.json();
       expect(syncData.rejected).toEqual(
-        expect.arrayContaining([expect.objectContaining({ id: '01TEST_CHEAT_DAY_05', code: 'day_locked' })])
+        expect.arrayContaining([expect.objectContaining({ id: '01TEST_CHEAT_DAY_05', code: 'day_locked', retry: false })])
       );
     });
 

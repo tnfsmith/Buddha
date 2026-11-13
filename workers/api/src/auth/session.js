@@ -5,6 +5,10 @@ import { getLocalDate } from '../utils/time.js';
 
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 ngày
 
+/** Khóa so trùng Tịnh danh: chữ thường tiếng Việt, NFC (đi cùng `tag` 4 số thành định danh hiển thị duy nhất) */
+export const nameKey = (name) => name.normalize('NFC').toLocaleLowerCase('vi');
+export const randomTag = () => { const b = new Uint32Array(1); crypto.getRandomValues(b); return String(1000 + (b[0] % 9000)); };
+
 /**
  * Trích xuất token từ header Authorization (Bearer) hoặc cookie vd_session
  */
@@ -59,19 +63,19 @@ export async function authMiddleware(c, next) {
 }
 
 /**
- * Tạo tài khoản khách ẩn danh mới kèm hồ sơ và hành trình ban đầu
+ * Tạo tài khoản khách ẩn danh mới kèm hồ sơ và hành trình ban đầu.
+ * `name` là Tịnh danh đã qua checkName (đã chuẩn hóa) hoặc null: máy chủ không tự đặt Tịnh danh thay người dùng.
  */
-export async function createAnonymousUser(db, ip = null, userAgent = null, initialName = 'An Tịnh') {
+export async function createAnonymousUser(db, ip = null, userAgent = null, name = null, tz = 'Asia/Ho_Chi_Minh') {
   const now = Date.now();
   const userId = generateId();
   const sessionId = generateId();
   const token = generateToken();
   const expiresAt = now + SESSION_TTL_MS;
 
-  // Tạo thẻ tag 4 chữ số ngẫu nhiên
-  const tag = String(Math.floor(1000 + Math.random() * 9000));
-  const tinhDanhKey = initialName.toLowerCase().normalize('NFC');
-  const tz = 'Asia/Ho_Chi_Minh';
+  // Thẻ 4 chữ số đi kèm Tịnh danh; trùng (tinh_danh_key, tag) thì bốc thẻ khác (tối đa 5 lần)
+  let tag = randomTag();
+  const tinhDanhKey = name ? nameKey(name) : null;
   const startedOn = getLocalDate(now, tz);
 
   const defaultLook = JSON.stringify({ v: 1, robe: 0, hair: 0, tone: 0 });
@@ -87,7 +91,7 @@ export async function createAnonymousUser(db, ip = null, userAgent = null, initi
     db.prepare(
       `INSERT INTO user (id, name, createdAt, updatedAt, isAnonymous)
        VALUES (?, ?, ?, ?, 1)`
-    ).bind(userId, initialName, now, now),
+    ).bind(userId, name, now, now),
 
     db.prepare(
       `INSERT INTO session (id, userId, token, expiresAt, ipAddress, userAgent, createdAt, updatedAt)
@@ -97,7 +101,7 @@ export async function createAnonymousUser(db, ip = null, userAgent = null, initi
     db.prepare(
       `INSERT INTO profile (user_id, tinh_danh, tinh_danh_key, tag, look_json, settings_json, tz, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).bind(userId, initialName, tinhDanhKey, tag, defaultLook, defaultSettings, tz, now, now),
+    ).bind(userId, name, tinhDanhKey, tag, defaultLook, defaultSettings, tz, now, now),
 
     db.prepare(
       `INSERT INTO journey (user_id, program, cycle, day, started_on, is_current, updated_at)
@@ -105,13 +109,22 @@ export async function createAnonymousUser(db, ip = null, userAgent = null, initi
     ).bind(userId, startedOn, now)
   ];
 
-  await db.batch(stmts);
+  for (let attempt = 0; ; attempt++) {
+    try { await db.batch(stmts); break; } catch (e) {
+      if (!name || attempt >= 4 || !/UNIQUE/i.test(String(e && e.message))) throw e;
+      tag = randomTag();
+      stmts[2] = db.prepare(
+        `INSERT INTO profile (user_id, tinh_danh, tinh_danh_key, tag, look_json, settings_json, tz, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(userId, name, tinhDanhKey, tag, defaultLook, defaultSettings, tz, now, now);
+    }
+  }
 
   return {
     user: { id: userId, isAnonymous: true },
     session: { id: sessionId, token, expiresAt },
     profile: {
-      tinh_danh: initialName,
+      tinh_danh: name,
       tag,
       look: JSON.parse(defaultLook),
       settings: JSON.parse(defaultSettings),

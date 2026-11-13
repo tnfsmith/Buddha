@@ -10,7 +10,9 @@ const rtApp = new Hono();
 rtApp.post('/ticket', authMiddleware, async (c) => {
   const user = c.get('user');
   const db = c.env.DB;
-  const secret = c.env.RT_SECRET || 'vandao-realtime-shared-secret-default';
+  // Không có khóa mặc định: thiếu RT_SECRET (wrangler secret put RT_SECRET) thì không cấp vé, tránh vé giả mạo được
+  const secret = c.env.RT_SECRET;
+  if (!secret) return c.json({ error: { code: 'rt_unavailable', message: 'Phòng thời gian thực chưa sẵn sàng' } }, 503);
   const now = Date.now();
   const exp = now + 60 * 1000; // Sống 60 giây
 
@@ -18,6 +20,7 @@ rtApp.post('/ticket', authMiddleware, async (c) => {
   try {
     const body = await c.req.json();
     if (body?.room) room = String(body.room).trim();
+    if (!/^[a-z0-9:_-]{1,64}$/.test(room)) return c.json({ error: { code: 'invalid_room', message: 'Tên phòng không hợp lệ' } }, 400);
   } catch {
     // Sử dụng phòng mặc định
   }

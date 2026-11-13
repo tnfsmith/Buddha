@@ -1,6 +1,7 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "vandao",
+  // Production (tài khoản a5f038f5…, chỉ deploy khi gắn tag vX.Y.Z). Một Worker phục vụ cả API lẫn trang tĩnh apps/web/public.
   "main": "src/index.js",
   "compatibility_date": "2026-11-01",
   "compatibility_flags": ["nodejs_compat"],
@@ -18,12 +19,12 @@
     {
       "binding": "DB",
       "database_name": "vandao-core",
-      "database_id": "vandao-core-prod-id",
+      "database_id": "9930849b-af4f-46b7-b7f1-c58cade859d5",
       "migrations_dir": "../../db/migrations"
     }
   ],
   "kv_namespaces": [
-    { "binding": "CONFIG", "id": "vandao-config-prod-id" }
+    { "binding": "CONFIG", "id": "561aec70f7ee4098a30d054ad224cdbb" }
   ],
   "r2_buckets": [
     { "binding": "MEDIA", "bucket_name": "vandao-media" }

@@ -1,307 +1,119 @@
 // workers/api/src/routes/sync.js
-// Giao thức đồng bộ hai chiều Offline-first (PROJECT_ROADMAP.md §5.1)
+// Giao thức đồng bộ Offline-first (PROJECT_ROADMAP.md §5.1).
+// - Thao tác xử lý theo thời gian; mỗi thao tác ghi trong MỘT db.batch (giao dịch) cùng dấu vết sync_op → không nửa vời.
+// - Trùng op_id (gửi lại sau mất mạng) được coi là đã áp dụng để client xóa khỏi outbox.
+// - Từ chối kèm `retry`: false là vĩnh viễn (client bỏ thao tác), true là lỗi tạm (giữ lại gửi sau).
+// - Máy chủ tự tính Kusala (@vandao/shared/kusala.js) và tiến ngày (@vandao/shared/schedule.js) theo ngày địa phương
+//   của từng thao tác, nên nhiều ngày ngoại tuyến vẫn khóa đúng 1 nấc mỗi ngày.
 import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
-import { kusala, advance, allDone } from '@vandao/shared';
-import { computeUnlockedZones } from './me.js';
-import { getLocalDate, daysBetween } from '../utils/time.js';
+import { kusala, validFactor, KUSALA } from '@vandao/shared';
+import { computeUnlockedZones, profileView } from './me.js';
+import { getLocalDate } from '../utils/time.js';
+import { readJson, bad, jsonCapped, dayPillars, stepJourney, isComplete, journeyUpdate, currentJourney, kusalaTotals } from '../lib.js';
+
+const MAX_OPS = 200;
+const PAST_MS = 7 * 24 * 60 * 60 * 1000, FUTURE_MS = 2 * 60 * 1000;
+const KINDS = ['thien15', 'thien_tu_do', 'nghe_giang', 'kinh_hanh', 'tra_dao', 'thien_duong'];
+const str = (v, max) => (v === undefined || v === null ? null : String(v).slice(0, max));
 
 const syncApp = new Hono();
 
 syncApp.post('/', authMiddleware, async (c) => {
-  const user = c.get('user');
-  const db = c.env.DB;
-  const now = Date.now();
+  const user = c.get('user'), db = c.env.DB, now = Date.now();
+  const body = await readJson(c);
+  if (!body || !Array.isArray(body.ops ?? [])) return bad(c, 'invalid_body', 'Payload không hợp lệ');
+  const ops = body.ops ?? [];
+  if (ops.length > MAX_OPS) return bad(c, 'too_many_ops', `Tối đa ${MAX_OPS} thao tác mỗi lần đồng bộ`, 413);
 
-  const body = await c.req.json();
-  if (!body || typeof body !== 'object') {
-    return c.json({ error: { code: 'invalid_body', message: 'Payload không hợp lệ' } }, 400);
-  }
-
-  const { device_id, tz, ops = [] } = body;
-
-  // Lấy hồ sơ và hành trình hiện tại
   const profileRow = await db.prepare(
-    `SELECT tinh_danh, tag, look_json, settings_json, island_json, tz, visibility, pref_seat, rev
-     FROM profile
-     WHERE user_id = ?`
+    'SELECT tinh_danh, tag, look_json, settings_json, island_json, tz, visibility, pref_seat, rev FROM profile WHERE user_id = ?',
   ).bind(user.id).first();
+  if (!profileRow) return bad(c, 'profile_not_found', 'Hồ sơ không tồn tại', 404);
+  const tz = profileRow.tz || 'Asia/Ho_Chi_Minh';
 
-  if (!profileRow) {
-    return c.json({ error: { code: 'profile_not_found', message: 'Hồ sơ không tồn tại' } }, 404);
-  }
-
-  let journeyRow = await db.prepare(
-    `SELECT program, cycle, day, started_on, last_done_on, completed_at, sacca_count, sessions_done, sermons_done, rev
-     FROM journey
-     WHERE user_id = ? AND is_current = 1`
+  let J = await db.prepare(
+    'SELECT program, cycle, day, started_on, last_done_on, completed_at, sacca_count, sessions_done, sermons_done, rev FROM journey WHERE user_id = ? AND is_current = 1',
   ).bind(user.id).first();
+  if (!J) return bad(c, 'journey_not_found', 'Chưa có hành trình', 404);
 
-  const userTz = profileRow.tz || tz || 'Asia/Ho_Chi_Minh';
-  const localToday = getLocalDate(now, userTz);
+  const applied = [], rejected = [];
+  const reject = (op, code, retry = false) => rejected.push({ id: op.id, code, retry });
+  const sorted = ops.filter((op) => op && typeof op.id === 'string' && op.id.length <= 64 && typeof op.type === 'string')
+    .sort((a, b) => (Number(a.at) || 0) - (Number(b.at) || 0));
 
-  const applied = [];
-  const rejected = [];
-
-  // Giới hạn kẹp thời gian: 7 ngày trước đến 2 phút sau
-  const minTime = now - 7 * 24 * 60 * 60 * 1000;
-  const maxTime = now + 2 * 60 * 1000;
-
-  // Sắp xếp các thao tác theo thứ tự thời gian tăng dần
-  const sortedOps = [...ops].sort((a, b) => (a.at || 0) - (b.at || 0));
-
-  for (const op of sortedOps) {
-    if (!op || !op.id || !op.type) {
-      continue;
-    }
-
-    // 1. Kiểm tra chống trùng thao tác (idempotency)
-    const existingOp = await db.prepare(
-      `SELECT op_id FROM sync_op WHERE user_id = ? AND op_id = ?`
-    ).bind(user.id, op.id).first();
-
-    if (existingOp) {
-      rejected.push({ id: op.id, code: 'exists' });
-      continue;
-    }
-
-    // 2. Kẹp thời gian hợp lệ
-    const opAt = Number(op.at);
-    if (!opAt || opAt < minTime || opAt > maxTime) {
-      rejected.push({ id: op.id, code: 'invalid_timestamp' });
-      continue;
-    }
-
-    const opLocalDate = getLocalDate(opAt, userTz);
-
+  for (const op of sorted) {
+    if (await db.prepare('SELECT 1 FROM sync_op WHERE user_id = ? AND op_id = ?').bind(user.id, op.id).first()) { applied.push(op.id); continue; }
+    const at = Number(op.at);
+    if (!Number.isFinite(at) || at < now - PAST_MS || at > now + FUTURE_MS) { reject(op, 'invalid_timestamp'); continue; }
+    const date = getLocalDate(at, tz), p = op.payload && typeof op.payload === 'object' ? op.payload : {};
+    const done = db.prepare('INSERT INTO sync_op (user_id, op_id, applied_at) VALUES (?, ?, ?)').bind(user.id, op.id, now);
+    const snapshot = { ...J };
     try {
-      // 3. Xử lý theo loại thao tác
       if (op.type === 'kusala.confirm') {
-        const payload = op.payload || {};
-        const { program = 'so-nhap-49', cycle = 1, day = 1, pillar, pre = 1, during = 1, post = 1, wise = 0, self = 0, note = null } = payload;
-
-        if (!['duc', 'thien', 'tue'].includes(pillar)) {
-          rejected.push({ id: op.id, code: 'invalid_pillar' });
-          continue;
-        }
-
-        // Bất biến cứng: day không thể vượt quá số ngày lịch đã trôi qua kể từ started_on
-        const daysElapsed = daysBetween(journeyRow.started_on, opLocalDate);
-        if (day > daysElapsed + 1) {
-          rejected.push({ id: op.id, code: 'day_locked' });
-          continue;
-        }
-
-        // Kiểm tra xem đã có bản ghi cho (user, program, cycle, day, pillar) chưa
-        const existingEntry = await db.prepare(
-          `SELECT id FROM kusala_entry
-           WHERE user_id = ? AND program = ? AND cycle = ? AND day = ? AND pillar = ?`
-        ).bind(user.id, program, cycle, day, pillar).first();
-
-        if (existingEntry) {
-          rejected.push({ id: op.id, code: 'exists' });
-          continue;
-        }
-
-        // MÁY CHỦ TÍNH LẠI KUSALA ĐỘC LẬP
-        const calculatedScore = kusala({
-          pre: Number(pre),
-          during: Number(during),
-          post: Number(post),
-          wise: Boolean(wise),
-          self: Boolean(self)
-        });
-
-        await db.prepare(
-          `INSERT INTO kusala_entry
-           (id, user_id, program, cycle, day, pillar, local_date, base, pre, during, post, wise, self, e_score, note, at, server_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, 10, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-        ).bind(
-          op.id, user.id, program, cycle, day, pillar, opLocalDate,
-          pre, during, post, wise ? 1 : 0, self ? 1 : 0,
-          calculatedScore, note, opAt, now
-        ).run();
-
-        // Kiểm tra điều kiện tiến ngày bằng hàm advance() dùng chung từ @vandao/shared
-        const pillarRows = await db.prepare(
-          `SELECT pillar FROM kusala_entry
-           WHERE user_id = ? AND program = ? AND cycle = ? AND day = ?`
-        ).bind(user.id, journeyRow.program, journeyRow.cycle, journeyRow.day).all();
-
-        const dayPillars = {};
-        for (const r of pillarRows?.results || []) {
-          dayPillars[r.pillar] = true;
-        }
-
-        const stateForAdvance = {
-          day: journeyRow.day,
-          lastDate: journeyRow.last_done_on,
-          done: { [journeyRow.day]: dayPillars },
-          completed: Boolean(journeyRow.completed_at)
-        };
-
-        const next = advance(stateForAdvance, localToday);
-
-        // Bất biến cứng: day không thể vượt quá số ngày lịch đã trôi qua kể từ started_on
-        const maxAllowedDay = daysBetween(journeyRow.started_on, localToday) + 1;
-        if (next.day !== journeyRow.day && next.day <= maxAllowedDay) {
-          const completedAt = next.completed ? now : null;
-          await db.prepare(
-            `UPDATE journey
-             SET day = ?, last_done_on = ?, completed_at = ?, rev = rev + 1, updated_at = ?
-             WHERE user_id = ? AND program = ? AND cycle = ?`
-          ).bind(next.day, opLocalDate, completedAt, now, user.id, journeyRow.program, journeyRow.cycle).run();
-
-          journeyRow.day = next.day;
-          journeyRow.last_done_on = opLocalDate;
-          journeyRow.completed_at = completedAt;
-        } else if (allDone(stateForAdvance.done, journeyRow.day) && (!journeyRow.last_done_on || journeyRow.last_done_on < opLocalDate)) {
-          await db.prepare(
-            `UPDATE journey
-             SET last_done_on = ?, updated_at = ?
-             WHERE user_id = ? AND program = ? AND cycle = ?`
-          ).bind(opLocalDate, now, user.id, journeyRow.program, journeyRow.cycle).run();
-
-          journeyRow.last_done_on = opLocalDate;
-        }
-
-        applied.push(op.id);
+        if (date < J.started_on) { reject(op, 'before_start'); continue; }
+        if (J.completed_at) { reject(op, 'completed'); continue; }
+        let pillars = await dayPillars(db, user.id, J);
+        if (stepJourney(J, pillars, date)) pillars = {};
+        if (Number(p.day) !== J.day) { reject(op, Number(p.day) > J.day ? 'day_locked' : 'day_closed'); J = snapshot; continue; }
+        if (!KUSALA.PILLARS.includes(p.pillar)) { reject(op, 'invalid_pillar'); J = snapshot; continue; }
+        const f = { pre: Number(p.pre ?? 1), during: Number(p.during ?? 1), post: Number(p.post ?? 1) };
+        if (![f.pre, f.during, f.post].every(validFactor)) { reject(op, 'invalid_factor'); J = snapshot; continue; }
+        if (pillars[p.pillar]) { reject(op, 'exists'); J = snapshot; continue; }
+        const note = p.note === undefined || p.note === null ? null : String(p.note);
+        if (note && note.length > 1000) { reject(op, 'note_too_long'); J = snapshot; continue; }
+        const wise = Boolean(p.wise), self = Boolean(p.self), E = kusala({ ...f, wise, self });
+        pillars[p.pillar] = true;
+        J.last_done_on = !J.last_done_on || J.last_done_on < date ? date : J.last_done_on;
+        if (isComplete(J, pillars)) J.completed_at = now;
+        await db.batch([
+          db.prepare(`INSERT INTO kusala_entry (id, user_id, program, cycle, day, pillar, local_date, base, pre, during, post, wise, self, e_score, note, at, server_at)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, 10, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+            .bind(op.id, user.id, J.program, J.cycle, J.day, p.pillar, date, f.pre, f.during, f.post, wise ? 1 : 0, self ? 1 : 0, E, note, at, now),
+          journeyUpdate(db, user.id, J, now), done,
+        ]);
       } else if (op.type === 'session.done') {
-        const payload = op.payload || {};
-        const { kind = 'thien15', ref = null, place = 'pad', duration_s = 900, completed = 1 } = payload;
-
-        await db.prepare(
-          `INSERT INTO practice_session
-           (id, user_id, kind, ref, place, started_at, duration_s, completed, server_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-        ).bind(
-          op.id, user.id, kind, ref, place, opAt,
-          Math.min(Math.max(Number(duration_s) || 0, 0), 14400),
-          completed ? 1 : 0, now
-        ).run();
-
-        await db.prepare(
-          `UPDATE journey
-           SET sessions_done = sessions_done + 1, updated_at = ?
-           WHERE user_id = ? AND program = ? AND cycle = ?`
-        ).bind(now, user.id, journeyRow.program, journeyRow.cycle).run();
-
-        journeyRow.sessions_done += 1;
-        applied.push(op.id);
+        if (!KINDS.includes(p.kind ?? 'thien15')) { reject(op, 'invalid_kind'); continue; }
+        J.sessions_done = (J.sessions_done || 0) + 1;
+        await db.batch([
+          db.prepare('INSERT INTO practice_session (id, user_id, kind, ref, place, started_at, duration_s, completed, server_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+            .bind(op.id, user.id, p.kind ?? 'thien15', str(p.ref, 64), str(p.place ?? 'pad', 32), at, Math.min(Math.max(Math.round(Number(p.duration_s) || 0), 0), 14400), p.completed === false ? 0 : 1, now),
+          journeyUpdate(db, user.id, J, now), done,
+        ]);
       } else if (op.type === 'profile.patch') {
-        const payload = op.payload || {};
-        let updatedSettings = profileRow.settings_json;
-        if (payload.settings) {
-          const merged = { ...JSON.parse(profileRow.settings_json || '{}'), ...payload.settings };
-          updatedSettings = JSON.stringify(merged);
-        }
-
-        let updatedIsland = profileRow.island_json;
-        if (payload.island) {
-          updatedIsland = JSON.stringify(payload.island);
-        }
-
-        await db.prepare(
-          `UPDATE profile
-           SET settings_json = ?, island_json = ?, rev = rev + 1, updated_at = ?
-           WHERE user_id = ?`
-        ).bind(updatedSettings, updatedIsland, now, user.id).run();
-
-        profileRow.settings_json = updatedSettings;
-        profileRow.island_json = updatedIsland;
-        applied.push(op.id);
+        const settings = p.settings === undefined ? profileRow.settings_json : jsonCapped({ ...JSON.parse(profileRow.settings_json || '{}'), ...p.settings });
+        const island = p.island === undefined ? profileRow.island_json : jsonCapped(p.island);
+        if (settings === null || island === null) { reject(op, 'invalid_profile'); continue; }
+        await db.batch([db.prepare('UPDATE profile SET settings_json = ?, island_json = ?, rev = rev + 1, updated_at = ? WHERE user_id = ?').bind(settings, island, now, user.id), done]);
+        profileRow.settings_json = settings; profileRow.island_json = island; profileRow.rev += 1;
       } else if (op.type === 'journey.reset_cycle') {
-        // "Trở về ngày 1" = chu kỳ mới (PROJECT_ROADMAP.md §4.3)
-        const newCycle = (journeyRow.cycle || 1) + 1;
-
-        await db.prepare(
-          `UPDATE journey SET is_current = 0, updated_at = ? WHERE user_id = ? AND is_current = 1`
-        ).bind(now, user.id).run();
-
-        await db.prepare(
-          `INSERT INTO journey (user_id, program, cycle, day, started_on, is_current, rev, updated_at)
-           VALUES (?, 'so-nhap-49', ?, 1, ?, 1, 1, ?)`
-        ).bind(user.id, newCycle, localToday, now).run();
-
-        journeyRow = {
-          program: 'so-nhap-49',
-          cycle: newCycle,
-          day: 1,
-          started_on: localToday,
-          last_done_on: null,
-          completed_at: null,
-          sacca_count: 0,
-          sessions_done: 0,
-          sermons_done: 0,
-          rev: 1
-        };
-
-        applied.push(op.id);
-      } else {
-        rejected.push({ id: op.id, code: 'unknown_op_type' });
-        continue;
-      }
-
-      // 4. Lưu vết thao tác đã xử lý
-      await db.prepare(
-        `INSERT INTO sync_op (user_id, op_id, applied_at) VALUES (?, ?, ?)`
-      ).bind(user.id, op.id, now).run();
-
+        // "Trở về ngày 1" = chu kỳ mới (PROJECT_ROADMAP.md §4.3); Tịnh danh và diện mạo giữ nguyên
+        const next = { program: J.program, cycle: (J.cycle || 1) + 1, day: 1, started_on: date, last_done_on: null, completed_at: null, sacca_count: 0, sessions_done: 0, sermons_done: 0, rev: 1 };
+        await db.batch([
+          db.prepare('UPDATE journey SET is_current = 0, updated_at = ? WHERE user_id = ? AND is_current = 1').bind(now, user.id),
+          db.prepare('INSERT INTO journey (user_id, program, cycle, day, started_on, is_current, rev, updated_at) VALUES (?, ?, ?, 1, ?, 1, 1, ?)').bind(user.id, next.program, next.cycle, date, now),
+          done,
+        ]);
+        J = next;
+      } else { reject(op, 'unknown_op'); continue; }
+      applied.push(op.id);
     } catch (err) {
-      rejected.push({ id: op.id, code: 'db_error', message: err.message });
+      J = snapshot;
+      console.error('[sync]', op.type, err && err.message);
+      reject(op, 'db_error', true);
     }
   }
 
-  // Cập nhật thông tin thiết bị nếu có device_id
-  if (device_id) {
-    const platform = body.platform || 'web';
-    await db.prepare(
-      `INSERT INTO device (id, user_id, platform, last_sync_at, created_at)
-       VALUES (?, ?, ?, ?, ?)
-       ON CONFLICT(id) DO UPDATE SET last_sync_at = ?`
-    ).bind(device_id, user.id, platform, now, now, now).run().catch(() => {});
+  if (typeof body.device_id === 'string' && body.device_id.length <= 64) {
+    await db.prepare('INSERT INTO device (id, user_id, platform, last_sync_at, created_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET last_sync_at = excluded.last_sync_at WHERE device.user_id = excluded.user_id')
+      .bind(body.device_id, user.id, ['web', 'pwa', 'android'].includes(body.platform) ? body.platform : 'web', now, now).run().catch(() => {});
   }
 
-  // Tính lại tổng Kusala và các phân khu đã mở
-  const totalsRow = await db.prepare(
-    `SELECT
-       SUM(CASE WHEN pillar = 'duc' THEN e_score ELSE 0 END) as duc,
-       SUM(CASE WHEN pillar = 'thien' THEN e_score ELSE 0 END) as thien,
-       SUM(CASE WHEN pillar = 'tue' THEN e_score ELSE 0 END) as tue,
-       SUM(e_score) as all_score
-     FROM kusala_entry
-     WHERE user_id = ? AND program = ? AND cycle = ?`
-  ).bind(user.id, journeyRow.program, journeyRow.cycle).first();
-
-  const totals = {
-    duc: Number((totalsRow?.duc || 0).toFixed(1)),
-    thien: Number((totalsRow?.thien || 0).toFixed(1)),
-    tue: Number((totalsRow?.tue || 0).toFixed(1)),
-    all: Number((totalsRow?.all_score || 0).toFixed(1))
-  };
-
-  const unlockedZones = computeUnlockedZones(journeyRow.day);
-
+  // Trạng thái sau đồng bộ: tiến ngày tới hôm nay (ngày địa phương) rồi trả đủ hồ sơ, hành trình, tổng Kusala
+  J = (await currentJourney(db, user.id, getLocalDate(now, tz), now)) || J;
   return c.json({
-    applied,
-    rejected,
-    state: {
-      profile: {
-        tinh_danh: profileRow.tinh_danh,
-        tag: profileRow.tag,
-        look: JSON.parse(profileRow.look_json || '{}'),
-        settings: JSON.parse(profileRow.settings_json || '{}'),
-        island: JSON.parse(profileRow.island_json || '{}'),
-        tz: profileRow.tz,
-        visibility: profileRow.visibility,
-        pref_seat: profileRow.pref_seat,
-        rev: profileRow.rev
-      },
-      journey: journeyRow,
-      totals,
-      unlocked_zones: unlockedZones,
-      server_now: now
-    }
+    applied, rejected,
+    state: { profile: profileView(profileRow), journey: J, totals: await kusalaTotals(db, user.id, J), unlocked_zones: computeUnlockedZones(J.day), server_now: now },
   });
 });
 

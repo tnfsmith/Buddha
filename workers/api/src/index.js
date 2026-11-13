@@ -12,15 +12,26 @@ import contentApp from './routes/content.js';
 
 const app = new Hono();
 
-// Middleware CORS
-app.use('*', async (c, next) => {
+// CORS: trình duyệt gọi cùng nguồn gốc nên không cần; chỉ mở cho các nguồn của chính Vân Đạo (production, staging,
+// preview pr-N và phiên bản, máy dev). Không dùng `*` vì /api/auth và dữ liệu cá nhân đi qua đây.
+const ORIGINS = [
+  /^https:\/\/vandao\.ainextbrain\.com$/,
+  /^https:\/\/([a-z0-9-]+-)?vandao-staging\.vandao-staging\.workers\.dev$/,
+  /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/,
+];
+export const allowOrigin = (o) => Boolean(o) && ORIGINS.some((re) => re.test(o));
+app.use('/api/*', async (c, next) => {
+  const origin = c.req.header('Origin');
+  if (c.req.method === 'OPTIONS') {
+    if (!allowOrigin(origin)) return c.body(null, 403);
+    return c.body(null, 204, {
+      'Access-Control-Allow-Origin': origin, 'Vary': 'Origin', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Max-Age': '600',
+      'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-d1-bookmark',
+    });
+  }
   await next();
-  c.header('Access-Control-Allow-Origin', '*');
-  c.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
-  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-d1-bookmark');
+  if (allowOrigin(origin)) { c.header('Access-Control-Allow-Origin', origin); c.header('Access-Control-Allow-Credentials', 'true'); c.header('Vary', 'Origin'); }
 });
-
-app.options('*', (c) => c.text('', 204));
 
 // Kiểm tra sức khỏe dịch vụ
 app.get('/api/health', (c) => {
@@ -37,6 +48,9 @@ app.route('/api/v1/account', accountApp);
 app.route('/api/v1/rt', rtApp);
 app.route('/api/v1/content', contentApp);
 
+// Đường dẫn /api/* không tồn tại: trả 404 JSON, không rơi xuống trang SPA
+app.all('/api/*', (c) => c.json({ error: { code: 'not_found', message: 'Không có API này' } }, 404));
+
 // Chuyển tiếp các request tĩnh không thuộc /api/* cho Static Assets (apps/web)
 app.all('*', async (c) => {
   if (c.env?.ASSETS && typeof c.env.ASSETS.fetch === 'function') {
@@ -45,17 +59,10 @@ app.all('*', async (c) => {
   return c.text('Not Found', 404);
 });
 
-// Xử lý lỗi toàn cục
+// Xử lý lỗi toàn cục: ghi log (không kèm dữ liệu người dùng), trả thông báo chung
 app.onError((err, c) => {
-  if (globalThis.console) {
-    globalThis.console.error('[API Error]', err);
-  }
-  return c.json({
-    error: {
-      code: 'internal_error',
-      message: err.message || 'Lỗi xử lý nội bộ máy chủ'
-    }
-  }, 500);
+  console.error('[API Error]', c.req.method, new URL(c.req.url).pathname, err && err.message);
+  return c.json({ error: { code: 'internal_error', message: 'Lỗi xử lý nội bộ máy chủ' } }, 500);
 });
 
 export default app;

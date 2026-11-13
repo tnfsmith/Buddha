@@ -52,10 +52,16 @@ export function createTestD1() {
         }
       };
     },
+    // D1 chạy batch như một giao dịch: lỗi ở câu nào thì hoàn tác cả lô
     async batch(stmts) {
       const results = [];
-      for (const stmt of stmts) {
-        results.push(await stmt.run());
+      db.exec('BEGIN');
+      try {
+        for (const stmt of stmts) results.push(await stmt.run());
+        db.exec('COMMIT');
+      } catch (e) {
+        db.exec('ROLLBACK');
+        throw e;
       }
       return results;
     }

@@ -22,6 +22,8 @@ Mục 3–5 nằm trong mã dùng chung `packages/shared` (`schedule.js`, `tinh-
 
 ```
 apps/web/            client 3D (Three.js + Web Audio), build.mjs → dist/van-dao.html, public/index.html
+workers/api/         Worker duy nhất: API Hono + D1, phục vụ apps/web/public (ADR docs/adr/0001)
+db/migrations/       migration D1 (chỉ thêm, đánh số NNNN_)
 packages/shared/     luật dùng chung client/máy chủ + kiểm thử Vitest
 scripts/             lane-guard, size-budget, check-migrations, hooks/pre-push
 tests/e2e/           kiểm khói Playwright (WebGL SwiftShader)
@@ -45,7 +47,7 @@ Mỗi bản clone cài hook một lần: `git config core.hooksPath scripts/hook
 | Làn | Agent | Tiền tố nhánh | Sở hữu chính |
 |---|---|---|---|
 | 3D, trải nghiệm, realtime | Claude | `claude/` | `apps/web/src/{world,island,people,realm,birds,gfx,audio,music,sermon}.js`, `apps/web/src/rt/`, `cong-duc/`, `workers/realtime/`, `tests/e2e/` |
-| API, auth, dữ liệu, hạ tầng, Android | Antigravity | `ag/` | `workers/api/`, `db/`, `apps/web/src/net/`, `apps/android/`, `.github/`, `scripts/`, `apps/web/{wrangler.jsonc,worker.js}` |
+| API, auth, dữ liệu, hạ tầng, Android | Antigravity | `ag/` | `workers/api/`, `db/`, `apps/web/src/net/`, `apps/android/`, `.github/`, `scripts/` |
 | Vận hành, danh mục, giám sát, nháp nội dung | Hermes | `hermes/` | `content/` (chỉ nháp `cho_duyet`), `ops/`, `docs/reports/` |
 | Việc chủ dự án giao | chủ dự án | `owner/` | mọi nơi (vẫn qua PR) |
 | Vá khẩn | bất kỳ | `hotfix/` | làn Claude + Antigravity + dùng chung |
