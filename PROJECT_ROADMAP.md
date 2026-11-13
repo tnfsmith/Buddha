@@ -972,7 +972,7 @@ Khi một yêu cầu "Cần giúp" được nhận và cả hai bấm "xong", m�
   - *Phi thương mại trong không gian Pháp:* không quảng cáo, không bán dữ liệu.
   - *Không buôn thần bán thánh:* không "khai quang, điểm nhãn, cải mệnh, trừ tà".
   - *Đúng Pháp – đúng Luật:* không hợp tác với hoạt động trái giới luật.
-- **Pháp nhân:** doanh nghiệp xã hội theo Điều 10 Luật Doanh nghiệp 2020 (cam kết dùng ≥ 51 % lợi nhuận sau thuế tái đầu tư cho mục tiêu xã hội), hoặc quỹ công nghệ mở do cư sĩ đứng tên. Tăng Ni chỉ ở Hội đồng cố vấn Pháp học.
+- **Pháp nhân (đã chốt 13/11/2026): Công ty TNHH Opalina Kim Bảo**, pháp nhân có sẵn của chủ dự án, vận hành Vân Đạo và Đại Công Đức. Dòng tiền Vân Đạo tách bằng tài khoản ngân hàng riêng và mã hạch toán riêng; tỉ lệ phân bổ thặng dư bên dưới áp cho **phần của Vân Đạo** bằng quy chế nội bộ và công khai ở Sổ Minh Bạch. Đăng ký tư cách doanh nghiệp xã hội (gửi Cam kết thực hiện mục tiêu xã hội, môi trường tới cơ quan đăng ký kinh doanh [53]) là bước tùy chọn: cam kết ≥ 51 % lợi nhuận sau thuế ràng buộc **toàn bộ** Opalina, kể cả mảng tư vấn AINextBrain, nên chỉ làm khi chủ dự án chấp nhận ràng buộc đó. Tăng Ni chỉ ở Hội đồng cố vấn Pháp học.
 - **Phân bổ thặng dư** lấy cảm hứng từ Kinh Giáo thọ Thi-ca-la-việt (DN 31) — ¼ chi dùng và bổn phận, 2/4 tái đầu tư, ¼ dự trữ (tài liệu gốc). Đề xuất cho Vân Đạo: 2/4 tái đầu tư nền tảng và công cụ Pháp học miễn phí · ¼ Quỹ Phụng Sự (sổ cái tác động) · ¼ dự phòng. Như vậy 75 % dành cho mục tiêu xã hội, vượt ngưỡng 51 %. Chủ đầu tư chốt tỉ lệ.
 
 ### 11.2 Không gian 3D "Đại Công Đức Viên"
@@ -1023,7 +1023,7 @@ Khi một yêu cầu "Cần giúp" được nhận và cả hai bấm "xong", m�
   4. Ghi `gieo_receipt`, gửi lời Tùy hỷ.
   5. Đối soát mỗi ngày bằng API lấy giao dịch để không sót khi webhook lỗi.
 - Mặc định ẩn danh; người gieo có thể cho hiện Tịnh danh trong danh sách tri ân, **không kèm số tiền**. Không lưu số tài khoản của người gieo.
-- **Kế toán:** khoản tài trợ cho doanh nghiệp phải hạch toán và có chứng từ; cần kế toán xác nhận cách ghi nhận.
+- **Kế toán:** Opalina chưa là doanh nghiệp xã hội thì tiền Gieo Duyên là thu nhập của công ty, phải hạch toán, có chứng từ và chịu thuế; kế toán xác nhận cách ghi nhận trước khi mở (Issue `lane:owner`).
 - **Android:** bản Play ẩn Gieo Duyên cho tới khi chốt cách tuân thủ chính sách thanh toán của Google Play (§13.4).
 
 ### 11.5 Hộ Trì Đài (chiến dịch thiện nguyện)
@@ -1398,12 +1398,12 @@ Dời `van-dao-src/` sang `apps/web/` bằng **một PR duy nhất** (`git mv`, 
 Ký hiệu: **[C]** Claude · **[AG]** Antigravity · **[H]** Hermes · **[O]** chủ dự án. Thời lượng là ước lượng. Mỗi giai đoạn kết thúc bằng một tag; mỗi nhiệm vụ là một Issue có phạm vi thư mục khớp `lanes.yml`.
 
 ### 19.1 Sẵn sàng GĐ0 (phải xong trước khi mở nhánh đầu tiên)
-- [O] Duyệt tài liệu này; tạo nhãn Issue `lane:claude`, `lane:antigravity`, `lane:hermes`, `shared-ok`, `gd0` … `gd9`.
-- [O] Tạo tài khoản Cloudflare thứ hai (Free) cho preview/staging; tạo hai API token quyền tối thiểu và lưu thành secrets cấp repo `CF_STAGING_*`, `CF_PROD_*` (§14.8). Không dùng GitHub Environments vì repo private gói Free không hỗ trợ [52].
+- [O] Duyệt tài liệu này; tạo nhãn Issue `lane:claude`, `lane:antigravity`, `lane:hermes`, `lane:owner`, `status:claimed`, `shared-ok`, `gd0` … `gd10` — **xong 13/11/2026**.
+- [O] Tạo tài khoản Cloudflare thứ hai (Free) cho preview/staging; tạo hai API token quyền tối thiểu và lưu thành secrets cấp repo `CF_STAGING_*`, `CF_PROD_*` (§14.8). Không dùng GitHub Environments vì repo private gói Free không hỗ trợ [52]. Secrets nhập qua giao diện web GitHub, vì proxy của phiên agent chặn API secrets.
 - [O] Xác nhận cả hai tài khoản Cloudflare đang ở gói Free; nâng riêng tài khoản production khi chạm ngưỡng §3.3.
-- [O] Ngừng đẩy thẳng lên `main` từ máy cá nhân; từ đây mọi thay đổi qua nhánh + PR.
-- [O] Bắt đầu song song các việc không phải mã: chọn pháp nhân DNXH, mời Hội đồng cố vấn, đăng ký Shopee Affiliate/TikTok Shop, cổng xác nhận chuyển khoản, tài khoản Google Play.
-- [O] Gắn tag `v0.10.0` cho `main` hiện tại (mốc bản 10 của web) làm điểm rollback. [AG] đóng hoặc merge các nhánh và thay đổi còn treo trước T0.1.
+- [O] Ngừng đẩy thẳng lên `main`; từ đây mọi thay đổi qua nhánh + PR. Từ 13/11/2026: workflow chỉ build khi PR/push `main`, production chỉ deploy khi gắn tag `v*`; hook `pre-push` trên máy chủ dự án chặn đẩy thẳng `main` (`scripts/hooks/pre-push`, cài bằng `git config core.hooksPath scripts/hooks`).
+- [O] Bắt đầu song song các việc không phải mã theo các Issue `lane:owner`: hồ sơ pháp nhân Opalina, Hội đồng cố vấn Pháp học, tài khoản affiliate/cổng xác nhận chuyển khoản, tài khoản Google Play tổ chức.
+- [O] Gắn tag `v0.10.0` cho `main` (commit `d3489d5`) làm điểm rollback — **xong 13/11/2026**. [AG] đóng hoặc merge các nhánh và thay đổi còn treo trước T0.1.
 
 ### GĐ0 — Nền móng repo, CI, Node 26 (≈ 1–1,5 tuần)
 
@@ -1516,11 +1516,12 @@ iOS (Capacitor), sự kiện hồi hướng chung ngày rằm, gian hàng thành
 - Dùng gói Workers Free trước, nâng Paid theo ngưỡng §3.3.
 - Node.js 26 LTS.
 - Có làn thứ ba cho Hermes.
+- Pháp nhân vận hành: Công ty TNHH Opalina Kim Bảo (§11.1).
 - Preview/staging chạy trên tài khoản Cloudflare thứ hai (Free) để không tiêu hạn mức của production.
 
 | # | Cần chốt | Đề xuất |
 |---|---|---|
-| 1 | Pháp nhân cho Đại Công Đức | Doanh nghiệp xã hội (Điều 10 Luật Doanh nghiệp 2020) do cư sĩ đứng tên |
+| 1 | Pháp nhân cho Đại Công Đức | **Đã chốt:** Công ty TNHH Opalina Kim Bảo (§11.1); đăng ký tư cách DNXH là tùy chọn vì ràng buộc cả công ty |
 | 2 | Tỉ lệ phân bổ thặng dư | 2/4 nền tảng · ¼ Quỹ Phụng Sự · ¼ dự phòng (§11.1) |
 | 3 | Hội đồng cố vấn Pháp học | Cần trước GĐ3 |
 | 4 | Người trực kiểm duyệt cộng đồng | Cần trước GĐ5 |
@@ -1765,6 +1766,8 @@ jobs:
 
 ```yaml
 # Làn sở hữu: tiền tố nhánh → glob được phép sửa. Tệp trong "shared" cần nhãn PR `shared-ok`.
+owner:                                  # nhánh owner/ (việc [O]): sửa mọi nơi, vẫn phải qua PR
+  - '**'
 claude:
   - apps/web/src/{world,island,people,realm,birds,gfx,audio,music,sermon}.js
   - apps/web/src/{rt,cong-duc}/**
@@ -1882,3 +1885,4 @@ Nguồn: 10 Phước nghiệp sự theo truyền thống Chú giải [47]; 10 Ba
 50. PWA push trên iOS 16.4+ chỉ khi đã thêm vào Màn hình chính: https://www.mobiloud.com/blog/pwa-push-notifications
 51. PushForge — Web Push chạy trên Cloudflare Workers: https://github.com/draphy/pushforge
 52. GitHub — Managing environments for deployment (repo private cần GitHub Pro/Team): https://docs.github.com/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment
+53. Nghị định 47/2021/NĐ-CP hướng dẫn Luật Doanh nghiệp (doanh nghiệp xã hội, tiếp nhận tài trợ): https://www.vcci.com.vn/legal-document/nghi-dinh-472021nd-cp-huong-dan-luat-doanh-nghiep · 53b. Thủ tục chuyển công ty TNHH thành doanh nghiệp xã hội: https://ketoananpha.vn/chuyen-doi-cong-ty-thanh-doanh-nghiep-xa-hoi.html
