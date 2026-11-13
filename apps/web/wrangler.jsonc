@@ -1,8 +1,9 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  // Production: tài khoản Cloudflare hiện tại, chỉ deploy khi gắn tag vX.Y.Z (PROJECT_ROADMAP.md §14.8)
   "name": "vandao",
   "main": "worker.js",
-  "compatibility_date": "2026-10-01",
+  "compatibility_date": "2026-11-01",
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
@@ -11,5 +12,15 @@
   },
   "routes": [
     { "pattern": "vandao.ainextbrain.com", "custom_domain": true }
-  ]
+  ],
+  "observability": { "enabled": true },
+  "env": {
+    // Staging + preview: tài khoản Cloudflare thứ hai (Free), URL *.workers.dev
+    "staging": {
+      "name": "vandao-staging",
+      "workers_dev": true,
+      "preview_urls": true,
+      "routes": []
+    }
+  }
 }

@@ -5,20 +5,11 @@ import { DUR, STAGES, TIERS, ZONES, WEEKS, PILLARS, valueAt, breathEnv, stageAt,
 import { SUTTAS, Sermon } from './sermon.js';
 import { Ambient, SONGS, SONG, MOODS, pickSong, probeSong } from './music.js';
 import { OPTIONS, PRESETS, defaultLook, checkName, suggestNames, tidyName } from './people.js';
+import { S, mem, save, allDone, today, resetState } from './state.js';
+import { $, fmt, esc } from './ui/dom.js';
 
-const $ = (s, r = document) => r.querySelector(s);
-const fmt = (t) => { t = Math.max(0, Math.floor(t)); return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); };
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-// ───────── Lưu trạng thái trên máy ─────────
-const KEY = 'vandao.v1';
-const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-const fresh = () => ({ v: 1, day: 1, lastDate: null, done: {}, totals: { duc: 0, thien: 0, tue: 0 }, sacca: 0, sessions: 0, completed: false, open: false, name: '', look: defaultLook(), birds: { n: 6, freq: 1, vol: 0.6 }, music: { on: false, source: 'time', song: 'van-thuy', mood: 'an', order: 'one', span: 5, vol: 0.6 } });
-let S = fresh(), mem = true;
-try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(fresh(), JSON.parse(raw)); S.look = { ...defaultLook(), ...S.look }; S.music = { ...fresh().music, ...S.music }; S.birds = { ...fresh().birds, ...S.birds }; localStorage.setItem(KEY, JSON.stringify(S)); mem = false; } catch (e) { mem = true; }
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* chỉ giữ trong bộ nhớ */ } };
-const allDone = (d) => { const x = S.done[d]; return !!(x && x.duc && x.thien && x.tue); };
-(function advance() { if (S.lastDate && S.lastDate < today() && allDone(S.day) && S.day < 49) S.day++; if (S.day === 49 && allDone(49)) S.completed = true; save(); })();
+// ───────── Lưu trạng thái trên máy: xem state.js ─────────
 
 const U = { mode: 'island', view: 'home', zone: null, tier: null, sim: null, bio: 'samadhi', bioAt: 0, quietManual: false, idleAt: performance.now(), drag: null, resetArm: false, friend: null, draft: null, pose: 'stand', chips: suggestNames(6) };
 const hash = Object.fromEntries(new URLSearchParams(location.hash.slice(1)));
@@ -352,7 +343,7 @@ panel.addEventListener('click', (e) => {
   else if (act === 'gohome') { world.goHome(() => { toast('Đã về Vân Đảo của mình.'); U.view = 'home'; world.setMode('island'); render(); }); toast('Du vân trở về…'); }
   else if (act === 'sitwith') { world.fig.setPose('sit'); world.av.state = 'sit'; world.av.rotTo = Math.atan2(-world.av.pos.x, -760 - world.av.pos.z); if (!player.playing) togglePlay(); toast('Hai người cùng an tọa, hướng về Tôn tượng.'); }
   else if (act === 'sacca') { S.sacca++; save(); if (world) world.burst(0xbfeee4); toast('Thành thật nhận lỗi và nguyện phòng hộ ngày mai: mặt hồ trong trở lại.'); }
-  else if (act === 'reset') { if (U.resetArm) { const keep = { name: S.name, look: S.look }; S = Object.assign(fresh(), keep); save(); U.resetArm = false; toast('Đã trở về ngày 1.'); } else U.resetArm = true; }
+  else if (act === 'reset') { if (U.resetArm) { const keep = { name: S.name, look: S.look }; resetState(keep); save(); U.resetArm = false; toast('Đã trở về ngày 1.'); } else U.resetArm = true; }
   else if (act === 'confirm') {
     const card = b.closest('.task'), key = card.dataset.p, c = readCard(card), E = kusala(c);
     S.done[S.day] = S.done[S.day] || {}; S.done[S.day][key] = { E, ...c, at: Date.now() };
