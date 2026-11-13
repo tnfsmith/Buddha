@@ -45,6 +45,18 @@ Migration D1 production chạy trong job `production` của `deploy.yml`, trư�
 - Dữ liệu trên máy: `localStorage['vandao.v1']` (đọc lúc khởi động) + IndexedDB `vandao` v2 (lược đồ do `apps/web/src/net/idb.js` giữ: store `state`, `outbox`, `meta`, `kusala`, `sessions`; máy đang ở v1 được nâng cấp tại chỗ). localStorage bị xóa mà IndexedDB còn thì tự khôi phục.
 - Bản HTML đơn (`dist/van-dao.html`, Release) không có service worker; mở bằng file:// vẫn chạy offline.
 
+## Số liệu và giám sát (T1.3, #8)
+
+- **Analytics Engine** (`vd_metrics` production, `vd_metrics_staging` staging; binding `METRICS`): `apps/web/src/net/metrics.js` lắng nghe `vandao:perf` (world.js phát mỗi 10 giây) và lỗi JS, gửi tóm tắt mỗi 5 phút hoặc khi rời trang tới `POST /api/v1/metrics`.
+  - Mỗi lần gửi tối đa 1 điểm hiệu năng (FPS p50/p10, lệnh vẽ, tam giác, mức chất lượng, DPR) và 10 điểm lỗi.
+  - Chỉ kèm nhóm máy thô: điện thoại, máy tính bảng hoặc máy tính; bậc số lõi; bậc bộ nhớ.
+  - Không cookie, không IP, không User-Agent. Thông điệp lỗi đã lược URL, email và chuỗi số. Tắt khi trình duyệt bật Do Not Track hoặc GPC.
+  - Gói Free cho 100.000 điểm/ngày. Truy vấn bằng SQL API của Analytics Engine, ví dụ `SELECT blob3 AS nhom, quantileWeighted(0.5)(double1, 1) AS fps FROM vd_metrics WHERE blob1 = 'perf' GROUP BY nhom`.
+- **Cloudflare Web Analytics** (không cookie):
+  - Production: zone `ainextbrain.com` đã bật tự chèn beacon, lọc theo host `vandao.ainextbrain.com` trong dashboard.
+  - Staging: site `vandao-staging.vandao-staging.workers.dev` (tạo ở tài khoản production), `net/metrics.js` chèn token công khai.
+- **Lighthouse CI**: `preview.yml` chạy cho mỗi PR, đo cả điện thoại lẫn máy tính, bình luận bảng điểm vào PR và lưu báo cáo làm artifact. Runner không có GPU nên Lighthouse chạy khi WebGL tắt, đo lớp giao diện 2D; hiệu năng 3D đo bằng `tests/e2e/perf.spec.js`.
+
 ## Runbook ngắn
 
 - **Phát hành production:** GitHub (web/app) → Releases → Draft a new release → tag mới `vX.Y.Z` từ `main` → Publish. Workflow `deploy` chạy lại toàn bộ CI rồi mới deploy; theo dõi ở tab Actions.

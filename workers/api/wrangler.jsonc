@@ -29,6 +29,9 @@
   "r2_buckets": [
     { "binding": "MEDIA", "bucket_name": "vandao-media" }
   ],
+  // T1.3 (#8): số liệu ẩn danh (FPS theo nhóm máy, lỗi JS) — Analytics Engine, gói Free 100.000 điểm/ngày
+  "analytics_engine_datasets": [{ "binding": "METRICS", "dataset": "vd_metrics" }],
+  "vars": { "ENV_NAME": "production" },
   "observability": { "enabled": true },
   "env": {
     "staging": {
@@ -62,7 +65,9 @@
           "binding": "MEDIA",
           "bucket_name": "vandao-media-staging"
         }
-      ]
+      ],
+      "analytics_engine_datasets": [{ "binding": "METRICS", "dataset": "vd_metrics_staging" }],
+      "vars": { "ENV_NAME": "staging" }
     }
   }
 }
