@@ -85,6 +85,7 @@ function mergeVerts(g) { // gộp đỉnh trùng để pháp tuyến mịn
   const o = new THREE.BufferGeometry(); o.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); o.setIndex(idx); return o;
 }
 const ROCK = [rockGeo(3), rockGeo(8), rockGeo(15)];
+const ROCK_FAR = [rockGeo(3, 1), rockGeo(8, 1), rockGeo(15, 1)];   // đá trên các đảo tầng ở xa: 80 thay vì 320 tam giác
 const rockMat = std('#8a8279', { roughness: 1 });
 
 function roofGeo(profile, sz) { const g = new THREE.LatheGeometry(profile.map((p) => new THREE.Vector2(p[0], p[1])), 4, Math.PI / 4, Math.PI * 2).toNonIndexed(); g.computeVertexNormals(); g.scale(1, 1, sz); return g; }
@@ -138,15 +139,101 @@ function bake(G) {
   by.forEach((list, m) => { const mesh = new THREE.Mesh(mergeGeometries(list), m); G.add(mesh); });
 }
 const LEAF = {}; const leafOf = (k) => LEAF[k] || (LEAF[k] = leafTex(k));
+
+// ───────── Gộp hình khối tĩnh của nhiều nhóm (đảo láng giềng) theo vật liệu, trong hệ tọa độ thế giới ─────────
+// T1.2 (PROJECT_ROADMAP.md §12.3): mỗi đảo láng giềng vốn tốn ~9 lệnh vẽ; gộp xuyên đảo còn ~1 lệnh vẽ cho mỗi loại vật liệu.
+// Chỉ dùng cho nhóm không bị code khác đụng tới sau khi dựng (không raycast, không bật/tắt từng phần).
+const uniIds = new WeakMap(); let uniN = 0;
+const uniId = (u) => { if (!uniIds.has(u)) uniIds.set(u, ++uniN); return uniIds.get(u); };
+const MKEYS = ['type', 'color', 'emissive', 'emissiveIntensity', 'roughness', 'metalness', 'opacity', 'transparent', 'side', 'blending', 'depthWrite', 'depthTest', 'vertexColors', 'alphaTest', 'flatShading', 'fog', 'toneMapped'];
+function matKey(m) {
+  if (m.isShaderMaterial) return `S|${uniId(m.uniforms)}|${m.transparent}|${m.side}|${m.depthWrite}|${m.blending}|${m.vertexShader}|${m.fragmentShader}`;
+  if (Object.hasOwn(m, 'onBeforeCompile')) return 'O|' + m.uuid;   // shader tùy biến: chỉ gộp khi cùng một vật liệu
+  return 'M|' + MKEYS.map((k) => { const v = m[k]; return v && v.isColor ? v.getHexString() : String(v); }).join('|') + '|' + (m.map ? m.map.uuid : '');
+}
+const attrSig = (g) => Object.keys(g.attributes).sort().map((k) => k + g.attributes[k].itemSize).join(',') + (g.index ? '|i' : '');
+const FARLEAF = {};
+function farLeafMat(kind) {
+  if (FARLEAF[kind]) return FARLEAF[kind];
+  const m = new THREE.MeshStandardMaterial({ map: leafOf(kind), alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.85 });
+  m.onBeforeCompile = (sh) => { sh.uniforms.uTime = U.uTime;
+    sh.vertexShader = 'attribute vec3 aC; uniform float uTime;\n' + sh.vertexShader
+      .replace('#include <defaultnormal_vertex>', 'vec3 ic = (instanceMatrix * vec4(0.,0.,0.,1.)).xyz; vec3 transformedNormal = normalMatrix * normalize(ic - aC + vec3(0.,1.2,0.));')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\n transformed.x += sin(uTime*1.2 + ic.x*0.6 + ic.y*0.4)*0.09; transformed.y += cos(uTime*0.9 + ic.z*0.7)*0.05;'); };
+  return (FARLEAF[kind] = m);
+}
+// Gộp hình khối tĩnh trong hệ tọa độ của chính `root` (nhóm vẫn di chuyển, raycast vẫn trúng).
+// Bỏ qua: nhánh trong `live` (bật/tắt, co giãn, đổi vật liệu lúc chạy), vật liệu trong suốt (giữ thứ tự sắp xếp; trừ khi
+// gọi với { transparent: true } cho các khối gần như đục),
+// InstancedMesh, Points. Vật liệu trong `liveMats` (đổi màu lúc chạy) chỉ gộp khi đúng cùng một vật liệu.
+export function bakeLocal(root, live = [], liveMats = [], { transparent = false } = {}) {
+  const skip = new Set(live), hot = new Set(liveMats), inv = new THREE.Matrix4(), M = new THREE.Matrix4(), by = new Map(), rm = [];
+  root.updateMatrixWorld(true); inv.copy(root.matrixWorld).invert();
+  const walk = (o) => {
+    if (skip.has(o) || !o.visible) return;
+    if (o.isMesh && !o.isInstancedMesh && !o.isSkinnedMesh && !Array.isArray(o.material) && (transparent || !o.material.transparent) && !o.material.isShaderMaterial && !o.morphTargetInfluences) {
+      const mat = o.material, key = `${hot.has(mat) ? 'L|' + mat.uuid : matKey(mat)}#${o.renderOrder}#${o.castShadow}${o.receiveShadow}`;
+      M.multiplyMatrices(inv, o.matrixWorld); let g = o.geometry.clone().applyMatrix4(M);
+      if (M.determinant() < 0) { g = g.index ? g.toNonIndexed() : g; const p = g.attributes; Object.values(p).forEach((a) => { for (let i = 0; i < a.count; i += 3) for (let k = 0; k < a.itemSize; k++) { const t = a.array[(i + 1) * a.itemSize + k]; a.array[(i + 1) * a.itemSize + k] = a.array[(i + 2) * a.itemSize + k]; a.array[(i + 2) * a.itemSize + k] = t; } }); }
+      Object.keys(g.attributes).forEach((k) => { if (k !== 'position' && k !== 'normal' && k !== 'uv' && !(k === 'color' && mat.vertexColors)) g.deleteAttribute(k); });
+      if (!mat.map) g.deleteAttribute('uv'); else if (!g.attributes.uv) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
+      if (!g.attributes.normal) g.computeVertexNormals();
+      if (!by.has(key)) by.set(key, { mat, ro: o.renderOrder, cs: o.castShadow, rs: o.receiveShadow, list: [] });
+      by.get(key).list.push(g); rm.push(o);
+    }
+    o.children.slice().forEach(walk);
+  };
+  root.children.slice().forEach(walk);
+  rm.forEach((o) => o.parent.remove(o));
+  let n = 0;
+  by.forEach(({ mat, ro, cs, rs, list }) => {
+    const mixed = list.some((g) => g.index) && list.some((g) => !g.index), gs = mixed ? list.map((g) => (g.index ? g.toNonIndexed() : g)) : list;
+    const geo = gs.length === 1 ? gs[0] : mergeGeometries(gs); if (!geo) return;
+    const m = new THREE.Mesh(geo, mat); m.name = 'baked'; m.renderOrder = ro; m.castShadow = cs; m.receiveShadow = rs; root.add(m); n++;
+  });
+  return { removed: rm.length, added: n };
+}
+
+export function bakeWorld(groups) {
+  const out = new THREE.Group(); out.name = 'baked-isles';
+  const meshes = new Map(), leaves = new Map(), rm = [];
+  groups.forEach((G) => G.updateMatrixWorld(true));
+  groups.forEach((G) => G.traverseVisible((o) => {
+    if (!o.isMesh || o.userData.noBake) return;
+    if (o.isInstancedMesh) {
+      const fl = o.userData.farLeaf; if (!fl) return;
+      if (!leaves.has(fl.kind)) leaves.set(fl.kind, { quad: fl.quad, list: [] });
+      leaves.get(fl.kind).list.push({ o, center: fl.center.clone().applyMatrix4(o.matrixWorld) }); rm.push(o); return;
+    }
+    const g = o.geometry.clone(); g.applyMatrix4(o.matrixWorld);
+    const key = `${matKey(o.material)}#${attrSig(g)}#${o.renderOrder}#${o.castShadow}${o.receiveShadow}`;
+    if (!meshes.has(key)) meshes.set(key, { mat: o.material, list: [], ro: o.renderOrder, cs: o.castShadow, rs: o.receiveShadow });
+    meshes.get(key).list.push(g); rm.push(o);
+  }));
+  rm.forEach((o) => o.parent.remove(o));
+  meshes.forEach(({ mat, list, ro, cs, rs }) => {
+    const geo = list.length === 1 ? list[0] : mergeGeometries(list); if (!geo) return;
+    const m = new THREE.Mesh(geo, mat); m.renderOrder = ro; m.castShadow = cs; m.receiveShadow = rs; out.add(m);
+  });
+  const M = new THREE.Matrix4(), c = new THREE.Color();
+  leaves.forEach(({ quad, list }, kind) => {
+    const n = list.reduce((a, x) => a + x.o.count, 0), geo = quad.clone(), aC = new Float32Array(n * 3);
+    const im = new THREE.InstancedMesh(geo, farLeafMat(kind), n); let k = 0;
+    list.forEach(({ o, center }) => { for (let i = 0; i < o.count; i++, k++) { o.getMatrixAt(i, M); im.setMatrixAt(k, M.premultiply(o.matrixWorld)); if (o.instanceColor) { o.getColorAt(i, c); im.setColorAt(k, c); } center.toArray(aC, k * 3); } });
+    geo.setAttribute('aC', new THREE.InstancedBufferAttribute(aC, 3)); im.computeBoundingSphere(); out.add(im);
+  });
+  return out;
+}
+
 export function leafTree({ count = 700, kind = 'bodhi', radius = 5, trunkH = 6.5, seed = 2, far = false }) {
   const G = new THREE.Group(), r = rng(seed), bark = BARK;
-  const tg = new THREE.CylinderGeometry(radius * 0.085, radius * 0.19, trunkH, 10, 6), tp = tg.attributes.position;
+  const tg = new THREE.CylinderGeometry(radius * 0.085, radius * 0.19, trunkH, far ? 6 : 10, far ? 3 : 6), tp = tg.attributes.position;
   for (let i = 0; i < tp.count; i++) { const y = tp.getY(i) / trunkH + 0.5; tp.setX(i, tp.getX(i) + Math.sin(y * 2.6) * radius * 0.07); tp.setZ(i, tp.getZ(i) + Math.cos(y * 2.1) * radius * 0.04); }
   tg.translate(0, trunkH / 2, 0); tg.computeVertexNormals();
   const trunk = new THREE.Mesh(tg, bark); trunk.castShadow = true; G.add(trunk);
   const blobs = [[0, trunkH + radius * 0.5, 0, radius * 0.8]];
   for (let i = 0; i < 6; i++) { const a = (i / 6) * 6.28 + r(), d = radius * (0.55 + r() * 0.25), y = trunkH + radius * (0.05 + r() * 0.35); blobs.push([Math.cos(a) * d, y, Math.sin(a) * d, radius * (0.5 + r() * 0.2)]);
-    const bl = new THREE.CylinderGeometry(radius * 0.025, radius * 0.06, d * 1.25, 6); bl.translate(0, d * 0.62, 0); const b = new THREE.Mesh(bl, bark); b.position.set(0, trunkH * 0.82, 0); b.rotation.set(0, -a + Math.PI / 2, 0); b.rotateZ(-1.05); b.castShadow = true; G.add(b); }
+    const bl = new THREE.CylinderGeometry(radius * 0.025, radius * 0.06, d * 1.25, far ? 4 : 6, 1, far); bl.translate(0, d * 0.62, 0); const b = new THREE.Mesh(bl, bark); b.position.set(0, trunkH * 0.82, 0); b.rotation.set(0, -a + Math.PI / 2, 0); b.rotateZ(-1.05); b.castShadow = true; G.add(b); }
   const center = new THREE.Vector3(0, trunkH + radius * 0.25, 0), quad = new THREE.PlaneGeometry(1.5, 1.5), tex = leafOf(kind);
   const mat = new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.85 });
   const uC = { value: center };
@@ -160,7 +247,7 @@ export function leafTree({ count = 700, kind = 'bodhi', radius = 5, trunkH = 6.5
     d.position.set(b[0] + rr * s * Math.cos(a), b[1] + rr * u * 0.72, b[2] + rr * s * Math.sin(a)); d.rotation.set(r() * 3, r() * 6, r() * 3); d.scale.setScalar((0.75 + r() * 0.6) * radius * 0.2); d.updateMatrix();
     leaves.setMatrixAt(i, d.matrix); leaves.setColorAt(i, c.setScalar(0.72 + r() * 0.5));
   }
-  if (far) { G.traverse((o) => { o.castShadow = false; }); leaves.computeBoundingSphere(); } else { leaves.castShadow = true; leaves.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: tex, alphaTest: 0.5 }); leaves.frustumCulled = false; }
+  if (far) { G.traverse((o) => { o.castShadow = false; }); leaves.computeBoundingSphere(); leaves.userData.farLeaf = { kind, center: center.clone(), quad }; } else { leaves.castShadow = true; leaves.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: tex, alphaTest: 0.5 }); leaves.frustumCulled = false; }
   G.add(leaves);
   return { group: G, leaves, count, top: center };
 }
@@ -377,6 +464,15 @@ export function buildHome() {
     const flow = Math.min(1, isl.water) * (0.25 + 0.75 * L); H.brook.material.uniforms.uFlow.value = flow; H.brook.visible = flow > 0.03; H.fall.visible = flow > 0.1; H.fall.scale.x = 0.25 + 0.75 * flow;
     return st;
   };
+  // T1.2: gộp phần tĩnh (Tịnh Thất, lối đi, vườn, cổng, bia…) theo vật liệu. Phần đổi theo tiến trình hay bị world.js
+  // bật/tắt, co giãn, đổi màu thì giữ nguyên: đất (raycast), Đài Thiền, khu trà, sen, bậc thang, suối, thác, cây Bồ-đề, màn mây cổng.
+  H.bake = [
+    bakeLocal(H.tree.group, [H.tree.leaves, H.glints]),                       // thân và cành cây Bồ-đề (cả cây co giãn theo tiến trình)
+    bakeLocal(H.veil, [], [], { transparent: true }), bakeLocal(H.gate, [H.veil], [], { transparent: true }),   // mây cổng Vân Môn, độ mờ 0,94
+    bakeLocal(H.pv.group, [], [H.pv.mats.roof, H.pv.mats.wood, H.pv.altar.material]),
+    bakeLocal(H.tea, [H.teaDeck]),
+    bakeLocal(G, [land, H.pv.group, H.padDeck, H.tea, ...H.lotus.map((l) => l.g), H.stairs, H.stairPosts, H.stairRough, H.brook, H.fall, H.tree.group, H.veil]),
+  ];
   return H;
 }
 
@@ -384,7 +480,7 @@ export function buildHome() {
 let NB_MAT = null;
 export function buildNeighbor(tier, seed, size) {
   const G = new THREE.Group(), r = rng(seed * 31 + tier), N = makeNoise(seed + 50), hf = (x, z) => 0.9 * N.fbm(x * 0.12, 1, z * 0.12, 2) * size * 0.18 + size * 0.06 * Math.exp(-(x * x + z * z) / (size * size * 0.25));
-  const T = terrain({ sx: size, sz: size * (0.72 + r() * 0.2), M: 44, NT: 7, NS: 8, depth: size * (1.3 + r() * 0.5), seed: seed + 3, height: hf });
+  const T = terrain({ sx: size, sz: size * (0.72 + r() * 0.2), M: 36, NT: 7, NS: 6, depth: size * (1.3 + r() * 0.5), seed: seed + 3, height: hf });
   const land = new THREE.Mesh(T.geo, NB_MAT || (NB_MAT = terrainMat())); land.userData.keep = true; G.add(land);
   const spot = (fmax) => { for (let k = 0; k < 40; k++) { const a = r() * 6.28, dd = Math.sqrt(r()) * fmax, x = size * dd * Math.cos(a), z = size * 0.8 * dd * Math.sin(a); if (T.frac(x, z) < fmax) return [x, hf(x, z), z]; } return [0, hf(0, 0), 0]; };
   const treeCol = tier === 2 ? '#d9ab3e' : tier === 3 ? '#f2e6ef' : ['#5f9a3a', '#6fa24a', '#4f8a44'][seed % 3];
@@ -392,7 +488,7 @@ export function buildNeighbor(tier, seed, size) {
   const kinds = tier === 2 ? ['gold'] : tier === 3 ? ['blossom'] : tier === 1 ? ['blossom', 'bodhi', 'pine'] : ['bodhi', 'pine', 'bodhi'];
   for (let i = 0; i < nT; i++) { const [x, y, z] = spot(0.5), k = (0.75 + r() * 0.5) * size / 13, kind = kinds[(seed + i) % kinds.length];
     const t = leafTree({ count: 170, kind, radius: (kind === 'pine' ? 2.3 : 3.3) * k, trunkH: (kind === 'pine' ? 4.6 : 3.4) * k, seed: seed * 7 + i, far: true }); t.group.position.set(x, y - 0.2, z); G.add(t.group); }
-  for (let i = 0; i < 9; i++) { const [x, y, z] = spot(0.85), s = (0.35 + r() * 0.9) * size / 13, m = new THREE.Mesh(ROCK[i % 3], rockMat); m.position.set(x, y + s * 0.2, z); m.scale.set(s, s * 0.7, s); m.rotation.y = r() * 6; G.add(m); }
+  for (let i = 0; i < 9; i++) { const [x, y, z] = spot(0.85), s = (0.35 + r() * 0.9) * size / 13, m = new THREE.Mesh(ROCK_FAR[i % 3], rockMat); m.position.set(x, y + s * 0.2, z); m.scale.set(s, s * 0.7, s); m.rotation.y = r() * 6; G.add(m); }
   if (tier >= 1) {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(size * 0.46, size * 0.02, 5, 40), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.0, 1.8, 1.7), transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false })); ring.rotation.x = Math.PI / 2; ring.scale.z = 1; ring.position.y = hf(size * 0.46, 0) + 0.25; G.add(ring);
     const wf = waterfall(size * 0.14, size * 2.0); const a = r() * 6.28; wf.position.set(size * 0.93 * Math.cos(a), hf(0, 0) - 1.2, size * 0.7 * Math.sin(a)); wf.rotation.y = -a + Math.PI / 2; G.add(wf);

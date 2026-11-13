@@ -5,10 +5,12 @@ import { pathToFileURL } from 'node:url';
 const BASE = process.env.E2E_BASE_URL || pathToFileURL(resolve('apps/web/dist/van-dao.html')).href;
 const url = (hash) => `${BASE.replace(/#.*$/, '')}#${hash}`;
 
-// Số đo cấu trúc cảnh (PROJECT_ROADMAP.md §1.5): đổi lớn là dấu hiệu dựng thiếu/vỡ cảnh
-const stats = (page) => page.evaluate(() => {
-  const r = window.__app.world.renderer.info;
-  return { geometries: r.memory.geometries, textures: r.memory.textures, programs: (r.programs ?? []).length };
+// Số đo cấu trúc cảnh (PROJECT_ROADMAP.md §1.5): đổi lớn là dấu hiệu dựng thiếu/vỡ cảnh.
+// Từ T1.2 hình khối tĩnh được gộp theo vật liệu nên số geometry giảm mạnh; lệnh vẽ của khung gần nhất cho biết cảnh có thật sự vẽ.
+const stats = (page) => page.evaluate(async () => {
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const r = window.__app.world.renderer.info, p = window.__app.world.perf();
+  return { geometries: r.memory.geometries, textures: r.memory.textures, programs: (r.programs ?? []).length, calls: p.calls, triangles: p.triangles };
 });
 
 async function open(page, hash) {
@@ -27,8 +29,9 @@ test('Vân Đảo dựng đủ cảnh, không lỗi', async ({ page }) => {
   await expect(page).toHaveTitle(/Vân Đạo/);
   const s = await stats(page);
   console.log('Vân Đảo', JSON.stringify(s));
-  expect(s.geometries).toBeGreaterThan(300);
+  expect(s.geometries).toBeGreaterThan(80);
   expect(s.programs).toBeGreaterThan(20);
+  expect(s.calls).toBeGreaterThan(40);
   await expect(page.locator('#panel')).toContainText('Vân Đảo');
   expect(await page.locator('#err').textContent()).toBe('');
   expect(errors, errors.join('\n')).toEqual([]);
@@ -38,7 +41,8 @@ test('Đại Thiền Đường dựng đủ cảnh', async ({ page }) => {
   const errors = await open(page, 'mode=hall&q=2&snap=1');
   const s = await stats(page);
   console.log('Đại Thiền Đường', JSON.stringify(s));
-  expect(s.geometries).toBeGreaterThan(150);
+  expect(s.geometries).toBeGreaterThan(60);
+  expect(s.calls).toBeGreaterThan(30);
   await expect(page.locator('#panel')).toContainText('Đại Thiền Đường');
   expect(errors, errors.join('\n')).toEqual([]);
 });

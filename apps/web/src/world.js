@@ -6,8 +6,8 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { buildRealm } from './realm.js';
 import { buildBirds } from './birds.js';
-import { NOISE, OUT, rng, puffAtlas, buddhaTex } from './gfx.js';
-import { buildHome, buildNeighbor, groundH, floorH, pvFloor, DECKS, STAIR, P, islandUniforms, SX, SZ, HILL, POND } from './island.js';
+import { NOISE, OUT, rng, puffAtlas, buddhaTex, lodPair } from './gfx.js';
+import { buildHome, buildNeighbor, bakeWorld, groundH, floorH, pvFloor, DECKS, STAIR, P, islandUniforms, SX, SZ, HILL, POND } from './island.js';
 import { buildFigure, makeCrowd, defaultLook, suggestNames, OPTIONS } from './people.js';
 
 export { groundH };
@@ -49,6 +49,7 @@ export class World {
     const r = (this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }));
     r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.NeutralToneMapping; r.toneMappingExposure = 1;
     r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFShadowMap;
+    r.info.autoReset = false; this.pf = { t0: 0, n: 0, calls: 0, tris: 0, last: null };   // số liệu hiệu năng gộp mọi lượt vẽ của một khung hình (kể cả bloom)
     this.scene = new THREE.Scene(); this.scene.fog = new THREE.Fog(DAY.clone(), 260, 2000);
     this.camera = new THREE.PerspectiveCamera(52, 1, 0.5, 7000);
     this.controls = new OrbitControls(this.camera, canvas);
@@ -161,6 +162,9 @@ export class World {
     [[128, 100, 356, 0.42], [178, 142, 362, 0.22]].forEach(([rx, rz, y, op]) => { const g = new THREE.TorusGeometry(1, 0.012, 6, 200); g.scale(rx, rz, 125); const ring = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: new THREE.Color(1.7, 1.45, 0.9), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); ring.rotation.x = Math.PI / 2; ring.position.set(0, y, -738); this.scene.add(ring); });
     for (let i = 0; i < 48; i++) { const c = T4[i % 4], j = Math.floor(i / 4), a = j * 2.4 + (i % 4) * 1.1, d = j ? 7.5 + Math.sqrt(j) * 7.2 : 0, x = c[0] + Math.cos(a) * d, y = c[1] + Math.sin(j * 1.7) * 1.2 + (j ? 0 : 0.5), z = c[2] + Math.sin(a) * d * 0.75; crowd.push({ x, y, z, rot: faceBud(x, z), robe: '#9a7436', sc: 2.2 }); this.glowSeats.push({ p: V(x, y, z), tier: 4 }); }
     this.tierCrowd = makeCrowd(crowd, 5); this.scene.add(this.tierCrowd);
+    // T1.2: gộp toàn bộ đảo láng giềng (tĩnh sau khi dựng) theo vật liệu để giảm lệnh vẽ
+    this.isleBake = bakeWorld(this.isles.map((I) => I.nb.group)); this.scene.add(this.isleBake);
+    this.isles.forEach((I) => { let has = false; I.nb.group.traverse((o) => { if (o.isMesh) has = true; }); if (!has) this.scene.remove(I.nb.group); });
     // Ba bạn đồng tu ở đảo gần: nhân vật riêng, chào và thăm được
     const fr = rng(21);
     this.friends.forEach((f, i) => {
@@ -186,13 +190,16 @@ export class World {
       for (let i = 0; i < n; i++) { const phi = -0.56 + (1.12 * (i + 0.5)) / n + (this.rnd() - 0.5) * 0.004, x = rho * Math.sin(phi), z = BUD.z + rho * Math.cos(phi); if (Math.hypot(x - SEAT.x, z - SEAT.z) < 9) continue; seats.push({ x, y: 3 + (this.rnd() - 0.5) * 0.8, z, row: (rho - 200) / 16 }); } }
     this.seats = seats; const n = seats.length, d = new THREE.Object3D();
     this.hallCrowd = makeCrowd(seats.map((s) => ({ x: s.x, y: s.y + 0.55, z: s.z, rot: faceBud(s.x, s.z) })), 9); this.scene.add(this.hallCrowd);
-    const a = new THREE.SphereGeometry(1.9, 10, 6); a.scale(1, 0.42, 1); const b = new THREE.SphereGeometry(1.2, 7, 5); b.scale(1, 0.5, 1); b.translate(1.5, -0.1, 0.4); const c2 = new THREE.SphereGeometry(1.1, 7, 5); c2.scale(1, 0.5, 1); c2.translate(-1.4, -0.1, -0.5);
-    const merged = new THREE.BufferGeometry(); { const gs = [a, b, c2].map((g) => g.toNonIndexed()), tot = gs.reduce((s, g) => s + g.attributes.position.count, 0), pp = new Float32Array(tot * 3), nn = new Float32Array(tot * 3); let o = 0; gs.forEach((g) => { pp.set(g.attributes.position.array, o); nn.set(g.attributes.normal.array, o); o += g.attributes.position.array.length; }); merged.setAttribute('position', new THREE.BufferAttribute(pp, 3)); merged.setAttribute('normal', new THREE.BufferAttribute(nn, 3)); }
+    // Vân Tọa: ba khối mây dẹt gộp một hình; mức chất lượng 0 (điện thoại) dùng bản ít mặt hơn (88 thay vì 212 tam giác/ghế)
+    const puffGeo = ([wa, ha], [wb, hb]) => { const a = new THREE.SphereGeometry(1.9, wa, ha); a.scale(1, 0.42, 1); const b = new THREE.SphereGeometry(1.2, wb, hb); b.scale(1, 0.5, 1); b.translate(1.5, -0.1, 0.4); const c2 = new THREE.SphereGeometry(1.1, wb, hb); c2.scale(1, 0.5, 1); c2.translate(-1.4, -0.1, -0.5);
+      const merged = new THREE.BufferGeometry(), gs = [a, b, c2].map((g) => g.toNonIndexed()), tot = gs.reduce((s, g) => s + g.attributes.position.count, 0), pp = new Float32Array(tot * 3), nn = new Float32Array(tot * 3); let o = 0; gs.forEach((g) => { pp.set(g.attributes.position.array, o); nn.set(g.attributes.normal.array, o); o += g.attributes.position.array.length; }); merged.setAttribute('position', new THREE.BufferAttribute(pp, 3)); merged.setAttribute('normal', new THREE.BufferAttribute(nn, 3)); return merged; };
+    this.puffGeos = [puffGeo([8, 4], [5, 3]), puffGeo([10, 6], [7, 5])]; const merged = this.puffGeos[this.quality === 0 ? 0 : 1];
+    // ghế ở xa (theo mức chất lượng 0/1/2: quá 140/220/320) dùng bản 40 tam giác
     this.seatMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, emissive: '#bfeee4', emissiveIntensity: 0 });
     this.seatMat.onBeforeCompile = (sh) => { sh.uniforms.uB = this.u.uB; sh.vertexShader = 'uniform float uB;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n transformed *= (1.0 + uB);'); };
-    const puff = new THREE.InstancedMesh(merged, this.seatMat, n + 1);
-    seats.concat([{ x: SEAT.x, y: SEAT.y, z: SEAT.z }]).forEach((s, i) => { d.position.set(s.x, s.y, s.z); d.rotation.set(0, i * 1.7, 0); d.updateMatrix(); puff.setMatrixAt(i, d.matrix); });
-    puff.frustumCulled = false; this.scene.add(puff);
+    const puff = new THREE.InstancedMesh(merged, this.seatMat, n + 1), puffFar = new THREE.InstancedMesh(puffGeo([6, 3], [4, 2]), this.seatMat, n + 1), pm = [], pp = [];
+    seats.concat([{ x: SEAT.x, y: SEAT.y, z: SEAT.z }]).forEach((s, i) => { d.position.set(s.x, s.y, s.z); d.rotation.set(0, i * 1.7, 0); d.updateMatrix(); pm.push(d.matrix.clone()); pp.push(V(s.x, s.y, s.z)); });
+    this.scene.add(puff, puffFar); this.puff = puff; this.puffLod = lodPair(puff, puffFar, pm, pp, [140, 220, 320]); this.puffLod(V(0, 0, 0), 2, true);
     this.pillarMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.5, 1.0, 0.5), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
     const pil = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.25, 0.8, 16, 8, 1, true), this.pillarMat, n + 1);
     seats.concat([{ x: SEAT.x, y: SEAT.y, z: SEAT.z }]).forEach((s, i) => { d.position.set(s.x, s.y - 8.6, s.z); d.rotation.set(0, 0, 0); d.updateMatrix(); pil.setMatrixAt(i, d.matrix); });
@@ -296,7 +303,7 @@ export class World {
   }
   applyQuality() {
     const q = this.quality, pr = Math.min(window.devicePixelRatio || 1, q >= 2 ? 2 : q === 1 ? 1.25 : 1);
-    this.renderer.setPixelRatio(pr); this.renderer.setSize(this.w, this.h, false); this.sun.castShadow = q >= 1;
+    this.renderer.setPixelRatio(pr); this.renderer.setSize(this.w, this.h, false); this.sun.castShadow = q >= 1; if (this.puff) this.puff.geometry = this.puffGeos[q === 0 ? 0 : 1];
     if (this.composer) { this.composer.setPixelRatio(pr); this.composer.setSize(this.w, this.h); }
   }
 
@@ -416,7 +423,7 @@ export class World {
       this.sBow = (this.sBow || 0) + ((sm.bow || 0) - (this.sBow || 0)) * Math.min(1, dt * 7);
       [this.hallCrowd, this.tierCrowd].forEach((c) => { if (c && c.userData.bow) { c.userData.bow.value = this.sBow; c.userData.setAnjali(!!sm.anjali); } }); }
     if (this.tween || !this.controls.enabled) this.camera.lookAt(this.controls.target); else this.controls.update();
-    const cam = this.camera.position; u.uCam.value.copy(cam); this.sky.position.copy(cam); this.stars.position.copy(cam);
+    const cam = this.camera.position; [this.hallCrowd, this.tierCrowd].forEach((c) => c && c.userData.lod(cam, this.quality)); this.realm.lod(cam, this.quality); this.puffLod(cam, this.quality); u.uCam.value.copy(cam); this.sky.position.copy(cam); this.stars.position.copy(cam);
     u.uBud.value.set(BUD.x - cam.x, BUD_EYE - cam.y, BUD.z - cam.z).normalize();
     this.budFig.lookAt(cam.x, BL + 148 * BS, cam.z); const nb = 1 + 0.12 * v.night; this.budFig.material.color.setRGB(0.96 * nb, 0.88 * nb, 0.74 * nb);
     u.uNight.value = v.night; u.uAmber.value = v.amber; u.uJade.value = v.jade; u.uCalm.value = v.calm;
@@ -454,7 +461,25 @@ export class World {
         if (k >= 0 && k <= 1) { const a = k < 0.5 ? b.from : b.mid, c = k < 0.5 ? b.mid : b.to, q = (k < 0.5 ? k : k - 0.5) * 2, e = ease(q); p = a.clone().lerp(c, e).addScaledVector(b.j, Math.sin(q * Math.PI)); p.y += Math.sin(q * Math.PI) * 2.5; }
         if (k <= 1) alive = true; this.burstPos.set(p ? [p.x, p.y, p.z] : [0, -9999, 0], i * 3); });
       this.burstPts.geometry.attributes.position.needsUpdate = true; if (!alive) this.burstList = []; }
+    // vật liệu cộng sáng đang tắt (độ mờ 0) thì bỏ hẳn lượt vẽ: các cột sáng cao 460 tốn tô điểm ảnh dù không thấy
+    [this.pillarMat, this.filaMat, this.beamMat, this.stars.material, this.homeLbMat, H.streamMat, H.glints.material].forEach((m) => { m.visible = m.opacity > 0.003; });
+    const inf = this.renderer.info; inf.reset();
     if (this.quality >= 1 && this.composer) { this.bloom.strength = 0.24 + 0.22 * v.night; this.composer.render(dt); } else this.renderer.render(this.scene, this.camera);
+    this._perfTick(inf);
+  }
+
+  // Đo hiệu năng: mỗi 10 giây phát sự kiện `vandao:perf` {fps, ms, calls, triangles, quality, dpr} cho lớp số liệu lắng nghe (net/metrics.js).
+  // Không gửi gì ra mạng từ đây; world.perf() trả số liệu khung hình gần nhất để kiểm thử và gỡ lỗi.
+  _perfTick(inf) {
+    const P = this.pf, now = performance.now(); P.calls = inf.render.calls; P.tris = inf.render.triangles;
+    if (!P.t0) P.t0 = now; P.n++;
+    if (now - P.t0 >= 10000) { const fps = (P.n * 1000) / (now - P.t0); P.last = { fps: Math.round(fps * 10) / 10, ms: Math.round(10000 / fps) / 10 }; P.t0 = now; P.n = 0;
+      try { window.dispatchEvent(new CustomEvent('vandao:perf', { detail: this.perf() })); } catch (e) { void e; } }
+  }
+  perf() {
+    const inf = this.renderer.info, L = this.pf.last, crowd = (c) => (c ? c.userData.lodStats() : null);
+    return { fps: L ? L.fps : null, ms: L ? L.ms : null, calls: this.pf.calls, triangles: this.pf.tris, quality: this.quality, dpr: this.renderer.getPixelRatio(), mode: this.mode,
+      geometries: inf.memory.geometries, textures: inf.memory.textures, programs: inf.programs ? inf.programs.length : 0, crowd: { hall: crowd(this.hallCrowd), tier: crowd(this.tierCrowd) }, realm: this.realm ? this.realm.stats() : null };
   }
 
   _avatarStep(dt, s) {
