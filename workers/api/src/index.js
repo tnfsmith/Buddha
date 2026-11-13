@@ -9,6 +9,7 @@ import exportApp from './routes/export.js';
 import accountApp from './routes/account.js';
 import rtApp from './routes/rt.js';
 import contentApp from './routes/content.js';
+import metricsApp from './routes/metrics.js';
 
 const app = new Hono();
 
@@ -47,6 +48,7 @@ app.route('/api/v1/export', exportApp);
 app.route('/api/v1/account', accountApp);
 app.route('/api/v1/rt', rtApp);
 app.route('/api/v1/content', contentApp);
+app.route('/api/v1/metrics', metricsApp);
 
 // Đường dẫn /api/* không tồn tại: trả 404 JSON, không rơi xuống trang SPA
 app.all('/api/*', (c) => c.json({ error: { code: 'not_found', message: 'Không có API này' } }, 404));

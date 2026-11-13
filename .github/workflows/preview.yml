@@ -37,6 +37,27 @@ jobs:
           url=$(grep -oE 'https://pr-[^ ]+\.workers\.dev' /tmp/up.txt | head -1)
           [ -n "$url" ] || url=$(grep -oE 'https://[^ ]+\.workers\.dev' /tmp/up.txt | head -1)
           echo "url=$url" >> "$GITHUB_OUTPUT"
+      - name: Lighthouse trên bản preview (điện thoại và máy tính, T1.3)
+        if: steps.up.outputs.url != ''
+        continue-on-error: true
+        env: { URL: '${{ steps.up.outputs.url }}' }
+        run: |
+          # tắt WebGL: runner không có GPU, cảnh 3D bằng SwiftShader làm Lighthouse báo "trang ngừng phản hồi".
+          # Lighthouse đo lớp giao diện 2D (§12.5: 2D tương tác < 2,5 s); hiệu năng 3D đo ở tests/e2e/perf.spec.js.
+          flags="--no-sandbox --headless=new --disable-3d-apis"
+          cats="performance,accessibility,best-practices,seo"
+          npx -y @lhci/cli@0.16.1 collect --url="$URL/" --numberOfRuns=1 --settings.chromeFlags="$flags" --settings.onlyCategories="$cats"
+          npx -y @lhci/cli@0.16.1 collect --url="$URL/" --numberOfRuns=1 --additive --settings.preset=desktop --settings.chromeFlags="$flags" --settings.onlyCategories="$cats"
+          node scripts/lh-summary.mjs > /tmp/lh.md; cat /tmp/lh.md
+      - name: Lưu báo cáo Lighthouse
+        if: always() && steps.up.outputs.url != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v5
+        with:
+          name: lighthouse-pr-${{ github.event.pull_request.number }}
+          path: .lighthouseci/
+          retention-days: 14
+          if-no-files-found: ignore
       - name: Kiểm khói bản preview
         if: steps.up.outputs.url != ''
         run: npm run e2e:smoke
@@ -48,4 +69,5 @@ jobs:
           URL: ${{ steps.up.outputs.url }}
         run: |
           body="Preview PR #$PR (tài khoản Cloudflare staging): $URL — commit ${GITHUB_SHA::7}"
+          if [ -s /tmp/lh.md ]; then body="$body"$'\n\n'"$(cat /tmp/lh.md)"; fi
           gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --edit-last --body "$body" 2>/dev/null || gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "$body"
