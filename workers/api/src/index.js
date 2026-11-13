@@ -37,6 +37,14 @@ app.route('/api/v1/account', accountApp);
 app.route('/api/v1/rt', rtApp);
 app.route('/api/v1/content', contentApp);
 
+// Chuyển tiếp các request tĩnh không thuộc /api/* cho Static Assets (apps/web)
+app.all('*', async (c) => {
+  if (c.env?.ASSETS && typeof c.env.ASSETS.fetch === 'function') {
+    return c.env.ASSETS.fetch(c.req.raw);
+  }
+  return c.text('Not Found', 404);
+});
+
 // Xử lý lỗi toàn cục
 app.onError((err, c) => {
   if (globalThis.console) {

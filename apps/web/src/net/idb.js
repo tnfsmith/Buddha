@@ -2,7 +2,7 @@
 // Lưu trữ phía client bằng IndexedDB thay cho localStorage (PROJECT_ROADMAP.md §4.5)
 
 const DB_NAME = 'vandao';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbPromise = null;
 

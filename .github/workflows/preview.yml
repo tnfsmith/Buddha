@@ -26,11 +26,11 @@ jobs:
       - run: npm ci
       - run: npm run build
       - name: Tạo Worker staging nếu chưa có
-        working-directory: apps/web
+        working-directory: workers/api
         run: npx wrangler deployments list --env staging >/dev/null 2>&1 || npx wrangler deploy --env staging
       - name: Tải phiên bản preview (không đổi bản staging đang chạy)
         id: up
-        working-directory: apps/web
+        working-directory: workers/api
         run: |
           npx wrangler versions upload --env staging --preview-alias "pr-$PR" --message "PR #$PR ${GITHUB_SHA::7}" | tee /tmp/up.txt
           url=$(grep -oE 'https://pr-[^ ]+\.workers\.dev' /tmp/up.txt | head -1)

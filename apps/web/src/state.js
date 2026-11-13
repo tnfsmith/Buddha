@@ -4,6 +4,7 @@
 // Đối tượng S giữ nguyên danh tính suốt vòng đời trang: mọi nơi import { S } đều thấy cùng một bản.
 import { advance, allDone as allDoneIn } from '@vandao/shared/schedule.js';
 import { defaultLook } from './people.js';
+import { idbGet, idbSet } from './net/idb.js';
 
 export const KEY = 'vandao.v1';
 export const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
@@ -19,23 +20,10 @@ const replace = (obj) => { for (const k of Object.keys(S)) delete S[k]; Object.a
 try { const raw = localStorage.getItem(KEY); if (raw) replace(Object.assign(fresh(), JSON.parse(raw))); S.look = { ...defaultLook(), ...S.look }; S.music = { ...fresh().music, ...S.music }; S.birds = { ...fresh().birds, ...S.birds }; localStorage.setItem(KEY, JSON.stringify(S)); mem = false; } catch (e) { mem = true; }
 
 // ───────── IndexedDB: bản sao song song + outbox ─────────
-const IDB_NAME = 'vandao', IDB_VERSION = 1;
-let dbP = null;
-function openDB() {
-  if (dbP) return dbP;
-  dbP = new Promise((res, rej) => {
-    if (typeof indexedDB === 'undefined') return rej(new Error('Không có IndexedDB'));
-    const r = indexedDB.open(IDB_NAME, IDB_VERSION);
-    r.onupgradeneeded = () => { const db = r.result; for (const st of ['state', 'outbox', 'meta']) if (!db.objectStoreNames.contains(st)) db.createObjectStore(st, st === 'outbox' ? { keyPath: 'id' } : undefined); };
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
-    r.onblocked = () => rej(new Error('IndexedDB bị chặn'));
-  });
-  return dbP;
-}
-const tx = (store, mode, fn) => openDB().then((db) => new Promise((res, rej) => { const t = db.transaction(store, mode), q = fn(t.objectStore(store)); t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error); }));
-export const idbGet = (store, key) => tx(store, 'readonly', (os) => os.get(key));
-export const idbPut = (store, key, val) => tx(store, 'readwrite', (os) => (key === undefined ? os.put(val) : os.put(val, key)));
+// Lược đồ IndexedDB chỉ có một chủ: net/idb.js (`vandao` v2: state, outbox, meta, kusala, sessions). Máy đã chạy bản v1
+// (T1.1) được nâng cấp tại chỗ: giữ nguyên ba store cũ cùng dữ liệu, thêm store mới.
+export { idbGet } from './net/idb.js';
+export const idbPut = (store, key, val) => idbSet(store, key, val);
 let idbQueue = Promise.resolve();
 // Chỉ chép sang IndexedDB sau khi stateReady đã đối chiếu, để trạng thái rỗng lúc khởi động không ghi đè bản cần khôi phục
 let mirrorOn = false;

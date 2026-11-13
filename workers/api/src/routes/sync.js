@@ -2,7 +2,8 @@
 // Giao thức đồng bộ hai chiều Offline-first (PROJECT_ROADMAP.md §5.1)
 import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
-import { kusala, getUnlockedZones } from '@vandao/shared';
+import { kusala, advance, allDone } from '@vandao/shared';
+import { computeUnlockedZones } from './me.js';
 import { getLocalDate, daysBetween } from '../utils/time.js';
 
 const syncApp = new Hono();
@@ -121,33 +122,40 @@ syncApp.post('/', authMiddleware, async (c) => {
           calculatedScore, note, opAt, now
         ).run();
 
-        // Kiểm tra điều kiện tiến ngày:
-        // Đã hoàn thành cả 3 trục (duc, thien, tue) cho day hiện tại và ngày gần nhất < ngày địa phương
-        const completedPillars = await db.prepare(
-          `SELECT COUNT(DISTINCT pillar) as cnt
-           FROM kusala_entry
+        // Kiểm tra điều kiện tiến ngày bằng hàm advance() dùng chung từ @vandao/shared
+        const pillarRows = await db.prepare(
+          `SELECT pillar FROM kusala_entry
            WHERE user_id = ? AND program = ? AND cycle = ? AND day = ?`
-        ).bind(user.id, journeyRow.program, journeyRow.cycle, journeyRow.day).first();
+        ).bind(user.id, journeyRow.program, journeyRow.cycle, journeyRow.day).all();
 
-        const allPillarsDone = (completedPillars?.cnt || 0) === 3;
-        const canAdvanceDay = allPillarsDone &&
-          (!journeyRow.last_done_on || journeyRow.last_done_on < opLocalDate) &&
-          (journeyRow.day + 1 <= daysBetween(journeyRow.started_on, localToday) + 1);
+        const dayPillars = {};
+        for (const r of pillarRows?.results || []) {
+          dayPillars[r.pillar] = true;
+        }
 
-        if (canAdvanceDay) {
-          const nextDay = journeyRow.day + 1;
-          const completedAt = nextDay > 49 ? now : null;
+        const stateForAdvance = {
+          day: journeyRow.day,
+          lastDate: journeyRow.last_done_on,
+          done: { [journeyRow.day]: dayPillars },
+          completed: Boolean(journeyRow.completed_at)
+        };
 
+        const next = advance(stateForAdvance, localToday);
+
+        // Bất biến cứng: day không thể vượt quá số ngày lịch đã trôi qua kể từ started_on
+        const maxAllowedDay = daysBetween(journeyRow.started_on, localToday) + 1;
+        if (next.day !== journeyRow.day && next.day <= maxAllowedDay) {
+          const completedAt = next.completed ? now : null;
           await db.prepare(
             `UPDATE journey
              SET day = ?, last_done_on = ?, completed_at = ?, rev = rev + 1, updated_at = ?
              WHERE user_id = ? AND program = ? AND cycle = ?`
-          ).bind(nextDay, opLocalDate, completedAt, now, user.id, journeyRow.program, journeyRow.cycle).run();
+          ).bind(next.day, opLocalDate, completedAt, now, user.id, journeyRow.program, journeyRow.cycle).run();
 
-          journeyRow.day = nextDay;
+          journeyRow.day = next.day;
           journeyRow.last_done_on = opLocalDate;
           journeyRow.completed_at = completedAt;
-        } else if (allPillarsDone && (!journeyRow.last_done_on || journeyRow.last_done_on < opLocalDate)) {
+        } else if (allDone(stateForAdvance.done, journeyRow.day) && (!journeyRow.last_done_on || journeyRow.last_done_on < opLocalDate)) {
           await db.prepare(
             `UPDATE journey
              SET last_done_on = ?, updated_at = ?
@@ -272,11 +280,7 @@ syncApp.post('/', authMiddleware, async (c) => {
     all: Number((totalsRow?.all_score || 0).toFixed(1))
   };
 
-  const unlockedZones = getUnlockedZones ? getUnlockedZones(journeyRow.day) : {
-    tra_dao: journeyRow.day >= 15,
-    cong_van_mon: journeyRow.day >= 43,
-    cong_van_mon_half: journeyRow.day >= 29
-  };
+  const unlockedZones = computeUnlockedZones(journeyRow.day);
 
   return c.json({
     applied,

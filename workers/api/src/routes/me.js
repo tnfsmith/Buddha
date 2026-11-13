@@ -2,9 +2,25 @@
 // Lấy trạng thái tổng thể của hành giả (PROJECT_ROADMAP.md §5)
 import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
-import { getUnlockedZones } from '@vandao/shared';
+import { ZONE_UNLOCK, gateLevel } from '@vandao/shared';
 
 const meApp = new Hono();
+
+export function computeUnlockedZones(day) {
+  const g = gateLevel(day);
+  return {
+    kuti: day >= ZONE_UNLOCK.kuti,
+    pad: day >= ZONE_UNLOCK.pad,
+    garden: day >= ZONE_UNLOCK.garden,
+    tea: day >= ZONE_UNLOCK.tea,
+    gate: g,
+    stele: day >= ZONE_UNLOCK.stele,
+    // Alias tiếng Việt thuận tiện cho UI
+    tra_dao: day >= ZONE_UNLOCK.tea,
+    cong_van_mon: g === 1,
+    cong_van_mon_half: g >= 0.5
+  };
+}
 
 meApp.get('/', authMiddleware, async (c) => {
   const user = c.get('user');
@@ -49,11 +65,7 @@ meApp.get('/', authMiddleware, async (c) => {
     all: Number((totalsRow?.all_score || 0).toFixed(1))
   };
 
-  const unlockedZones = getUnlockedZones ? getUnlockedZones(currentDay) : {
-    tra_dao: currentDay >= 15,
-    cong_van_mon: currentDay >= 43,
-    cong_van_mon_half: currentDay >= 29
-  };
+  const unlockedZones = computeUnlockedZones(currentDay);
 
   return c.json({
     user,
