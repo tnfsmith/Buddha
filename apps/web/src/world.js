@@ -40,10 +40,29 @@ export const TIER_ISLES = [
 export const TIER_LABEL = [[-150, 30, 40], [-250, 92, -170], [-345, 172, -520], [-292, 256, -720], [-200, 372, -724]];
 
 const seatOf = (an) => (an && an.deck !== undefined ? DECKS[an.deck].seat || 0.02 : (an && an.seatH) || 0.02);
+// ───────── Chọn mức chất lượng ban đầu theo thiết bị (để máy yếu khỏi giật vài giây trước khi tự hạ) ─────────
+const GFX_KEY = 'vandao.gfx', GFX_TTL = 14 * 24 * 3600 * 1000;
+export const isMobile = () => { try { return matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } };
+function saveGfx(q) { try { localStorage.setItem(GFX_KEY, JSON.stringify({ q, at: Date.now() })); } catch (e) { void e; } }
+/**
+ * Mức 0 cho trình vẽ phần mềm (SwiftShader, llvmpipe) và điện thoại yếu (≤ 4 GB RAM hoặc ≤ 4 lõi hoặc màn nhỏ);
+ * mức 1 cho điện thoại/máy tính bảng còn lại và máy tính yếu; mức 2 cho máy tính. Lần trước đã phải tự hạ mức
+ * (lưu ở localStorage 'vandao.gfx', hết hạn sau 14 ngày để thử lại) thì bắt đầu luôn ở mức đó.
+ */
+export function pickQuality(renderer, nav = navigator, mobile = isMobile()) {
+  let gpu = '';
+  try { const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info'); gpu = String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || ''); } catch (e) { void e; }
+  const mem = nav.deviceMemory || 8, cores = nav.hardwareConcurrency || 8, small = Math.min(screen.width || 0, screen.height || 0) <= 400;
+  let q = /swiftshader|llvmpipe|software|microsoft basic render/i.test(gpu) ? 0 : mobile ? (mem <= 4 || cores <= 4 || small ? 0 : 1) : mem <= 4 && cores <= 4 ? 1 : 2;
+  try { const g = JSON.parse(localStorage.getItem(GFX_KEY) || 'null'); if (g && Date.now() - g.at < GFX_TTL && g.q < q) q = g.q; } catch (e) { void e; }
+  return q;
+}
+
 export class World {
   static V3 = THREE.Vector3;
   static NODES = NODES;
   static floorH = floorH;
+  static pickQuality = pickQuality;
   constructor(canvas, look, quality, startPos) {
     this.startPos = startPos && isFinite(startPos.x) && isFinite(startPos.z) ? startPos : null;
     const r = (this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }));
@@ -56,7 +75,8 @@ export class World {
     Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.08, enablePan: false, rotateSpeed: 0.45, zoomSpeed: 0.7 });
     this.controls.target.set(12, 36, 0);
     this.mode = 'island'; this.time = 0; this.tween = null; this.rnd = rng(7); this.baseFov = 58;
-    this.fixedQ = quality !== undefined; this.quality = quality !== undefined ? quality : 2; this.acc = 0; this.accN = 0;
+    // Mức chất lượng: cố định khi URL có ?q / #q=, không thì chọn theo thiết bị ngay từ đầu (pickQuality) rồi tự hạ khi chậm
+    this.fixedQ = quality !== undefined; this.mobile = isMobile(); this.quality = quality !== undefined ? quality : pickQuality(r); this.res = 1; this.hold = null; this.born = 0;
     this.u = { uTime: { value: 0 }, uNight: { value: 0 }, uAmber: { value: 0 }, uJade: { value: 0 }, uCalm: { value: 0 }, uCam: { value: V(0, 0, 0) }, uMist: { value: 0.7 },
       uHalo: { value: 1 }, uRainbow: { value: 0.5 }, uHaloWhite: { value: 0 }, uTier2: { value: 0 }, uBud: { value: V(0, 0.2, -1).normalize() }, uB: { value: 0 }, uP: { value: 0 } };
     this._lights(); this._sky(); this._clouds(); this._buddha();
@@ -65,6 +85,11 @@ export class World {
     this.look = { ...defaultLook(), ...look }; this._avatar();
     this._composer(); this.setLimits(); this.resize();
     this.camera.position.copy(this.islandCam()); this.controls.target.copy(this.islandTarget());
+    // §12.3 mục 4: biên dịch trước mọi shader (kể cả vật đang ẩn); bản cho mức thấp hơn biên dịch sau khi cảnh đã chạy
+    this.warmed = this._warm();
+    if (!this.fixedQ && this.quality > 0) this.warmLater = setTimeout(() => { const go = () => this._warm(this.quality - 1); if (window.requestIdleCallback) requestIdleCallback(go, { timeout: 4000 }); else go(); }, 8000);
+    // §12.3 mục 6: tab ẩn thì không vẽ; quay lại thì bỏ mẫu đo khung hình cũ để không hạ chất lượng nhầm
+    document.addEventListener('visibilitychange', () => { if (this.ad) { this.ad.t0 = this.ad.last = performance.now(); this.ad.n = 0; this.ad.sum = 0; } });
   }
 
   _lights() {
@@ -301,10 +326,46 @@ export class World {
       this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.24, 0.6, 1.0); this.composer.addPass(this.bloom); this.composer.addPass(new OutputPass());
     } catch (e) { this.composer = null; }
   }
+  // DPR tối đa theo mức (điện thoại mức 2 giới hạn 1,5 theo §12.2) nhân hệ số độ phân giải động `res` (0,6–1)
   applyQuality() {
-    const q = this.quality, pr = Math.min(window.devicePixelRatio || 1, q >= 2 ? 2 : q === 1 ? 1.25 : 1);
+    const q = this.quality, cap = q >= 2 ? (this.mobile ? 1.5 : 2) : q === 1 ? 1.25 : 1, pr = Math.min(window.devicePixelRatio || 1, cap) * this.res;
     this.renderer.setPixelRatio(pr); this.renderer.setSize(this.w, this.h, false); this.sun.castShadow = q >= 1; if (this.puff) this.puff.geometry = this.puffGeos[q === 0 ? 0 : 1];
-    if (this.composer) { this.composer.setPixelRatio(pr); this.composer.setSize(this.w, this.h); }
+    if (this.composer) {
+      this.composer.setPixelRatio(pr); this.composer.setSize(this.w, this.h);
+      // §12.3 mục 5: bloom nửa độ phân giải trên điện thoại (ánh hào quang vốn mờ, khác biệt khó thấy)
+      if (this.mobile && this.bloom) this.bloom.setSize(Math.max(1, Math.round(this.w * pr / 2)), Math.max(1, Math.round(this.h * pr / 2)));
+    }
+  }
+  // Biên dịch trước shader của biến thể `q` (bóng đổ bật/tắt; qua bloom thì vẽ vào render target nên không tone mapping)
+  _warm(q = this.quality) {
+    const r = this.renderer, prev = r.getRenderTarget(), cast = this.sun.castShadow;
+    let p = Promise.resolve();
+    try {
+      this.sun.castShadow = q >= 1;
+      r.setRenderTarget(q >= 1 && this.composer ? this.composer.renderTarget1 : null);
+      p = r.compileAsync(this.scene, this.camera);
+    } catch (e) { void e; } finally { r.setRenderTarget(prev); this.sun.castShadow = cast; }
+    return p.catch(() => {});
+  }
+  // Đổi mức chất lượng: giữ khung hình cũ trên màn hình (không vẽ) tới khi shader của mức mới sẵn sàng, tối đa 3 giây
+  setQuality(q) {
+    q = Math.max(0, Math.min(2, q)); if (q === this.quality) return;
+    this.quality = q; this.res = 1; this.applyQuality(); saveGfx(q);
+    const h = (this.hold = Promise.race([this._warm(q), new Promise((r) => setTimeout(r, 3000))]).then(() => { if (this.hold === h) this.hold = null; }));
+  }
+  // §12.3 mục 5: độ phân giải động theo thời gian khung (đồng hồ thật, mỗi 2 giây). Chậm thì hạ `res` từng nấc 0,1 tới 0,6
+  // rồi mới hạ mức chất lượng; nhanh thì nâng `res` dần về 1. Mục tiêu 30 fps khi thiền (§12.2).
+  _adapt() {
+    if (this.fixedQ || document.hidden) return;
+    const now = performance.now(), A = this.ad || (this.ad = { t0: now, last: now, n: 0, sum: 0, changed: now });
+    if (!this.born) this.born = now;   // tính từ khung hình đầu tiên, không từ lúc dựng cảnh
+    A.sum += Math.min(now - A.last, 250); A.last = now; A.n++;   // kẹp 250 ms: một lần khựng không kéo cả trung bình
+    if (now - A.t0 < 2000) return;
+    const avg = A.sum / A.n; A.t0 = now; A.n = 0; A.sum = 0;
+    if (now - this.born < 5000 || now - A.changed < 2500 || this.hold) return;   // 5 giây đầu còn biên dịch shader, chưa đo
+    if (avg > 34 && this.res > 0.6) { this.res = Math.round((this.res - 0.1) * 10) / 10; this.applyQuality(); A.changed = now; }
+    else if (avg > 34 && this.quality > 0) { this.setQuality(this.quality - 1); A.changed = now; }
+    else if (avg < 22 && this.res < 1) { this.res = Math.min(1, Math.round((this.res + 0.1) * 10) / 10); this.applyQuality(); A.changed = now; }
   }
 
   // Hạt sáng: từ Bia Tích Lũy vào thân rồi thấm vào cây Bồ-đề, hoặc từ mình sang đảo bạn
@@ -411,7 +472,7 @@ export class World {
 
   update(dt, s) {
     const u = this.u, v = s.vis, isl = s.isl, H = this.home; this.time += dt; u.uTime.value = this.time; islandUniforms.uTime.value = this.time;
-    if (!this.fixedQ) { this.acc += dt; if (++this.accN >= 80) { const avg = this.acc / this.accN; this.acc = 0; this.accN = 0; if (avg > 0.036 && this.quality > 0 && this.time > 4) { this.quality--; this.applyQuality(); } } }
+    this._adapt();
     if (this.tween) { const tw = this.tween; tw.k = Math.min(1, tw.k + dt / tw.dur); const e = ease(tw.k);
       this.camera.position.lerpVectors(tw.p0, tw.p, e); this.controls.target.lerpVectors(tw.t0, tw.t, e); this.baseFov = tw.f0 + (tw.fov - tw.f0) * e; this.applyFov();
       if (tw.k >= 1) { this.tween = null; this.controls.enabled = true; this.setLimits(); } }
@@ -463,6 +524,7 @@ export class World {
       this.burstPts.geometry.attributes.position.needsUpdate = true; if (!alive) this.burstList = []; }
     // vật liệu cộng sáng đang tắt (độ mờ 0) thì bỏ hẳn lượt vẽ: các cột sáng cao 460 tốn tô điểm ảnh dù không thấy
     [this.pillarMat, this.filaMat, this.beamMat, this.stars.material, this.homeLbMat, H.streamMat, H.glints.material].forEach((m) => { m.visible = m.opacity > 0.003; });
+    if (document.hidden || this.hold) return;   // tab ẩn, hoặc đang chờ shader của mức chất lượng mới: không vẽ
     const inf = this.renderer.info; inf.reset();
     if (this.quality >= 1 && this.composer) { this.bloom.strength = 0.24 + 0.22 * v.night; this.composer.render(dt); } else this.renderer.render(this.scene, this.camera);
     this._perfTick(inf);
@@ -478,7 +540,7 @@ export class World {
   }
   perf() {
     const inf = this.renderer.info, L = this.pf.last, crowd = (c) => (c ? c.userData.lodStats() : null);
-    return { fps: L ? L.fps : null, ms: L ? L.ms : null, calls: this.pf.calls, triangles: this.pf.tris, quality: this.quality, dpr: this.renderer.getPixelRatio(), mode: this.mode,
+    return { fps: L ? L.fps : null, ms: L ? L.ms : null, calls: this.pf.calls, triangles: this.pf.tris, quality: this.quality, res: this.res, dpr: this.renderer.getPixelRatio(), mode: this.mode,
       geometries: inf.memory.geometries, textures: inf.memory.textures, programs: inf.programs ? inf.programs.length : 0, crowd: { hall: crowd(this.hallCrowd), tier: crowd(this.tierCrowd) }, realm: this.realm ? this.realm.stats() : null };
   }
 
