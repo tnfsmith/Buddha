@@ -9,6 +9,8 @@ import { S, mem, save, allDone, today, resetState, stateReady } from './state.js
 import { registerPWA, persistStorage } from './boot.js';
 import { startMetrics } from './net/metrics.js';
 import { $, fmt, esc } from './ui/dom.js';
+import { accountView, accountAct, accountHint, accountOn, accountInit } from './ui/account.js';
+import { record, recordProfile } from './net/account.js';
 
 
 // ───────── Lưu trạng thái trên máy: xem state.js ─────────
@@ -90,7 +92,7 @@ $('#bio').addEventListener('click', (e) => {
   document.querySelectorAll('#bio button').forEach((x) => x.classList.toggle('on', x === b));
   toast({ samadhi: 'Định tĩnh: trở về kịch bản chuẩn', uddhacca: 'Trị phóng dật: âm trầm 136,1 Hz dâng từ dưới Vân Tọa', thina: 'Trị hôn trầm: chuông tỉnh giác từ đỉnh đầu' }[U.bio] + (player.playing ? '' : ' (nghe được khi đang phát)'));
 });
-player.onend = () => { S.sessions++; save(); toast('Sādhu! Thời thiền đã viên mãn. Hồi hướng công đức.'); render(); };
+player.onend = () => { S.sessions++; save(); record('session.done', { kind: 'thien15', duration_s: 900 }); toast('Sādhu! Thời thiền đã viên mãn. Hồi hướng công đức.'); render(); };
 function toast(msg) { const el = $('#toast'); el.textContent = msg; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 3800); }
 
 // ───────── Nhãn trong cảnh ─────────
@@ -193,9 +195,11 @@ function render() {
       TIERS.map((t) => `<button class="tier${t.key === cur ? ' on' : ''}" data-tier="${t.key}"><b>${esc(t.name)}</b> <span class="pali">${esc(t.pali)}</span>
         <div><strong>Nền tảng:</strong> ${esc(t.base)}</div><div><strong>Thực hành:</strong> ${esc(t.tasks)}</div><div><strong>Không gian:</strong> ${esc(t.space)}</div></button>`).join('') +
       `<p class="muted">Bấm một tầng để bay tới đó. Càng lên cao, Vân Đảo càng giản lược; ở Tầng 4 chỉ còn Vân Tọa sáng quanh hào quang.</p>`;
+  } else if (U.view === 'account') {
+    h = accountView();
   } else if (U.view === 'creator') {
     const D = U.draft, k = D.look, nb = nameBlock(D.name);
-    h = `<h2>Nhân vật của bạn</h2>
+    h = `<h2>Nhân vật của bạn</h2>${S.name ? '' : '<div class="row"><button class="ghost" data-act="acct-open" data-v="have">Tôi đã có hành trình</button></div>'}
       <h3>Tịnh danh</h3><input id="nm" type="text" maxlength="20" value="${esc(D.name)}" placeholder="Ví dụ: Tâm An" autocomplete="off" spellcheck="false"><div id="nmBox">${nb.html}</div>
       <div class="chips" data-opt="chip">${U.chips.map((n) => `<button class="chip" data-v="${esc(n)}">${esc(n)}</button>`).join('')}<button class="chip more" data-act="chips">Gợi ý khác</button></div>
       <p class="muted">Tịnh danh là tên tu tập trong ứng dụng. Nếu đã có pháp danh do thầy ban khi quy y, hãy dùng pháp danh ấy.</p>
@@ -247,7 +251,7 @@ function render() {
       (allDone(d) ? `<p><strong>${d < 49 ? 'Đã trọn ba việc hôm nay. Ngày mai sẽ mở ngày ' + (d + 1) + '.' : 'Đã viên mãn 49 ngày: Cổng Vân Môn mở, bước lên Tầng 1.'}</strong></p>` : '') +
       `<div class="row"><button class="btn alt" data-act="sacca">Sám hối chân thật</button><span class="muted">Hạt Chân thật: ${S.sacca}</span></div>
       <p class="muted">Mỗi ngày chỉ mở một nấc. Các hệ số là tự khai để quán chiếu, không phải phép đo tâm.</p>
-      <div class="row"><button class="ghost" data-act="home">← Vân Đảo</button><button class="ghost" data-act="reset">${U.resetArm ? 'Bấm lần nữa để xóa hành trình' : 'Bắt đầu lại từ ngày 1'}</button></div>`;
+      <div class="row"><button class="ghost" data-act="home">← Vân Đảo</button><button class="ghost" data-act="reset">${U.resetArm ? 'Bấm lần nữa để xóa hành trình' : 'Bắt đầu lại từ ngày 1'}</button>${d > 1 || accountOn() ? accountHint() : ''}</div>`;
   } else if (U.view === 'zone' && U.zone) {
     const z = ZONES.find((x) => x.id === U.zone), ok = unlocked(z);
     h = `<h2>${esc(z.name)}</h2><p class="pali">${esc(z.pali)}</p><p>${esc(z.text)}</p>` + (z.note ? `<p class="note">${esc(z.note)}</p>` : '') +
@@ -262,6 +266,7 @@ function render() {
     h = `<h2>Vân Đảo của ${esc(S.name || 'bạn')}</h2><p class="pali">Sơ nhập Tịnh Cảnh · ngày ${d}/49 · tuần ${wk}: ${esc(W.title)}</p>${bars()}
       <p class="muted">Bấm tên một phân khu, hoặc bấm thẳng lên mặt đảo để đi tới đó. Kéo để xoay cảnh, cuộn để phóng to. Bấm tên bạn đồng tu ở đảo bên để chào.</p>
       <div class="row"><button class="btn" data-act="board">Nhiệm vụ hôm nay</button><button class="btn alt" data-act="sit">Đến Đài Thiền</button><button class="btn alt" data-act="creator">${S.name ? 'Sửa nhân vật' : 'Tạo nhân vật'}</button></div>
+      <div class="row">${accountHint()}${S.name || accountOn() ? '' : '<button class="ghost" data-act="acct-open" data-v="have">Tôi đã có hành trình</button>'}</div>
       <h3>Xem trước tiến trình</h3>
       <div class="sl"><span>Ngày thứ</span><input type="range" id="sim" min="1" max="49" step="1" value="${sim}"><b id="simv">${sim}</b></div>
       <p class="muted" id="simt">${esc(WEEKS[Math.ceil(sim / 7) - 1].reward)}</p>
@@ -317,6 +322,7 @@ panel.addEventListener('click', (e) => {
   const b = e.target.closest('[data-act]'); if (!b) return;
   const act = b.dataset.act;
   if (act !== 'reset') U.resetArm = false;
+  if (act.startsWith('acct-')) return accountAct(act.slice(5), b);   // T2.3: Giữ hành trình, Tài khoản (ui/account.js)
   if (act === 'kuti-sit') { if (world) world.goZone('kuti', () => { world.setFace(S.kface || 0); savePos(); }); return; }
   if (act === 'chirp') { amb.chirp(0, 4, Math.random() * 9, Math.max(0.15, S.birds.vol)); return; }
   if (act === 'sermon-go') { sermonStart(U.sutta || SUTTAS[0].id); return; }
@@ -328,7 +334,7 @@ panel.addEventListener('click', (e) => {
   if (act === 'creator') return openCreator();
   if (act === 'chips') { U.chips = suggestNames(6); render(); return; }
   if (act === 'rand') { const R = (n) => Math.floor(Math.random() * n), pk = (l) => l[R(l.length)][0]; Object.assign(U.draft.look, PRESETS[R(PRESETS.length)].look, { skin: R(5), build: pk(OPTIONS.build), age: pk(OPTIONS.age), hairColor: R(2) }); if (U.draft.look.age === 'cao') U.draft.look.hairColor = 2 + R(2); U.draft.name = suggestNames(1)[0]; applyDraft(); render(); return; }
-  if (act === 'saveLook') { const c = checkName(U.draft.name); if (!c.ok) return; S.name = c.name; S.look = { ...U.draft.look }; save(); persistStorage(); closeCreator(true); U.view = 'home'; world.setMode('island'); toast('Đã lưu: ' + c.name + (c.meaning ? ' (' + c.meaning + ')' : '')); render(); return; }
+  if (act === 'saveLook') { const c = checkName(U.draft.name); if (!c.ok) return; S.name = c.name; S.look = { ...U.draft.look }; save(); persistStorage(); recordProfile(S); closeCreator(true); U.view = 'home'; world.setMode('island'); toast('Đã lưu: ' + c.name + (c.meaning ? ' (' + c.meaning + ')' : '')); render(); return; }
   if (act === 'board') { if (U.view === 'creator') closeCreator(false); U.view = 'board'; U.zone = 'stele'; if (world && world.av.where === 'home') { if (!world.goZone('stele', () => savePos())) world.setMode('zone', { zone: 'stele' }); } }
   else if (act === 'home') { if (U.view === 'creator') closeCreator(false); U.view = 'home'; U.zone = null; if (world) world.setMode('island'); }
   else if (act === 'sit') { goZone('pad'); return; }
@@ -344,12 +350,13 @@ panel.addEventListener('click', (e) => {
   else if (act === 'visit') { const i = U.friend; world.setMode('island'); world.visit(i, () => { toast('Đã đến đảo của ' + world.friends[i].name + '.'); world.greet(i); render(); }); toast('Du vân theo vân lộ…'); }
   else if (act === 'gohome') { world.goHome(() => { toast('Đã về Vân Đảo của mình.'); U.view = 'home'; world.setMode('island'); render(); }); toast('Du vân trở về…'); }
   else if (act === 'sitwith') { world.fig.setPose('sit'); world.av.state = 'sit'; world.av.rotTo = Math.atan2(-world.av.pos.x, -760 - world.av.pos.z); if (!player.playing) togglePlay(); toast('Hai người cùng an tọa, hướng về Tôn tượng.'); }
-  else if (act === 'sacca') { S.sacca++; save(); if (world) world.burst(0xbfeee4); toast('Thành thật nhận lỗi và nguyện phòng hộ ngày mai: mặt hồ trong trở lại.'); }
-  else if (act === 'reset') { if (U.resetArm) { const keep = { name: S.name, look: S.look }; resetState(keep); save(); U.resetArm = false; toast('Đã trở về ngày 1.'); } else U.resetArm = true; }
+  else if (act === 'sacca') { S.sacca++; save(); record('sacca.add'); if (world) world.burst(0xbfeee4); toast('Thành thật nhận lỗi và nguyện phòng hộ ngày mai: mặt hồ trong trở lại.'); }
+  else if (act === 'reset') { if (U.resetArm) { const keep = { name: S.name, look: S.look }; resetState(keep); save(); record('journey.reset_cycle'); U.resetArm = false; toast('Đã trở về ngày 1.'); } else U.resetArm = true; }
   else if (act === 'confirm') {
     const card = b.closest('.task'), key = card.dataset.p, c = readCard(card), E = kusala(c);
     S.done[S.day] = S.done[S.day] || {}; S.done[S.day][key] = { E, ...c, at: Date.now() };
     S.totals[key] = Math.round((S.totals[key] + E) * 100) / 100; S.lastDate = today(); if (S.day === 49 && allDone(49)) S.completed = true; save();
+    record('kusala.confirm', { day: S.day, pillar: key, pre: c.pre, during: c.during, post: c.post, wise: c.wise, self: c.self });   // ghi chú quán chiếu không gửi lên
     const p = PILLARS.find((x) => x.key === key); if (world) world.burst(new THREE.Color(p.color).lerp(new THREE.Color('#ffe7a8'), 0.5).getHex());
     toast(`+${E.toFixed(2)} ${p.name}: hạt sáng thấm vào cội Bồ-đề`);
   }
@@ -458,4 +465,10 @@ window.__app = { player, world, offlineProbe, amb, probeSong, SONGS, state: () =
 registerPWA();
 startMetrics();   // T1.3 (#8): số liệu ẩn danh, chỉ khi chạy qua http(s) và không bật Do Not Track
 if (S.name) persistStorage();
+// T2.3: tài khoản. `show` mở bảng Tài khoản; `remote` chạy khi thiết bị khác vừa cập nhật hành trình.
+accountInit({
+  S, save, render,
+  show: () => { if (U.view === 'creator') { closeCreator(false); if (world) world.setMode('island'); } U.view = 'account'; U.zone = null; U.musicOpen = false; document.body.classList.remove('pmin'); panel.scrollTop = 0; render(); },
+  remote: () => { if (world) world.setLook(S.look); render(); },
+}).then((r) => { if (r.welcome) toast('Hành trình đã trở lại trên máy này.'); }).catch(() => {});
 requestAnimationFrame(frame);

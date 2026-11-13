@@ -80,6 +80,7 @@ Migration D1 production chạy trong job `production` của `deploy.yml`, trư�
 - **Cloudflare Web Analytics** (không cookie):
   - Production: zone `ainextbrain.com` đã bật tự chèn beacon, lọc theo host `vandao.ainextbrain.com` trong dashboard.
   - Staging: site `vandao-staging.vandao-staging.workers.dev` (tạo ở tài khoản production), `net/metrics.js` chèn token công khai.
+- **Kiểm thử tài khoản (T2.3)**: `tests/e2e/account.spec.js` có hai nhóm. Nhóm giao diện luôn chạy trong CI với API giả lập. Nhóm đầy đủ cần Worker thật nên chỉ chạy tay trước khi phát hành: tạo `workers/api/.dev.vars` có `BETTER_AUTH_SECRET=<chuỗi bất kỳ ≥ 32 ký tự>` (không commit), chạy `npm run dev:api`, rồi `E2E_ACCOUNT=http://localhost:8787/ npx playwright test tests/e2e/account.spec.js`. Nhóm này đi trọn điện thoại → máy tính bằng mã khôi phục, liên kết thiết bị (nghiệm thu < 10 giây), passkey (trình xác thực ảo) và hai nhánh xung đột.
 - **Lighthouse CI**: `preview.yml` chạy cho mỗi PR, đo cả điện thoại lẫn máy tính, bình luận bảng điểm vào PR và lưu báo cáo làm artifact. Runner không có GPU nên Lighthouse chạy khi WebGL tắt, đo lớp giao diện 2D; hiệu năng 3D đo bằng `tests/e2e/perf.spec.js`.
 
 ## Runbook ngắn
