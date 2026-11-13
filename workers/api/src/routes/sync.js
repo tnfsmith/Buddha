@@ -8,12 +8,14 @@
 import { byUser } from '../guard.js';
 import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
-import { kusala, validFactor, KUSALA } from '@vandao/shared';
+import { kusala, validFactor, KUSALA, DAYS } from '@vandao/shared';
 import { computeUnlockedZones, profileView } from './me.js';
 import { getLocalDate } from '../utils/time.js';
 import { readJson, bad, jsonCapped, dayPillars, stepJourney, isComplete, journeyUpdate, currentJourney, kusalaTotals } from '../lib.js';
 
-const MAX_OPS = 200;
+// Gói Free cho 50 truy vấn D1 mỗi lần gọi Worker: ~9 truy vấn cố định + tối đa 5 cho mỗi thao tác → 8 thao tác/lần.
+// Client (net/sync.js) tự chia outbox thành từng lô 8.
+const MAX_OPS = 8;
 const PAST_MS = 7 * 24 * 60 * 60 * 1000, FUTURE_MS = 2 * 60 * 1000;
 const KINDS = ['thien15', 'thien_tu_do', 'nghe_giang', 'kinh_hanh', 'tra_dao', 'thien_duong'];
 const str = (v, max) => (v === undefined || v === null ? null : String(v).slice(0, max));
@@ -96,6 +98,45 @@ syncApp.post('/', authMiddleware, byUser('RL_SYNC'), async (c) => {
           done,
         ]);
         J = next;
+      } else if (op.type === 'sacca.add') {
+        await db.batch([db.prepare('UPDATE journey SET sacca_count = sacca_count + 1, rev = rev + 1, updated_at = ? WHERE user_id = ? AND program = ? AND cycle = ?').bind(now, user.id, J.program, J.cycle), done]);
+        J.sacca_count = (J.sacca_count || 0) + 1;
+      } else if (op.type === 'legacy.import') {
+        // Đưa hành trình đang có trên máy lên lần đầu (PROJECT_ROADMAP.md Phụ lục A): chỉ khi hành trình máy chủ còn trống.
+        // Máy chủ nhận ngày hiện tại của người dùng, đặt started_on = hôm nay − (day − 1), tính lại E, và đòi các ngày
+        // đã qua phải đủ ba trục (đúng luật khóa ngày). Ghi mọi dòng bằng MỘT câu lệnh (json_each) để vừa hạn mức gói Free.
+        const has = await db.prepare('SELECT COUNT(*) AS n FROM kusala_entry WHERE user_id = ? AND program = ? AND cycle = ?').bind(user.id, J.program, J.cycle).first();
+        if (J.day !== 1 || J.completed_at || (has?.n || 0) > 0) { reject(op, 'not_empty'); continue; }
+        const day = Number(p.day), src = p.done && typeof p.done === 'object' ? p.done : {};
+        if (!Number.isInteger(day) || day < 1 || day > DAYS) { reject(op, 'invalid_import'); continue; }
+        const today = getLocalDate(now, tz), startMs = now - (day - 1) * 86400000, rows = []; let ok = true, last = null;
+        for (let d = 1; d <= day && ok; d++) {
+          const e = src[d] && typeof src[d] === 'object' ? src[d] : {};
+          if (d < day && !KUSALA.PILLARS.every((k) => e[k])) ok = false;
+          for (const k of KUSALA.PILLARS) {
+            const x = e[k]; if (!x) continue;
+            const f = { pre: Number(x.pre ?? 1), during: Number(x.during ?? 1), post: Number(x.post ?? 1) };
+            if (![f.pre, f.during, f.post].every(validFactor)) { ok = false; break; }
+            const xa = Number(x.at), t = Number.isFinite(xa) && xa <= now && xa >= startMs - 86400000 ? xa : startMs + (d - 1) * 86400000;
+            const ld = getLocalDate(t, tz), wise = Boolean(x.wise), self = Boolean(x.self);
+            if (!last || ld > last) last = ld;
+            rows.push({ d, p: k, ld, a: f.pre, b: f.during, c: f.post, w: wise ? 1 : 0, s: self ? 1 : 0, e: kusala({ ...f, wise, self }), at: Math.round(t) });
+          }
+        }
+        if (!ok) { reject(op, 'invalid_import'); continue; }
+        const cnt = (v) => Math.min(Math.max(Math.round(Number(v) || 0), 0), 100000);
+        const all49 = day === DAYS && KUSALA.PILLARS.every((k) => src[DAYS] && src[DAYS][k]);
+        const N = { ...J, day, started_on: getLocalDate(startMs, tz), last_done_on: last && last > today ? today : last, completed_at: all49 ? now : null, sacca_count: cnt(p.sacca), sessions_done: cnt(p.sessions) };
+        await db.batch([
+          db.prepare(`INSERT INTO kusala_entry (id, user_id, program, cycle, day, pillar, local_date, base, pre, during, post, wise, self, e_score, note, at, server_at)
+                      SELECT ?1 || ':' || json_extract(value, '$.d') || ':' || json_extract(value, '$.p'), ?2, ?3, ?4, json_extract(value, '$.d'), json_extract(value, '$.p'), json_extract(value, '$.ld'), 10,
+                             json_extract(value, '$.a'), json_extract(value, '$.b'), json_extract(value, '$.c'), json_extract(value, '$.w'), json_extract(value, '$.s'), json_extract(value, '$.e'), NULL, json_extract(value, '$.at'), ?5
+                      FROM json_each(?6)`).bind(op.id, user.id, J.program, J.cycle, now, JSON.stringify(rows)),
+          db.prepare('UPDATE journey SET day = ?, started_on = ?, last_done_on = ?, completed_at = ?, sacca_count = ?, sessions_done = ?, rev = rev + 1, updated_at = ? WHERE user_id = ? AND program = ? AND cycle = ?')
+            .bind(N.day, N.started_on, N.last_done_on, N.completed_at, N.sacca_count, N.sessions_done, now, user.id, J.program, J.cycle),
+          done,
+        ]);
+        J = N;
       } else { reject(op, 'unknown_op'); continue; }
       applied.push(op.id);
     } catch (err) {
