@@ -10,7 +10,7 @@ export default [
     languageOptions: { ecmaVersion: 2024, sourceType: 'module', globals: { ...globals.browser } },
   },
   {
-    files: ['**/*.mjs', 'scripts/**/*.js', '*.config.js', 'packages/*/test/**/*.js', 'scripts/test/**/*.js', 'tests/**/*.js', 'ops/**/*.mjs'],
+    files: ['**/*.mjs', 'scripts/**/*.js', '*.config.js', 'packages/*/test/**/*.js', 'workers/*/test/**/*.js', 'scripts/test/**/*.js', 'tests/**/*.js', 'ops/**/*.mjs'],
     languageOptions: { ecmaVersion: 2024, sourceType: 'module', globals: { ...globals.node } },
   },
   {
@@ -19,7 +19,7 @@ export default [
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
   {
-    files: ['apps/web/worker.js', 'packages/shared/src/**/*.js'],
+    files: ['workers/*/src/**/*.js', 'packages/shared/src/**/*.js'],
     languageOptions: { ecmaVersion: 2024, sourceType: 'module', globals: { ...globals.worker } },
   },
   {

@@ -5,7 +5,8 @@
   "type": "module",
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "workers/*"
   ],
   "engines": {
     "node": ">=26"
@@ -18,8 +19,9 @@
     "check:migrations": "node scripts/check-migrations.mjs",
     "lane-guard": "node scripts/lane-guard.mjs",
     "e2e:smoke": "playwright test",
-    "deploy:staging": "npm run deploy:staging -w @vandao/web",
-    "test:shot": "npm run test:shot -w @vandao/web"
+    "deploy:staging": "npm run build && npm run deploy:staging -w @vandao/api",
+    "test:shot": "npm run test:shot -w @vandao/web",
+    "dev:api": "npm run build && npm run db:migrate:local -w @vandao/api && npm run dev -w @vandao/api"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

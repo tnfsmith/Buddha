@@ -2,6 +2,8 @@
 name: ci
 on:
   pull_request:
+    # labeled/unlabeled: gắn nhãn shared-ok sau khi mở PR thì lane-guard chạy lại ngay (lần chạy cũ tự hủy)
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches: [main]
   workflow_call:
@@ -14,7 +16,7 @@ jobs:
   check:
     name: check (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
@@ -37,6 +39,16 @@ jobs:
       - run: npm run build
       - run: npm run size
       - run: npm run check:migrations
+      - name: Kiểm tra đóng gói Worker (wrangler dry-run, staging và production)
+        if: matrix.node == 26
+        working-directory: workers/api
+        run: |
+          npx wrangler deploy --dry-run --env staging --outdir /tmp/wr-staging
+          npx wrangler deploy --dry-run --env="" --outdir /tmp/wr-production
+      - name: Chạy migration D1 trên SQLite của workerd (cục bộ, không đụng tài khoản Cloudflare)
+        if: matrix.node == 26
+        working-directory: workers/api
+        run: npx wrangler d1 migrations apply vandao-core-staging --local --env staging
       - name: Kiểm khói Playwright (WebGL SwiftShader)
         if: matrix.node == 26
         run: npm run e2e:smoke

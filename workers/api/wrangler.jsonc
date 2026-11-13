@@ -1,0 +1,68 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "vandao",
+  // Production (tài khoản a5f038f5…, chỉ deploy khi gắn tag vX.Y.Z). Một Worker phục vụ cả API lẫn trang tĩnh apps/web/public.
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "../../apps/web/public",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/ws/*", "/.well-known/*"]
+  },
+  "routes": [
+    { "pattern": "vandao.ainextbrain.com", "custom_domain": true }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "vandao-core",
+      "database_id": "9930849b-af4f-46b7-b7f1-c58cade859d5",
+      "migrations_dir": "../../db/migrations"
+    }
+  ],
+  "kv_namespaces": [
+    { "binding": "CONFIG", "id": "561aec70f7ee4098a30d054ad224cdbb" }
+  ],
+  "r2_buckets": [
+    { "binding": "MEDIA", "bucket_name": "vandao-media" }
+  ],
+  "observability": { "enabled": true },
+  "env": {
+    "staging": {
+      "name": "vandao-staging",
+      "workers_dev": true,
+      "preview_urls": true,
+      "routes": [],
+      "assets": {
+        "directory": "../../apps/web/public",
+        "binding": "ASSETS",
+        "html_handling": "auto-trailing-slash",
+        "not_found_handling": "single-page-application",
+        "run_worker_first": ["/api/*", "/ws/*", "/.well-known/*"]
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "vandao-core-staging",
+          "database_id": "a9c4ecd2-2084-4aa8-9a63-a2e716d06044",
+          "migrations_dir": "../../db/migrations"
+        }
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "CONFIG",
+          "id": "52f5a88f999344b5a04ec7aa1ae84325"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "MEDIA",
+          "bucket_name": "vandao-media-staging"
+        }
+      ]
+    }
+  }
+}
