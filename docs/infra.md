@@ -30,7 +30,17 @@ Khai báo trong `workers/api/wrangler.jsonc` → `env.staging`. Migration D1 ch�
 | KV | `vandao-config` | `561aec70f7ee4098a30d054ad224cdbb` |
 | R2 | `vandao-media` (APAC) | — |
 
-Migration D1 production chạy trong job `production` của `deploy.yml`, trước bước deploy. Secret `RT_SECRET` (vé phòng thời gian thực) chưa đặt; khi cần: `cd workers/api && npx wrangler secret put RT_SECRET` (thêm `--env staging` cho staging).
+Migration D1 production chạy trong job `production` của `deploy.yml`, trước bước deploy.
+
+## Secret của Worker (đặt một lần, không nằm trong repo)
+
+| Secret | Bắt buộc | Dùng cho | Đặt bằng |
+|---|---|---|---|
+| `BETTER_AUTH_SECRET` | Có, cả staging và production (giá trị khác nhau) | Ký cookie/phiên Better Auth. Thiếu thì `/api/auth/*`, `/api/v1/*` trả 503 | `cd workers/api && npx wrangler secret put BETTER_AUTH_SECRET [--env staging]`, hoặc dashboard → Worker → Settings → Variables and Secrets |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Không | Đăng nhập Google (OAuth client loại Web; redirect `https://<miền>/api/auth/callback/google`) | như trên |
+| `RT_SECRET` | Khi mở phòng thời gian thực (GĐ4) | Ký vé `/api/v1/rt/ticket` | như trên |
+
+Đổi `BETTER_AUTH_SECRET` làm mọi người phải đăng nhập lại (khách ẩn danh mất phiên, không mất dữ liệu nếu đã gắn passkey/mã khôi phục).
 
 ## Token
 

@@ -130,6 +130,8 @@ profileApp.patch('/', authMiddleware, async (c) => {
       tag = randomTag();
     }
   }
+  // Better Auth hiện user.name trong hộp thoại passkey/Google → đi theo Tịnh danh "Tên · 1234"
+  if (newName && newName !== current.tinh_danh) await db.prepare('UPDATE user SET name = ?, updatedAt = ? WHERE id = ?').bind(`${newName} · ${tag}`, now, user.id).run();
 
   return c.json({
     success: true,

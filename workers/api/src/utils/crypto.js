@@ -17,9 +17,10 @@ export function generateId() {
     str = timeChars[t % 32] + str;
     t = Math.floor(t / 32);
   }
-  const randomBytes = new Uint8Array(10);
+  // ULID = 10 ký tự thời gian + 16 ký tự ngẫu nhiên (80 bit) = 26 ký tự Crockford Base32
+  const randomBytes = new Uint8Array(16);
   crypto.getRandomValues(randomBytes);
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 16; i++) {
     str += timeChars[randomBytes[i] % 32];
   }
   return str;

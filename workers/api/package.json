@@ -9,13 +9,19 @@
     "dev": "wrangler dev --env staging --local",
     "db:migrate:local": "wrangler d1 migrations apply vandao-core-staging --local --env staging",
     "deploy:staging": "wrangler deploy --env staging",
-    "deploy:production": "wrangler deploy --env=\"\""
+    "deploy:production": "wrangler deploy --env=\"\"",
+    "test": "vitest run"
   },
   "dependencies": {
-    "hono": "^4.7.2",
-    "@vandao/shared": "*"
+    "@better-auth/passkey": "^1.7.22",
+    "@vandao/shared": "*",
+    "better-auth": "^1.7.22",
+    "drizzle-orm": "^0.45.4",
+    "hono": "^4.7.2"
   },
   "devDependencies": {
-    "wrangler": "^4"
+    "@cloudflare/vitest-plugin": "^1.8.1",
+    "drizzle-kit": "^0.31.11",
+    "wrangler": "^4.161.0"
   }
 }

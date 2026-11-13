@@ -16,7 +16,13 @@ Phân hệ API máy chủ và phục vụ tài nguyên tĩnh của dự án Vân
    - `0005_content_ops.sql`: `content_item` (nội dung duyệt), `community_day` (tổng hợp ẩn danh), `device`, `sync_op` (chống trùng), `consent`, `deletion_request`.
 
 2. **Endpoints API REST (`/api/v1` & `/api/auth`)**:
-   - `POST /api/auth/sign-in/anonymous`: tạo khách ẩn danh (lược đồ bảng tương thích Better Auth, xem `docs/adr/0001-worker-api-va-dang-nhap.md`), token phiên 30 ngày và cookie `vd_session` (`HttpOnly; Secure; SameSite=Lax`). Tịnh danh tùy chọn, nếu có phải qua 4 quy tắc; không có thì để trống — máy chủ không tự đặt tên.
+   - `/api/auth/*` do **Better Auth 1.7** xử lý (`src/auth/index.js`, ADR `docs/adr/0001-worker-api-va-dang-nhap.md`):
+     - `POST /sign-in/anonymous` → `{ token, user }`, cookie `vd.session_token`, header `set-auth-token` (bearer cho Android).
+     - `GET /get-session`, `POST /sign-out`.
+     - Passkey: `/passkey/generate-register-options`, `/passkey/verify-registration`, `/passkey/generate-authenticate-options`, `/passkey/verify-authentication`.
+     - `/sign-in/social` (Google, khi có secret); `/email-otp/*` (khi `EMAIL_OTP=1`).
+     - Tịnh danh để trống tới khi người dùng tự đặt qua `PATCH /api/v1/profile`.
+     - Khách đăng nhập vào tài khoản đã có thì dữ liệu được gộp (`src/auth/link.js`).
    - `GET /api/auth/session`: Lấy thông tin phiên hiện tại.
    - `POST /api/auth/sign-out`: Hủy phiên đăng nhập.
    - `GET /api/v1/me`: Trả về hồ sơ, hành trình, phân khu mở (dùng `ZONE_UNLOCK` và `gateLevel` từ `@vandao/shared`), và tính tổng Kusala 3 trục (`duc`, `thien`, `tue`).
@@ -82,8 +88,9 @@ Phân hệ API máy chủ và phục vụ tài nguyên tĩnh của dự án Vân
 ## 3. Kiểm thử và chạy thử
 
 ```bash
-npm test                      # Vitest toàn repo, gồm workers/api/test (D1 giả lập bằng node:sqlite, batch có giao dịch)
-npm run dev:api               # dựng web, chạy migration lên D1 cục bộ (workerd), mở Worker ở http://127.0.0.1:8787
+npm test                      # Vitest toàn repo; workers/api/test chạy trong workerd với D1 thật (@cloudflare/vitest-plugin)
+npm run dev:api               # dựng web, migration lên D1 cục bộ, Worker ở http://127.0.0.1:8787
+                              # (cần workers/api/.dev.vars chứa BETTER_AUTH_SECRET=<chuỗi bất kỳ ≥ 32 ký tự>)
 cd workers/api && npx wrangler deploy --dry-run --env staging   # kiểm đóng gói (CI chạy cả staging lẫn production)
 ```
 
