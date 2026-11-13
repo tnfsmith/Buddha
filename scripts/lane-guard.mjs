@@ -8,8 +8,7 @@ import { check, parseNameStatus } from './lane-guard-core.mjs';
 
 const branch = process.env.HEAD_REF || execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { encoding: 'utf8' }).trim();
 const base = process.env.BASE_REF || 'main';
-let labels = [];
-try { labels = JSON.parse(process.env.PR_LABELS || '[]'); } catch { labels = []; }
+const labels = (() => { try { return JSON.parse(process.env.PR_LABELS || '[]') ?? []; } catch { return []; } })();
 
 const cfg = parse(readFileSync(new URL('../.github/lanes.yml', import.meta.url), 'utf8'));
 const diff = execFileSync('git', ['diff', '--name-status', '-M', `origin/${base}...HEAD`], { encoding: 'utf8' });

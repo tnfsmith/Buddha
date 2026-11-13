@@ -1,7 +1,7 @@
 # VÂN ĐẠO — LỘ TRÌNH KỸ THUẬT & THIẾT KẾ PRODUCTION (bản 3)
 
 > **Ngày lập:** 13/11/2026 · **Thay thế:** bản 2 (12/11/2026). Bản 3 bổ sung: Tầng 0 chuẩn Pháp hành – Ba-la-mật theo hoàn cảnh từng người; theo dõi – nhắc nhở – tích lũy; không gian cộng đồng Hộ Trì & thiện nguyện; khu **Đại Công Đức** (affiliate Shopee/TikTok Shop/WooCommerce, Gieo Duyên, chiến dịch thiện nguyện, Sổ Minh Bạch); đánh giá có số đo và lộ trình hiện đại hóa 3D; chạy trên gói Workers Free rồi nâng Paid khi cần; Node.js 26 LTS; làn việc thứ ba cho **Hermes**; tách dev/staging/production không cần GitHub Pro.
-> **Thứ tự ưu tiên khi mâu thuẫn:** nguyên tắc bất di bất dịch trong `CLAUDE.md` (mục 1) > tài liệu này > `van-dao-tom-tat-thiet-ke.md`. Lộ trình, lược đồ DB, API và quy trình làm việc trong tài liệu này thay thế mục 4 của `CLAUDE.md`.
+> **Thứ tự ưu tiên khi mâu thuẫn:** nguyên tắc bất di bất dịch trong `AGENTS.md` (mục 1) > tài liệu này > `van-dao-tom-tat-thiet-ke.md`. Lộ trình, lược đồ DB, API và quy trình làm việc trong tài liệu này thay thế mục 4 của `CLAUDE.md`.
 > **Ký hiệu:** `[n]` là nguồn ở Phụ lục I. Số chi phí/năng lực là **ước lượng** phải đo lại bằng tải thật. "Tài liệu gốc" = `chuong trinh thien-1.pdf`.
 > **Mục lục:** 0 Tóm tắt · 1 Kiểm định · 2 Nguyên tắc · 3 Kiến trúc Cloudflare · 4 Dữ liệu · 5 API · 6 Tài khoản · 7 Thời gian thực · 8 Tầng 0 Pháp hành · 9 Theo dõi & nhắc nhở · 10 Cộng đồng Hộ Trì · 11 Đại Công Đức · 12 3D & trải nghiệm · 13 Android · 14 Cộng tác 3 agent · 15 Bảo mật & pháp lý · 16 Nội dung · 17 Phiên bản · 18 Cấu trúc repo · 19 Kế hoạch giai đoạn · 20 Vận hành · 21 Quyết định & rủi ro · Phụ lục A–I.
 
