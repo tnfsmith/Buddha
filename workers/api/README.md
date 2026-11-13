@@ -93,6 +93,14 @@ Phân hệ API máy chủ và phục vụ tài nguyên tĩnh của dự án Vân
 
 ---
 
+## 2b. Việc định kỳ (Cron, `src/cron.js`)
+
+Chạy mỗi đêm 02:17 giờ Việt Nam (`triggers.crons: "17 19 * * *"` UTC, cả production và staging). Mỗi lần xử lý tối đa 200 tài khoản; log chỉ ghi số lượng.
+
+1. Thực thi yêu cầu xóa tài khoản đã qua 7 ngày ân hạn: xóa `user`, các bảng khác xóa theo CASCADE; dọn thêm `sync_op`, `deletion_request`.
+2. Xóa khách (`isAnonymous = 1`) không hoạt động quá 90 ngày. Hoạt động tính theo lần gần nhất của hồ sơ, phiên, đồng bộ, Kusala hoặc thời thiền. `GET /api/v1/me` trả `guest_purge_after` để app báo trước; tài khoản đã gắn passkey hoặc mã khôi phục trả `null`.
+3. Dọn `sync_op` quá 30 ngày, phiên hết hạn, mã dùng một lần hết hạn.
+
 ## 3. Kiểm thử và chạy thử
 
 ```bash
