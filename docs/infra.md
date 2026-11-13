@@ -27,6 +27,12 @@ Chưa gắn vào Worker; GĐ2 (`workers/api`) khai báo binding trong `env.stagi
 | `CF_PROD_API_TOKEN` (`vandao-ci-production`) | Tài khoản production + zone `ainextbrain.com`: Workers Scripts/Routes, D1, KV, R2, Queues (Edit); Account Settings, Workers Tail (Read); User Details, Memberships (Read) | 11/02/2027 — tạo token mới và cập nhật secret trước ngày này |
 | `CF_STAGING_API_TOKEN` | Tài khoản staging: Workers Scripts, D1, KV, R2, Queues (Edit) | theo cài đặt của chủ dự án |
 
+## Bản web và offline (T1.1)
+
+- `public/` (Worker phục vụ): `index.html` + `manifest.webmanifest` + `sw.js` + biểu tượng SVG. Service worker: trang ưu tiên mạng, mất mạng hoặc chậm quá 3 giây thì dùng bản đã lưu; tài nguyên tĩnh ưu tiên bộ đệm; bỏ qua `/api/`, `/ws/`. Tên bộ đệm theo băm của `index.html`, bản mới tự xóa bộ đệm cũ.
+- Dữ liệu trên máy: `localStorage['vandao.v1']` (đọc lúc khởi động) + IndexedDB `vandao` (store `state`, `outbox`, `meta`). localStorage bị xóa mà IndexedDB còn thì tự khôi phục.
+- Bản HTML đơn (`dist/van-dao.html`, Release) không có service worker; mở bằng file:// vẫn chạy offline.
+
 ## Runbook ngắn
 
 - **Phát hành production:** GitHub (web/app) → Releases → Draft a new release → tag mới `vX.Y.Z` từ `main` → Publish. Workflow `deploy` chạy lại toàn bộ CI rồi mới deploy; theo dõi ở tab Actions.

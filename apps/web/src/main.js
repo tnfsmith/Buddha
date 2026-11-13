@@ -5,7 +5,8 @@ import { DUR, STAGES, TIERS, ZONES, WEEKS, PILLARS, valueAt, breathEnv, stageAt,
 import { SUTTAS, Sermon } from './sermon.js';
 import { Ambient, SONGS, SONG, MOODS, pickSong, probeSong } from './music.js';
 import { OPTIONS, PRESETS, checkName, suggestNames } from './people.js';
-import { S, mem, save, allDone, today, resetState } from './state.js';
+import { S, mem, save, allDone, today, resetState, stateReady } from './state.js';
+import { registerPWA, persistStorage } from './boot.js';
 import { $, fmt, esc } from './ui/dom.js';
 
 
@@ -326,7 +327,7 @@ panel.addEventListener('click', (e) => {
   if (act === 'creator') return openCreator();
   if (act === 'chips') { U.chips = suggestNames(6); render(); return; }
   if (act === 'rand') { const R = (n) => Math.floor(Math.random() * n), pk = (l) => l[R(l.length)][0]; Object.assign(U.draft.look, PRESETS[R(PRESETS.length)].look, { skin: R(5), build: pk(OPTIONS.build), age: pk(OPTIONS.age), hairColor: R(2) }); if (U.draft.look.age === 'cao') U.draft.look.hairColor = 2 + R(2); U.draft.name = suggestNames(1)[0]; applyDraft(); render(); return; }
-  if (act === 'saveLook') { const c = checkName(U.draft.name); if (!c.ok) return; S.name = c.name; S.look = { ...U.draft.look }; save(); closeCreator(true); U.view = 'home'; world.setMode('island'); toast('Đã lưu: ' + c.name + (c.meaning ? ' (' + c.meaning + ')' : '')); render(); return; }
+  if (act === 'saveLook') { const c = checkName(U.draft.name); if (!c.ok) return; S.name = c.name; S.look = { ...U.draft.look }; save(); persistStorage(); closeCreator(true); U.view = 'home'; world.setMode('island'); toast('Đã lưu: ' + c.name + (c.meaning ? ' (' + c.meaning + ')' : '')); render(); return; }
   if (act === 'board') { if (U.view === 'creator') closeCreator(false); U.view = 'board'; U.zone = 'stele'; if (world && world.av.where === 'home') { if (!world.goZone('stele', () => savePos())) world.setMode('zone', { zone: 'stele' }); } }
   else if (act === 'home') { if (U.view === 'creator') closeCreator(false); U.view = 'home'; U.zone = null; if (world) world.setMode('island'); }
   else if (act === 'sit') { goZone('pad'); return; }
@@ -452,5 +453,7 @@ if (hash.view === 'creator') openCreator();
 if (hash.at && world && World.NODES[hash.at]) { const n = World.NODES[hash.at]; world.av.pos.set(n[0], 0, n[1]); world.av.pos.y = World.floorH(n[0], n[1]); world.snap = true; }
 if (hash.zone) goZone(hash.zone);
 if (world && world.tween && hash.snap !== undefined) world.tween.k = 0.999;
-window.__app = { player, world, offlineProbe, amb, probeSong, SONGS, state: () => S, U };
+window.__app = { player, world, offlineProbe, amb, probeSong, SONGS, state: () => S, U, stateReady };
+registerPWA();
+if (S.name) persistStorage();
 requestAnimationFrame(frame);
