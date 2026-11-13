@@ -39,6 +39,21 @@ Migration D1 production chạy trong job `production` của `deploy.yml`, trư�
 | `BETTER_AUTH_SECRET` | Có, cả staging và production (giá trị khác nhau) | Ký cookie/phiên Better Auth. Thiếu thì `/api/auth/*`, `/api/v1/*` trả 503 | `cd workers/api && npx wrangler secret put BETTER_AUTH_SECRET [--env staging]`, hoặc dashboard → Worker → Settings → Variables and Secrets |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Không | Đăng nhập Google (OAuth client loại Web; redirect `https://<miền>/api/auth/callback/google`) | như trên |
 | `RT_SECRET` | Khi mở phòng thời gian thực (GĐ4) | Ký vé `/api/v1/rt/ticket` | như trên |
+| `TURNSTILE_SECRET` | Có, cả staging và production (cùng một giá trị) | Kiểm token Turnstile ở máy chủ cho đăng nhập bằng mã khôi phục, bắt đầu QR liên kết, gửi OTP. Thiếu thì không kiểm (chỉ còn giới hạn tần suất) | Dashboard tài khoản production → Turnstile → widget `vandao` → Settings → Secret key; rồi đặt như trên |
+
+**Turnstile:** widget `vandao` (tài khoản production, chế độ managed), sitekey công khai `0x4AAAAAAF_iytQJWvfn-nya`. Widget phủ miền `vandao.ainextbrain.com` và `vandao-staging.workers.dev`, tức cả staging lẫn mọi preview `pr-N`. Client gửi token trong header `cf-turnstile-response`.
+
+**Giới hạn tần suất** (binding `ratelimits`, khai báo ở cả hai môi trường trong `workers/api/wrangler.jsonc`):
+
+| Binding | Giới hạn | Áp cho |
+|---|---|---|
+| `RL_AUTH` | 5/phút/IP | đăng nhập khách, mã khôi phục, passkey, bắt đầu QR |
+| `RL_POLL` | 60/phút/IP | máy mới hỏi trạng thái QR; `/api/v1/metrics` |
+| `RL_OTP` | 3/phút/IP | gửi OTP (khi bật) |
+| `RL_SYNC` | 30/phút/người | `/api/v1/sync` |
+| `RL_API` | 60/phút/người | `/api/v1/me`, `PATCH /api/v1/profile` |
+| `RL_TICKET` | 20/phút/người | `/api/v1/rt/ticket` |
+| KV `quota:export` | 2/ngày/người | `/api/v1/export` |
 
 Đổi `BETTER_AUTH_SECRET` làm mọi người phải đăng nhập lại (khách ẩn danh mất phiên, không mất dữ liệu nếu đã gắn passkey/mã khôi phục).
 

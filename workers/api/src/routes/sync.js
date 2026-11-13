@@ -5,6 +5,7 @@
 // - Từ chối kèm `retry`: false là vĩnh viễn (client bỏ thao tác), true là lỗi tạm (giữ lại gửi sau).
 // - Máy chủ tự tính Kusala (@vandao/shared/kusala.js) và tiến ngày (@vandao/shared/schedule.js) theo ngày địa phương
 //   của từng thao tác, nên nhiều ngày ngoại tuyến vẫn khóa đúng 1 nấc mỗi ngày.
+import { byUser } from '../guard.js';
 import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
 import { kusala, validFactor, KUSALA } from '@vandao/shared';
@@ -19,7 +20,7 @@ const str = (v, max) => (v === undefined || v === null ? null : String(v).slice(
 
 const syncApp = new Hono();
 
-syncApp.post('/', authMiddleware, async (c) => {
+syncApp.post('/', authMiddleware, byUser('RL_SYNC'), async (c) => {
   const user = c.get('user'), db = c.env.DB, now = Date.now();
   const body = await readJson(c);
   if (!body || !Array.isArray(body.ops ?? [])) return bad(c, 'invalid_body', 'Payload không hợp lệ');

@@ -10,6 +10,7 @@ import accountApp from './routes/account.js';
 import rtApp from './routes/rt.js';
 import contentApp from './routes/content.js';
 import metricsApp from './routes/metrics.js';
+import { byIp, turnstile } from './guard.js';
 
 const app = new Hono();
 
@@ -33,6 +34,13 @@ app.use('/api/*', async (c, next) => {
   await next();
   if (allowOrigin(origin)) { c.header('Access-Control-Allow-Origin', origin); c.header('Access-Control-Allow-Credentials', 'true'); c.header('Vary', 'Origin'); }
 });
+
+// Giới hạn tần suất theo IP và Turnstile cho các bước đăng nhập (§5, §6.3, §6.4)
+for (const p of ['/api/auth/sign-in/anonymous', '/api/auth/sign-in/recovery-code', '/api/auth/device-link/start', '/api/auth/passkey/verify-authentication']) app.post(p, byIp('RL_AUTH'));
+app.post('/api/auth/sign-in/device-link', byIp('RL_POLL'));
+app.post('/api/auth/email-otp/send-verification-otp', byIp('RL_OTP'));
+for (const p of ['/api/auth/sign-in/recovery-code', '/api/auth/device-link/start', '/api/auth/email-otp/send-verification-otp']) app.post(p, turnstile());
+app.post('/api/v1/metrics', byIp('RL_POLL'));
 
 // Kiểm tra sức khỏe dịch vụ
 app.get('/api/health', (c) => {

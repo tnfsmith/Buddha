@@ -1,5 +1,6 @@
 // workers/api/src/routes/rt.js
 // Cấp vé HMAC vào phòng thời gian thực (Durable Objects - PROJECT_ROADMAP.md §7.2)
+import { byUser } from '../guard.js';
 import { Hono } from 'hono';
 import { Buffer } from 'node:buffer';
 import { authMiddleware } from '../auth/session.js';
@@ -7,7 +8,7 @@ import { signHmac } from '../utils/crypto.js';
 
 const rtApp = new Hono();
 
-rtApp.post('/ticket', authMiddleware, async (c) => {
+rtApp.post('/ticket', authMiddleware, byUser('RL_TICKET'), async (c) => {
   const user = c.get('user');
   const db = c.env.DB;
   // Không có khóa mặc định: thiếu RT_SECRET (wrangler secret put RT_SECRET) thì không cấp vé, tránh vé giả mạo được

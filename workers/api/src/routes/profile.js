@@ -1,5 +1,6 @@
 // workers/api/src/routes/profile.js
 // Cập nhật hồ sơ hành giả (PROJECT_ROADMAP.md §4.3, §5)
+import { byUser } from '../guard.js';
 import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
 import { checkName } from '@vandao/shared';
@@ -9,7 +10,7 @@ import { readJson, bad, nameError, jsonCapped } from '../lib.js';
 
 const profileApp = new Hono();
 
-profileApp.patch('/', authMiddleware, async (c) => {
+profileApp.patch('/', authMiddleware, byUser('RL_API'), async (c) => {
   const user = c.get('user');
   const db = c.env.DB;
   const now = Date.now();
