@@ -32,6 +32,7 @@ jobs:
         id: up
         working-directory: workers/api
         run: |
+          set -o pipefail   # wrangler lỗi thì bước này phải đỏ (không bị `tee` che mất mã thoát)
           npx wrangler versions upload --env staging --preview-alias "pr-$PR" --message "PR #$PR ${GITHUB_SHA::7}" | tee /tmp/up.txt
           url=$(grep -oE 'https://pr-[^ ]+\.workers\.dev' /tmp/up.txt | head -1)
           [ -n "$url" ] || url=$(grep -oE 'https://[^ ]+\.workers\.dev' /tmp/up.txt | head -1)
