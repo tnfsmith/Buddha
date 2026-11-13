@@ -1,6 +1,7 @@
 import { build } from 'esbuild';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
@@ -21,8 +22,46 @@ const html = readFileSync('src/index.template.html', 'utf8').replace('/*__FONTS_
 mkdirSync('dist', { recursive: true });
 writeFileSync('dist/van-dao.html', html);
 
-// 2. Ghi vào public/index.html cho Cloudflare Workers Static Assets
+// 2. Bản web (public/) cho Cloudflare Workers Static Assets: thêm PWA (manifest, service worker, biểu tượng).
+//    Bản HTML đơn ở dist/ giữ nguyên, mở bằng file:// vẫn chạy offline mà không cần service worker.
 mkdirSync('public', { recursive: true });
-writeFileSync('public/index.html', html);
+const ICON = readFileSync('src/index.template.html', 'utf8').match(/<link rel="icon" type="image\/svg\+xml" href="data:image\/svg\+xml,([^"]+)"/)[1];
+const iconSvg = decodeURIComponent(ICON);
+// Biểu tượng maskable: nền kín + thu nhỏ vào vùng an toàn 80 %
+const maskable = iconSvg.replace(/<svg ([^>]*)viewBox='0 0 64 64'>/, "<svg $1viewBox='0 0 64 64'><rect width='64' height='64' fill='#f6efe2'/><g transform='translate(6.4 6.4) scale(.8)'>").replace(/<\/svg>$/, '</g></svg>');
+writeFileSync('public/icon.svg', iconSvg);
+writeFileSync('public/icon-maskable.svg', maskable);
+writeFileSync('public/manifest.webmanifest', JSON.stringify({
+  name: 'Vân Đạo — Tịnh Cảnh tu tập', short_name: 'Vân Đạo', lang: 'vi', dir: 'ltr',
+  description: 'Không gian 3D tu tập, thiền tọa và học kinh',
+  start_url: '/', scope: '/', display: 'standalone', orientation: 'any',
+  background_color: '#f6efe2', theme_color: '#f6efe2',
+  icons: [{ src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }, { src: '/icon-maskable.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' }],
+}, null, 2));
+const webHtml = html.replace('</head>', '<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#f6efe2"><link rel="apple-touch-icon" href="/icon-maskable.svg"></head>');
+writeFileSync('public/index.html', webHtml);
+const VERSION = createHash('sha256').update(webHtml).digest('hex').slice(0, 12);
+writeFileSync('public/sw.js', `// Service worker Vân Đạo ${VERSION} — sinh bởi build.mjs, không sửa tay
+const CACHE = 'vandao-${VERSION}';
+const CORE = ['/', '/manifest.webmanifest', '/icon.svg', '/icon-maskable.svg'];
+self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting())); });
+self.addEventListener('activate', (e) => {
+  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith('vandao-') && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+});
+self.addEventListener('fetch', (e) => {
+  const req = e.request, url = new URL(req.url);
+  if (req.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/') || url.pathname.startsWith('/ws/')) return;
+  const cacheP = caches.open(CACHE);
+  if (req.mode === 'navigate') {
+    // Trang: ưu tiên mạng để luôn có bản mới; mất mạng hoặc chậm quá 3 giây thì dùng bản đã lưu
+    const net = fetch(req).then(async (res) => { if (res.ok) await (await cacheP).put('/', res.clone()); return res; });
+    e.waitUntil(net.catch(() => {}));
+    e.respondWith(cacheP.then((c) => c.match('/')).then((cached) => (cached ? Promise.race([net.catch(() => cached), new Promise((r) => setTimeout(() => r(cached), 3000))]) : net)));
+    return;
+  }
+  // Tài nguyên tĩnh: ưu tiên bản đã lưu
+  e.respondWith(cacheP.then((c) => c.match(req).then((hit) => hit || fetch(req).then((res) => { if (res.ok) c.put(req, res.clone()); return res; }))));
+});
+`);
 
-console.log('Build hoàn tất: dist/van-dao.html & public/index.html', (html.length / 1024).toFixed(0) + ' KB');
+console.log('Build hoàn tất: dist/van-dao.html & public/ (index.html, sw.js, manifest)', (html.length / 1024).toFixed(0) + ' KB');
