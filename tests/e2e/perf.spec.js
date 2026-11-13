@@ -14,7 +14,7 @@ const url = (hash) => `${BASE.replace(/#.*$/, '')}#${hash}`;
 async function measure(page, hash) {
   await page.goto('about:blank');
   await page.goto(url(hash));
-  await page.waitForFunction(() => window.__app?.world?.perf, null, { timeout: 60_000 });
+  await page.waitForFunction(() => window.__app?.world?.perf, null, { timeout: 120_000 });
   await page.waitForTimeout(2500);
   return page.evaluate(async () => {
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -30,7 +30,8 @@ for (const [device, q, use] of [
   test.describe(`ngân sách ${device}`, () => {
     test.use(use);
     test(`mức ${q}: mọi cảnh chính trong ngân sách §12.2`, async ({ page }) => {
-      test.setTimeout(300_000);
+      // 5 cảnh × dựng WebGL bằng CPU; trên bản preview qua mạng mỗi cảnh có thể mất 1–1,5 phút (#20 từng hụt 300 giây)
+      test.setTimeout(600_000);
       const rows = [];
       for (const [name, h] of VIEWS) rows.push({ view: name, ...(await measure(page, `${h}q=${q}&snap=1`)) });
       console.log(`Ngân sách ${device} (mức ${q}):\n` + rows.map((r) => `  ${r.view.padEnd(16)} ${String(r.calls).padStart(4)} lệnh vẽ  ${String(r.triangles).padStart(8)} tam giác  DPR ${r.dpr}`).join('\n'));
