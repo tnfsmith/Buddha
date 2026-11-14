@@ -7,7 +7,7 @@ import { parseArgs } from 'node:util';
 import { createHash } from 'node:crypto';
 import { parseDocument } from 'yaml';
 import { parseContent } from '../content-data.mjs';
-import { spokenLines, fingerprint, audioKey, gradeClip } from './core.mjs';
+import { spokenLines, fingerprint, audioKey, gradeClip, clipRank } from './core.mjs';
 import { synthesize, recognize, maleVoices } from './google.mjs';
 import { seconds, joinSpeech } from './audio.mjs';
 import { uploadAudio } from './r2.mjs';
@@ -63,8 +63,8 @@ try {
             score = { hash, transcript, attempt, i, ...gradeClip(lines[i], transcript, seconds(wav), names) };
             saveJson(base + '.json', score);
           }
-          chosen = { wav, score };
-          if (score.pass) break;
+          if (!chosen || clipRank(score) < clipRank(chosen.score)) chosen = { wav, score };
+          if (score.pass) { chosen = { wav, score }; break; }
         }
         wavs.push(chosen.wav); scores.push(chosen.score);
         if (!chosen.score.pass) flags.push({ i, wer: chosen.score.wer, tail_ok: chosen.score.tailOk, names_ok: chosen.score.namesOk, seconds_per_word: chosen.score.secondsPerWord });
@@ -77,7 +77,8 @@ try {
       saveJson(join(dir, 'result.json'), { id: article.id, version: article.version, key, hash: hash.slice(0, 8), fingerprint: hash, dur: audio.dur,
         voice: config.voice, model: config.model, provider: config.provider, generated_at: new Date().toISOString(),
         wer: scores.reduce((sum, x) => sum + x.wer, 0) / scores.length,
-        sha256: createHash('sha256').update(readFileSync(mp3)).digest('hex'), loudness: audio.loudness, flags });
+        sha256: createHash('sha256').update(readFileSync(mp3)).digest('hex'), loudness: audio.loudness,
+        selected_attempts: scores.map(x => x.attempt), flags });
       }
       const row = readJson(join(dir, 'result.json'));
       validateCues(article, readJson(cueFile), dictionary);

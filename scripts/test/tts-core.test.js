@@ -1,9 +1,18 @@
 import { it, expect } from 'vitest';
-import { spokenLines, fingerprint, audioKey, cuePoints, gradeClip, wordErrorRate } from '../tts/core.mjs';
+import { spokenLines, fingerprint, audioKey, cuePoints, gradeClip, wordErrorRate, clipRank } from '../tts/core.mjs';
 
 it('bỏ Pāli, đọc cách đọc và áp từ điển có biên tiếng Việt', () => {
   expect(spokenLines('Ý [[129|một trăm hai mươi chín]].\n> Pāli\nTất Đạt Đa nói về tâm.', { 'Tất Đạt Đa': 'Tất Đạt Đa', 'tâm': 'tâm an' })).toEqual(['Ý một trăm hai mươi chín.', 'Tất Đạt Đa nói về tâm an.']);
   expect(() => spokenLines('[[chưa đóng')).toThrow();
+});
+
+it('không chọn lượt cuối rỗng khi lượt trước đúng lời nhưng còn cờ nhịp hơi nhanh', () => {
+  const earlier = gradeClip('Tâm từ nhẹ nhàng', 'Tâm từ nhẹ nhàng', 1.18);
+  const last = gradeClip('Tâm từ nhẹ nhàng', '', 1.3);
+  expect(earlier.pass).toBe(false);
+  expect(clipRank(earlier)).toBeLessThan(clipRank(last));
+  expect(clipRank({ ...earlier, tailOk: false })).toBeGreaterThan(clipRank(earlier));
+  expect(clipRank({ ...earlier, namesOk: false })).toBeGreaterThan(clipRank(earlier));
 });
 it('băm ổn định, đổi lời đọc/giọng/mô hình/tốc độ thì đổi băm', () => {
   const config = { provider: 'google', voice: 'vi-VN-Chirp3-HD-Charon', model: 'Chirp3-HD', speed: 0.9 };

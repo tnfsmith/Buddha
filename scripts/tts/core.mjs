@@ -56,3 +56,9 @@ export function gradeClip(reference, hypothesis, duration, names = []) {
   return { wer, tailOk: heard.includes(tail), namesOk, secondsPerWord,
     pass: wer <= 0.05 && heard.includes(tail) && namesOk && secondsPerWord >= 0.3 && secondsPerWord <= 0.75 };
 }
+
+// Khi cả bốn lượt còn cờ, ưu tiên lời/tên/đuôi đúng hơn; không lấy lượt cuối theo thứ tự.
+export function clipRank(score) {
+  const cadence = Math.max(0, 0.3 - score.secondsPerWord, score.secondsPerWord - 0.75);
+  return score.wer + (score.tailOk ? 0 : 0.5) + (score.namesOk ? 0 : 0.5) + cadence * 0.25;
+}
