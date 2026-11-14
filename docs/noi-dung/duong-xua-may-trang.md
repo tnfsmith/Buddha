@@ -113,23 +113,20 @@ Bảy bài v0.14.0 (Chuyển Pháp Luân, Vô Ngã Tướng, Tâm Từ, Điềm 
 
 ## 5. Đợt sản xuất và mốc
 
-Bảng tiến độ chung nằm ở `PROJECT_ROADMAP.md` §19 GĐ3 (T3.5–T3.9), do Codex cập nhật. Trạng thái từng việc theo dõi trên Issue.
-
-Chủ dự án chỉnh ngày 14/11/2026: **làm giọng đọc cho bảy bài «Lời Phật dạy» trước**. Bảy bài có tiếng thì gắn tag v0.15.0 ngay. Đường Xưa làm liền sau, không để lâu.
+**Lệnh cập nhật lần 2 ngày 14/11/2026 thay mọi mốc cũ:** [#33](https://github.com/tnfsmith/Buddha/issues/33#issuecomment-6879908476), [#49](https://github.com/tnfsmith/Buddha/issues/49#issuecomment-6879902450). Chạy liên tục, xong việc nào làm việc kế ngay, không chờ đến mốc. Chủ dự án đã điều chỉnh nhà cung cấp sang Google Chirp 3: HD vi-VN nam, ưu tiên cách đọc gần miền Nam; Codex tự chọn theo mẫu thật và dùng đúng một giọng cho mọi loạt.
 
 | Thứ tự | Việc | Ai | Mốc |
 |---|---|---|---|
-| 1 | «Lời Phật dạy»: 7 bài đã phát hành (chủ dự án duyệt PR #54 ngày 14/11) | Claude | xong 14/11 |
-| 2 | Công cụ nạp D1 (#46), API `body_r2_key`, `/media` (#50) | Codex | 16/11 |
-| 3 | Giọng đọc: Codex tự chọn giọng theo bảng điểm rồi sinh ngay 7 bài, tải lên R2 `bai-giang/loi-phat-day/` (#49) | Codex | 17/11 |
-| 4 | Kiểm phát tiếng trên staging → chủ dự án gắn tag **v0.15.0** | Claude, chủ dự án | 18/11 |
-| 5 | Migration 0008 `content_item.meta`, bắt buộc trước bài Đường Xưa đầu tiên (thiếu `meta`, bài sẽ lạc sang menu «Lời Phật dạy») | Codex | 19/11 |
-| 6 | Đường Xưa đợt B: 10 bài Phần Một, văn bản + giọng đọc trong cùng PR | Codex | 20/11 |
-| 7 | Đợt C: 11 bài Phần Hai | Codex | 25/11 |
-| 8 | Đợt D: 12 bài Phần Ba | Codex | 30/11 |
-| Hạn cứng | Giọng đọc mọi bài đã có văn bản | Codex | **05/01/2027**, vì OpenAI ngừng Speech API ngày 06/01/2027 (ADR 0002 mục 7) |
+| 1 | Bảy bài «Lời Phật dạy» v2 da_duyet đã có trên main qua #58 | Claude/chủ dự án | xong 14/11 |
+| A | Công cụ nạp D1 (#46, gắn deploy), API body_r2_key và /media (#50) | Codex AG | 14/11 |
+| B | Tự chọn giọng, sinh 7 bài và cues; tải cả vandao-media-staging và vandao-media; PR hermes/49-tts-loi-phat-day | Codex H + AG | 15/11, bắt đầu ngay sau A |
+| Phát hành | Chủ dự án merge A+B → Claude kiểm tiếng thật trên staging → chủ dự án tag v0.15.0 | Chủ dự án + Claude | 15/11 |
+| Meta | Hoàn tất tuần tự hóa migration #35 rồi 0008 content_item.meta; API/công cụ nạp hỗ trợ meta | Codex AG | ngay sau v0.15.0 trong 15/11, trước bài Đường Xưa đầu tiên |
+| Đường Xưa B | 10 bài Phần Một, một PR văn bản cho_duyet + giọng đọc + đường dẫn nghe | Codex H | 15/11, làm liền sau meta |
+| Đường Xưa C | 11 bài Phần Hai, một PR văn bản + giọng đọc | Codex H | 15/11, nối tiếp B |
+| Đường Xưa D | 12 bài Phần Ba, một PR văn bản + giọng đọc | Codex H | 15/11, nối tiếp C |
 
-Mỗi đợt Đường Xưa: chủ dự án duyệt PR → merge → staging → gắn tag bản kế tiếp.
+Một giọng duy nhất cho cả hai loạt, thư mục R2 tách loi-phat-day/ và duong-xua/. Không lấy thiếu meta làm lý do xếp bài Đường Xưa vào sai menu. Mỗi đợt mở PR ngay khi xong; chủ dự án chọn phát hành rồi merge/tag bản kế tiếp. Google đã được chủ dự án cho dùng; không tự tạo tài khoản hoặc đổi sang nhà cung cấp khác. Hạn ngừng Speech API của OpenAI trong thiết kế cũ không phải hạn dịch vụ Google.
 
 ## 6. Tên riêng thường gặp
 

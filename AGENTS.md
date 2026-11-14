@@ -82,7 +82,7 @@ Mỗi bản clone cài hook một lần: `git config core.hooksPath scripts/hook
 ## 6. Đừng làm
 
 - Đổi sang framework nặng (React, Vue, Next.js…) khi chưa có yêu cầu rõ.
-- Nhúng tệp âm thanh lớn; mọi âm thanh sinh bằng `audio.js`, `music.js`.
+- Không nhúng tệp âm thanh lớn vào bản HTML/client. **Ngoại lệ chủ dự án giao (#33/#49, cập nhật lần 2 ngày 14/11/2026): giọng đọc bài giảng sinh trước bằng TTS, lưu trên R2, tải theo yêu cầu; thời thiền vẫn chỉ dùng Web Audio** (`audio.js`, `music.js`). Một giọng chung cho mọi loạt; nhà cung cấp hiện hành là Google Chirp 3: HD vi-VN nam theo điều chỉnh trực tiếp của chủ dự án.
 - Đổi tỉ lệ 7 mốc thời thiền, công thức Kusala, 4 quy tắc Tịnh danh.
 - Đặt quảng cáo hay sản phẩm vào Kinh Đài, Tịnh Thất, Đài Thiền, Đại Thiền Đường hay thời thiền.
 - Trộn logic máy chủ vào vòng lặp render Three.js.

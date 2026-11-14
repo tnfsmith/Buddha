@@ -1449,11 +1449,11 @@ Ký hiệu: **[C]** Claude · **[AG]** Antigravity · **[H]** Hermes · **[O]** 
 | T3.2 | `variant.js`, "Duyên khởi hành trình", Bia Tích Lũy mới (hoa sen 10 cánh, lịch tu, nhịp thiền, phản tỉnh), chứng thực tuần (UI) | C | Cùng đầu vào → cùng nhiệm vụ trên máy và máy chủ |
 | T3.3 | Migration mới kế tiếp; API practice/deeds/attest/reminders/push; `ReminderClock` DO + Web Push | AG (DO: C) | Nhắc đúng giờ ±1 phút ở múi +7; 410 xóa subscription |
 | T3.4 | Điều kiện Tầng 0 → 1, `tier_progress` | AG + C | Không câu chữ khẳng định chứng đắc |
-| T3.5 | Thiết kế loạt «Đường Xưa Mây Trắng» và hợp đồng bài giảng/giọng đọc R2 (ADR 0002, #47/#52) | C | Thiết kế theo chính sách không bắt buộc Hội đồng tại ADR 0003 |
-| T3.6 | Loạt «Lời Phật dạy» 7 bài chi tiết cho v0.15.0 (#53/#54), sau đó loạt «Đường Xưa Mây Trắng» (#48) | H + O (biên tập/phát hành) | Có nguồn, bài chọn phát hành hiện trên staging; không chờ Hội đồng |
-| T3.7 | Một giọng đọc chung cho các loạt; chọn mẫu, sinh TTS có kiểm lỗi và lưu R2 theo loạt (#49) | H + AG | Chủ dự án nghe mẫu; văn bản vẫn phát hành được khi chưa có giọng thu sẵn |
-| T3.8 | Công cụ nạp D1 (#46), API nội dung và `/media` có Range, metadata (#50); migration mới sau #35 | AG | Bài công khai đọc/phát được; nháp/ngừng không lộ; không đòi dấu duyệt Hội đồng |
-| T3.9 | Client: menu riêng theo loạt, giọng đọc/cues, nhãn AI, dự phòng chữ và SW bỏ qua `/media` (#51) | C | Kiểm khói theo hợp đồng; không yêu cầu `reviewed_at` để mở bài công khai |
+| T3.5 | Thiết kế hai loạt và hợp đồng nội dung/giọng đọc R2 (ADR 0002, #47/#52) | C | Đã merge 14/11; mốc mới theo lệnh cập nhật lần 2 ở #33/#49 |
+| T3.6 | 7 bài «Lời Phật dạy» v2 đã chọn phát hành (#58); Đường Xưa B=10, C=11, D=12 bài, mỗi đợt một PR văn bản + giọng đọc (#48) | H + O | Bảy bài có tiếng trước để tag v0.15.0 ngày 15/11; Đường Xưa B → C → D nối tiếp trong 15/11, không chờ mốc |
+| T3.7 | Codex tự chọn một giọng Google Chirp 3: HD vi-VN nam theo bảng điểm, ưu tiên gần miền Nam; sinh TTS/kiểm lỗi/R2 cho mọi loạt (#49) | H + AG | 7 bài hoàn tất 15/11, cùng một giọng cho cả kho; tải MP3+cues lên cả staging/prod; không chờ duyệt giọng |
+| T3.8 | A: nạp D1 (#46), API body_r2_key và /media có Range (#50), gắn deploy; sau v0.15.0 tuần tự hóa migration (#35), 0008 meta/API/công cụ nạp | AG | A 14/11; 0008 ngay 15/11 và bắt buộc trước bài Đường Xưa đầu tiên; không lộ nháp/ngừng hoặc khóa của môi trường khác |
+| T3.9 | Client menu/giọng đọc/cues/SW (#51/#57) do Claude giữ; Codex bàn giao tiếng thật trên staging | C | #57 đã merge; Claude kiểm staging sau chủ dự án merge A+B, chủ dự án tag v0.15.0 ngày 15/11; nhãn nhà cung cấp phải khớp Google |
 
 ### GĐ4 — Đại Thiền Đường thời gian thực (≈ 2–3 tuần)
 | ID | Việc | Làn | Nghiệm thu |
