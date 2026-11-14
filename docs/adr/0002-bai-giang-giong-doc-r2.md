@@ -101,10 +101,14 @@ Ví dụ, mỗi loạt một thư mục:
 - Loại nội dung khác dùng cùng mẫu dưới tiền tố riêng (`bai-thien/`, `kinh-van/`… trùng giá trị `kind`).
 - **`content_item.body_r2_key`** = khóa tệp `.mp3`. Tệp `.cues.json` cùng tên, đổi đuôi.
 - **Định dạng:**
-  - MP3 CBR 64 kbps, mono, 24 kHz (giữ tần số mẫu gốc của OpenAI);
+  - MP3 CBR **96 kbps**, mono, 24 kHz (MPEG-2 Layer III, giữ tần số mẫu gốc 24 kHz của giọng TTS; chủ dự án chốt 15/11/2026, thay 64 kbps):
+    - Nhận âm thanh gốc từ Google dạng `LINEAR16` 24 kHz rồi tự mã hóa bằng `libmp3lame`. Không dùng đầu ra MP3 của Google, vì đó là MP3 cố định 32 kbps.
+    - Ở 24 kHz, MP3 chỉ cho tối đa 160 kbps; nâng tần số mẫu lên 44,1/48 kHz để đạt 192 kbps thì không thêm chi tiết nào.
+    - Đo trên giọng Việt 24 kHz: LAME không cắt dải cao ở cả 64/80/96 kbps. Sai lệch phổ vùng âm xát (4–8 kHz, các âm s, x, ch, tr) là 3,7 dB ở 64 kbps, 2,7 dB ở 80 kbps, 1,9 dB ở 96 kbps.
+    - Giữ chất lượng thuật toán mặc định của LAME (`-compression_level 0` đo ra kém hơn);
   - chuẩn hóa −16 LUFS, đỉnh −1,5 dBTP;
   - lặng 0,9 giây giữa hai ý và 1,5 giây trước ý cuối.
-  - Một bài 5 phút khoảng 2,4 MB. Cả loạt 36 bài dưới 100 MB, trong hạn mức Free của R2.
+  - Một bài 5 phút khoảng 3,6 MB. Cả kho khoảng 40 bài dưới 150 MB, trong hạn mức 10 GB miễn phí của R2.
 - **`cues.json`:**
 
 ```json
