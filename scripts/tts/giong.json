@@ -1,0 +1,15 @@
+{
+  "provider": "google",
+  "model": "Chirp3-HD",
+  "voice": "vi-VN-Chirp3-HD-Sadaltager",
+  "speed": 0.85,
+  "instructions": "",
+  "selected_at": "2026-11-14T17:27:05.398Z",
+  "selected_by": "Codex: bảng điểm gốc + QA tên riêng, tối đa 3 lần sinh lại mỗi ý",
+  "accent_preference": "miền Nam; Google chỉ gắn nhãn vi-VN, chưa chứng nhận vùng miền",
+  "raw_wer": 0.00987588713849099,
+  "raw_name_errors": 2,
+  "qa_passed": 15,
+  "qa_checks": 15,
+  "backup_voice": "vi-VN-Chirp3-HD-Orus"
+}
