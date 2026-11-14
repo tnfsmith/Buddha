@@ -3,9 +3,9 @@ import { World, ANCHORS, TIER_LABEL, groundH } from './world.js';
 import { Player, TR, EV, offlineProbe } from './audio.js';
 import { DUR, STAGES, TIERS, ZONES, WEEKS, PILLARS, valueAt, breathEnv, stageAt, kusala } from './data.js';
 import { SUTTAS, Sermon } from './sermon.js';
-import { Ambient, SONGS, SONG, MOODS, pickSong, probeSong } from './music.js';
+import { Ambient, SONGS, SONG, MOODS, GROUPS, songsOf, pickSong, probeSong } from './music.js';
 import { OPTIONS, PRESETS, checkName, suggestNames } from './people.js';
-import { S, mem, save, allDone, today, resetState, stateReady } from './state.js';
+import { S, mem, save, allDone, today, resetState, stateReady, fixMusic } from './state.js';
 import { registerPWA, persistStorage } from './boot.js';
 import { startMetrics } from './net/metrics.js';
 import { $, fmt, esc } from './ui/dom.js';
@@ -34,12 +34,22 @@ function sermonStop() { sermon.stop(); if (world) { world.wide = false; if (U.mo
 const amb = new Ambient(); amb.volume = S.music.vol;
 const wantSong = () => pickSong(S.music, S.day, new Date().getHours());
 const musBtn = () => { const b = $('#mus'); if (!b) return; b.textContent = amb.on && amb.cur ? '♪ ' + SONG[amb.cur].name : 'Nhạc'; b.classList.toggle('on', amb.on); };
-const musicStart = (id) => amb.play(id || wantSong()).then(() => { S.music.on = true; save(); musBtn(); if (U.musicOpen) render(); }).catch((e) => toast('Chưa phát được nhạc: ' + e.message));
-const musicStop = () => { amb.stop(); S.music.on = false; save(); musBtn(); if (U.musicOpen) render(); };
-const musicNext = () => { const i = SONGS.findIndex((x) => x.id === amb.cur); let id; if (S.music.order === 'shuf') { do { id = SONGS[Math.floor(Math.random() * SONGS.length)].id; } while (id === amb.cur); } else id = SONGS[(i + 1) % SONGS.length].id; if (S.music.order === 'one') { S.music.source = 'pick'; S.music.song = id; save(); } musicStart(id); };
+const musicSync = () => { musBtn(); renderDock(); if (U.view === 'zone') render(); };
+const musicStart = (id, again) => amb.play(id || wantSong(), { len: fixMusic(S.music).len, again }).then(() => { S.music.on = true; save(); musicSync(); }).catch((e) => toast('Chưa phát được nhạc: ' + e.message));
+const musicStop = () => { amb.stop(); S.music.on = false; save(); musicSync(); };
+// Hết một khúc "phát 1 lần": ba tiếng chuông bát rồi lắng hẳn
+const musicEnd = () => { amb.end(); S.music.on = false; save(); musicSync(); toast('Khúc nhạc đã trọn.'); };
+// Khúc kế tiếp trong thể loại đang chọn. `manual`: người dùng bấm "Khúc khác" → từ nay giữ khúc tự chọn, không để lịch/giờ đổi lại
+function musicNext(manual) {
+  const M = S.music, pool = songsOf(M.genre), i = pool.findIndex((x) => x.id === amb.cur); let id = pool[(i + 1) % pool.length].id;
+  if (M.order === 'shuf' && pool.length > 1) { do { id = pool[Math.floor(Math.random() * pool.length)].id; } while (id === amb.cur); }
+  if (manual && M.order === 'loop') M.source = 'pick'; if (M.source === 'pick') M.song = id; save(); musicStart(id, true);
+}
 setInterval(() => { amb.duck(player.playing); }, 300);
-setInterval(() => { if (!amb.on || amb.ducked) return; const M = S.music;
-  if (M.order === 'one') { const w = wantSong(); if (M.source !== 'pick' && w !== amb.cur) musicStart(w); } else if (amb.minutes >= M.span) musicNext(); }, 5000);
+setInterval(() => { if (!amb.on || amb.ducked) return; const M = fixMusic(S.music);
+  if (M.len && amb.minutes >= M.len) { if (M.order === 'once') musicEnd(); else if (M.order === 'loop') musicStart(M.source === 'pick' ? amb.cur : wantSong(), true); else musicNext(); }
+  else if (!M.len && M.source !== 'pick' && wantSong() !== amb.cur) musicStart(wantSong());   // phát liên tục theo giờ/lịch/tâm trạng: sang buổi khác thì hòa sang khúc mới
+  const el = dock.querySelector('[data-left]'); if (el) el.textContent = leftTxt(); }, 5000);
 window.addEventListener('pointerdown', () => { if (S.music.on && !amb.on) musicStart(); }, { once: true });
 let world = null;
 try { world = new World($('#gl'), S.look, hash.q !== undefined ? +hash.q : undefined, S.pos); world.onChirp = (pan, n, seed) => amb.chirp(pan, n, seed, S.birds.vol); world.birdOpts = S.birds; if (hash.snap) world.snap = true; } catch (e) {
@@ -190,20 +200,7 @@ function nameBlock(raw) { const c = checkName(raw); return { c, html: `<div id="
 function render() {
   const d = S.day, wk = Math.ceil(d / 7), W = WEEKS[wk - 1], keep = panel.scrollTop;
   let h = '';
-  if (U.musicOpen) {
-    const M = S.music, cur = amb.on ? amb.cur : null, w = wantSong(), hr = new Date().getHours();
-    const why = M.source === 'time' ? `Bây giờ ${hr} giờ → khúc <strong>${esc(SONG[w].name)}</strong>` : M.source === 'plan' ? `Ngày ${d}/49 · tuần ${wk}: ${esc(W.title)} → khúc <strong>${esc(SONG[w].name)}</strong>` : M.source === 'mood' ? `Gợi ý cho lúc này → khúc <strong>${esc(SONG[w].name)}</strong>` : 'Bấm một khúc trong danh sách bên dưới.';
-    h = `<h2>Vân Nhạc</h2><div class="sub">Nhạc nền tĩnh tâm cho toàn Vân Đảo</div>
-      <p>Cùng hệ âm với thời thiền và sinh trực tiếp, nên phát mãi mà không lặp lại y nguyên. Khi vào thời thiền 15 phút, nhạc nền tự lắng xuống rồi dâng lại sau đó.</p>
-      <div class="row"><button class="btn" data-act="mus-toggle">${amb.on ? 'Tạm ngưng' : 'Phát nhạc'}</button><button class="btn alt" data-act="mus-next">Khúc khác</button><button class="btn alt" data-act="mus-close">Xong</button></div>
-      <div class="np">${cur ? `Đang phát: <strong>${esc(SONG[cur].name)}</strong> · ${esc(SONG[cur].sub)}${player.playing ? ' (đang nhường thời thiền)' : ''}` : 'Nhạc đang tắt.'}</div>
-      <h3>Chọn khúc theo</h3>${seg('msrc', [['time', 'Buổi trong ngày'], ['plan', 'Lịch tu tập'], ['mood', 'Tâm trạng'], ['pick', 'Tự chọn']], M.source)}
-      ${M.source === 'mood' ? seg('mmood', MOODS.map((m) => [m.id, m.label]), M.mood) : ''}<p class="muted">${why}</p>
-      <h3>Cách phát</h3>${seg('morder', [['one', 'Liên tục một khúc'], ['seq', 'Lần lượt'], ['shuf', 'Ngẫu nhiên']], M.order)}
-      ${M.order !== 'one' ? '<p class="muted">Đổi khúc sau</p>' + seg('mspan', [[3, '3 phút'], [5, '5 phút'], [10, '10 phút']], M.span) : ''}
-      <h3>Âm lượng nhạc nền</h3><input type="range" data-mvol min="0" max="1" step="0.01" value="${M.vol}" aria-label="Âm lượng nhạc nền">
-      <h3>Bảy khúc</h3>` + `<a class="ext" href="https://music.youtube.com/watch?v=5FCcXCchXDk" target="_blank" rel="noopener" data-ext><strong>Bài thiền anh chọn</strong> <em>mở trên YouTube Music</em><div>Phát ở thẻ mới bằng tài khoản YouTube của bạn; ứng dụng không chép hay nhúng tệp nhạc này. Nhạc nền sẽ tạm ngưng.</div></a>` + SONGS.map((x) => `<button class="tier song ${cur === x.id ? 'on' : ''}" data-song="${x.id}"><strong>${esc(x.name)}</strong> <em>${esc(x.sub)}</em><div>${esc(x.desc)}</div></button>`).join('');
-  } else if (U.mode === 'hall' && U.hallTab === 'sermon') {
+  if (U.mode === 'hall' && U.hallTab === 'sermon') {
     const hasVoice = !!Sermon.viVoice();
     h = `<h2>Đại Thiền Đường Vô Tận</h2>${seg('htab', [['sit', 'Thời thiền'], ['sermon', 'Thuyết giảng']], 'sermon')}
       <p>Chọn một bài. Khi giảng, Tôn tượng mở mắt nhìn xuống hội chúng và giơ ấn thuyết pháp; hội chúng chắp tay lắng nghe, đảnh lễ lúc mở đầu và ba lần khi kết thúc, rồi công đức lan tỏa ra khắp cõi.</p>
@@ -292,6 +289,8 @@ function render() {
       (z.action === 'gate' && ok ? `<button class="btn" data-act="gate">${S.open ? 'Chuyển sang Độc cư (khép cổng)' : 'Chuyển sang Nghênh khách (mở cổng)'}</button>` : '') +
       (z.id === 'kuti' ? '<button class="btn" data-act="kuti-sit">Tọa thiền tại đây</button>' : '') +
       (z.action === 'board' ? '<button class="btn" data-act="board">Mở bảng nhiệm vụ</button>' : '') + '<button class="ghost" data-act="home">← Vân Đảo</button></div>' + (z.id === 'kuti' ? '<h3>Hướng ngồi</h3>' + seg('kface', [[0, 'Cửa chính'], [1, 'Bên phải'], [2, 'Vào trong'], [3, 'Bên trái']], S.kface || 0) : '') +
+      ((z.id === 'kuti' || z.id === 'tea') && ok ? `<h3>Nhạc thiền</h3><div class="row"><button class="btn alt" data-act="mus-toggle">${amb.on ? 'Tạm ngưng nhạc' : 'Mở nhạc thiền'}</button><button class="ghost" data-act="mus-open">Chọn khúc và thời lượng</button></div>
+        <p class="muted">${amb.on && amb.cur ? 'Đang phát: ' + esc(SONG[amb.cur].name) + leftTxt() + '.' : 'Nhạc đang tắt.'} ${S.music.len ? 'Mỗi khúc ' + S.music.len + ' phút, ' + ORDER[S.music.order].toLowerCase() + '.' : 'Phát liên tục.'}</p>` : '') +
       (z.action === 'gate' && ok ? `<p class="muted">Hiện tại: ${S.open ? 'Nghênh khách. Bấm tên một bạn đồng tu ở đảo bên để chào hoặc sang thăm.' : 'Độc cư.'}</p>` : '');
   } else {
     const sim = U.sim ?? d;
@@ -324,7 +323,6 @@ panel.addEventListener('input', (e) => {
   if (t.dataset.bn !== undefined) { S.birds.n = +t.value; const o = panel.querySelector('[data-bnv]'); if (o) o.textContent = S.birds.n; save(); return; }
   if (t.dataset.bvol !== undefined) { S.birds.vol = +t.value; const o = panel.querySelector('[data-bvv]'); if (o) o.textContent = S.birds.vol > 0 ? Math.round(S.birds.vol * 100) + '%' : 'tắt'; save(); return; }
   if (t.dataset.tts !== undefined) { S.tts = t.checked; save(); return; }
-  if (t.dataset.mvol !== undefined) { S.music.vol = +t.value; amb.setVolume(S.music.vol); save(); return; }
   if (t.id === 'sim') { U.sim = +t.value; U.tier = null; $('#simv').textContent = t.value; $('#simt').textContent = WEEKS[Math.ceil(U.sim / 7) - 1].reward; return; }
   if (t.id === 'nm') { U.draft.name = t.value; const nb = nameBlock(t.value); $('#nmBox').innerHTML = nb.html; const b = panel.querySelector('[data-act="saveLook"]'); if (b) b.disabled = !nb.c.ok; return; }
   if (t.dataset.opt === 'height') { U.draft.look.height = +t.value; applyDraft(); return; }
@@ -336,16 +334,12 @@ const readCard = (card) => { const q = (k) => card.querySelector(`[data-c="${k}"
 panel.addEventListener('click', (e) => {
   const sk = e.target.closest('[data-seek]'); if (sk) { player.seek(+sk.dataset.seek); if (!player.playing) togglePlay(); return; }
   const tr = e.target.closest('[data-tier]'); if (tr) return pickTier(+tr.dataset.tier);
-  if (e.target.closest('[data-ext]')) { if (amb.on) musicStop(); return; }
+  if (musicAct(e)) return;
   const su = e.target.closest('[data-sut]'); if (su) { U.sutta = su.dataset.sut; if (sermon.on) sermonStart(U.sutta); else render(); return; }
-  const sg = e.target.closest('[data-song]'); if (sg) { S.music.source = 'pick'; S.music.song = sg.dataset.song; save(); musicStart(sg.dataset.song); render(); return; }
   const ob = e.target.closest('[data-opt] button');
   if (ob && ob.parentElement.dataset.opt === 'bfreq') { S.birds.freq = +ob.dataset.v; save(); render(); return; }
   if (ob && ob.parentElement.dataset.opt === 'kface') { S.kface = +ob.dataset.v; save(); if (world) world.setFace(S.kface); render(); setTimeout(savePos, 1200); return; }
   if (ob && ob.parentElement.dataset.opt === 'htab') { if (ob.dataset.v !== 'sermon' && sermon.on) sermonStop(); U.hallTab = ob.dataset.v; if (!U.sutta) U.sutta = SUTTAS[0].id; render(); return; }
-  if (ob && ['msrc', 'mmood', 'morder', 'mspan'].includes(ob.parentElement.dataset.opt)) { const k = ob.parentElement.dataset.opt, v = ob.dataset.v, M = S.music;
-    if (k === 'msrc') M.source = v; else if (k === 'mmood') M.mood = v; else if (k === 'morder') M.order = v; else M.span = +v;
-    if (M.source === 'pick' && !SONG[M.song]) M.song = 'van-thuy'; save(); if (amb.on && k !== 'mspan' && k !== 'morder') musicStart(wantSong()); render(); return; }
   if (ob && U.draft && !ob.dataset.act) {
     const key = ob.parentElement.dataset.opt, v = ob.dataset.v, D = U.draft;
     if (key === 'chip') D.name = v; else if (key === 'preset') Object.assign(D.look, PRESETS[+v].look); else if (key === 'pose') U.pose = v;
@@ -362,9 +356,6 @@ panel.addEventListener('click', (e) => {
   if (act === 'chirp') { amb.chirp(0, 4, Math.random() * 9, Math.max(0.15, S.birds.vol)); return; }
   if (act === 'sermon-go') { sermonStart(U.sutta || SUTTAS[0].id); return; }
   if (act === 'sermon-stop') { sermonStop(); render(); return; }
-  if (act === 'mus-toggle') { if (amb.on) musicStop(); else musicStart(); return; }
-  if (act === 'mus-next') { musicNext(); return; }
-  if (act === 'mus-close') { U.musicOpen = false; render(); return; }
   if (act === 'pmin') { document.body.classList.toggle('pmin'); render(); return; }
   if (act === 'creator') return openCreator();
   if (act === 'chips') { U.chips = suggestNames(6); render(); return; }
@@ -412,9 +403,49 @@ function setMode(m) {
 $('#rad').addEventListener('click', () => { S.radar = !S.radar; save(); document.body.classList.toggle('radar', !!S.radar); $('#rad').classList.toggle('on', !!S.radar); });
 document.body.classList.toggle('radar', !!S.radar); $('#rad').classList.toggle('on', !!S.radar);
 $('#tabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setMode(b.dataset.m); });
-$('#who').addEventListener('click', () => { U.musicOpen = false; openCreator(); });
-$('#mus').addEventListener('click', () => { U.musicOpen = !U.musicOpen; if (U.musicOpen && U.view === 'creator') { closeCreator(false); U.view = 'home'; if (world) world.setMode('island'); } document.body.classList.remove('pmin'); render(); });
-musBtn();
+$('#who').addEventListener('click', () => openCreator());
+// ───────── Vân Nhạc: thanh nhạc thu gọn / mở rộng (không chiếm bảng bên phải) ─────────
+const dock = $('#mdock'), ORDER = { loop: 'Lặp lại', seq: 'Lần lượt', shuf: 'Ngẫu nhiên', once: 'Phát 1 lần' };
+function leftTxt() { const l = amb.left; return l === null ? '' : l < 1 ? ' · sắp trọn' : ' · còn ' + Math.ceil(l) + ' phút'; }
+function renderDock() {
+  const M = fixMusic(S.music), cur = amb.on ? amb.cur : null, open = !!U.dock;
+  dock.hidden = !open && !amb.on; dock.classList.toggle('open', open); if (dock.hidden) return;
+  dock.style.right = window.innerWidth > 820 ? Math.round(window.innerWidth - panel.getBoundingClientRect().left + 10) + 'px' : '';   // máy tính: nằm sát mép trái của bảng, ngay dưới nút Nhạc
+  const now = cur ? `<strong>${esc(SONG[cur].name)}</strong><span data-left>${leftTxt()}</span>` : 'Nhạc đang tắt';
+  if (!open) { dock.innerHTML = `<button class="mb" data-act="mus-toggle" aria-label="${cur ? 'Tạm ngưng nhạc' : 'Phát nhạc'}">${cur ? '❚❚' : '▶'}</button><button class="mt" data-act="mus-open" title="Mở Vân Nhạc">♪ ${now}</button><button class="mb" data-act="mus-next" title="Khúc khác" aria-label="Khúc khác">⏭</button><button class="mb" data-act="mus-open" title="Mở rộng" aria-label="Mở rộng Vân Nhạc">▾</button>`; return; }
+  const w = wantSong(), d = S.day, wk = Math.ceil(d / 7);
+  const why = M.source === 'time' ? `Bây giờ ${new Date().getHours()} giờ → khúc ${esc(SONG[w].name)}.` : M.source === 'plan' ? `Ngày ${d}/49, tuần ${wk} → khúc ${esc(SONG[w].name)}.` : M.source === 'mood' ? `Gợi ý cho lúc này → khúc ${esc(SONG[w].name)}.` : 'Giữ khúc bạn đã chọn ở trên.';
+  dock.innerHTML = `<div class="mh"><h3>Vân Nhạc</h3><button class="ghost" data-act="mus-min">Thu gọn ▴</button></div>
+    <div class="row"><button class="btn" data-act="mus-toggle">${amb.on ? 'Tạm ngưng' : 'Phát nhạc'}</button><button class="btn alt" data-act="mus-next">Khúc khác</button><input type="range" data-mvol min="0" max="1" step="0.01" value="${M.vol}" aria-label="Âm lượng nhạc nền" title="Âm lượng"></div>
+    <div class="np">${cur ? 'Đang phát: ' + now + (player.playing ? ' (đang nhường thời thiền)' : '') : 'Nhạc đang tắt.'}</div>
+    <label class="fl">Thời lượng mỗi khúc</label>${seg('mlen', [[5, '5′'], [15, '15′'], [30, '30′'], [45, '45′'], [60, '60′'], [0, 'Liên tục']], M.len)}
+    ${M.len ? '<label class="fl">Khi hết khúc</label>' + seg('morder', Object.entries(ORDER), M.order) : '<p class="muted">Phát liên tục: nhạc sinh trực tiếp nên không lặp lại y nguyên.</p>'}
+    <label class="fl">Thể loại</label>${seg('mgenre', GROUPS, M.genre)}
+    <div class="songs">${songsOf(M.genre).map((x) => `<button class="chip${cur === x.id ? ' on' : ''}" data-song="${x.id}" title="${esc(x.sub + ': ' + x.desc)}">${esc(x.name)}</button>`).join('')}</div>
+    <p class="muted">${cur ? esc(SONG[cur].sub + ': ' + SONG[cur].desc) + '.' : 'Bấm một khúc để nghe.'}</p>
+    <label class="fl">Để Vân Đạo chọn khúc theo</label>${seg('msrc', [['time', 'Buổi trong ngày'], ['plan', 'Lịch tu tập'], ['mood', 'Tâm trạng'], ['pick', 'Tự chọn']], M.source)}
+    ${M.source === 'mood' ? seg('mmood', MOODS.map((m) => [m.id, m.label]), M.mood) : ''}<p class="muted">${why} Khi vào thời thiền 15 phút, nhạc tự lắng xuống rồi dâng lại sau đó.</p>
+    <a class="ext" href="https://music.youtube.com/watch?v=5FCcXCchXDk" target="_blank" rel="noopener" data-ext><strong>Bài thiền anh chọn</strong> <em>mở trên YouTube Music</em><div>Phát ở thẻ mới bằng tài khoản YouTube của bạn; ứng dụng không chép hay nhúng tệp nhạc này. Nhạc nền sẽ tạm ngưng.</div></a>`;
+}
+/** Mọi thao tác nhạc, dùng chung cho thanh nhạc và các nút nhạc trong bảng phân khu. Trả true nếu đã xử lý. */
+function musicAct(e) {
+  if (e.target.closest('[data-ext]')) { if (amb.on) musicStop(); return true; }
+  const sg = e.target.closest('[data-song]'); if (sg) { S.music.source = 'pick'; S.music.song = sg.dataset.song; save(); musicStart(sg.dataset.song, true); return true; }
+  const ob = e.target.closest('[data-opt] button'), k = ob && ob.parentElement.dataset.opt, M = S.music;
+  if (ob && ['msrc', 'mmood', 'morder', 'mlen', 'mgenre'].includes(k)) { const v = ob.dataset.v;
+    if (k === 'msrc') M.source = v; else if (k === 'mmood') M.mood = v; else if (k === 'mgenre') M.genre = v;
+    else if (k === 'morder') M.order = v; else { M.len = +v; if (!M.len) M.order = 'loop'; }
+    if (M.source === 'pick' && !SONG[M.song]) M.song = amb.cur || 'van-thuy'; save();
+    if (amb.on && (k === 'msrc' || k === 'mmood')) musicStart(wantSong()); else if (amb.on && k === 'mlen') musicStart(amb.cur); else musicSync();   // đổi thời lượng: áp cho khúc đang phát, tính từ lúc khúc bắt đầu
+    return true; }
+  const b = e.target.closest('[data-act]'), act = b && b.dataset.act; if (!act || !act.startsWith('mus-')) return false;
+  if (act === 'mus-toggle') { if (amb.on) musicStop(); else musicStart(); } else if (act === 'mus-next') musicNext(true); else { U.dock = act === 'mus-open'; renderDock(); }
+  return true;
+}
+dock.addEventListener('click', musicAct);
+dock.addEventListener('input', (e) => { if (e.target.dataset.mvol !== undefined) { S.music.vol = +e.target.value; amb.setVolume(S.music.vol); save(); } });
+$('#mus').addEventListener('click', () => { U.dock = !U.dock; renderDock(); });
+musBtn(); renderDock();
 
 // ───────── Ẩn giao diện khi tọa thiền ─────────
 const wake = () => { U.idleAt = performance.now(); };
@@ -425,7 +456,7 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'h' || e.key === 'H') U.quietManual = !U.quietManual;
   if (e.key === ' ') { e.preventDefault(); togglePlay(); }
 });
-window.addEventListener('resize', () => world && world.resize());
+window.addEventListener('resize', () => { if (world) world.resize(); renderDock(); });
 
 // ───────── Radar và dao động ký ─────────
 const rc = $('#radar').getContext('2d'), sc = $('#scope').getContext('2d'), scopeBuf = new Float32Array(1024);
@@ -490,7 +521,7 @@ if (hash.mode && hash.mode !== 'island') setMode(hash.mode);
 if (hash.tier !== undefined) pickTier(+hash.tier);
 if (hash.realm && world) world.setMode('realm');
 if (hash.sermon) { U.hallTab = 'sermon'; setMode('hall'); sermonStart(hash.sermon === '1' ? SUTTAS[0].id : hash.sermon); if (hash.sk) { for (let i = 0; i < +hash.sk * 20; i++) sermon.tick(0.05); } }
-if (hash.music) { U.musicOpen = true; render(); }
+if (hash.music) { U.dock = true; renderDock(); }
 if (hash.view === 'board') { U.view = 'board'; render(); }
 if (hash.view === 'creator') openCreator();
 if (hash.at && world && World.NODES[hash.at]) { const n = World.NODES[hash.at]; world.av.pos.set(n[0], 0, n[1]); world.av.pos.y = World.floorH(n[0], n[1]); world.snap = true; }
@@ -503,7 +534,7 @@ if (S.name) persistStorage();
 // T2.3: tài khoản. `show` mở bảng Tài khoản; `remote` chạy khi thiết bị khác vừa cập nhật hành trình.
 accountInit({
   S, save, render,
-  show: () => { if (U.view === 'creator') { closeCreator(false); if (world) world.setMode('island'); } U.view = 'account'; U.zone = null; U.musicOpen = false; document.body.classList.remove('pmin'); panel.scrollTop = 0; render(); },
-  remote: () => { if (world) world.setLook(S.look); render(); },
+  show: () => { if (U.view === 'creator') { closeCreator(false); if (world) world.setMode('island'); } U.view = 'account'; U.zone = null; document.body.classList.remove('pmin'); panel.scrollTop = 0; render(); },
+  remote: () => { if (world) world.setLook(S.look); fixMusic(S.music); render(); renderDock(); },
 }).then((r) => { if (r.welcome) toast('Hành trình đã trở lại trên máy này.'); }).catch(() => {});
 requestAnimationFrame(frame);

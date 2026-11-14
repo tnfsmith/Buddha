@@ -8,7 +8,9 @@ import { idbGet, idbSet } from './net/idb.js';
 
 export const KEY = 'vandao.v1';
 export const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-export const fresh = () => ({ v: 1, day: 1, lastDate: null, done: {}, totals: { duc: 0, thien: 0, tue: 0 }, sacca: 0, sessions: 0, completed: false, open: false, name: '', look: defaultLook(), birds: { n: 6, freq: 1, vol: 0.6 }, music: { on: false, source: 'time', song: 'van-thuy', mood: 'an', order: 'one', span: 5, vol: 0.6 } });
+export const fresh = () => ({ v: 1, day: 1, lastDate: null, done: {}, totals: { duc: 0, thien: 0, tue: 0 }, sacca: 0, sessions: 0, completed: false, open: false, name: '', look: defaultLook(), birds: { n: 6, freq: 1, vol: 0.6 }, music: { on: false, source: 'time', song: 'van-thuy', mood: 'an', order: 'loop', len: 0, genre: 'all', vol: 0.6 } });
+// Cài đặt nhạc bản cũ (và bản từ thiết bị chưa cập nhật): 'one' = phát liên tục một khúc → 'loop' không giới hạn; 'đổi khúc sau 3/5/10 phút' → thời lượng khúc
+export function fixMusic(M) { if (M.order === 'one') M.order = 'loop'; if (!['loop', 'seq', 'shuf', 'once'].includes(M.order)) M.order = 'loop'; if (typeof M.len !== 'number') M.len = M.order === 'loop' ? 0 : M.span >= 10 ? 15 : 5; if (!M.genre) M.genre = 'all'; delete M.span; return M; }
 
 export const S = fresh();
 const hadLocal = (() => { try { return !!localStorage.getItem(KEY); } catch (e) { return false; } })();
@@ -17,7 +19,7 @@ export let mem = true;
 
 const replace = (obj) => { for (const k of Object.keys(S)) delete S[k]; Object.assign(S, obj); };
 
-try { const raw = localStorage.getItem(KEY); if (raw) replace(Object.assign(fresh(), JSON.parse(raw))); S.look = { ...defaultLook(), ...S.look }; S.music = { ...fresh().music, ...S.music }; S.birds = { ...fresh().birds, ...S.birds }; localStorage.setItem(KEY, JSON.stringify(S)); mem = false; } catch (e) { mem = true; }
+try { const raw = localStorage.getItem(KEY); if (raw) replace(Object.assign(fresh(), JSON.parse(raw))); S.look = { ...defaultLook(), ...S.look }; S.music = fixMusic({ ...fresh().music, len: undefined, ...S.music }); S.birds = { ...fresh().birds, ...S.birds }; localStorage.setItem(KEY, JSON.stringify(S)); mem = false; } catch (e) { mem = true; }
 
 // ───────── IndexedDB: bản sao song song + outbox ─────────
 // Lược đồ IndexedDB chỉ có một chủ: net/idb.js (`vandao` v2: state, outbox, meta, kusala, sessions). Máy đã chạy bản v1
