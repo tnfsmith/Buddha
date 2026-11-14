@@ -115,6 +115,15 @@ input[type=text]{width:100%;border:1px solid var(--line);border-radius:10px;padd
 .pm{display:none;float:right;margin:0 0 4px 8px;padding:4px 10px}
 #toast{position:absolute;left:50%;top:76px;transform:translateX(-50%);padding:9px 16px;font-family:var(--serif);font-size:17px;opacity:0;transition:opacity .5s;pointer-events:none}
 #toast.on{opacity:1}
+#cam{position:absolute;left:14px;bottom:118px;display:flex;flex-direction:column;padding:4px;gap:2px;border-radius:12px;transition:opacity .7s}
+#cam button{width:34px;height:34px;border:0;background:transparent;border-radius:8px;font-size:19px;line-height:1;color:var(--ink)}
+#cam button:hover{background:rgba(255,255,255,.7)}
+body.hall #cam [data-cam=me],body.journey #cam [data-cam=me]{display:none}
+body.quiet #cam{opacity:0;pointer-events:none}
+#wake{position:absolute;left:50%;bottom:128px;transform:translateX(-50%);padding:12px 16px;background:rgba(255,251,243,.9);text-align:center;font-family:var(--serif);font-size:16.5px;width:max-content;max-width:min(440px,calc(100vw - 28px));z-index:5}
+#wake[hidden]{display:none}
+#wake .row{justify-content:center;margin-top:8px}
+@media (max-width:820px){#cam{bottom:auto;top:118px}#wake{bottom:172px}}
 #err{position:absolute;inset:auto 14px 130px 14px;padding:12px 14px;display:none;color:#7a2a1f}
 @media (max-width:820px){#who,#mus{padding:6px 9px}#panel{top:auto;bottom:158px;left:14px;right:14px;width:auto;max-height:36vh}.pm{display:block}body.pmin #panel{max-height:54px;overflow:hidden}#bar{bottom:8px}#hud{display:none!important}.brand small{display:none}#tabs button{padding:6px 10px;font-size:15px}#hide{display:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -203,6 +212,8 @@ body.pmin #panel h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       <button id="rad" class="ghost" title="Hiện hoặc ẩn radar âm thanh 3D">Radar</button>
     </div>
   </footer>
+  <div id="cam" class="glass" aria-label="Máy quay"><button data-cam="in" title="Phóng to" aria-label="Phóng to">+</button><button data-cam="out" title="Thu nhỏ" aria-label="Thu nhỏ">−</button><button data-cam="me" title="Về bên nhân vật" aria-label="Về bên nhân vật">◎</button></div>
+  <div id="wake" class="glass" role="alertdialog" aria-live="assertive" hidden><span></span><div class="row"><button class="btn" data-wake="yes">Xả thiền</button><button class="btn alt" data-wake="no">Ngồi tiếp</button></div></div>
   <div id="toast" class="glass"></div>
   <div id="err" class="glass"></div>
 </div>

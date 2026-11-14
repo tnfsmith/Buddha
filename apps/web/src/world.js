@@ -376,16 +376,20 @@ export class World {
   }
 
   // ───────── Đi lại ─────────
-  _route(target) {
-    const pos = this.av.pos, near = (x, z) => Object.keys(NODES).reduce((b, k) => (Math.hypot(NODES[k][0] - x, NODES[k][1] - z) < Math.hypot(NODES[b][0] - x, NODES[b][1] - z) ? k : b), 'mid');
-    const a = near(pos.x, pos.z), prev = { [a]: null }, q = [a];
+  // Chỗ không bước vào được: hồ, khối đồi Tịnh Thất (chỉ lên xuống theo bậc đá), mép đảo
+  _blocked(px, pz) { const a = (px - POND.x) / (POND.rx + 0.5), b = (pz - POND.z) / (POND.rz + 0.5); return a * a + b * b < 1 || (Math.abs(px - HILL.x) < 8.4 && Math.abs(pz - HILL.z) < 6.4) || this.home.frac(px, pz) > 0.88; }
+  _clear(x0, z0, x1, z1) { for (let i = 1; i <= 12; i++) if (this._blocked(x0 + ((x1 - x0) * i) / 12, z0 + ((z1 - z0) * i) / 12)) return false; return true; }
+  _near(x, z, ok = () => true) { return Object.keys(NODES).filter(ok).reduce((b, k) => (b === null || Math.hypot(NODES[k][0] - x, NODES[k][1] - z) < Math.hypot(NODES[b][0] - x, NODES[b][1] - z) ? k : b), null); }
+  _route(target, from) {
+    const pos = this.av.pos;
+    const a = from || this._near(pos.x, pos.z), prev = { [a]: null }, q = [a];
     while (q.length) { const k = q.shift(); if (k === target) break; EDGES.forEach(([x, y]) => { const o = x === k ? y : y === k ? x : null; if (o && !(o in prev)) { prev[o] = k; q.push(o); } }); }
     const out = []; for (let k = target; k; k = prev[k]) out.unshift(NODES[k]);
     return out;
   }
   walkTo(id, done) {
     const an = ANCHORS[id]; if (!an || this.av.where !== 'home' || this.av.state === 'travel') return false;
-    this.fig.setPose('stand'); this.av.path = this._route(an.node).map(([x, z]) => V(x, 0, z)); this.av.state = 'walk'; this.av.done = done; this.av.sit = !!an.sit; this.av.id = id; this.av.an = an;
+    this.fig.setPose('stand'); this.av.path = this._route(an.node).map(([x, z]) => V(x, 0, z)); this.av.state = 'walk'; this.av.done = done; this.av.sit = !!an.sit; this.av.id = id; this.av.an = an; this.av.track = false; this.av.steer = false; this.av.after = null;
     return true;
   }
   // Chọn một khu: máy quay bám theo nhân vật suốt đường đi, tới nơi mới chuyển sang góc nhìn của khu
@@ -408,6 +412,20 @@ export class World {
     const dir = this.camera.position.clone().sub(P), len = dir.length(), near = this.mode === 'island' || this.mode === 'zone' ? Math.max(7, Math.min(13, len * 0.3)) : len * 0.38; dir.normalize(); if (dir.y < 0.22) { dir.y = 0.22; dir.normalize(); }
     this.flyTo(P.clone().addScaledVector(dir, near), P, Math.min(this.baseFov, 46), 0.8); return true;
   }
+  // Nút + / −: phóng to, thu nhỏ quanh điểm đang nhìn, trong giới hạn của chế độ hiện tại
+  dolly(k) { if (this.tween) return; const c = this.controls, off = this.camera.position.clone().sub(c.target); off.setLength(Math.max(c.minDistance, Math.min(c.maxDistance, off.length() * k))); this.zoomed = null; this.flyTo(c.target.clone().add(off), c.target.clone(), this.baseFov, 0.3); }
+  // Đưa máy quay về bên nhân vật: đang ngồi ở phân khu thì dùng góc nhìn của khu, còn lại thì đứng chếch phía sau
+  focusAvatar(dur = 1.1) {
+    const A = this.av, io = A.where === 'home' ? this.home.group.position.y : 0; this.zoomed = null; this.follow = null;
+    if (A.state === 'sit' && A.id && ANCHORS[A.id]) { const c = ANCHORS[A.id].cam; return this.flyTo(V(c[0][0], c[0][1] + io, c[0][2]), V(c[1][0], c[1][1] + io, c[1][2]), 48, dur); }
+    const tg = V(A.pos.x, A.pos.y + io + (this.fig.pose === 'sit' ? 1.5 : 2.3), A.pos.z), d = this.camera.position.clone().sub(tg); d.y = 0; if (d.lengthSq() < 1) d.set(0.5, 0, 1);
+    d.setLength(11); this.flyTo(V(tg.x + d.x, tg.y + 5, tg.z + d.z), tg, 46, dur);
+  }
+  // Xả thiền: máy quay về bên nhân vật, nhân vật chắp tay xá rồi đứng dậy; xong mới gọi `done` (để đi tiếp theo lệnh)
+  wake(done) {
+    const A = this.av; this.focusAvatar(1.2); if (A.state !== 'sit') { if (done) done(); return; }
+    Object.assign(A, { state: 'idle', sit: false, hold: 1.7, after: done || null }); if (A.where === 'home') A.pos.y = floorH(A.pos.x, A.pos.z); this.fig.setPose('anjali');
+  }
   pickAny(nx, ny) { this.ray = this.ray || new THREE.Raycaster(); this.ray.setFromCamera(new THREE.Vector2(nx, ny), this.camera); const hit = this.ray.intersectObject(this.home.group, true).find((h) => h.object.isMesh && !h.object.isPoints && h.object.material && !h.object.material.transparent); return hit ? hit.point : null; }
   _birds(dt) {
     if (!this.birds) { this.birds = buildBirds(12); this.scene.add(this.birds.group); const H = this.home, gy = H.group.position.y, bb = new THREE.Box3().setFromObject(H.pv.group), tb = new THREE.Box3().setFromObject(H.tree.group);
@@ -416,12 +434,32 @@ export class World {
     if (A.where === 'home' && (A.state === 'sit' || A.state === 'idle')) { const ax = A.pos.x, az = A.pos.z; [[1.25, 0.5], [-1.1, 0.9], [0.3, 1.5]].forEach(([dx, dz]) => { const x = ax + dx * Math.cos(A.rot) + dz * Math.sin(A.rot), z = az - dx * Math.sin(A.rot) + dz * Math.cos(A.rot); list.push({ p: V(x, floorH(x, z) + gy + 0.02, z), moved: () => this.av.state === 'walk' || this.av.state === 'travel' }); }); }
     this.birds.group.visible = this.mode === 'island' || this.mode === 'zone' || this.mode === 'creator'; this.birds.update(dt, this.time, list, this.camera, this.birds.group.visible ? this.onChirp : null, this.birdOpts);
   }
+  // Bấm lên mặt đảo: đi thẳng tới đó; bị chắn (đang ngồi trong Tịnh Thất, hồ nằm giữa đường) thì theo lối đi tới nút gần đích nhất
   walkToPoint(x, z) {
-    if (this.av.where !== 'home' || this.av.state === 'travel' || this.mode !== 'island') return false;
-    const p = this.av.pos, blocked = (px, pz) => { const a = (px - POND.x) / (POND.rx + 0.5), b = (pz - POND.z) / (POND.rz + 0.5); return a * a + b * b < 1 || (Math.abs(px - HILL.x) < 8.4 && Math.abs(pz - HILL.z) < 6.4) || this.home.frac(px, pz) > 0.88; };
-    for (let i = 1; i <= 12; i++) if (blocked(p.x + ((x - p.x) * i) / 12, p.z + ((z - p.z) * i) / 12)) return false;
-    this.fig.setPose('stand'); this.av.path = [V(x, 0, z)]; this.av.state = 'walk'; this.av.done = null; this.av.sit = false;
-    this.ring.position.set(x, groundH(x, z) + 0.12 + this.home.group.position.y, z); this.ring.material.opacity = 0.9; return true;
+    const A = this.av; if (A.where !== 'home' || A.state === 'travel' || (this.mode !== 'island' && this.mode !== 'zone') || this._blocked(x, z)) return false;
+    let path = [V(x, 0, z)];
+    if (!this._clear(A.pos.x, A.pos.z, x, z)) {
+      const end = this._near(x, z, (k) => this._clear(NODES[k][0], NODES[k][1], x, z)); if (!end) return false;
+      const start = this._blocked(A.pos.x, A.pos.z) ? null : this._near(A.pos.x, A.pos.z, (k) => this._clear(A.pos.x, A.pos.z, NODES[k][0], NODES[k][1]));
+      path = [...this._route(end, start).map(([nx, nz]) => V(nx, 0, nz)), ...path];
+    }
+    this._go(path); this.ring.position.set(x, groundH(x, z) + 0.12 + this.home.group.position.y, z); this.ring.material.opacity = 0.9; return true;
+  }
+  _go(path) { const A = this.av; if (A.state !== 'walk') this.fig.setPose('stand'); Object.assign(A, { path, state: 'walk', done: null, sit: false, id: null, an: null, after: null, hold: 0, exit: false }); this.follow = null; A.track = this.camera.position.distanceTo(this.controls.target) < 90 && this.controls.target.distanceTo(V(A.pos.x, A.pos.y + this.home.group.position.y, A.pos.z)) < 40; }
+  // Phím mũi tên / WASD: đi theo hướng máy quay đang nhìn. kx: phải (+) / trái (−); kz: tới (+) / lui (−)
+  steer(kx, kz) { this.key = kx || kz ? { x: kx, z: kz } : null; if (!this.key && this.av.steer) { this.av.steer = false; this.stopWalk(); } }
+  _steer() {
+    const A = this.av, K = this.key; if (!K || A.where !== 'home' || A.state === 'travel' || (this.mode !== 'island' && this.mode !== 'zone') || this.tween) return;
+    if (A.exit && A.state === 'walk') return;   // đang xuống bậc đá: đi hết lối rồi mới nhận hướng phím
+    if (this._blocked(A.pos.x, A.pos.z)) {   // đang ở trên đồi Tịnh Thất: xuống theo bậc đá trước
+      const out = this._route(this._near(A.pos.x, A.pos.z, (k) => !this._blocked(NODES[k][0], NODES[k][1]))); this._go(out.map(([nx, nz]) => V(nx, 0, nz))); A.exit = true; return;
+    }
+    const f = V(this.controls.target.x - this.camera.position.x, 0, this.controls.target.z - this.camera.position.z).normalize(), dx = f.x * K.z - f.z * K.x, dz = f.z * K.z + f.x * K.x, n = Math.hypot(dx, dz) || 1;
+    // đi thẳng theo hướng bấm; bị chắn thì trượt dọc theo vật cản
+    const d = [[dx / n, dz / n], [Math.sign(dx), 0], [0, Math.sign(dz)]].find(([ux, uz]) => (ux || uz) && !this._blocked(A.pos.x + ux * 0.4, A.pos.z + uz * 0.4) && !this._blocked(A.pos.x + ux * 1.2, A.pos.z + uz * 1.2));
+    if (!d) { if (A.steer) { A.steer = false; this.stopWalk(); } return; }
+    if (!A.steer || A.state !== 'walk') this._go([V(0, 0, 0)]);
+    A.steer = true; A.path = [V(A.pos.x + d[0] * 4, 0, A.pos.z + d[1] * 4)];
   }
   pickGround(nx, ny) {
     this.ray = this.ray || new THREE.Raycaster(); this.ray.setFromCamera(new THREE.Vector2(nx, ny), this.camera);
@@ -458,8 +496,8 @@ export class World {
     else if (m === 'creator') Object.assign(c, { minDistance: 5, maxDistance: 18, minPolarAngle: 0.9, maxPolarAngle: 1.75 });
     else if (m === 'realm') Object.assign(c, { minDistance: 60, maxDistance: 1900, minPolarAngle: 0.4, maxPolarAngle: 1.75 });
     else if (m === 'overview' || m === 'tier') Object.assign(c, { minDistance: 30, maxDistance: 900, minPolarAngle: 0.5, maxPolarAngle: 1.75 });
-    else if (m === 'island') Object.assign(c, { minDistance: 14, maxDistance: 380, minPolarAngle: 0.5, maxPolarAngle: this.portrait ? 1.95 : 1.64 });
-    else Object.assign(c, { minDistance: 14, maxDistance: 260, minPolarAngle: 0.5, maxPolarAngle: 1.54 });
+    else if (m === 'island') Object.assign(c, { minDistance: 4, maxDistance: 380, minPolarAngle: 0.5, maxPolarAngle: this.portrait ? 1.95 : 1.64 });
+    else Object.assign(c, { minDistance: 3.2, maxDistance: 260, minPolarAngle: 0.5, maxPolarAngle: 1.54 });   // phân khu: zoom được tới sát nhân vật
   }
   applyFov() { const b = (this.baseFov * Math.PI) / 360, k = this.portrait ? 1.5 : 1; this.camera.fov = (Math.atan(Math.tan(b) * k) * 360) / Math.PI; this.camera.updateProjectionMatrix(); }
   project(v) { const p = v.clone().project(this.camera); return { x: (p.x * 0.5 + 0.5) * this.w, y: (-p.y * 0.5 + 0.5) * this.h, vis: p.z < 1 && p.z > -1 }; }
@@ -547,6 +585,7 @@ export class World {
   _avatarStep(dt, s) {
     const A = this.av, g = this.fig.group, io = this.home.group.position.y;
     const turn = (to, rate = 6) => { let d = to - A.rot; d = Math.atan2(Math.sin(d), Math.cos(d)); A.rot += d * Math.min(1, dt * rate); };
+    this._steer(); const px = A.pos.x, py = A.pos.y, pz = A.pos.z;
     if (A.state === 'walk') {
       const to = A.path[0], d = V(to.x - A.pos.x, 0, to.z - A.pos.z), L = d.length(), last = A.path.length === 1;
       A.speed += ((last && L < 2.2 ? 1.2 : 3.3) - A.speed) * Math.min(1, dt * 4); const step = A.speed * dt;
@@ -556,10 +595,13 @@ export class World {
           else if (A.an && A.an.face !== undefined && A.id) A.rotTo = A.an.face;
           if (this.follow) { const f2 = this.follow; this.follow = null; if (f2.zone && ANCHORS[f2.zone]) { const c = ANCHORS[f2.zone].cam; this.flyTo(V(c[0][0], c[0][1] + io, c[0][2]), V(c[1][0], c[1][1] + io, c[1][2]), 48, 1.6); } }
           if (A.done) { const f = A.done; A.done = null; f(A.id); } } }
+      else if (A.steer && this._blocked(A.pos.x + (d.x / L) * step, A.pos.z + (d.z / L) * step)) A.speed = 0;   // đi bằng phím: không bước vào chỗ cấm dù chỉ một khung hình
       else { d.normalize(); A.pos.x += d.x * step; A.pos.z += d.z * step; A.phase += dt * A.speed * 1.5; turn(Math.atan2(d.x, d.z)); }
       if (A.state !== 'sit') { const fy = floorH(A.pos.x, A.pos.z); A.pos.y += (fy - A.pos.y) * Math.min(1, dt * 14); }
       if (this.follow && A.state === 'walk' && !this.tween) { const tg = V(A.pos.x, A.pos.y + io + 2.1, A.pos.z), off = this.follow.off, k1 = 1 - Math.exp(-dt * 5), k2 = 1 - Math.exp(-dt * 2.6);
         this.controls.target.lerp(tg, k1); this.camera.position.lerp(V(tg.x + off.x, tg.y + off.y, tg.z + off.z), k2); }
+      // đi bằng phím hoặc bấm khi đang nhìn gần: máy quay trượt theo đúng quãng nhân vật vừa đi, giữ nguyên góc và độ zoom người dùng đã chọn
+      else if (A.track && !this.tween) { const d = V(A.pos.x - px, A.pos.y - py, A.pos.z - pz); this.controls.target.add(d); this.camera.position.add(d); }
     } else if (A.state === 'travel') {
       A.k = Math.min(1, A.k + dt / 6.5); const e = ease(A.k), p = A.curve.getPoint(e), tan = A.curve.getTangent(Math.min(0.999, e));
       A.pos.copy(p); turn(Math.atan2(tan.x, tan.z), 4); this.ride.position.set(p.x, p.y - 0.35 + (A.where === 'home' ? io : 0), p.z);
@@ -571,7 +613,7 @@ export class World {
       if (A.restoreSit) { A.restoreSit = false; this.fig.setPose('sit'); }
       if (A.state === 'sit' && A.an && A.where === 'home') A.pos.y = floorH(A.pos.x, A.pos.z) + seatOf(A.an);
       if (A.rotTo !== undefined) { turn(A.rotTo, 5); if (Math.abs(Math.atan2(Math.sin(A.rotTo - A.rot), Math.cos(A.rotTo - A.rot))) < 0.01) A.rotTo = undefined; }
-      if (A.hold > 0) { A.hold -= dt; if (A.hold <= 0 && this.fig.pose === 'anjali' && this.mode !== 'creator') this.fig.setPose('stand'); }
+      if (A.hold > 0) { A.hold -= dt; if (A.hold <= 0) { if (this.fig.pose === 'anjali' && this.mode !== 'creator') this.fig.setPose('stand'); if (A.after) { const f = A.after; A.after = null; f(); } } }
       if (this.fig.pose !== 'sit') { A.blink -= dt; if (A.blink < 0) { this.fig.eyes(A.blink > -0.13); if (A.blink < -0.13) { this.fig.eyes(false); A.blink = 2.5 + this.rnd() * 3.5; } } }
     }
     const base = this.look.height ? 1.9 * this.look.height : 1.9, bob = A.state === 'walk' ? 0.045 * Math.abs(Math.sin(A.phase)) : 0;
