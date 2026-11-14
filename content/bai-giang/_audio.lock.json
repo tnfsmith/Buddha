@@ -105,6 +105,324 @@
       }
     },
     {
+      "id": "bat-com-cuoi-cung",
+      "version": 1,
+      "key": "bai-giang/duong-xua/bat-com-cuoi-cung/v1-9ac9b859/vi-sadaltager.mp3",
+      "hash": "9ac9b859",
+      "fingerprint": "9ac9b85966d35ddc8ac8c2b1d95d9c22da518b99282705e19f796b3b698d3d85",
+      "dur": 209.47395833333334,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:32:18.297Z",
+      "wer": 0.004497239625333416,
+      "sha256": "e1fec05c75a43a57f1929002c61d4f60bf2085b61c977a1b55a03f2a6f33b0ad",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.1,
+        "peak_dbtp": -1.99
+      },
+      "selected_attempts": [
+        2,
+        2,
+        1,
+        3,
+        1,
+        1,
+        2,
+        1,
+        3,
+        2,
+        1,
+        1,
+        1,
+        1
+      ],
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2890486111111111
+        },
+        {
+          "i": 3,
+          "wer": 0.02127659574468085,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2832836879432624
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2842246376811594
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28396598639455783
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2926866666666667
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29034126984126984
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      }
+    },
+    {
+      "id": "bon-trai-nui",
+      "version": 1,
+      "key": "bai-giang/duong-xua/bon-trai-nui/v1-398cd9cf/vi-sadaltager.mp3",
+      "hash": "398cd9cf",
+      "fingerprint": "398cd9cfa98f23b20c64a6f7cd87e33757cada6e96039b91c803f675a2412d87",
+      "dur": 194.59395833333335,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:33:41.766Z",
+      "wer": 0.0031746031746031746,
+      "sha256": "49f4fc6ca26422422fc2b052942628e6bc2d94d6b0cbc51986d85ae8344003f7",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.09,
+        "peak_dbtp": -1.82
+      },
+      "selected_attempts": [
+        4,
+        1,
+        3,
+        2,
+        1,
+        1,
+        1,
+        1,
+        3,
+        4,
+        1,
+        3,
+        3,
+        1
+      ],
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29031159420289854
+        },
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29010077519379845
+        },
+        {
+          "i": 5,
+          "wer": 0.044444444444444446,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29054074074074077
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2934964539007092
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.26738194444444446
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28532575757575757
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2989126984126984
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.25854074074074074
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2954715447154471
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      }
+    },
+    {
+      "id": "bong-mat-ho-hang",
+      "version": 1,
+      "key": "bai-giang/duong-xua/bong-mat-ho-hang/v1-e5c85c42/vi-sadaltager.mp3",
+      "hash": "e5c85c42",
+      "fingerprint": "e5c85c426867210b25e5dbb47443bc9e09ff7b2b12c1bc023c8fd9a74d30678e",
+      "dur": 200.04195833333333,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:36:31.878Z",
+      "wer": 0.006146572104018913,
+      "sha256": "7b5562d9d3f0fa3da98e984d7e7ebb7f777e3ddb9a4b3d5602caa5610dddba2f",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.19,
+        "peak_dbtp": -2.08
+      },
+      "selected_attempts": [
+        3,
+        3,
+        3,
+        2,
+        1,
+        1,
+        4,
+        3,
+        2,
+        2,
+        1,
+        3,
+        4,
+        2
+      ],
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0.06382978723404255,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.30030496453900707
+        },
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27321527777777777
+        },
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29805303030303026
+        },
+        {
+          "i": 3,
+          "wer": 0.022222222222222223,
+          "tail_ok": false,
+          "names_ok": true,
+          "seconds_per_word": 0.3012074074074074
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28498581560283687
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.25434751773049646
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2976518518518519
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2877028985507247
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2875390070921986
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2934964539007092
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2976518518518519
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29805303030303026
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      }
+    },
+    {
       "id": "cau-be-chan-trau",
       "version": 1,
       "key": "bai-giang/duong-xua/cau-be-chan-trau/v1-67a8a577/vi-sadaltager.mp3",
@@ -308,6 +626,84 @@
         "source_sha256": "112e5bd6808f0e7c08752581861b1045aa41009a7139d8fd8df9071759369a24",
         "source_generated_at": "2026-11-14T20:07:57.806Z",
         "payload_sha256": "3f632c69debea5d5f094f422b882115e2fe7267db08f1541c890c4c9dae29277"
+      }
+    },
+    {
+      "id": "chim-cut-va-chim-ung",
+      "version": 1,
+      "key": "bai-giang/duong-xua/chim-cut-va-chim-ung/v1-88e5e357/vi-sadaltager.mp3",
+      "hash": "88e5e357",
+      "fingerprint": "88e5e3574a8161c4affb8cd14437a27e69808b186084f58767a6532b6032adb4",
+      "dur": 203.06595833333333,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:45:04.057Z",
+      "wer": 0.0017006802721088435,
+      "sha256": "07d7d3f794093b72418d751ccf6a2ad25554f666bbb031fb7c22e66ff4e5f5b7",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.12,
+        "peak_dbtp": -2
+      },
+      "selected_attempts": [
+        4,
+        1,
+        1,
+        2,
+        2,
+        4,
+        1,
+        3,
+        2,
+        1,
+        3,
+        1,
+        2,
+        1
+      ],
+      "flags": [
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27365185185185187
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29292028985507246
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2700962962962963
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.26161594202898547
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29805303030303026
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
       }
     },
     {
@@ -559,6 +955,105 @@
       }
     },
     {
+      "id": "day-dan",
+      "version": 1,
+      "key": "bai-giang/duong-xua/day-dan/v1-c5973e52/vi-sadaltager.mp3",
+      "hash": "c5973e52",
+      "fingerprint": "c5973e521d76078fd0a6b399a56b49031642f6c7dd8ce735f31e5c8fa75004e1",
+      "dur": 196.80195833333335,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:41:21.241Z",
+      "wer": 0.006390096253594736,
+      "sha256": "c652211f96dbf77ec4d17dd50101d77f949681fee506183f1fa98ec4316fa1ee",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.11,
+        "peak_dbtp": -2.01
+      },
+      "selected_attempts": [
+        2,
+        2,
+        2,
+        1,
+        2,
+        1,
+        4,
+        3,
+        4,
+        4,
+        1,
+        1,
+        3,
+        1
+      ],
+      "flags": [
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28987121212121214
+        },
+        {
+          "i": 6,
+          "wer": 0.021739130434782608,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2833550724637681
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2718740740740741
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29604964539007095
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27259848484848487
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28158156028368797
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2885724637681159
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28254074074074076
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      }
+    },
+    {
       "id": "dem-trang-ra-di",
       "version": 1,
       "key": "bai-giang/duong-xua/dem-trang-ra-di/v1-52acab01/vi-sadaltager.mp3",
@@ -711,6 +1206,119 @@
       }
     },
     {
+      "id": "duong-xua-may-trang",
+      "version": 1,
+      "key": "bai-giang/duong-xua/duong-xua-may-trang/v1-379372c7/vi-sadaltager.mp3",
+      "hash": "379372c7",
+      "fingerprint": "379372c7bdd6285631ace78d05da609208291a09f9d3ebed12014696522ce808",
+      "dur": 204.26595833333334,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:48:27.789Z",
+      "wer": 0.007521575068984875,
+      "sha256": "df4ef19de4f8b93027b9c767c2d95aacb3c2887f764fde6925293e0ae2d43cdf",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.2,
+        "peak_dbtp": -2.03
+      },
+      "selected_attempts": [
+        1,
+        2,
+        1,
+        1,
+        4,
+        1,
+        1,
+        1,
+        1,
+        3,
+        2,
+        2,
+        3,
+        1
+      ],
+      "flags": [
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2726866666666667
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2862866666666667
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29519858156028367
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2840486111111111
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2763185185185185
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27439869281045753
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2850942028985507
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2715486111111111
+        },
+        {
+          "i": 12,
+          "wer": 0.019230769230769232,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27219871794871797
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29010077519379845
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      }
+    },
+    {
       "id": "goc-cay-hong-tao",
       "version": 1,
       "key": "bai-giang/duong-xua/goc-cay-hong-tao/v1-5e6294d9/vi-sadaltager.mp3",
@@ -798,6 +1406,105 @@
         "changed_cues": [
           11
         ]
+      }
+    },
+    {
+      "id": "hay-tinh-tan",
+      "version": 1,
+      "key": "bai-giang/duong-xua/hay-tinh-tan/v1-a59154e2/vi-sadaltager.mp3",
+      "hash": "a59154e2",
+      "fingerprint": "a59154e24b94c4a7eda57bb900c3a582c15474266ed884a21a37894d8b3fe0f4",
+      "dur": 206.90595833333333,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:47:29.893Z",
+      "wer": 0.01090407177363699,
+      "sha256": "ca0d01af4e6ee5ed3a2fac82452220d60cdab1cd08f0244af6b344b806fd5e3b",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.15,
+        "peak_dbtp": -1.96
+      },
+      "selected_attempts": [
+        2,
+        4,
+        3,
+        1,
+        2,
+        3,
+        2,
+        1,
+        2,
+        1,
+        1,
+        1,
+        1,
+        2
+      ],
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0.08695652173913043,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.30683333333333335
+        },
+        {
+          "i": 1,
+          "wer": 0.021739130434782608,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2998768115942029
+        },
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2885724637681159
+        },
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.291312925170068
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27477304964539007
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2998768115942029
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2815486111111111
+        },
+        {
+          "i": 13,
+          "wer": 0.022222222222222223,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29054074074074077
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
       }
     },
     {
@@ -1628,6 +2335,105 @@
       }
     },
     {
+      "id": "noi-dau-ba-visakha",
+      "version": 1,
+      "key": "bai-giang/duong-xua/noi-dau-ba-visakha/v1-01d46639/vi-sadaltager.mp3",
+      "hash": "01d46639",
+      "fingerprint": "01d466398d867e7da821785c75826dd9b7e09b701591b99b0a424a078ec744a8",
+      "dur": 196.22595833333332,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:50:35.303Z",
+      "wer": 0.007867494824016562,
+      "sha256": "be05958c042fb51e8b4825bfda84b491a2aebe190cac38b95f171a905ae7860b",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.1,
+        "peak_dbtp": -1.88
+      },
+      "selected_attempts": [
+        2,
+        4,
+        1,
+        2,
+        1,
+        4,
+        2,
+        1,
+        2,
+        3,
+        1,
+        2,
+        1,
+        2
+      ],
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0.06666666666666667,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29054074074074077
+        },
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28843650793650794
+        },
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2962348484848485
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2835891472868217
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29054074074074077
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2963985507246377
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2615486111111111
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2842246376811594
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      }
+    },
+    {
       "id": "nuoc-mat-ai-cung-man",
       "version": 1,
       "key": "bai-giang/duong-xua/nuoc-mat-ai-cung-man/v1-c5a9c3e7/vi-sadaltager.mp3",
@@ -2346,6 +3152,197 @@
       }
     },
     {
+      "id": "ta-da-dung-lai",
+      "version": 1,
+      "key": "bai-giang/duong-xua/ta-da-dung-lai/v1-1eec8490/vi-sadaltager.mp3",
+      "hash": "1eec8490",
+      "fingerprint": "1eec8490d2f3b91c931e8ba7fc5e757be88958909e0839e8b58f4d32a3740211",
+      "dur": 203.76195833333333,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:53:09.324Z",
+      "wer": 0.004659853457263262,
+      "sha256": "62670496f8d089c07ca6845c4286b5dc2201ceaeb753ea3629669b6594a79e95",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.1,
+        "peak_dbtp": -1.85
+      },
+      "selected_attempts": [
+        1,
+        1,
+        1,
+        3,
+        4,
+        2,
+        3,
+        2,
+        4,
+        1,
+        2,
+        2,
+        3,
+        2
+      ],
+      "flags": [
+        {
+          "i": 3,
+          "wer": 0.022222222222222223,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29587407407407407
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29805303030303026
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27335658914728683
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27987121212121213
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28248550724637683
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2979603174603175
+        },
+        {
+          "i": 13,
+          "wer": 0.021739130434782608,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2850942028985507
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      }
+    },
+    {
+      "id": "tam-long-nhu-dat",
+      "version": 1,
+      "key": "bai-giang/duong-xua/tam-long-nhu-dat/v1-e230e00c/vi-sadaltager.mp3",
+      "hash": "e230e00c",
+      "fingerprint": "e230e00c71ec4673e20c622ec41679c6886a5333de5d90e15586c8894708ae1c",
+      "dur": 195.84195833333334,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:54:14.237Z",
+      "wer": 0.00645910936608611,
+      "sha256": "4ccd4d2fb89c47f4adbef630e6a0c003cffbe7bc8a7b3bf1c52e294633093168",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.09,
+        "peak_dbtp": -2.05
+      },
+      "selected_attempts": [
+        1,
+        3,
+        2,
+        1,
+        1,
+        3,
+        2,
+        3,
+        2,
+        1,
+        1,
+        2,
+        4,
+        3
+      ],
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2975426356589147
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2949851851851852
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28168939393939396
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2832836879432624
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2855793650793651
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27732624113475174
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2807304964539007
+        },
+        {
+          "i": 13,
+          "wer": 0.022222222222222223,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29587407407407407
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      }
+    },
+    {
       "id": "thuong-la-hieu",
       "version": 1,
       "key": "bai-giang/duong-xua/thuong-la-hieu/v1-f8d164be/vi-sadaltager.mp3",
@@ -2456,6 +3453,98 @@
       }
     },
     {
+      "id": "tro-ve-hoi-tho",
+      "version": 1,
+      "key": "bai-giang/duong-xua/tro-ve-hoi-tho/v1-9253762a/vi-sadaltager.mp3",
+      "hash": "9253762a",
+      "fingerprint": "9253762a1dd18e40c976146060fece7ca69853c3d23bceb86c641249cc1254ea",
+      "dur": 190.80195833333335,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:55:55.877Z",
+      "wer": 0.00994405679144493,
+      "sha256": "cbf607626be30973d97c5bf91d44d4d0cbf1425771af074ba8a2aebe9566d4d2",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.15,
+        "peak_dbtp": -1.97
+      },
+      "selected_attempts": [
+        3,
+        1,
+        1,
+        3,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        1,
+        4,
+        4,
+        4
+      ],
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0.023809523809523808,
+          "tail_ok": false,
+          "names_ok": true,
+          "seconds_per_word": 0.30176984126984124
+        },
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.293520325203252
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29319841269841274
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2868583333333333
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2816159420289855
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29196124031007753
+        },
+        {
+          "i": 12,
+          "wer": 0.02127659574468085,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2875390070921986
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      }
+    },
+    {
       "id": "tu-bi",
       "version": 2,
       "key": "bai-giang/loi-phat-day/tu-bi/v2-80fda0cc/vi-sadaltager.mp3",
@@ -2519,6 +3608,91 @@
         "peak_dbtp": -1.93
       },
       "rendered_at": "2026-11-14T18:38:24.888Z",
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      }
+    },
+    {
+      "id": "voi-say",
+      "version": 1,
+      "key": "bai-giang/duong-xua/voi-say/v1-684febae/vi-sadaltager.mp3",
+      "hash": "684febae",
+      "fingerprint": "684febae312f8a35e43a33d812e7f7da5cef98b656df3a15bcadbbcffbda4a07",
+      "dur": 207.72195833333333,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:58:20.792Z",
+      "wer": 0.006493506493506494,
+      "sha256": "60eab844f928931a86322f449693fe18ba8d88bf8daa8b6a50ed2f74f435d4b5",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.15,
+        "peak_dbtp": -1.92
+      },
+      "selected_attempts": [
+        2,
+        2,
+        2,
+        1,
+        4,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2,
+        1,
+        3,
+        2
+      ],
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0.09090909090909091,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.31259848484848485
+        },
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29350757575757574
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28548666666666667
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2763985507246377
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2662624113475177
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29031159420289854
+        }
+      ],
       "format": {
         "sample_rate": 24000,
         "channels": 1,

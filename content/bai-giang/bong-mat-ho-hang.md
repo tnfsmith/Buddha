@@ -5,14 +5,18 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Bóng mát của họ hàng
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 52, cảnh hòa giải tranh nước giữa hai dòng họ Thích Ca và Câu Ly · https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chuong-52-phuoc-dien-y/"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 52, cảnh
+  hòa giải tranh nước giữa hai dòng họ Thích Ca và Câu Ly ·
+  https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chu\
+  ong-52-phuoc-dien-y/"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 2
   thu_tu: 235
-  chuong: [52]
+  chuong: [ 52 ]
   dot: D
+body_r2_key: bai-giang/duong-xua/bong-mat-ho-hang/v1-e5c85c42/vi-sadaltager.mp3
 ---
 Trong câu chuyện ở chương năm mươi hai, một dòng nước trở thành điều hai bên cùng muốn giữ lấy. Người của dòng họ Thích Ca và dòng họ Câu Ly đều lo cho ruộng đồng của mình, rồi sự lo lắng dần hóa thành đối đầu.
 Khi lời qua tiếng lại đã kéo theo ý muốn dùng sức mạnh, những người có họ hàng với nhau đứng trước nguy cơ làm nhau đổ máu. Điều ban đầu liên quan đến nước tưới ruộng đang thành chuyện sinh mạng của chính những người cần nước.

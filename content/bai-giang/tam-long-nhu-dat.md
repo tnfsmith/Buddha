@@ -5,14 +5,17 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Tấm lòng như đất
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 62 · AN 9.11, lời trình bày của Xá Lợi Phất khi bị cáo buộc · https://suttacentral.net/an9.11/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 62 · AN
+  9.11, lời trình bày của Xá Lợi Phất khi bị cáo buộc ·
+  https://suttacentral.net/an9.11/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 3
   thu_tu: 280
-  chuong: [62]
+  chuong: [ 62 ]
   dot: D
+body_r2_key: bai-giang/duong-xua/tam-long-nhu-dat/v1-e230e00c/vi-sadaltager.mp3
 ---
 Sau mùa an cư, Xá Lợi Phất xin phép Đức Phật lên đường. Khi thầy vừa rời đi, một vị khất sĩ đến thưa rằng mình đã bị thầy xúc phạm mà không nhận được lời xin lỗi trước lúc thầy đi xa.
 Đức Phật cho mời Xá Lợi Phất trở lại. Lời cáo buộc được đặt trước người có liên quan, để sự việc có thể được nghe rõ giữa đại chúng, thay vì tiếp tục lớn lên qua những lời kể vắng mặt nhau.

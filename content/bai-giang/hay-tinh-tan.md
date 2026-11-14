@@ -5,14 +5,17 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Hãy tinh tấn
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 80 · DN 16, Tu Bạt Đà La và lời nhắc cuối về sự chuyên cần · https://suttacentral.net/dn16/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 80 · DN
+  16, Tu Bạt Đà La và lời nhắc cuối về sự chuyên cần ·
+  https://suttacentral.net/dn16/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 3
   thu_tu: 360
-  chuong: [80]
+  chuong: [ 80 ]
   dot: D
+body_r2_key: bai-giang/duong-xua/hay-tinh-tan/v1-a59154e2/vi-sadaltager.mp3
 ---
 Trong rừng cây sa la ở Câu Thi Na, các vị đệ tử quây quần bên Đức Phật trong những giờ cuối. Trước một cuộc chia lìa đang đến gần, mỗi người đều phải gặp phần bối rối và thương kính đang có trong lòng mình.
 Một người du sĩ tên Tu Bạt Đà La tìm đến, mong được hỏi điều còn băn khoăn. A Nan lo Đức Phật đã rất mệt, nhưng Ngài vẫn cho người ấy vào để một sự tìm hiểu chân thành có cơ hội được lắng nghe.

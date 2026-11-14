@@ -5,14 +5,17 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Bữa cơm cuối cùng
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 79 · DN 16, bữa ăn của Thuần Đà và lời nhắn giúp ông khỏi hối tiếc; không kết luận món ăn hay nguyên nhân bệnh · https://suttacentral.net/dn16/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 79 · DN
+  16, bữa ăn của Thuần Đà và lời nhắn giúp ông khỏi hối tiếc; không kết luận món
+  ăn hay nguyên nhân bệnh · https://suttacentral.net/dn16/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 3
   thu_tu: 350
-  chuong: [79]
+  chuong: [ 79 ]
   dot: D
+body_r2_key: bai-giang/duong-xua/bat-com-cuoi-cung/v1-9ac9b859/vi-sadaltager.mp3
 ---
 Trong chặng đường cuối đời, Đức Phật nhận lời đến dùng bữa ở nhà Thuần Đà. Người chủ nhà chuẩn bị thức ăn để dâng lên Ngài và đoàn khất sĩ, đặt lòng thành của mình vào một việc chăm sóc gần gũi như bao gia đình vẫn làm.
 Sau bữa ấy, Ngài bị bệnh nặng và tiếp tục lên đường với sự giúp đỡ của người đi cùng. Kể lại câu chuyện, ta giữ rõ sự nối tiếp của các sự việc mà không vội kết luận một món ăn chính là nguyên nhân của bệnh.

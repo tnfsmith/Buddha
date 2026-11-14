@@ -5,14 +5,16 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Nỗi đau của bà Tỳ Xá Khư
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 60 · Ud 8.8, người thân yêu và nỗi sầu · https://suttacentral.net/ud8.8/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 60 · Ud
+  8.8, người thân yêu và nỗi sầu · https://suttacentral.net/ud8.8/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 3
   thu_tu: 270
-  chuong: [60]
+  chuong: [ 60 ]
   dot: D
+body_r2_key: bai-giang/duong-xua/noi-dau-ba-visakha/v1-01d46639/vi-sadaltager.mp3
 ---
 Bà Tỳ Xá Khư đã quen chăm lo cho nhiều người, nhưng hôm ấy bà đến gặp Đức Phật trong nỗi đau mất một người cháu thương yêu. Tóc và áo còn ướt, bà mang theo sự trống vắng vừa mở ra trong gia đình.
 Đức Phật hỏi điều gì đã xảy đến. Trước một người đang đau, câu chuyện bắt đầu bằng việc để nỗi đau ấy được nói ra, để người vừa mất đi có một chỗ trong lời kể của người còn ở lại.

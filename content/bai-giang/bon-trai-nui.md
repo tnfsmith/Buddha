@@ -5,14 +5,16 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Bốn trái núi
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 66 · SN 3.25, ví dụ núi và sự già chết · https://suttacentral.net/sn3.25/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 66 · SN
+  3.25, ví dụ núi và sự già chết · https://suttacentral.net/sn3.25/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 3
   thu_tu: 290
-  chuong: [66]
+  chuong: [ 66 ]
   dot: D
+body_r2_key: bai-giang/duong-xua/bon-trai-nui/v1-398cd9cf/vi-sadaltager.mp3
 ---
 Vua Ba Tư Nặc đến gặp Đức Phật sau những công việc của một người đứng đầu đất nước. Chung quanh nhà vua là quyền lực và nhiều việc phải lo, những điều có thể khiến một ngày trôi qua mà tâm chưa kịp dừng lại.
 Đức Phật đưa ra một hình ảnh để nhà vua suy xét. Nếu từ bốn phía đều có tin đáng tin cậy rằng những trái núi rất lớn đang tiến đến, nghiền qua mọi thứ trên đường, nhà vua sẽ chọn làm điều gì?

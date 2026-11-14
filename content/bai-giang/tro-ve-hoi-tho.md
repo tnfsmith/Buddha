@@ -5,14 +5,16 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Trở về hơi thở
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 56 · MN 118, niệm hơi thở · https://suttacentral.net/mn118/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 56 · MN
+  118, niệm hơi thở · https://suttacentral.net/mn118/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 3
   thu_tu: 260
-  chuong: [56]
+  chuong: [ 56 ]
   dot: D
+body_r2_key: bai-giang/duong-xua/tro-ve-hoi-tho/v1-9253762a/vi-sadaltager.mp3
 ---
 Sau mùa mưa, các vị khất sĩ cùng trở về bên Đức Phật. Có những người mới học còn đang tìm một chỗ đứng vững cho tâm, giữa bao nhiêu điều được nghe và những đổi thay trong nếp sống hằng ngày.
 Trong khung cảnh ấy, Ngài dành thêm thời gian ở lại cùng đại chúng. Sự hướng dẫn bắt đầu từ điều gần đến mức ta vẫn thường đi qua mà ít nhận ra, đó là hơi thở đang nâng đỡ sự sống của mình.

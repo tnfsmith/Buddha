@@ -5,14 +5,17 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Ta đã dừng lại
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 53 · MN 86, Ương Quật Ma La dừng việc sát hại và thay đổi đời sống · https://suttacentral.net/mn86/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 53 · MN
+  86, Ương Quật Ma La dừng việc sát hại và thay đổi đời sống ·
+  https://suttacentral.net/mn86/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 2
   thu_tu: 250
-  chuong: [53]
+  chuong: [ 53 ]
   dot: D
+body_r2_key: bai-giang/duong-xua/ta-da-dung-lai/v1-1eec8490/vi-sadaltager.mp3
 ---
 Trên con đường có Ương Quật Ma La, người đi đường mang nhiều sợ hãi vì những việc sát hại đã xảy ra. Đức Phật vẫn đi về phía ấy, trong khi người chung quanh tìm cách cảnh báo về điều đang chờ phía trước.
 Nhìn thấy Ngài, Ương Quật Ma La đuổi theo. Câu chuyện kể rằng dù cố chạy, anh vẫn không bắt kịp người đang bước thong thả. Cuối cùng anh gọi người phía trước dừng lại, để rồi nghe một câu trả lời khiến mình phải hỏi thêm.

@@ -5,14 +5,19 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Đường xưa mây trắng
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 81 · Svastika là nhân vật trong truyện khung của tác phẩm; lời suy ngẫm biên soạn mới, không phải lời kinh · https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chuong-81-duong-xua-may-trang/"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 81 ·
+  Svastika là nhân vật trong truyện khung của tác phẩm; lời suy ngẫm biên soạn
+  mới, không phải lời kinh ·
+  https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chu\
+  ong-81-duong-xua-may-trang/"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 3
   thu_tu: 370
-  chuong: [81]
+  chuong: [ 81 ]
   dot: D
+body_r2_key: bai-giang/duong-xua/duong-xua-may-trang/v1-379372c7/vi-sadaltager.mp3
 ---
 Ở phần cuối Đường Xưa Mây Trắng, Svastika trở lại bên dòng sông gắn với tuổi nhỏ của mình. Trước mắt thầy là những đứa trẻ chăn trâu, những giỏ cỏ và một cảnh sinh hoạt khiến quãng đời đã qua bỗng trở nên rất gần.
 Svastika là nhân vật dẫn chuyện trong tác phẩm, giúp người đọc đi qua cuộc đời Đức Phật bằng một cái nhìn thân thuộc. Từ cậu bé đứng bên lề nhiều cơ hội, nhân vật ấy đã bước vào một đời sống được học hỏi và đồng hành.

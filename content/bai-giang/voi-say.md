@@ -5,14 +5,19 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Con voi say
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 74 · truyện Nalagiri trong Luật tạng, Tiểu phẩm VII.3; chi tiết kể theo sách, không phải hướng dẫn tiếp cận thú dữ · https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chuong-74-tieng-ru-cua-con-voi-chua/"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 74 ·
+  truyện Nalagiri trong Luật tạng, Tiểu phẩm VII.3; chi tiết kể theo sách, không
+  phải hướng dẫn tiếp cận thú dữ ·
+  https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chu\
+  ong-74-tieng-ru-cua-con-voi-chua/"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 3
   thu_tu: 340
-  chuong: [74]
+  chuong: [ 74 ]
   dot: D
+body_r2_key: bai-giang/duong-xua/voi-say/v1-684febae/vi-sadaltager.mp3
 ---
 Trên con đường Đức Phật đi qua, một con voi đã bị làm cho say rồi thả ra. Tiếng động và sức mạnh của nó khiến người chung quanh hoảng sợ, còn cuộc khất thực bình thường bỗng đứng trước một hiểm nguy rất gần.
 Trong bản kể của Đường Xưa Mây Trắng, con voi ấy tên là Na La Ghi Ri. Âm mưu làm hại Đức Phật đã đặt cả người lẫn con vật vào một tình thế bị thúc đẩy bởi sợ hãi và sự kích động.
