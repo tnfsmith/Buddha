@@ -37,7 +37,7 @@ export function joinSpeech(wavs, output) {
   for (let attempt = 0; attempt < 4; attempt++) {
     const level = loudness(ffmpeg([...input, '-af', `loudnorm=I=${targetI}:TP=${targetTP}:LRA=11:print_format=json`, '-f', 'null', '-'], joined));
     const filter = `loudnorm=I=${targetI}:TP=${targetTP}:LRA=11:measured_I=${level.input_i}:measured_TP=${level.input_tp}:measured_LRA=${level.input_lra}:measured_thresh=${level.input_thresh}:offset=${level.target_offset}:linear=true`;
-    ffmpeg(['-y', ...input, '-af', filter, '-ac', '1', '-ar', '24000', '-c:a', 'libmp3lame', '-b:a', '64k', output], joined);
+    ffmpeg(['-y', ...input, '-af', filter, '-ac', '1', '-ar', '24000', '-c:a', 'libmp3lame', '-b:a', '96k', output], joined);
     actual = measureAudio(output);
     if (Math.abs(actual.lufs + 16) <= 0.2 && actual.peak_dbtp <= -1.5) break;
     targetI = Math.max(-20, Math.min(-12, targetI - 16 - actual.lufs));
@@ -46,5 +46,5 @@ export function joinSpeech(wavs, output) {
   if (Math.abs(actual.lufs + 16) > 0.5 || actual.peak_dbtp > -1.5) throw new Error(`MP3 chưa đạt loudness: ${actual.lufs} LUFS, ${actual.peak_dbtp} dBTP`);
   const dur = seconds(readFileSync(output)), cues = cuePoints(durations);
   if (cues.at(-1).e > dur + 0.08) throw new Error('Âm thanh sau mã hóa bị mất đuôi');
-  return { dur, cues, loudness: { target_lufs: -16, target_peak_dbtp: -1.5, ...actual }, format: { sample_rate: 24000, channels: 1, bit_rate: 64000 } };
+  return { dur, cues, loudness: { target_lufs: -16, target_peak_dbtp: -1.5, ...actual }, format: { sample_rate: 24000, channels: 1, bit_rate: 96000 } };
 }
