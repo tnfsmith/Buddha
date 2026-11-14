@@ -1,4 +1,5 @@
-// Thuyết giảng: CHỈ phát bài giảng đã được Hội đồng cố vấn Pháp học duyệt (AGENTS.md mục 1.6, PROJECT_ROADMAP.md §16).
+// Thuyết giảng: chỉ phát bài giảng đã được chọn phát hành (máy chủ chỉ trả status = 'da_duyet', PROJECT_ROADMAP.md §16).
+// #55 (chủ dự án, 14/11/2026): Hội đồng là tư vấn tùy chọn, không phải điều kiện hiển thị; reviewed_at không bắt buộc ở client.
 // Văn bản bài giảng không nằm trong mã client: tải từ GET /api/v1/content?kind=bai_giang, máy chủ chỉ trả status = 'da_duyet'.
 // Giọng đọc (ADR 0002): tệp MP3 sinh trước, trên R2, phát qua /media/<body_r2_key>; chữ từng ý chạy theo <khóa>.cues.json.
 export const HOMAGE = 'Namo tassa bhagavato arahato sammāsambuddhassa.';
@@ -14,12 +15,12 @@ const metaOf = (m) => { if (typeof m === 'string') { try { m = JSON.parse(m); } 
 
 /**
  * Đổi một dòng content_item (API) thành bài giảng; không đủ điều kiện thì trả null và bài đó không hiện.
- * Điều kiện: kind 'bai_giang', có dấu duyệt (reviewed_at), có id, tên, nguồn kinh, và ít nhất một ý.
+ * Điều kiện: kind 'bai_giang', có id, tên, nguồn kinh, và ít nhất một ý (reviewed_at không bắt buộc, #55).
  * body_inline: mỗi dòng không trống là một ý; dòng bắt đầu bằng '>' là câu Pāli gốc. Bài chỉ có body_r2_key mà không có chữ: bỏ qua.
  * body_r2_key (khóa MP3 trên R2) và meta (loat, phan, thu_tu; chuỗi JSON hoặc đối tượng) là tùy chọn.
  */
 export function toSermon(it) {
-  if (!it || (it.kind && it.kind !== 'bai_giang') || !it.reviewed_at || !it.id || !it.title || !it.source_ref || typeof it.body_inline !== 'string') return null;
+  if (!it || (it.kind && it.kind !== 'bai_giang') || !it.id || !it.title || !it.source_ref || typeof it.body_inline !== 'string') return null;
   const rows = it.body_inline.split(/\r?\n/).map((x) => x.trim()).filter(Boolean), pali = rows.filter((x) => x.startsWith('>')), lines = rows.filter((x) => !x.startsWith('>'));
   if (!lines.length) return null;
   const m = metaOf(it.meta), k = typeof it.body_r2_key === 'string' && R2KEY.test(it.body_r2_key) && !it.body_r2_key.includes('..') ? it.body_r2_key : '';
@@ -34,7 +35,7 @@ export function sortSermons(list) {
 /** Các thẻ menu: mọi loạt đã biết, thêm loạt lạ có trong danh sách */
 export function loatTabs(list) { return [...new Set([...Object.keys(LOAT), ...list.map((x) => x.loat)])].map((k) => [k, (LOAT[k] && LOAT[k].name) || k]); }
 
-/** Danh sách bài đã duyệt của phiên này. state: idle → loading → ok (items có thể rỗng) | error (mất mạng, bản HTML đơn mở từ máy, máy chủ lỗi) */
+/** Danh sách bài đã phát hành của phiên này. state: idle → loading → ok (items có thể rỗng) | error (mất mạng, bản HTML đơn mở từ máy, máy chủ lỗi) */
 export const library = { state: 'idle', items: [] };
 let pending = null;
 export function loadSermons(force) {
@@ -48,7 +49,7 @@ export function loadSermons(force) {
       const r = await fetch('/api/v1/content?kind=bai_giang', { signal: ac.signal, headers: { accept: 'application/json' } }).finally(() => clearTimeout(tm));
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const j = await r.json(), seen = new Set();
-      // máy chủ xếp các phiên bản cùng id theo version giảm dần: giữ bản đầu tiên (mới nhất đã duyệt)
+      // máy chủ xếp các phiên bản cùng id theo version giảm dần: giữ bản đầu tiên (mới nhất đã phát hành)
       library.items = sortSermons((Array.isArray(j.items) ? j.items : []).map(toSermon).filter((x) => x && !seen.has(x.id) && seen.add(x.id)));
       library.state = 'ok';
     } catch (e) { library.items = []; library.state = 'error'; library.why = e.message; }

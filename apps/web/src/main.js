@@ -26,8 +26,8 @@ setInterval(savePos, 1500); window.addEventListener('pagehide', savePos); docume
 const sermon = new Sermon();
 sermon.online = (o) => { const el = $('#sub'); if (!el) return; el.innerHTML = o ? `<div class="src">${esc(o.src)}</div><div class="ln">${esc(o.ln)}</div>${o.pl ? `<div class="pl">${esc(o.pl)}</div>` : ''}${o.ai ? `<div class="ai">${esc(AI_VOICE)}</div>` : ''}` : ''; };
 sermon.onend = (done) => { if (world) { world.wide = false; if (U.mode === 'hall') world.setMode('hall'); } document.body.classList.remove('sermon'); amb.setVolume(S.music.vol); if (done) { S.sermons = (S.sermons || 0) + 1; save(); toast('Bài giảng đã viên mãn. Sādhu!'); } render(); };
-// Chỉ phát bài có trong danh sách đã duyệt tải từ máy chủ (#39): mã bài lạ, kể cả qua #sermon=…, không phát gì
-function sermonStart(id) { const su = library.items.find((x) => x.id === id); if (!su) { toast('Bài giảng này chưa được Hội đồng cố vấn Pháp học duyệt.'); return render(); } U.sutta = su.id; U.loat = su.loat; if (player.playing) player.pause(); if (U.mode !== 'hall') setMode('hall'); U.hallTab = 'sermon';
+// Chỉ phát bài có trong danh sách đã phát hành tải từ máy chủ (#39): mã bài lạ, kể cả qua #sermon=…, không phát gì
+function sermonStart(id) { const su = library.items.find((x) => x.id === id); if (!su) { toast('Bài giảng này chưa được phát hành.'); return render(); } U.sutta = su.id; U.loat = su.loat; if (player.playing) player.pause(); if (U.mode !== 'hall') setMode('hall'); U.hallTab = 'sermon';
   document.body.classList.add('sermon'); amb.setVolume(S.music.vol * 0.4); if (amb.on && amb.voice && amb.ctx) { try { amb.voice.bowl(amb.ctx.currentTime + 0.1, 136.1, 0.3, 0); } catch (e) { /* bỏ qua */ } }
   sermon.start(su, S.tts !== false); if (world) U.sCam = null; render(); }
 function sermonStop() { sermon.stop(); if (world) { world.wide = false; if (U.mode === 'hall') world.setMode('hall'); } }
@@ -40,7 +40,7 @@ function sermonList(list) {
   return seg('loat', loatTabs(list), cur) + (mine.length ? mine.map((x) => {
     let hd = ''; if (x.phan !== ph) { ph = x.phan; const t = LOAT[cur] && LOAT[cur].phan[x.phan]; if (t) hd = `<p class="phan">${esc(t)}</p>`; }
     return hd + `<button class="sut ${U.sutta === x.id ? 'on' : ''}" data-sut="${esc(x.id)}"><b>${esc(x.name)}</b><em>${esc(x.ref)}${x.audio ? ' · có giọng đọc' : ''}</em></button>`;
-  }).join('') : '<p class="sermon-empty muted">Loạt này đang được soạn và duyệt. Bài sẽ hiện ở đây khi đã được duyệt.</p>');
+  }).join('') : '<p class="sermon-empty muted">Loạt này đang được soạn. Bài sẽ hiện ở đây khi được phát hành.</p>');
 }
 // ── Vân Nhạc: nhạc nền toàn Vân Đảo ──
 const amb = new Ambient(); amb.volume = S.music.vol;
@@ -242,11 +242,11 @@ function render() {
       (list.length ? `<p>Chọn một bài. Khi giảng, Tôn tượng mở mắt nhìn xuống hội chúng và giơ ấn thuyết pháp; hội chúng chắp tay lắng nghe, đảnh lễ lúc mở đầu và ba lần khi kết thúc, rồi công đức lan tỏa ra khắp cõi.</p>
       <div class="row">${sermon.on ? `<button class="btn" data-act="sermon-stop">Dừng giảng</button><button class="btn alt" data-act="sermon-pause">${sermon.paused ? 'Tiếp tục' : 'Tạm dừng'}</button><button class="btn alt" data-act="sermon-prev" aria-label="Ý trước" title="Ý trước">‹</button><button class="btn alt" data-act="sermon-next" aria-label="Ý sau" title="Ý sau">›</button>` : `<button class="btn" data-act="sermon-go">Thỉnh giảng</button>`}</div>
       <label class="tog" style="display:block;margin:10px 0 4px"><input type="checkbox" data-tts ${S.tts !== false && hasVoice ? 'checked' : ''} ${hasVoice ? '' : 'disabled'}> Đọc thành tiếng bằng giọng máy tiếng Việt khi bài chưa có giọng đọc${hasVoice ? '' : ' (thiết bị này chưa có)'}</label>
-      <h3>Bài giảng đã duyệt</h3>` + sermonList(list) +
-      '<p class="note">Mọi bài giảng ở đây đã được Hội đồng cố vấn Pháp học duyệt. Nguồn kinh ghi dưới tên bài.</p>'
-      : L.state === 'error' ? `<p class="sermon-empty">Chưa tải được danh sách bài giảng đã duyệt. Cần kết nối mạng; bản HTML đơn mở từ tệp trên máy không tải được bài giảng.</p><div class="row"><button class="btn alt" data-act="sermon-reload">Thử lại</button></div>`
-      : L.state === 'ok' ? '<p class="sermon-empty">Chưa có bài giảng nào được Hội đồng cố vấn Pháp học duyệt. Bài giảng chỉ xuất hiện ở đây sau khi được duyệt.</p>'
-      : '<p class="sermon-empty muted">Đang tải bài giảng đã được Hội đồng cố vấn Pháp học duyệt…</p>') +
+      <h3>Bài giảng</h3>` + sermonList(list) +
+      '<p class="note">Bài giảng tóm lược để tham khảo, viết bằng lời mới theo kinh điển; nguồn kinh ghi dưới tên bài.</p>'
+      : L.state === 'error' ? `<p class="sermon-empty">Chưa tải được danh sách bài giảng. Cần kết nối mạng; bản HTML đơn mở từ tệp trên máy không tải được bài giảng.</p><div class="row"><button class="btn alt" data-act="sermon-reload">Thử lại</button></div>`
+      : L.state === 'ok' ? '<p class="sermon-empty">Chưa có bài giảng nào được phát hành. Bài giảng sẽ xuất hiện ở đây khi được chọn phát hành.</p>'
+      : '<p class="sermon-empty muted">Đang tải bài giảng…</p>') +
       `<p class="muted">Số bài đã nghe trọn: ${S.sermons || 0}.</p>`;
   } else if (U.mode === 'hall') {
     const cur = stageAt(U.drag ?? player.time);
@@ -569,7 +569,7 @@ render();
 if (hash.mode && hash.mode !== 'island') setMode(hash.mode);
 if (hash.tier !== undefined) pickTier(+hash.tier);
 if (hash.realm && world) world.setMode('realm');
-// #sermon=1 (bài đầu) hoặc #sermon=<mã bài>: mở Thuyết giảng; chỉ phát khi bài đó có trong danh sách đã duyệt
+// #sermon=1 (bài đầu) hoặc #sermon=<mã bài>: mở Thuyết giảng; chỉ phát khi bài đó có trong danh sách đã phát hành
 if (hash.sermon) { U.hallTab = 'sermon'; setMode('hall'); loadSermons().then(() => { sermonPick(); const id = hash.sermon === '1' ? library.items[0] && library.items[0].id : hash.sermon; if (!id) return render(); sermonStart(id); if (sermon.on && hash.sk) { for (let i = 0; i < +hash.sk * 20; i++) sermon.tick(0.05); } }); }
 if (hash.music) { U.dock = true; renderDock(); }
 if (hash.vandu !== undefined) U.vdForce = +hash.vandu;   // xem thử một chặng Vân Du: #vandu=0…6
