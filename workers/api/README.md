@@ -128,3 +128,12 @@ Chỉ bài `da_duyet` đủ id, version, tên, nguồn và ý được nạp; `r
 Mặc định chỉ kiểm, không gọi D1. Công cụ upsert theo `(id, version)`, không xóa bản khác;
 ghi `body_r2_key` khi có, không bịa thông tin duyệt. `meta` được đọc nhưng chưa ghi trước migration 0008;
 phải bổ sung ghi/trả `meta` trước bài Đường Xưa đầu tiên. Bí mật lấy từ biến môi trường của đúng job deploy.
+
+## Media bài giảng (#50)
+
+`GET|HEAD /media/<khóa>` chỉ đọc R2 khi D1 của chính môi trường có dòng `da_duyet`
+với `body_r2_key` tương ứng. Cues đổi đuôi về MP3 để kiểm cùng bài; mẫu giọng riêng không công khai.
+Hỗ trợ Range đơn (206/416), ETag (304), HEAD, If-Range; không có tệp thì 404.
+`run_worker_first` áp dụng `/media/*` ở cả staging và production, không rơi xuống SPA.
+API nội dung trả thêm `body_r2_key`; metadata chờ migration 0008 ở PR riêng.
+Âm thanh được sinh trước và tải lên hai bucket, nhưng chỉ phát sau khi D1 môi trường đó đã nạp bài.

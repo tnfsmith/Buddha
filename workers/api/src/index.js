@@ -10,6 +10,7 @@ import accountApp from './routes/account.js';
 import rtApp from './routes/rt.js';
 import contentApp from './routes/content.js';
 import metricsApp from './routes/metrics.js';
+import mediaApp from './routes/media.js';
 import { byIp, turnstile } from './guard.js';
 import { runCron } from './cron.js';
 
@@ -62,7 +63,9 @@ app.route('/api/v1/metrics', metricsApp);
 // Đường dẫn /api/* không tồn tại: trả 404 JSON, không rơi xuống trang SPA
 app.all('/api/*', (c) => c.json({ error: { code: 'not_found', message: 'Không có API này' } }, 404));
 
-// Chuyển tiếp các request tĩnh không thuộc /api/* cho Static Assets (apps/web)
+app.route('/media', mediaApp);
+
+// Chuyển tiếp các request tĩnh không thuộc /api/* hoặc /media/* cho Static Assets (apps/web)
 app.all('*', async (c) => {
   if (c.env?.ASSETS && typeof c.env.ASSETS.fetch === 'function') {
     return c.env.ASSETS.fetch(c.req.raw);
