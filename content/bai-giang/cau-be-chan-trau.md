@@ -15,7 +15,7 @@ meta:
   thu_tu: 10
   chuong: [ 1, 2, 3 ]
   dot: B
-body_r2_key: bai-giang/duong-xua/cau-be-chan-trau/v1-10467c40/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/cau-be-chan-trau/v1-3f0c925c/vi-sadaltager.mp3
 ---
 Chiều xuống bên dòng Ni Liên Thiền, đàn trâu chậm rãi tìm về bãi nghỉ. Cậu bé chăn trâu đứng giữa mùi cỏ mới, trên tay còn giữ một nắm lá xanh vừa cắt.
 Trong truyện khung của sách, cậu tên Svastika, lớn lên trong cảnh nghèo và phải sớm lo cho các em. Cậu đã quen nép sang bên khi gặp người thuộc những gia đình được trọng vọng.

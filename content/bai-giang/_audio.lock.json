@@ -4,59 +4,91 @@
     {
       "id": "cau-be-chan-trau",
       "version": 1,
-      "key": "bai-giang/duong-xua/cau-be-chan-trau/v1-10467c40/vi-sadaltager.mp3",
-      "hash": "10467c40",
-      "fingerprint": "10467c404501b9f36cfcd0c80c99e3a995ea519df5c96c54bacb4a739a8f0e2f",
-      "dur": 203.66595833333332,
+      "key": "bai-giang/duong-xua/cau-be-chan-trau/v1-67a8a577/vi-sadaltager.mp3",
+      "hash": "67a8a577",
+      "fingerprint": "67a8a5777c69db4c3f2c1d3ad952b1763fdf259325ded72771fd7ef6c8be61de",
+      "dur": 203.83395833333333,
       "voice": "vi-VN-Chirp3-HD-Sadaltager",
       "model": "Chirp3-HD",
       "provider": "google",
-      "generated_at": "2026-11-14T18:29:17.403Z",
-      "wer": 0.06932164734989811,
-      "sha256": "545c3ff6416731b65d8c4f605afab7816bf4dd6a0f0ad974c3bef54c3f917979",
+      "generated_at": "2026-11-15T02:32:41.599Z",
+      "wer": 0.006913021618903972,
+      "sha256": "d0667c4861b8aa72d783f3bf49a9f1a60619800270b0129d57ef01e3a6b7b9eb",
       "loudness": {
         "target_lufs": -16,
         "target_peak_dbtp": -1.5,
-        "lufs": -16.19,
-        "peak_dbtp": -1.78
+        "lufs": -16.17,
+        "peak_dbtp": -1.95
       },
+      "selected_attempts": [
+        2,
+        2,
+        1,
+        4,
+        3,
+        2,
+        2,
+        1,
+        1,
+        4,
+        2,
+        1,
+        2,
+        2,
+        3,
+        3
+      ],
       "flags": [
         {
           "i": 1,
-          "wer": 1,
-          "tail_ok": false,
+          "wer": 0.027777777777777776,
+          "tail_ok": true,
           "names_ok": true,
-          "seconds_per_word": 0.3187314814814815
+          "seconds_per_word": 0.29650925925925925
         },
         {
           "i": 4,
-          "wer": 0.02631578947368421,
+          "wer": 0,
           "tail_ok": true,
           "names_ok": true,
-          "seconds_per_word": 0.28932456140350876
+          "seconds_per_word": 0.27353508771929824
         },
         {
           "i": 5,
           "wer": 0,
           "tail_ok": true,
           "names_ok": true,
-          "seconds_per_word": 0.2726752136752137
+          "seconds_per_word": 0.29421367521367525
         },
         {
           "i": 12,
           "wer": 0,
           "tail_ok": true,
           "names_ok": true,
-          "seconds_per_word": 0.29839837398373986
+          "seconds_per_word": 0.29937398373983737
         },
         {
           "i": 14,
           "wer": 0,
           "tail_ok": true,
           "names_ok": true,
-          "seconds_per_word": 0.26034959349593495
+          "seconds_per_word": 0.2769349593495935
         }
-      ]
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "speed": 0.85,
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "provenance": {
+        "operation": "ID3 metadata only; MPEG/LAME payload unchanged",
+        "source_key": "bai-giang/duong-xua/cau-be-chan-trau/v1-3f0c925c/vi-sadaltager.mp3",
+        "source_sha256": "ae542dcc7c628621d804f7b98ea39285e4cbc659f20e67193191611fcf8a4e21",
+        "source_generated_at": "2026-11-14T19:32:31.516Z",
+        "payload_sha256": "147f626702346acd9ebe8af79ee14df9cdfc51d39fd0cd399966d5dd53364347"
+      }
     },
     {
       "id": "chuyen-phap-luan",
@@ -108,47 +140,327 @@
       }
     },
     {
-      "id": "con-thien-nga",
+      "id": "con-duong-o-giua",
       "version": 1,
-      "key": "bai-giang/duong-xua/con-thien-nga/v1-9e045606/vi-sadaltager.mp3",
-      "hash": "9e045606",
-      "fingerprint": "9e045606d6c8fb214ff2a8842afb2de47f2772f0640b247240bff6ec4b10e340",
-      "dur": 206.47395833333334,
+      "key": "bai-giang/duong-xua/con-duong-o-giua/v1-7c328539/vi-sadaltager.mp3",
+      "hash": "7c328539",
+      "fingerprint": "7c328539641e4df28a0c7bf3cf9fa9e1143975c432a61e06e21db2f7de57c191",
+      "dur": 214.46595833333333,
       "voice": "vi-VN-Chirp3-HD-Sadaltager",
       "model": "Chirp3-HD",
       "provider": "google",
-      "generated_at": "2026-11-14T18:27:53.745Z",
-      "wer": 0.011245307119424577,
-      "sha256": "f3fbceb7f2e8b7d72834c7c21fb0c1386a9324bddc81dcd414a7b3db74e5bae1",
+      "generated_at": "2026-11-15T02:33:18.921Z",
+      "wer": 0.0014534883720930232,
+      "sha256": "818798856c3adfbc3bfdb935b7e4c7bd7a7e18758d8fbda823caf5a3db795998",
       "loudness": {
         "target_lufs": -16,
         "target_peak_dbtp": -1.5,
-        "lufs": -16.13,
-        "peak_dbtp": -1.51
+        "lufs": -16.11,
+        "peak_dbtp": -1.88
       },
+      "selected_attempts": [
+        1,
+        4,
+        4,
+        1,
+        3,
+        3,
+        1,
+        3,
+        1,
+        2,
+        2,
+        3,
+        2,
+        1,
+        3,
+        1
+      ],
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29805303030303026
+        },
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29937398373983737
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2788583333333333
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.26785833333333336
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2970079365079365
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29350757575757574
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28376422764227643
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.293520325203252
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29644715447154474
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29485833333333333
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "speed": 0.85,
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "provenance": {
+        "operation": "ID3 metadata only; MPEG/LAME payload unchanged",
+        "source_key": "bai-giang/duong-xua/con-duong-o-giua/v1-25687cad/vi-sadaltager.mp3",
+        "source_sha256": "d910359becdb41afac82726f9986b170cbf3f7e9586e41c106d252013e6b0301",
+        "source_generated_at": "2026-11-14T19:32:58.084Z",
+        "payload_sha256": "bca6e0dfd4d16453250495757826459b8fb2ffa50d689030600b18b33cb84b96"
+      }
+    },
+    {
+      "id": "con-thien-nga",
+      "version": 1,
+      "key": "bai-giang/duong-xua/con-thien-nga/v1-588b2533/vi-sadaltager.mp3",
+      "hash": "588b2533",
+      "fingerprint": "588b2533dcfa8dd9676f708cbb0529f5a67e50ed2d8c6aba4b1927cecfd39d89",
+      "dur": 207.50595833333333,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-15T02:33:24.050Z",
+      "wer": 0.0082328216374269,
+      "sha256": "d3488e245e6003f2f9c33b74c388ec0478322a4d166fc9cc454fd2ad52ca8bf5",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.12,
+        "peak_dbtp": -1.83
+      },
+      "selected_attempts": [
+        2,
+        4,
+        3,
+        1,
+        1,
+        2,
+        3,
+        1,
+        2,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
       "flags": [
         {
           "i": 8,
           "wer": 0,
           "tail_ok": true,
           "names_ok": true,
-          "seconds_per_word": 0.2921623931623932
+          "seconds_per_word": 0.2931880341880342
         },
         {
           "i": 10,
-          "wer": 0.024390243902439025,
+          "wer": 0,
           "tail_ok": true,
           "names_ok": true,
-          "seconds_per_word": 0.26522764227642276
+          "seconds_per_word": 0.29644715447154474
         },
         {
           "i": 11,
-          "wer": 0.023809523809523808,
+          "wer": 0,
           "tail_ok": true,
           "names_ok": true,
-          "seconds_per_word": 0.29319841269841274
+          "seconds_per_word": 0.286531746031746
         }
-      ]
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "speed": 0.85,
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "provenance": {
+        "operation": "ID3 metadata only; MPEG/LAME payload unchanged",
+        "source_key": "bai-giang/duong-xua/con-thien-nga/v1-e8052dfa/vi-sadaltager.mp3",
+        "source_sha256": "485eeb8d0111a2c99c2831a555b836bea83e253cdf5e4f778b3fc04bd5f33a5a",
+        "source_generated_at": "2026-11-14T19:33:25.035Z",
+        "payload_sha256": "0f18d2e35e867218f53e2d12aa4dc1ac7a0e229579d3462af81aca06e425c6ee"
+      }
+    },
+    {
+      "id": "dem-trang-ra-di",
+      "version": 1,
+      "key": "bai-giang/duong-xua/dem-trang-ra-di/v1-4c043b28/vi-sadaltager.mp3",
+      "hash": "4c043b28",
+      "fingerprint": "4c043b280f5106fe70df743d1241cb201db98edb1fcc094dd4062d7caa5df1cc",
+      "dur": 211.10595833333332,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-15T02:33:55.900Z",
+      "wer": 0.00625,
+      "sha256": "c4d095e206512d1360848c45dd14c49950229332b7c97a9ccf572ca1601e83cc",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.11,
+        "peak_dbtp": -1.97
+      },
+      "selected_attempts": [
+        3,
+        3,
+        1,
+        1,
+        3,
+        1,
+        1,
+        2,
+        1,
+        2,
+        2,
+        3,
+        1,
+        2,
+        1,
+        1
+      ],
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29937398373983737
+        },
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29644715447154474
+        },
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2954715447154471
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2846269841269841
+        },
+        {
+          "i": 5,
+          "wer": 0.1,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.30685833333333334
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29644715447154474
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28265891472868215
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29937398373983737
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2956821705426357
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28376422764227643
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "speed": 0.85,
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "provenance": {
+        "operation": "ID3 metadata only; MPEG/LAME payload unchanged",
+        "source_key": "bai-giang/duong-xua/dem-trang-ra-di/v1-90d828c4/vi-sadaltager.mp3",
+        "source_sha256": "3da0ec6a216563cb94928d1f8d0de03b947e56d4cf505fd5b6dcef10ae24259c",
+        "source_generated_at": "2026-11-14T19:39:08.066Z",
+        "payload_sha256": "724920cec2f8abca58b7359492f41f3200982142888a7c707f939e8321ef6ddb"
+      }
     },
     {
       "id": "diem-lanh",
@@ -175,6 +487,102 @@
         "sample_rate": 24000,
         "channels": 1,
         "bit_rate": 96000
+      }
+    },
+    {
+      "id": "goc-cay-hong-tao",
+      "version": 1,
+      "key": "bai-giang/duong-xua/goc-cay-hong-tao/v1-ed5542f2/vi-sadaltager.mp3",
+      "hash": "ed5542f2",
+      "fingerprint": "ed5542f23591f3cec1c6b6dd330f0fa29eb2b4bd4b6db55eae88f6de2ab875b3",
+      "dur": 215.18595833333333,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-15T02:34:24.371Z",
+      "wer": 0.007982991014120668,
+      "sha256": "a6a5a6a36286a0e4fc7130a97405ecd2a1cbc861e0ecce15297ee5be9d7c48b1",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.1,
+        "peak_dbtp": -2.01
+      },
+      "selected_attempts": [
+        1,
+        3,
+        1,
+        2,
+        3,
+        3,
+        4,
+        4,
+        1,
+        2,
+        1,
+        1,
+        3,
+        1,
+        3,
+        1
+      ],
+      "flags": [
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29285833333333333
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29986507936507933
+        },
+        {
+          "i": 9,
+          "wer": 0.024390243902439025,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.293520325203252
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2989126984126984
+        },
+        {
+          "i": 11,
+          "wer": 0.05263157894736842,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.3187982456140351
+        },
+        {
+          "i": 15,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2819059829059829
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "speed": 0.85,
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "provenance": {
+        "operation": "ID3 metadata only; MPEG/LAME payload unchanged",
+        "source_key": "bai-giang/duong-xua/goc-cay-hong-tao/v1-8c920995/vi-sadaltager.mp3",
+        "source_sha256": "7f1a362f7167c938a9765f40ebb0113581eb887c5f3de8d8ef419059b240e284",
+        "source_generated_at": "2026-11-14T19:40:16.144Z",
+        "payload_sha256": "7fa5b5854c0ea57b828b15b794fe57b3f490fd0a75a9d0e4ecfeb2ad00e89551"
       }
     },
     {
@@ -210,6 +618,226 @@
         "sample_rate": 24000,
         "channels": 1,
         "bit_rate": 96000
+      }
+    },
+    {
+      "id": "loc-uyen",
+      "version": 1,
+      "key": "bai-giang/duong-xua/loc-uyen/v1-09811acc/vi-sadaltager.mp3",
+      "hash": "09811acc",
+      "fingerprint": "09811acccf754d4bea94af9be5dba10a7a6cb59e70490c6ba1ec7c00c621042a",
+      "dur": 220.89795833333332,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-15T02:35:00.130Z",
+      "wer": 0.008689469445283399,
+      "sha256": "506c1de9e24a7f808502fdb55cad2c1730f196359142069967ede8cd6f530812",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.11,
+        "peak_dbtp": -1.89
+      },
+      "selected_attempts": [
+        3,
+        1,
+        2,
+        3,
+        4,
+        1,
+        1,
+        1,
+        3,
+        1,
+        1,
+        3,
+        2,
+        3,
+        4,
+        1
+      ],
+      "flags": [
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2947519379844961
+        },
+        {
+          "i": 8,
+          "wer": 0.023255813953488372,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2956821705426357
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29587407407407407
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.26387407407407404
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2825984848484848
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27986821705426357
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2798617886178862
+        },
+        {
+          "i": 15,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2979603174603175
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "speed": 0.85,
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "provenance": {
+        "operation": "ID3 metadata only; MPEG/LAME payload unchanged",
+        "source_key": "bai-giang/duong-xua/loc-uyen/v1-f15d6c94/vi-sadaltager.mp3",
+        "source_sha256": "c20561dfbbef5a4036324945c0f437eecef2ee1430bd334b8250dee5695b29ef",
+        "source_generated_at": "2026-11-14T19:41:41.908Z",
+        "payload_sha256": "59277756590761c21245e4f0ec91e89d2b51db95eb4c7b368ff2c218c89818a5"
+      }
+    },
+    {
+      "id": "lua-dang-chay",
+      "version": 1,
+      "key": "bai-giang/duong-xua/lua-dang-chay/v1-fce32464/vi-sadaltager.mp3",
+      "hash": "fce32464",
+      "fingerprint": "fce32464cb36d638da658c7a13be63761a89e97a15059cf4f87ccd608522e72e",
+      "dur": 218.25795833333333,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-15T02:35:02.579Z",
+      "wer": 0.004366767504884351,
+      "sha256": "56d9e5ba6e905521b917bcfbb00cce76d0c8d2559665946565d349a85925b3c5",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.11,
+        "peak_dbtp": -2.03
+      },
+      "selected_attempts": [
+        2,
+        1,
+        1,
+        4,
+        1,
+        3,
+        2,
+        3,
+        2,
+        3,
+        2,
+        2,
+        1,
+        4,
+        1,
+        3
+      ],
+      "flags": [
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2836746031746032
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28168939393939396
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29441666666666666
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2703412698412698
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2880530303030303
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29805303030303026
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.26312403100775195
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28376422764227643
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "speed": 0.85,
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "provenance": {
+        "operation": "ID3 metadata only; MPEG/LAME payload unchanged",
+        "source_key": "bai-giang/duong-xua/lua-dang-chay/v1-16651fd1/vi-sadaltager.mp3",
+        "source_sha256": "9ce3bb94e84cfffdcf32cce557595faa923ece712d72e947f44715b515f342ac",
+        "source_generated_at": "2026-11-14T19:45:19.686Z",
+        "payload_sha256": "48fc2930d261c2db93dfc7bc531d1b690a5fe7aa5d25b1ba063e3aa1c7a6cce9"
       }
     },
     {
@@ -313,6 +941,130 @@
       }
     },
     {
+      "id": "nhan-duyen",
+      "version": 1,
+      "key": "bai-giang/duong-xua/nhan-duyen/v1-0f87d877/vi-sadaltager.mp3",
+      "hash": "0f87d877",
+      "fingerprint": "0f87d87737fa5ccce4b310cc50e551778977ae19d212724966706aa40805f9f1",
+      "dur": 222.26595833333334,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-15T02:35:41.370Z",
+      "wer": 0.0014534883720930232,
+      "sha256": "76a9bf493137273c31be983dfc8a5c63b7f76ecb3c9d2ed143e47c926f909bd5",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.13,
+        "peak_dbtp": -1.81
+      },
+      "selected_attempts": [
+        1,
+        2,
+        1,
+        3,
+        1,
+        3,
+        3,
+        1,
+        1,
+        1,
+        1,
+        1,
+        3,
+        1,
+        1,
+        2
+      ],
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2966124031007752
+        },
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2798617886178862
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2947519379844961
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28172868217054264
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28342962962962964
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.26209629629629627
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2916893939393939
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2850942028985507
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2949851851851852
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2735075757575757
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "speed": 0.85,
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "provenance": {
+        "operation": "ID3 metadata only; MPEG/LAME payload unchanged",
+        "source_key": "bai-giang/duong-xua/nhan-duyen/v1-d6256efc/vi-sadaltager.mp3",
+        "source_sha256": "e7867396686dff3252e821f35da56fe7d1edae54988fe8d92de9ece264d41235",
+        "source_generated_at": "2026-11-14T19:47:13.780Z",
+        "payload_sha256": "0bde226eb898ae35b4ff4ac127464161c05ae6c71bd554215ccc5814759d1594"
+      }
+    },
+    {
       "id": "niem-xu",
       "version": 2,
       "key": "bai-giang/loi-phat-day/niem-xu/v2-e9db9d4f/vi-sadaltager.mp3",
@@ -364,6 +1116,184 @@
         "sample_rate": 24000,
         "channels": 1,
         "bit_rate": 96000
+      }
+    },
+    {
+      "id": "qua-quyt-chanh-niem",
+      "version": 1,
+      "key": "bai-giang/duong-xua/qua-quyt-chanh-niem/v1-566307ce/vi-sadaltager.mp3",
+      "hash": "566307ce",
+      "fingerprint": "566307ce7e2799d77da7891bdaf35866f925a82d51f2720e4d7e52d07e08f933",
+      "dur": 216.55395833333333,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-15T02:36:43.182Z",
+      "wer": 0.002883085896076352,
+      "sha256": "fdc30caebe0651c05265f95964af2579f1349451b7a8975c5174cdc0aec894bb",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.13,
+        "peak_dbtp": -1.94
+      },
+      "selected_attempts": [
+        4,
+        3,
+        1,
+        2,
+        1,
+        1,
+        1,
+        4,
+        2,
+        4,
+        2,
+        1,
+        3,
+        1,
+        3,
+        1
+      ],
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28254074074074076
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29059349593495937
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28787407407407406
+        },
+        {
+          "i": 12,
+          "wer": 0.021739130434782608,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29378985507246375
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28985833333333333
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "speed": 0.85,
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "provenance": {
+        "operation": "ID3 metadata only; MPEG/LAME payload unchanged",
+        "source_key": "bai-giang/duong-xua/qua-quyt-chanh-niem/v1-39ac1b59/vi-sadaltager.mp3",
+        "source_sha256": "9da7e540b864f26f593b2478f1496a85e15ae58ec4553f32c2aeb6d604b116cc",
+        "source_generated_at": "2026-11-14T19:46:42.571Z",
+        "payload_sha256": "48c4eea348218de38f8c28321b5d68a2120baa219d2b7a40fa0ca63a43f18e02"
+      }
+    },
+    {
+      "id": "sao-mai-da-moc",
+      "version": 1,
+      "key": "bai-giang/duong-xua/sao-mai-da-moc/v1-f14a3392/vi-sadaltager.mp3",
+      "hash": "f14a3392",
+      "fingerprint": "f14a3392626a03fdd233fac1f5eb8dd6deec6c4409ea2fd0e217a311c0180056",
+      "dur": 225.45795833333332,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-15T02:36:48.753Z",
+      "wer": 0.005884855360181509,
+      "sha256": "0ca56ed9e005a476555667d57165a9f0e7b08212c6e8eff69d6aba5b8fb2552b",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.17,
+        "peak_dbtp": -1.76
+      },
+      "selected_attempts": [
+        1,
+        4,
+        2,
+        1,
+        2,
+        3,
+        4,
+        1,
+        3,
+        1,
+        1,
+        2,
+        1,
+        1,
+        4,
+        2
+      ],
+      "flags": [
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2966124031007752
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2835075757575758
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29847286821705427
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27987407407407405
+        },
+        {
+          "i": 15,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2975426356589147
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "speed": 0.85,
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "provenance": {
+        "operation": "ID3 metadata only; MPEG/LAME payload unchanged",
+        "source_key": "bai-giang/duong-xua/sao-mai-da-moc/v1-f9ad9457/vi-sadaltager.mp3",
+        "source_sha256": "1ff8b7ea31a18cd03b45fb7a302ad2399d0ffe4e96027d3cfb8aa9b6ced12f68",
+        "source_generated_at": "2026-11-14T19:50:46.595Z",
+        "payload_sha256": "712a9dd898b836eb707b50bb3d1986e06c82a4d69b429fb3d2e04d2ae5d4784f"
       }
     },
     {

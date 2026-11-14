@@ -5,14 +5,18 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Quả quýt chánh niệm
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 19 · cảnh quả quýt do tác giả sách kể, không phải một bài kinh độc lập · https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chuong-19-trai-quyt-cua-chanh-niem/"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 19 · cảnh
+  quả quýt do tác giả sách kể, không phải một bài kinh độc lập ·
+  https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chu\
+  ong-19-trai-quyt-cua-chanh-niem/"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 1
   thu_tu: 70
-  chuong: [19]
+  chuong: [ 19 ]
   dot: B
+body_r2_key: bai-giang/duong-xua/qua-quyt-chanh-niem/v1-39ac1b59/vi-sadaltager.mp3
 ---
 Dưới bóng cây bên bờ sông, mấy đứa trẻ ngồi gần Đức Phật sau một buổi đi chơi. Một quả quýt nằm trong lòng bàn tay, màu vỏ sáng lên giữa những ngón tay còn vương chút bụi đường.
 Đây là cảnh được tác giả sách kể để gợi một cách sống có mặt. Không cần một vật lạ hay một buổi lễ trang trọng, câu chuyện bắt đầu bằng thức ăn quen thuộc mà trẻ nhỏ cũng có thể cầm và cảm nhận.

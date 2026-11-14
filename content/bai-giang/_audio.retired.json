@@ -3,6 +3,36 @@
   "policy": "Không xóa trước delete_after; kiểm không còn tham chiếu D1 trước khi dọn. Chưa xóa tệp nào.",
   "items": [
     {
+      "id": "cau-be-chan-trau",
+      "version": 1,
+      "key": "bai-giang/duong-xua/cau-be-chan-trau/v1-10467c40/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/duong-xua/cau-be-chan-trau/v1-10467c40/vi-sadaltager.cues.json",
+      "sha256": "545c3ff6416731b65d8c4f605afab7816bf4dd6a0f0ad974c3bef54c3f917979",
+      "bit_rate": 64000,
+      "retired_at": "2026-11-14T19:56:44.178Z",
+      "delete_after": "2026-12-14T19:56:44.179Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Đường Xưa chuyển sang 96 kbps theo quyết định chủ dự án ngày 15/11/2026"
+    },
+    {
+      "id": "con-thien-nga",
+      "version": 1,
+      "key": "bai-giang/duong-xua/con-thien-nga/v1-9e045606/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/duong-xua/con-thien-nga/v1-9e045606/vi-sadaltager.cues.json",
+      "sha256": "f3fbceb7f2e8b7d72834c7c21fb0c1386a9324bddc81dcd414a7b3db74e5bae1",
+      "bit_rate": 64000,
+      "retired_at": "2026-11-14T19:56:44.179Z",
+      "delete_after": "2026-12-14T19:56:44.179Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Đường Xưa chuyển sang 96 kbps theo quyết định chủ dự án ngày 15/11/2026"
+    },
+    {
       "id": "chuyen-phap-luan",
       "version": 2,
       "key": "bai-giang/loi-phat-day/chuyen-phap-luan/v2-3042aac1/vi-sadaltager.mp3",

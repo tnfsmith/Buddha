@@ -5,14 +5,17 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Dưới gốc cây hồng táo
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 6 · MN 36 (ký ức ngồi dưới cây jambu); cảnh đồng ruộng được kể theo Phật truyện · https://suttacentral.net/mn36/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 6 · MN 36
+  (ký ức ngồi dưới cây jambu); cảnh đồng ruộng được kể theo Phật truyện ·
+  https://suttacentral.net/mn36/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 1
   thu_tu: 30
-  chuong: [6]
+  chuong: [ 6 ]
   dot: B
+body_r2_key: bai-giang/duong-xua/goc-cay-hong-tao/v1-8c920995/vi-sadaltager.mp3
 ---
 Một ngày lễ xuống đồng, mặt đất mở ra dưới những đường cày mới. Giữa tiếng người và tiếng trâu, thái tử Tất Đạt Đa còn nhỏ đứng nhìn nhịp lao động đang chuyển động trước mắt mình.
 Người lớn chú ý đến nghi lễ và mùa màng sắp tới. Còn cậu nhìn gần xuống luống đất, nơi những sinh vật bé nhỏ vừa bị đánh thức khỏi chỗ trú ẩn quen thuộc dưới lớp cỏ.

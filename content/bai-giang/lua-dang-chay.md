@@ -5,14 +5,17 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Lửa đang cháy
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 27 · SN 35.28, Ādittapariyāya Sutta (Bài giảng về lửa) · https://suttacentral.net/sn35.28/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 27 · SN
+  35.28, Ādittapariyāya Sutta (Bài giảng về lửa) ·
+  https://suttacentral.net/sn35.28/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 1
   thu_tu: 100
-  chuong: [27]
+  chuong: [ 27 ]
   dot: B
+body_r2_key: bai-giang/duong-xua/lua-dang-chay/v1-16651fd1/vi-sadaltager.mp3
 ---
 Trên núi Tượng Đầu gần vùng Già Da, Đức Phật ngồi cùng những người vừa bước vào một nếp tu học mới. Họ đã quen với hình ảnh lửa trong đời sống và trong những nghi lễ mình từng gìn giữ.
 Gió qua sườn núi, khoảng ngồi mở ra trước trời rộng. Ngài bắt đầu từ một hình ảnh mà người nghe có thể hiểu ngay: lửa đang cháy, và điều cần nhìn không chỉ là ngọn lửa thấy được bằng mắt.

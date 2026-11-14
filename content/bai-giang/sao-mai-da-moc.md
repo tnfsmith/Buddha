@@ -5,14 +5,17 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Sao mai đã mọc
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 18 · MN 26; MN 36 (thành đạo và sự thấy biết); sao mai là hình ảnh trong Phật truyện · https://suttacentral.net/mn26/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 18 · MN
+  26; MN 36 (thành đạo và sự thấy biết); sao mai là hình ảnh trong Phật truyện ·
+  https://suttacentral.net/mn26/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 1
   thu_tu: 60
-  chuong: [18]
+  chuong: [ 18 ]
   dot: B
+body_r2_key: bai-giang/duong-xua/sao-mai-da-moc/v1-f9ad9457/vi-sadaltager.mp3
 ---
 Đêm dần nhạt trên bờ sông, những chiếc lá trên cây chỉ còn hiện thành nét mảnh. Trong câu chuyện thành đạo, vị tu sĩ trẻ ngồi yên cho đến khi ánh sáng đầu ngày trở lại với khu rừng.
 Người đã đi qua nhiều chặng tìm kiếm, từ học với các vị thầy đến những năm tháng thử thách thân mình. Bây giờ, thân được chăm sóc vừa đủ và tâm có điều kiện ở lại với sự quan sát sâu sắc.

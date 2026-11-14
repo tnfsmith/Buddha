@@ -5,14 +5,17 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Lần đầu ở Lộc Uyển
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 20–22 · SN 56.11; SN 22.59; Luật tạng Đại phẩm I.6 · https://suttacentral.net/sn56.11/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 20–22 · SN
+  56.11; SN 22.59; Luật tạng Đại phẩm I.6 ·
+  https://suttacentral.net/sn56.11/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 1
   thu_tu: 80
-  chuong: [20, 21, 22]
+  chuong: [ 20, 21, 22 ]
   dot: B
+body_r2_key: bai-giang/duong-xua/loc-uyen/v1-f15d6c94/vi-sadaltager.mp3
 ---
 Con đường đến Lộc Uyển mở ra dưới những bước chân đi bộ của Đức Phật. Sau thời gian ở lại bên dòng Ni Liên Thiền, Ngài tìm đến năm người từng cùng mình sống những tháng ngày tu tập khắc khổ.
 Ở khu vườn gần thành Ba La Nại, năm người bạn vẫn nhớ lần Tất Đạt Đa dùng lại thức ăn. Họ từng cho rằng Ngài đã bỏ cuộc, nên khi thấy bóng người từ xa, trong lòng còn giữ sự dè dặt.

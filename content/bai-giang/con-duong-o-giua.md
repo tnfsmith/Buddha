@@ -5,14 +5,17 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Con đường ở giữa
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 13–17 · MN 26; MN 36 (tìm thầy, khổ hạnh, nhớ sự an tĩnh và dùng lại thức ăn) · https://suttacentral.net/mn36/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 13–17 · MN
+  26; MN 36 (tìm thầy, khổ hạnh, nhớ sự an tĩnh và dùng lại thức ăn) ·
+  https://suttacentral.net/mn36/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 1
   thu_tu: 50
-  chuong: [13, 14, 15, 16, 17]
+  chuong: [ 13, 14, 15, 16, 17 ]
   dot: B
+body_r2_key: bai-giang/duong-xua/con-duong-o-giua/v1-25687cad/vi-sadaltager.mp3
 ---
 Trong khu rừng bên dòng Ni Liên Thiền, vị tu sĩ trẻ Tất Đạt Đa ngồi với một thân thể đã gầy yếu. Những ngày tháng tìm đường dài dằng dặc để lại dấu vết trên vai và trong từng cử động.
 Người đã rời đời sống đầy đủ, tìm đến những vị thầy và học các cách định tâm được kính trọng lúc bấy giờ. Học với sự chăm chỉ, người vẫn muốn biết khổ đau có thể được hiểu và chấm dứt ra sao.

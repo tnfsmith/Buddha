@@ -5,14 +5,17 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Đêm trăng ra đi
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 9–12 · MN 26; AN 3.38 (già, bệnh, chết và sự tìm cầu) · https://suttacentral.net/mn26/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 9–12 · MN
+  26; AN 3.38 (già, bệnh, chết và sự tìm cầu) ·
+  https://suttacentral.net/mn26/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 1
   thu_tu: 40
-  chuong: [9, 10, 11, 12]
+  chuong: [ 9, 10, 11, 12 ]
   dot: B
+body_r2_key: bai-giang/duong-xua/dem-trang-ra-di/v1-90d828c4/vi-sadaltager.mp3
 ---
 Đêm phủ yên lên những mái nhà trong thành Ca Tỳ La Vệ. Trong câu chuyện về buổi ra đi, ánh trăng soi một con đường còn vắng, nơi thái tử Tất Đạt Đa sắp bước qua cánh cổng quen thuộc.
 Phía sau cánh cổng ấy là gia đình, sự sung túc và những điều được xem là bảo đảm cho một đời hạnh phúc. Thế nhưng trong lòng người trẻ, câu hỏi về nỗi khổ vẫn chưa tìm được chỗ yên.
