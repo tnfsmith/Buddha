@@ -133,7 +133,7 @@ export class Sermon {
     else if (this.phase === 'wait') { st.speak = 0; st.bow = 0; if (!this.au || this.au.state !== 'loading' || this.left <= 0) this._next(); }
     else if (this.phase === 'audio') {
       const au = this.au; st.bow = 0;
-      if (!au || au.state === 'fail') { this._drop(); this.phase = 'gap'; this.left = 0.6; st.speak = 0; }   // mất tiếng giữa chừng: đọc tiếp bằng chữ từ ý sau
+      if (!au || au.state === 'fail') { this._drop(); this.i = Math.max(-1, this.i - 1); this.phase = 'gap'; this.left = 0.3; st.speak = 0; }   // mất tiếng (kể cả ngay khi vừa phát): đọc lại ý đang dở bằng chữ
       else if (au.el.ended) { this._drop(); this.i = this.s.lines.length - 1; this.phase = 'gap'; this.left = 1.2; st.speak = 0; }
       else { const tt = au.el.currentTime, i = au.at(tt), q = au.cues[i]; if (i !== this.i) this._line(i); st.speak = !au.el.paused && tt >= q.t && tt < q.e - 0.15 ? mouth(this.t) : 0;
         // kẹt quá 20 giây (mất mạng, hệ điều hành dừng tiếng): chuyển sang đọc bằng chữ

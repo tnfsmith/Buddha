@@ -121,10 +121,10 @@ test('bản HTML đơn mở từ tệp trên máy: không gọi được máy ch
 const KEY = 'bai-giang/duong-xua/co-tieng/v1-aaaa1111/vi-cedar.mp3';
 const VOICED = { ...OK, id: 'co-tieng', title: 'Bài có giọng đọc', body_inline: 'Ý một có tiếng.\nÝ hai có tiếng.', body_r2_key: KEY, meta: { loat: 'duong-xua', phan: 1, thu_tu: 80 } };
 const EARLY = { ...OK, id: 'chuong-dau', title: 'Bài chương đầu', meta: JSON.stringify({ loat: 'duong-xua', phan: 1, thu_tu: 20 }) };
-const CUES = { v: 1, id: 'co-tieng', version: 2, dur: 2.4, cues: [{ i: 0, t: 0, e: 1.0 }, { i: 1, t: 1.2, e: 2.2 }] };
+const CUES = { v: 1, id: 'co-tieng', version: 2, dur: 14, cues: [{ i: 0, t: 0, e: 7.5 }, { i: 1, t: 8, e: 13.5 }] };   // đủ dài để bấm nút trước khi hết ý 1, kể cả trên máy chậm
 const AI = 'Giọng đọc do AI tạo (OpenAI)';
 /** WAV mono 16 bit, tiếng 220 Hz khẽ, dài sec giây */
-function wav(sec = 2.4, sr = 8000) {
+function wav(sec = 14, sr = 8000) {
   const n = Math.round(sec * sr), b = Buffer.alloc(44 + n * 2);
   b.write('RIFF', 0); b.writeUInt32LE(36 + n * 2, 4); b.write('WAVEfmt ', 8); b.writeUInt32LE(16, 16); b.writeUInt16LE(1, 20); b.writeUInt16LE(1, 22);
   b.writeUInt32LE(sr, 24); b.writeUInt32LE(sr * 2, 28); b.writeUInt16LE(2, 32); b.writeUInt16LE(16, 34); b.write('data', 36); b.writeUInt32LE(n * 2, 40);
@@ -136,7 +136,12 @@ async function media(page, { mp3 = 200, cues = CUES } = {}) {
   await page.route('**/media/**', (route) => {
     const u = route.request().url(); hits.push(new URL(u).pathname);
     if (u.endsWith('.cues.json')) return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(cues) });
-    return mp3 === 200 ? route.fulfill({ status: 200, contentType: 'audio/wav', body: wav() }) : route.fulfill({ status: mp3, body: '' });
+    if (mp3 !== 200) return route.fulfill({ status: mp3, body: '' });
+    // như /media thật (ADR 0002 mục 4): hỗ trợ Range để tua được
+    const body = wav(), m = /bytes=(\d+)-(\d*)/.exec(route.request().headers().range || '');
+    if (!m) return route.fulfill({ status: 200, contentType: 'audio/wav', headers: { 'accept-ranges': 'bytes' }, body });
+    const a = +m[1], z = m[2] ? Math.min(+m[2], body.length - 1) : body.length - 1;
+    return route.fulfill({ status: 206, contentType: 'audio/wav', headers: { 'accept-ranges': 'bytes', 'content-range': `bytes ${a}-${z}/${body.length}` }, body: body.subarray(a, z + 1) });
   });
   return hits;
 }
@@ -180,14 +185,15 @@ test('bài có giọng đọc: xếp theo loạt và thứ tự chương, phát 
   expect(hits).toEqual(expect.arrayContaining(['/media/' + KEY, '/media/' + KEY.replace(/\.mp3$/, '.cues.json')]));
   await slow.poll(() => page.evaluate(() => window.__app.sermon.au?.el.currentTime || 0)).toBeGreaterThan(0.1);
 
+  // tạm dừng rồi mới sang ý sau: tiếng đứng yên nên không phụ thuộc tốc độ máy chạy kiểm thử
   await panel(page).locator('[data-act="sermon-pause"]').click();
   expect(await page.evaluate(() => [window.__app.sermon.paused, window.__app.sermon.au.el.paused])).toEqual([true, true]);
   await expect(panel(page).locator('[data-act="sermon-pause"]')).toHaveText('Tiếp tục');
-  await panel(page).locator('[data-act="sermon-pause"]').click();
-  expect(await page.evaluate(() => window.__app.sermon.paused)).toBe(false);
-
   await panel(page).locator('[data-act="sermon-next"]').click();
   a = await live(page); expect(a.sub).toContain('Ý hai có tiếng.'); expect(a.sub).toContain('ý 2/2');
+  expect(await page.evaluate(() => window.__app.sermon.au.el.currentTime)).toBeGreaterThanOrEqual(7.9);
+  await panel(page).locator('[data-act="sermon-pause"]').click();
+  expect(await page.evaluate(() => window.__app.sermon.paused)).toBe(false);
   await until(page, 'sadhu');   // hết tệp thì sang đảnh lễ kết thúc
   expect(await page.evaluate(() => window.__app.sermon.au)).toBeNull();
   await panel(page).locator('[data-act="sermon-stop"]').click();
@@ -204,4 +210,12 @@ test('giọng đọc lỗi (thiếu tệp, cues lệch số ý): vẫn giảng b
   await begin(p2, 'co-tieng');
   await until(p2, 'line');
   a = await live(p2); expect(a.sub).toContain('Ý một có tiếng.'); expect(a.sub).not.toContain(AI);
+
+  // mất tiếng ngay khi vừa vào bài (bị chặn phát, tệp hỏng): đọc lại ý đang dở bằng chữ, không bỏ sót ý 1
+  const p3 = await page.context().newPage(); await mock(p3, [VOICED]); await media(p3);
+  await begin(p3, 'co-tieng');
+  await until(p3, 'audio');
+  await p3.evaluate(() => window.__app.sermon.au.fail('play'));
+  await until(p3, 'line');
+  a = await live(p3); expect(a.sub).toContain('Ý một có tiếng.'); expect(a.sub).toContain('ý 1/2'); expect(a.sub).not.toContain(AI);
 });
