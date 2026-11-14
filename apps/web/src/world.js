@@ -426,6 +426,24 @@ export class World {
     const A = this.av; this.focusAvatar(1.2); if (A.state !== 'sit') { if (done) done(); return; }
     Object.assign(A, { state: 'idle', sit: false, hold: 1.7, after: done || null }); if (A.where === 'home') A.pos.y = floorH(A.pos.x, A.pos.z); this.fig.setPose('anjali');
   }
+  // ───────── Vân Du: khi tọa thiền, máy quay rời chỗ ngồi đi viếng các cảnh ─────────
+  // k: 0 bên nhân vật · 1 Vân Đảo · 2 Biển mây · 3–5 ba tầng đảo · 6 ngang tầm mắt Tôn tượng. Không điểm nhìn nào cao hơn mắt Ngài (AGENTS.md mục 1.2).
+  // main.js tính k từ thời gian ngồi yên; null = kết thúc, máy quay trở về bên nhân vật.
+  setVandu(k) {
+    if (k === null || k === undefined) { if (this.vd) { this.vd = null; this.controls.enabled = true; this.focusAvatar(3); } return; }
+    if (!this.vd) {
+      const A = this.av, io = A.where === 'home' ? this.home.group.position.y : 0, h = V(A.pos.x, A.pos.y + io + 1.6, A.pos.z);
+      const tier = (n) => { const I = this.isles.find((x) => x.tier === n), q = (I.size / 14) * 2.4; return [V(I.x + 20 * q * Math.sign(-I.x), I.y + 9 * q, I.z + 30 * q), V(I.x, I.y + 2.5, I.z)]; };
+      const W = [[V(h.x + 6, h.y + 3.2, h.z + 9), h], [this.islandCam(), this.islandTarget()], [V(-60, 64, 170), V(-190, 74, -150)], tier(1), tier(2), tier(3), [V(-330, 362, -430), V(-10, 352, -760)]];
+      this.vd = { p: new THREE.CatmullRomCurve3(W.map((w) => w[0])), t: new THREE.CatmullRomCurve3(W.map((w) => w[1])), n: W.length - 1, k: 0 }; this.zoomed = null; this.follow = null; this.tween = null;
+    }
+    this.vd.k = Math.max(0, Math.min(this.vd.n, k));
+  }
+  /** Điểm đặt máy quay và điểm nhìn của Vân Du tại vị trí k, kèm độ đung đưa nhẹ (calm: bỏ đung đưa cho người chọn giảm chuyển động) */
+  vanduAt(k, tm = this.time) {
+    const d = this.vd, u = k / d.n, a = this.calm ? 0 : 1.5 + 4.5 * Math.min(1, k), p = d.p.getPoint(u), t = d.t.getPoint(u);
+    p.x += Math.sin(tm * 0.05) * a; p.y = Math.min(BUD_EYE - 2, p.y + Math.sin(tm * 0.037) * a * 0.3); p.z += Math.cos(tm * 0.043) * a; return { p, t };
+  }
   pickAny(nx, ny) { this.ray = this.ray || new THREE.Raycaster(); this.ray.setFromCamera(new THREE.Vector2(nx, ny), this.camera); const hit = this.ray.intersectObject(this.home.group, true).find((h) => h.object.isMesh && !h.object.isPoints && h.object.material && !h.object.material.transparent); return hit ? hit.point : null; }
   _birds(dt) {
     if (!this.birds) { this.birds = buildBirds(12); this.scene.add(this.birds.group); const H = this.home, gy = H.group.position.y, bb = new THREE.Box3().setFromObject(H.pv.group), tb = new THREE.Box3().setFromObject(H.tree.group);
@@ -521,6 +539,8 @@ export class World {
       if (this.budFrames) { const f = sm.on ? 1 + (sm.speak > 0.62 ? 2 : sm.speak > 0.22 ? 1 : 0) : 0; if (this.budFig.material.map !== this.budFrames[f]) this.budFig.material.map = this.budFrames[f]; }
       this.sBow = (this.sBow || 0) + ((sm.bow || 0) - (this.sBow || 0)) * Math.min(1, dt * 7);
       [this.hallCrowd, this.tierCrowd].forEach((c) => { if (c && c.userData.bow) { c.userData.bow.value = this.sBow; c.userData.setAnjali(!!sm.anjali); } }); }
+    if (this.vd && !this.tween) { const w = this.vanduAt(this.vd.k), k = this.snap ? 1 : 1 - Math.exp(-dt * 0.5);   // lướt chậm tới điểm đang muốn: vào Vân Du không giật
+      this.controls.enabled = false; this.camera.position.lerp(w.p, k); this.controls.target.lerp(w.t, k); if (Math.abs(this.baseFov - 54) > 0.05) { this.baseFov += (54 - this.baseFov) * k; this.applyFov(); } }
     if (this.tween || !this.controls.enabled) this.camera.lookAt(this.controls.target); else this.controls.update();
     const cam = this.camera.position; [this.hallCrowd, this.tierCrowd].forEach((c) => c && c.userData.lod(cam, this.quality)); this.realm.lod(cam, this.quality); this.puffLod(cam, this.quality); u.uCam.value.copy(cam); this.sky.position.copy(cam); this.stars.position.copy(cam);
     u.uBud.value.set(BUD.x - cam.x, BUD_EYE - cam.y, BUD.z - cam.z).normalize();
