@@ -3,7 +3,14 @@
 // Văn bản bài giảng không nằm trong mã client: tải từ GET /api/v1/content?kind=bai_giang, máy chủ chỉ trả status = 'da_duyet'.
 // Giọng đọc (ADR 0002): tệp MP3 sinh trước, trên R2, phát qua /media/<body_r2_key>; chữ từng ý chạy theo <khóa>.cues.json.
 export const HOMAGE = 'Namo tassa bhagavato arahato sammāsambuddhassa.';
-export const AI_VOICE = 'Giọng đọc do AI tạo (OpenAI)';
+/** Nhãn bắt buộc khi phát giọng đọc sinh bằng AI; ghi đúng nhà cung cấp theo cues.json (#63) */
+export function aiVoiceLabel(provider) { return 'Giọng đọc do AI tạo' + (provider === 'google' ? ' (Google)' : provider === 'openai' ? ' (OpenAI)' : ''); }
+/** provider khai trong cues.json; thiếu thì suy từ tên giọng hoặc mô hình */
+export function providerOf(j) {
+  const p = String((j && j.provider) || '').toLowerCase(); if (p === 'google' || p === 'openai') return p;
+  const s = `${(j && j.voice) || ''} ${(j && j.model) || ''}`;
+  return /chirp|google|\bvi-VN-/i.test(s) ? 'google' : /gpt|openai|tts-1/i.test(s) ? 'openai' : '';
+}
 /** Menu các loạt bài (chỉ là tên loạt và tên phần; nội dung bài nằm ở máy chủ). Bài chưa có meta.loat vào loạt mặc định. */
 export const LOAT = {
   'loi-phat-day': { name: 'Lời Phật dạy', phan: [] },
@@ -72,7 +79,7 @@ class Track {
       .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then((j) => { const c = j && Array.isArray(j.cues) ? j.cues : [];
         if (c.length !== s.lines.length || c.some((q, i) => !q || q.i !== i || !(q.t >= 0) || !(q.e > q.t))) throw new Error('cues lệch số ý');
-        this.cues = c; if (this.state === 'loading') this.state = 'ready'; })
+        this.cues = c; this.provider = providerOf(j); if (this.state === 'loading') this.state = 'ready'; })
       .catch(() => this.fail('cues')).finally(() => clearTimeout(tm));
   }
   fail(why) { if (this.state !== 'fail') { this.state = 'fail'; this.why = why; } }
@@ -106,7 +113,7 @@ export class Sermon {
   }
   _drop() { if (this.au) { this.au.dispose(); this.au = null; } }
   _show(o) { if (this.online) this.online(o); }
-  _line(i) { const s = this.s; this.i = i; this._show({ src: `${s.name} · ${s.ref} · ý ${i + 1}/${s.lines.length}`, ln: s.lines[i], pl: i === 0 && s.key ? s.key : '', ai: !!this.au }); }
+  _line(i) { const s = this.s; this.i = i; this._show({ src: `${s.name} · ${s.ref} · ý ${i + 1}/${s.lines.length}`, ln: s.lines[i], pl: i === 0 && s.key ? s.key : '', ai: this.au ? aiVoiceLabel(this.au.provider) : '' }); }
   _say(text) {
     this.spoken = true; this.left = Math.max(4.5, text.length * 0.085) + 0.6; this.ttsBusy = false;
     if (this.tts) { try { const u = new SpeechSynthesisUtterance(text); u.voice = this.voice; u.lang = this.voice.lang; u.rate = 0.82; u.pitch = 0.85; this.ttsBusy = true; this.left += 8; const done = () => { if (this.ttsBusy) { this.ttsBusy = false; this.left = Math.min(this.left, 0.2); } }; u.onend = done; u.onerror = done; speechSynthesis.speak(u); } catch (e) { this.ttsBusy = false; } }

@@ -22,7 +22,7 @@ Ràng buộc:
 - **Bản HTML đơn không chứa âm thanh.** Lộ trình §2 điều 5: "bản ghi tham khảo (nếu có) để trên R2, tải theo yêu cầu".
 - **Thời thiền giữ nguyên.** Âm thanh thời thiền vẫn sinh bằng Web Audio (`AGENTS.md` 1.3). Giọng đọc chỉ phát ở tab Thuyết giảng; không thay chuông, không thay nhạc thiền.
 - **OpenAI ngừng mọi mô hình của `/v1/audio/speech` ngày 06/01/2027** (`tts-1`, `tts-1-hd`, `gpt-4o-mini-tts`), thay bằng `gpt-realtime-2.1-mini` qua Realtime API ([trang ngừng mô hình của OpenAI](https://developers.openai.com/docs/deprecations)). Các mô hình chuyển giọng nói thành chữ dùng để kiểm lỗi (`gpt-4o-transcribe`, `gpt-4o-mini-transcribe`) ngừng ngày 26/02/2027.
-- **Theo chính sách sử dụng của OpenAI**, phải báo rõ cho người nghe rằng giọng đọc do AI tạo.
+- Phải báo rõ cho người nghe rằng giọng đọc do AI tạo (chính sách sử dụng của OpenAI; áp dụng cho mọi nhà cung cấp).
 - Chỉ phát bài chủ dự án đã chọn phát hành (`status = 'da_duyet'`); không bao giờ nói người dùng đã chứng đắc. Theo #55 (14/11/2026), Hội đồng cố vấn là tư vấn tùy chọn, không phải điều kiện hiển thị.
 - `AGENTS.md` 1.1: không gắn bài giảng với tiền, Gieo Duyên hay Đại Công Đức.
 
@@ -109,7 +109,7 @@ Ví dụ, mỗi loạt một thư mục:
 
 ```json
 { "v": 1, "id": "con-thien-nga", "version": 1, "lang": "vi",
-  "voice": "cedar", "model": "gpt-4o-mini-tts", "hash": "3fa94c1d", "dur": 287.4,
+  "provider": "google", "voice": "vi-VN-Chirp3-HD-…", "model": "chirp3-hd", "hash": "3fa94c1d", "dur": 287.4,
   "cues": [ { "i": 0, "t": 0.0, "e": 14.2 }, { "i": 1, "t": 15.1, "e": 24.8 } ] }
 ```
 
@@ -152,12 +152,20 @@ Ví dụ, mỗi loạt một thư mục:
   - Tôn tượng "nói" trong khoảng `t`–`e` của từng ý;
   - chữ từng ý hiện theo `cues`;
   - nút tạm dừng / tiếp, ý trước / ý sau.
-- **Nhãn cố định khi có tiếng:** "Giọng đọc do AI tạo (OpenAI)".
+- **Nhãn luôn hiện khi có tiếng**, ghi đúng nhà cung cấp theo `provider` trong `cues.json` (thiếu thì suy từ `voice` / `model`): "Giọng đọc do AI tạo (Google)", "(OpenAI)", hoặc chỉ "Giọng đọc do AI tạo" khi không rõ (#63).
 - **Dự phòng:** không có `body_r2_key`, chạy `file://`, lỗi mạng, hoặc `cues` lệch số ý → phát như hiện nay (chữ theo nhịp, không tiếng).
 - **Service worker** (`build.mjs` sinh `sw.js`) bỏ qua `/media/`. Hiện SW gọi `cache.put` với mọi phản hồi `ok`, mà phản hồi 206 không lưu cache được.
 - Kiểm khói Playwright giả lập `/media` và API. Không gọi OpenAI hay R2 thật.
 
-### 7. Giọng đọc OpenAI (Codex)
+### 7. Giọng đọc (Codex)
+
+> **Cập nhật 14/11/2026 (#49, #63):** chủ dự án chuyển sang **Google Cloud TTS Chirp 3: HD**, một giọng nam `vi-VN` cho mọi loạt.
+>
+> - Tham số: `speakingRate` ≈ 0,9, không có câu chỉ dẫn kiểu OpenAI.
+> - Kiểm lỗi bằng Google Speech-to-Text.
+> - `cues.json` ghi `"provider": "google"` và tên giọng đầy đủ.
+> - Hạn 06/01/2027 bên dưới chỉ ràng buộc khi dùng OpenAI. Theo tài liệu Google, Chirp 3: HD đang ở mức GA.
+> - Các mục OpenAI dưới đây giữ làm phương án dự phòng; khung chung (sinh từng ý, ghép, chuẩn hóa, băm, cues, khóa R2, kiểm lỗi, một giọng) áp dụng cho cả hai nhà cung cấp.
 
 - **Không phụ thuộc lúc chạy.** Worker và client không gọi OpenAI. Âm thanh sinh trước bằng công cụ trong `scripts/tts/`, lưu trên R2. Khi OpenAI ngừng mô hình, các bài đã sinh vẫn phát bình thường.
 - **Mô hình:** `gpt-4o-mini-tts` (dùng tên gọi chung; có báo cáo tên kèm ngày bị từ chối 400). Tốc độ khoảng 0,9.
