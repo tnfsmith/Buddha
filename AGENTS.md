@@ -16,7 +16,7 @@
 3. **Thời thiền 15 phút, 7 mốc:** `00:00` Quy tụ · `02:00` Niệm hơi thở mây · `05:00` Lắng dịu phóng dật · `07:00` Cận định và Thánh im lặng · `09:30` Tưởng ánh sáng · `11:00` Tâm từ toàn cõi · `13:30` Xuất thiền và Hồi hướng. Âm thanh sinh bằng Web Audio dao động liên tục, chuông về 0; không dùng tệp mp3.
 4. **Tịnh danh:** 2–3 chữ, tối đa 16 ký tự; chữ cái tiếng Việt NFC; có ít nhất một chữ mang nghĩa tu tập; không tự xưng quả vị, giáo phẩm, danh hiệu tôn kính.
 5. **Kusala:** `E = 10 × (trước + trong + sau)/3 × (1,5 nếu như lý tác ý) × (1,25 nếu tự giác)`, thanh trượt 0,5–1,2; khóa 1 nấc tiến trình mỗi ngày.
-6. **Không bao giờ nói người dùng đã chứng đắc.** Chỉ nói "đã hoàn thành chương trình". Nội dung giáo lý chỉ hiển thị khi đã được Hội đồng cố vấn Pháp học duyệt (`da_duyet`); AI không tự trả lời giáo lý ngoài nội dung đã duyệt.
+6. **Không bao giờ nói người dùng đã chứng đắc.** Chỉ nói "đã hoàn thành chương trình". **Nội dung có nguồn, không bắt buộc Hội đồng phê duyệt:** Vân Đạo hỗ trợ thực hành và chia sẻ tham khảo, không tổ chức thuyết pháp chính thức thay chùa hoặc tu viện. Bài giảng, tóm lược và gợi ý của AI cần nguồn rõ ràng, phân biệt lời trích với lời biên soạn; không tự nhận là lời dạy chính thức hoặc đã được Hội đồng duyệt. Hội đồng/chuyên gia là tư vấn tùy chọn, không là điều kiện hiển thị hoặc phát hành. `da_duyet` là tên trạng thái kỹ thuật cho nội dung được chọn phát hành; không bắt buộc `reviewed_by`/`reviewed_at` hay biên bản Hội đồng. Giữ bản nháp/ẩn/ngừng riêng và quy trình PR thông thường. Quyết định trực tiếp của chủ dự án ngày 14/11/2026 thay yêu cầu cũ: xem `docs/adr/0003-noi-dung-tham-khao-khong-bat-buoc-hoi-dong.md`.
 
 Mục 3–5 nằm trong mã dùng chung `packages/shared` (`schedule.js`, `tinh-danh.js`, `kusala.js`) và có kiểm thử: muốn đổi phải có quyết định của chủ dự án.
 
@@ -50,7 +50,7 @@ Mỗi bản clone cài hook một lần: `git config core.hooksPath scripts/hook
 |---|---|---|---|
 | 3D, trải nghiệm, realtime | Claude | `claude/` | `apps/web/src/{world,island,people,realm,birds,gfx,audio,music,sermon}.js`, `apps/web/src/rt/`, `cong-duc/`, `workers/realtime/`, `tests/e2e/` |
 | API, auth, dữ liệu, hạ tầng, Android | Antigravity | `ag/` | `workers/api/`, `db/`, `apps/web/src/net/`, `apps/android/`, `.github/`, `scripts/` |
-| Vận hành, danh mục, giám sát, nháp nội dung | Hermes | `hermes/` | `content/` (chỉ nháp `cho_duyet`), `ops/`, `docs/reports/` |
+| Vận hành, danh mục, giám sát, nội dung | Hermes | `hermes/` | `content/` (biên soạn có nguồn, trạng thái phát hành theo Issue/PR), `ops/`, `docs/reports/` |
 | Việc chủ dự án giao | chủ dự án | `owner/` | mọi nơi (vẫn qua PR) |
 | Vá khẩn | bất kỳ | `hotfix/` | làn Claude + Antigravity + dùng chung |
 

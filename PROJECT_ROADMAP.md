@@ -1,5 +1,7 @@
 # VÂN ĐẠO — LỘ TRÌNH KỸ THUẬT & THIẾT KẾ PRODUCTION (bản 3)
 
+> **Quyết định nội dung hiện hành 14/11/2026 của chủ dự án (#55):** không bắt buộc Hội đồng cố vấn Pháp học phê duyệt. Nội dung tham khảo có nguồn được biên tập và chọn phát hành theo PR thông thường; tư vấn chuyên gia tùy chọn. Quyết định này thay yêu cầu cũ trong bản 3 và hợp đồng đang đề xuất; xem ADR 0003, `AGENTS.md` mục 1.6 và §16.
+
 > **Ngày lập:** 13/11/2026 · **Thay thế:** bản 2 (12/11/2026). Bản 3 bổ sung: Tầng 0 chuẩn Pháp hành – Ba-la-mật theo hoàn cảnh từng người; theo dõi – nhắc nhở – tích lũy; không gian cộng đồng Hộ Trì & thiện nguyện; khu **Đại Công Đức** (affiliate Shopee/TikTok Shop/WooCommerce, Gieo Duyên, chiến dịch thiện nguyện, Sổ Minh Bạch); đánh giá có số đo và lộ trình hiện đại hóa 3D; chạy trên gói Workers Free rồi nâng Paid khi cần; Node.js 26 LTS; làn việc thứ ba cho **Hermes**; tách dev/staging/production không cần GitHub Pro.
 > **Thứ tự ưu tiên khi mâu thuẫn:** nguyên tắc bất di bất dịch trong `AGENTS.md` (mục 1) > tài liệu này > `van-dao-tom-tat-thiet-ke.md`. Lộ trình, lược đồ DB, API và quy trình làm việc trong tài liệu này thay thế mục 4 của `CLAUDE.md`.
 > **Ký hiệu:** `[n]` là nguồn ở Phụ lục I. Số chi phí/năng lực là **ước lượng** phải đo lại bằng tải thật. "Tài liệu gốc" = `chuong trinh thien-1.pdf`.
@@ -9,7 +11,7 @@
 
 ## 0. TÓM TẮT ĐIỀU HÀNH
 
-**Kết luận kiểm định:** mã hiện tại vẫn là bản trải nghiệm một người dùng, **chưa production**. Sau bản 3, **thiết kế** đã có đủ các khối cần cho production (tài khoản, đồng bộ, nhiều người, cộng đồng, Đại Công Đức, Android, vận hành, pháp lý) để bắt tay GĐ0. Chỉ được gọi là production khi qua nghiệm thu GĐ9 (tải, bảo mật, pháp lý, hiệu năng trên máy thật). Ba việc không giải quyết bằng mã và phải có trước khi mở cộng đồng/Đại Công Đức: (1) pháp nhân doanh nghiệp xã hội cùng hồ sơ TMĐT/affiliate, (2) Hội đồng cố vấn Pháp học duyệt nội dung, (3) người trực kiểm duyệt cộng đồng.
+**Kết luận kiểm định lịch sử:** mã tại thời điểm bản 3 vẫn là bản trải nghiệm một người dùng, **chưa production**. Sau bản 3, **thiết kế** đã có đủ các khối cần cho production (tài khoản, đồng bộ, nhiều người, cộng đồng, Đại Công Đức, Android, vận hành, pháp lý) để bắt tay GĐ0. Chỉ được gọi là production đầy đủ khi qua nghiệm thu GĐ9 (tải, bảo mật, pháp lý, hiệu năng trên máy thật). Việc ngoài mã trước khi mở cộng đồng/Đại Công Đức gồm hồ sơ pháp nhân/TMĐT/affiliate và người trực kiểm duyệt cộng đồng. **Cập nhật chủ dự án 14/11/2026:** Hội đồng Pháp học là tư vấn tùy chọn, không là điều kiện mở nội dung hay phát hành; xem ADR 0003 và `AGENTS.md` mục 1.6.
 
 **3D:** chạy ổn định trên máy tính (không lỗi console, có chất lượng thích ứng) nhưng **nặng với điện thoại**: đo ngày 13/11/2026 ở mức chất lượng cao ra 685 lệnh vẽ và ~1,40 triệu tam giác mỗi khung ở Vân Đảo (§1.5). Hướng xử lý: tối ưu WebGL trước (GĐ1), chuyển WebGPURenderer + TSL có dự phòng WebGL2 sau (GĐ7).
 
@@ -40,7 +42,7 @@
 | Tịnh danh 4 quy tắc | Đạt (client) | `people.js: checkName`; chưa kiểm ở máy chủ, chưa chống trùng |
 | 6 phân khu Vân Đảo mở theo ngày (Trà Đạo ngày 15, Cổng Vân Môn 29/43) | Đạt | Suy ra từ `S.day`, không cần lưu riêng |
 | Đại Thiền Đường, Tôn tượng 1,5×, 4 tầng + Vân Tọa | Đạt (hình ảnh) | Người ngồi quanh là mô phỏng |
-| Vân Nhạc, thuyết giảng 7 bài, chim cảnh, diện mạo nhân vật | Đạt | Nội dung thuyết giảng chưa qua duyệt chuyên môn |
+| Vân Nhạc, thuyết giảng 7 bài, chim cảnh, diện mạo nhân vật | Đạt ở mốc kiểm định | Nội dung tham khảo có nguồn; biên tập/phát hành theo ADR 0003, không bắt buộc Hội đồng |
 | Triển khai Cloudflare Workers Static Assets + tên miền riêng | Đạt | CI GitHub Actions → `vandao.ainextbrain.com` |
 
 ### 1.2 Khoảng trống để thành "ứng dụng tu tập thật sự theo 4 tầng"
@@ -55,7 +57,7 @@ Bốn tầng mang tên biểu trưng của bốn quả Thánh (Nhập Lưu, Nh�
 | 3 · Bất Lai | Thiền từ & thiền quán mỗi ngày; **điều phối, giải đáp, sách tấn nhóm sơ nhập** | Chưa có | Vai trò điều phối, hỏi–đáp có kiểm duyệt |
 | 4 · Vô Học | Chánh niệm mọi oai nghi; **hộ pháp ẩn danh** | Chưa có | Chế độ phụng sự ẩn danh (giúp người khác mà không hiện tên) |
 
-**Thiếu lớn nhất là nội dung**, không phải mã: chương trình tu học của Tầng 1–4 chưa tồn tại (chỉ Giai đoạn 0 có 7 tuần nhiệm vụ). Cần một người hướng dẫn chuyên môn duyệt (xem §16).
+**Thiếu lớn nhất là nội dung**, không phải mã: chương trình tu học của Tầng 1–4 chưa tồn tại (chỉ Giai đoạn 0 có 7 tuần nhiệm vụ). Cần biên soạn có nguồn và chọn phát hành; có thể tham vấn chuyên gia nhưng không bắt buộc (§16, ADR 0003).
 
 **Nguyên tắc đạo đức sản phẩm bổ sung:**
 - Không bảng xếp hạng Kusala, không so sánh điểm giữa người với người; điểm là để tự soi, chỉ chủ nhân thấy. Cộng đồng chỉ thấy số liệu tổng hợp ẩn danh ("hôm nay có N thời thiền được hồi hướng").
@@ -110,7 +112,7 @@ Kèm theo: 448–468 geometry, 32 texture, 52 chương trình shader; bản HTML
 | Khối | Thiết kế bản 3 | Còn thiếu trước khi gọi là production |
 |---|---|---|
 | Tài khoản, đồng bộ, khóa ngày | Đủ (§4–§6) | Mã + kiểm thử GĐ2 |
-| Tầng 0 Pháp hành, theo dõi, nhắc nhở | Đủ khung (§8–§9) | Nội dung biến thể đã duyệt; thử với nhóm người dùng thật |
+| Tầng 0 Pháp hành, theo dõi, nhắc nhở | Đủ khung (§8–§9) | Nội dung biến thể đã biên tập/chọn phát hành; thử với nhóm người dùng thật |
 | Nhiều người cùng lúc | Đủ (§7) | Kiểm thử tải §7.6 |
 | Cộng đồng Hộ Trì | Đủ (§10) | Người trực kiểm duyệt; quy chế cộng đồng |
 | Đại Công Đức | Đủ (§11) | Pháp nhân DNXH, tài khoản affiliate, tài khoản ngân hàng + cổng xác nhận chuyển khoản, ý kiến luật sư/kế toán |
@@ -168,7 +170,7 @@ Kèm theo: 448–468 geometry, 32 texture, 52 chương trình shader; bản HTML
 | D1 read replication | Đọc gần người dùng | Chỉ có tác dụng khi dùng **Sessions API**; bookmark giữ nhất quán tuần tự trong một phiên [2] |
 | Durable Objects (SQLite) | Phòng thời gian thực, chia shard | Lớp mới nên dùng SQLite; 10 GB/đối tượng; CPU mặc định 30 s/lần gọi, nâng được đến 5 phút [4]; giới hạn mềm ~1.000 yêu cầu/giây/đối tượng [4] |
 | WebSocket Hibernation | Giữ kết nối khi phòng im lặng | Đối tượng ngủ khi rảnh, kết nối vẫn mở [5]; tối đa 32.768 kết nối/đối tượng nhưng CPU/bộ nhớ giới hạn thực tế thấp hơn [5b] |
-| KV | Cờ tính năng, cache nội dung đã duyệt | Đọc nhiều, ghi ít |
+| KV | Cờ tính năng, cache nội dung đã chọn phát hành | Đọc nhiều, ghi ít |
 | R2 | Âm thanh tham khảo, gói xuất dữ liệu, lưu trữ nhật ký cũ | Không phí egress |
 | Queues | Gửi mail, tổng hợp, xóa tài khoản theo hẹn | Tách việc chậm khỏi request |
 | Cron Triggers | Tổng hợp hằng ngày, dọn dẹp | Chạy trên Worker `vandao` |
@@ -689,7 +691,7 @@ Ghi chú: `kusala_entry` (0003) được bổ sung cột `variant_id`, `punna`, 
 | `POST /api/v1/account/delete` · `DELETE …/delete` | phiên + OTP | Yêu cầu/hủy yêu cầu xóa tài khoản | — |
 | `POST /api/v1/rt/ticket` | phiên | Vé vào phòng thời gian thực (§7.2) | 20/phút |
 | `GET/POST /api/v1/companions`, `/invites`, `/groups`, `/blocks`, `/reports` | phiên | Xã hội tu tập (GĐ5) | theo loại |
-| `GET /api/v1/content?tier=&kind=` | công khai | Nội dung **đã duyệt** (cache KV) | cache 1 giờ |
+| `GET /api/v1/content?tier=&kind=` | công khai | Nội dung **đã chọn phát hành**, trạng thái kỹ thuật `da_duyet` (cache KV; không chứng nhận Hội đồng) | cache 1 giờ |
 
 Lỗi trả về dạng `{"error":{"code":"day_locked","message":"…"}}`. Mọi phản hồi có `x-d1-bookmark`; client gửi lại ở request sau để đọc nhất quán qua bản sao [2]. Kiểm tra đầu vào bằng thư viện schema nhẹ (Valibot) dùng chung ở `packages/shared`.
 
@@ -842,10 +844,10 @@ Hạn mức DO miễn phí (100.000 yêu cầu và 13.000 GB-giây mỗi ngày [
 ### 8.1 Căn cứ
 - Ba trụ **Đức – Thiện – Tuệ** của app tương ứng ba nền tảng làm phước **Trì giới – Bố thí – Tu tập** (sīla, dāna, bhāvanā) có trong Tam tạng; truyền thống Chú giải mở rộng thành **10 Phước nghiệp sự**: bố thí, trì giới, tu tập, cung kính, phục vụ, hồi hướng, tùy hỷ, nghe Pháp, thuyết Pháp, chỉnh trực tri kiến [47]. Tài liệu gốc chọn đúng khung này (Chú giải Atthasālinī) làm nền cho chuỗi 49 ngày.
 - **10 Ba-la-mật** theo Phật Sử (Buddhavaṃsa): bố thí, trì giới, xuất ly, trí tuệ, tinh tấn, nhẫn nại, chân thật, quyết định, tâm từ, xả [48].
-- Pháp hành cốt lõi của người tại gia ở Tầng 0: Tam quy – Ngũ giới, Bát quan trai vào ngày trai; niệm hơi thở (MN 118); tâm từ (Snp 1.8); quán thọ – tâm – pháp ở mức nhập môn (MN 10); nghe và đọc Pháp có trích dẫn; tự vấn chánh kiến nhân quả. Bản dịch dùng trong app do Hội đồng cố vấn chọn.
+- Pháp hành cốt lõi của người tại gia ở Tầng 0: Tam quy – Ngũ giới, Bát quan trai vào ngày trai; niệm hơi thở (MN 118); tâm từ (Snp 1.8); quán thọ – tâm – pháp ở mức nhập môn (MN 10); nghe và đọc Pháp có trích dẫn; tự vấn chánh kiến nhân quả. Bản dịch dùng trong app được biên tập, ghi nguồn và quyền sử dụng; tham vấn chuyên gia khi cần, không bắt buộc Hội đồng.
 - **Giữ nguyên** công thức Kusala, hệ số Tam thời tư tâm sở, Trí tương ưng, Vô trợ, khóa 1 nấc/ngày, 7 tuần nhiệm vụ trong `data.js` và thời thiền 15 phút 7 mốc.
 
-### 8.2 Ánh xạ 7 tuần ↔ Phước nghiệp sự ↔ Ba-la-mật (đề xuất, chờ Hội đồng cố vấn duyệt)
+### 8.2 Ánh xạ 7 tuần ↔ Phước nghiệp sự ↔ Ba-la-mật (đề xuất biên tập, tham vấn tùy chọn)
 
 | Tuần | Đức (trì giới) | Thiện (bố thí – phụng sự) | Tuệ (tu tập – chánh kiến) |
 |---|---|---|---|
@@ -865,7 +867,7 @@ Hỏi 6 câu khi bắt đầu (bỏ qua được, sửa lại bất cứ lúc n�
 2. Khung giờ thuận tiện: sáng · trưa · tối · linh hoạt.
 3. Hoàn cảnh: học sinh–sinh viên · đi làm · nội trợ · cha mẹ con nhỏ · nghỉ hưu · khác.
 4. Mức quen thuộc với Phật pháp: mới tìm hiểu · đã quy y · tu tập lâu năm.
-5. Giới nguyện trong chu kỳ: chọn các giới phát nguyện giữ trọn; khuyến khích đủ năm giới (cách diễn đạt do Hội đồng cố vấn chốt).
+5. Giới nguyện trong chu kỳ: chọn các giới phát nguyện giữ trọn; khuyến khích đủ năm giới (cách diễn đạt do nhóm biên tập chọn, không bắt buộc Hội đồng).
 6. Giới hạn hiện tại (chỉ lưu trên máy): ít di chuyển · không muốn chi tiền · thời gian bất định · không tham gia nơi đông người.
 
 **Dữ liệu ở đâu:** máy chủ chỉ nhận `level`, `minutes`, `time_window`, `familiarity`, giới nguyện, ngày trai, cờ `no_money`, `at_home` (§4.6). Hoàn cảnh cụ thể (câu 3, 6) ở lại trên máy để tránh thu thập dữ liệu nhạy cảm.
@@ -888,7 +890,7 @@ Hỏi 6 câu khi bắt đầu (bỏ qua được, sửa lại bất cứ lúc n�
 
 ### 8.5 Bốn hàng rào chống "ảo tưởng công đức" (tài liệu gốc) — cách triển khai
 1. **Khóa nhịp thời gian thực:** máy chủ quyết định ngày (§5.1). Xác thực thời thiền bằng nhịp thở qua micro để sau GĐ9, chỉ xử lý trên máy như tài liệu gốc yêu cầu.
-2. **Phản tỉnh có AI:** chỉ chạy khi người dùng bật; gửi câu chữ đã bỏ tên riêng; trả lời dạng câu hỏi gợi mở, có nhãn "gợi ý, không phải lời thầy"; lời nhắc hệ thống do Hội đồng cố vấn duyệt.
+2. **Phản tỉnh có AI:** chỉ chạy khi người dùng bật; gửi câu chữ đã bỏ tên riêng; trả lời dạng câu hỏi gợi mở, có nhãn "gợi ý, không phải lời thầy"; lời nhắc hệ thống được biên tập theo ADR 0003, không bắt buộc Hội đồng duyệt.
 3. **Chứng thực chéo cuối tuần:** §9.4.
 4. **Quy đổi thành hành động xã hội có sổ cái:** §11.6.
 
@@ -921,7 +923,7 @@ Một hàm thống kê dùng chung (`packages/shared/stats.js`) chạy được 
 | Email | Thư tổng kết tuần | Chỉ khi gói Paid và người dùng bật |
 | Mọi nơi | Thông báo trong app khi mở | Dự phòng |
 
-**Nguyên tắc:** mặc định tắt (chỉ gợi ý bật một nhắc giờ thiền); tối đa 2 nhắc/ngày; giờ yên lặng mặc định 21:30–05:00; nút "Tịnh khẩu" tạm dừng 1–30 ngày; không câu chữ gây áy náy; nội dung nhắc qua duyệt.
+**Nguyên tắc:** mặc định tắt (chỉ gợi ý bật một nhắc giờ thiền); tối đa 2 nhắc/ngày; giờ yên lặng mặc định 21:30–05:00; nút "Tịnh khẩu" tạm dừng 1–30 ngày; không câu chữ gây áy náy; nội dung nhắc được biên tập, không đòi phê duyệt Hội đồng.
 
 **Máy chủ:** `reminder` trong D1 là nguồn chính. Durable Object `ReminderClock` chia 16 shard theo `user_id`; mỗi shard giữ chỉ mục đến hạn trong SQLite và đặt alarm đến lần gửi gần nhất. Khi alarm chạy: gửi Web Push theo lô, tính `next_at` theo múi giờ người dùng, xóa subscription trả 404/410. Âm lịch tính bằng `packages/shared/amlich.js` (thuật toán âm lịch Việt Nam, múi giờ +7, chạy offline) để ra ngày trai theo lựa chọn 2/4/6/10 ngày.
 
@@ -972,7 +974,7 @@ Khi một yêu cầu "Cần giúp" được nhận và cả hai bấm "xong", m�
   - *Phi thương mại trong không gian Pháp:* không quảng cáo, không bán dữ liệu.
   - *Không buôn thần bán thánh:* không "khai quang, điểm nhãn, cải mệnh, trừ tà".
   - *Đúng Pháp – đúng Luật:* không hợp tác với hoạt động trái giới luật.
-- **Pháp nhân (đã chốt 13/11/2026): Công ty TNHH Opalina Kim Bảo**, pháp nhân có sẵn của chủ dự án, vận hành Vân Đạo và Đại Công Đức. Dòng tiền Vân Đạo tách bằng tài khoản ngân hàng riêng và mã hạch toán riêng; tỉ lệ phân bổ thặng dư bên dưới áp cho **phần của Vân Đạo** bằng quy chế nội bộ và công khai ở Sổ Minh Bạch. Đăng ký tư cách doanh nghiệp xã hội (gửi Cam kết thực hiện mục tiêu xã hội, môi trường tới cơ quan đăng ký kinh doanh [53]) là bước tùy chọn: cam kết ≥ 51 % lợi nhuận sau thuế ràng buộc **toàn bộ** Opalina, kể cả mảng tư vấn AINextBrain, nên chỉ làm khi chủ dự án chấp nhận ràng buộc đó. Tăng Ni chỉ ở Hội đồng cố vấn Pháp học.
+- **Pháp nhân (đã chốt 13/11/2026): Công ty TNHH Opalina Kim Bảo**, pháp nhân có sẵn của chủ dự án, vận hành Vân Đạo và Đại Công Đức. Dòng tiền Vân Đạo tách bằng tài khoản ngân hàng riêng và mã hạch toán riêng; tỉ lệ phân bổ thặng dư bên dưới áp cho **phần của Vân Đạo** bằng quy chế nội bộ và công khai ở Sổ Minh Bạch. Đăng ký tư cách doanh nghiệp xã hội (gửi Cam kết thực hiện mục tiêu xã hội, môi trường tới cơ quan đăng ký kinh doanh [53]) là bước tùy chọn: cam kết ≥ 51 % lợi nhuận sau thuế ràng buộc **toàn bộ** Opalina, kể cả mảng tư vấn AINextBrain, nên chỉ làm khi chủ dự án chấp nhận ràng buộc đó. Tăng Ni có thể tham gia tư vấn Pháp học độc lập, không tham gia thương mại.
 - **Phân bổ thặng dư** lấy cảm hứng từ Kinh Giáo thọ Thi-ca-la-việt (DN 31) — ¼ chi dùng và bổn phận, 2/4 tái đầu tư, ¼ dự trữ (tài liệu gốc). Đề xuất cho Vân Đạo: 2/4 tái đầu tư nền tảng và công cụ Pháp học miễn phí · ¼ Quỹ Phụng Sự (sổ cái tác động) · ¼ dự phòng. Như vậy 75 % dành cho mục tiêu xã hội, vượt ngưỡng 51 %. Chủ đầu tư chốt tỉ lệ.
 
 ### 11.2 Không gian 3D "Đại Công Đức Viên"
@@ -1103,7 +1105,7 @@ Khi một yêu cầu "Cần giúp" được nhận và cả hai bấm "xong", m�
 ### 12.6 Offline/online thông minh
 - **Service worker:**
   - App shell precache, tên tệp băm, `Cache-Control: immutable`.
-  - Nội dung đã duyệt: stale-while-revalidate.
+  - Nội dung đã chọn phát hành: stale-while-revalidate.
   - `/api/v1/me`: network-first, dự phòng bằng IndexedDB.
 - Gọi `navigator.storage.persist()` để trình duyệt không tự xóa IndexedDB chứa hành trình.
 - **Đồng bộ khi:** mở app, có mạng trở lại (`online`), app quay lại foreground, Background Sync (Chromium). Luôn idempotent nhờ ULID.
@@ -1112,7 +1114,7 @@ Khi một yêu cầu "Cần giúp" được nhận và cả hai bấm "xong", m�
 
 ### 12.7 Tận dụng hạ tầng Cloudflare cho trải nghiệm
 - Static Assets với cache `immutable`.
-- KV cho danh mục và nội dung đã duyệt.
+- KV cho danh mục và nội dung đã chọn phát hành.
 - D1 bản sao đọc + Sessions API.
 - Durable Objects cho thời gian thực và nhắc nhở.
 - R2 cho âm thanh tham khảo và chứng từ.
@@ -1181,8 +1183,8 @@ apps/android/
 | **API, Auth, Dữ liệu** | Antigravity | `workers/api/`, `db/migrations/` (**độc quyền tạo migration**), `apps/web/src/net/` (client sync) |
 | **Hạ tầng & CI** | Antigravity | `.github/workflows/`, `wrangler.jsonc` các Worker, `apps/android/` |
 | **Dùng chung (tuần tự)** | Người tạo Issue chỉ định 1 agent | `packages/shared/` (Kusala, Tịnh danh, giao thức, schema), `apps/web/src/ui/`, `data.js`, `package.json` gốc |
-| **Nội dung** | Người dùng + người duyệt | `content/` (bài giảng, chương trình các tầng) |
-| **Vận hành, danh mục, giám sát** | Hermes | Soạn nháp `content/` (trạng thái `cho_duyet`), `ops/`, `docs/reports/` (§14.6) |
+| **Nội dung** | Người biên soạn + chủ dự án | `content/` (bài chia sẻ, chương trình các tầng; biên tập/phát hành qua PR) |
+| **Vận hành, danh mục, giám sát** | Hermes | Biên soạn có nguồn trong `content/`, trạng thái phát hành theo Issue/PR; `ops/`, `docs/reports/` (§14.6) |
 
 Thay đổi chạm lane khác → mở Issue cho lane đó hoặc ghi rõ trong PR và chờ lane đó xác nhận.
 
@@ -1233,7 +1235,7 @@ Build xanh · kiểm thử mới cho logic mới · không tăng kích thước 
 | Giám sát | Báo cáo hằng ngày: hạn mức Free/Paid (§3.3), lỗi 5xx, dung lượng D1, chi phí, PR đã merge khi CI đỏ |
 | Đại Công Đức | Lấy ứng viên sản phẩm từ Shopee/TikTok/Woo, lọc sơ bộ danh mục cấm, mở PR vào `content/catalog/` hoặc gọi API quản trị chỉ ở mức "ứng viên"; soạn nháp Sổ Minh Bạch; nhắc đối tác nộp báo cáo; mở PR công bố `head_hash` vào repo ledger công khai |
 | Cộng đồng | Tóm tắt báo cáo vi phạm và đề xuất xử lý (không tự xử lý) |
-| Nội dung | Soạn nháp lời nhắc và tóm tắt bài giảng kèm trích dẫn → PR `content/` ở trạng thái `cho_duyet` |
+| Nội dung | Biên soạn lời nhắc và bài chia sẻ kèm nguồn → PR `content/`; phân biệt nháp với bản đã chọn phát hành, không đòi Hội đồng |
 | Kiểm thử | Chạy kiểm thử tải (k6) và đo hiệu năng định kỳ vào **staging** |
 
 **Không được:**
@@ -1306,25 +1308,27 @@ Mọi dòng trên cần luật sư/kế toán xác nhận trước GĐ6. Tài li
 
 ## 16. QUẢN TRỊ NỘI DUNG TU HỌC
 
-- Mọi bài giảng, bài thiền, chương trình tầng nằm trong `content/` (Markdown + front-matter: `id, version, tier, source_ref, status`) → CI nạp vào `content_item`/KV. Chỉ nội dung `da_duyet` được hiển thị.
-- Bảy bài thuyết giảng tóm lược Nikāya hiện có chuyển sang trạng thái `cho_duyet` cho đến khi người hướng dẫn chuyên môn đọc lại.
-- **Khung điều kiện mở tầng (đề xuất, chờ người hướng dẫn quyết):**
+- **Quyết định chủ dự án 14/11/2026 (ADR 0003):** Vân Đạo hỗ trợ thực hành và chia sẻ tham khảo; không phải hoạt động thuyết pháp chính thức của chùa/tu viện. Hội đồng/chuyên gia là tư vấn tùy chọn, không là điều kiện hiển thị, phát âm thanh hay phát hành.
+- Mọi bài giảng, bài thiền, chương trình tầng nằm trong `content/` (Markdown + front-matter: `id, version, tier, source_ref, status`) → CI nạp vào `content_item`/KV. `da_duyet` giữ làm tên kỹ thuật cho nội dung đã chọn phát hành qua quy trình biên tập/PR; không chứng nhận Hội đồng. `reviewed_by`/`reviewed_at` là truy vết tùy chọn, không bắt buộc ở client/công cụ nạp. Nháp/ẩn/ngừng không tự công khai.
+- Bảy bài tóm lược cũ và các loạt mới được biên tập có nguồn, ghi rõ tóm lược bằng lời mới; có thể chọn phát hành qua PR mà không chờ thành lập Hội đồng hoặc biên bản duyệt riêng. Issue #53/PR #54 giữ loạt «Lời Phật dạy»; #47/#52 giữ thiết kế «Đường Xưa Mây Trắng».
+- Giữ tab Thuyết giảng. Khi chưa có nội dung công khai, hiện "Chưa có bài chia sẻ. Nội dung đang được cập nhật."; lỗi tải có trạng thái thử lại riêng. Không dùng câu thiếu Hội đồng để khóa bài hoặc khẳng định mọi bài đã được Hội đồng duyệt.
+- **Khung điều kiện mở tầng (đề xuất, chủ dự án quyết sau biên tập):**
   - 0 → 1: hoàn tất 49 ngày (đã có) + ≥ 30 thời thiền trọn + bài tự vấn cuối chương trình.
   - 1 → 2: hoàn tất chương trình Tầng 1 + đã dẫn dắt ≥ 3 người sơ nhập hoàn thành ít nhất tuần đầu.
   - 2 → 3: tham gia hoặc khởi xướng một nhóm đồng tu và hoàn thành mục tiêu chung.
   - 3 → 4: giữ vai trò điều phối nhóm sơ nhập trong một chu kỳ.
   - Điều kiện lưu ở dữ liệu nội dung (không viết cứng trong mã); giao diện chỉ nói "đã hoàn thành chương trình Tầng N", **không nói đã chứng đắc**.
-- Không dùng AI sinh nội dung giáo lý hiển thị trực tiếp cho người dùng nếu chưa qua duyệt; nếu sau này có tra cứu kinh bằng AI thì chỉ trả lời kèm trích dẫn nguồn kinh và có nhãn rõ ràng.
+- AI/Hermes có thể hỗ trợ biên soạn, tóm lược và giải thích có nguồn; phân biệt trích dẫn với lời biên soạn, không tự nhận là lời dạy chính thức hoặc xác nhận chứng đắc. Nội dung tham khảo không bị khóa vì thiếu Hội đồng; phát hành theo PR thông thường, không thêm vòng duyệt chuyên môn bắt buộc thay Hội đồng.
 
-### 16.1 Hội đồng cố vấn Pháp học (tài liệu gốc)
-Mời các bậc tôn đức thông suốt Pháp – Luật làm Hội đồng cố vấn **độc lập**, chỉ kiểm duyệt tính chuẩn xác của Kinh – Luật – Luận trên hệ thống, không tham gia thương mại. Hội đồng duyệt:
+### 16.1 Tư vấn Pháp học tùy chọn
+Theo quyết định chủ dự án, đề xuất lập Hội đồng trong tài liệu gốc chuyển thành tùy chọn. Có thể mời người am hiểu góp ý độc lập, không tham gia thương mại; không đặt việc mời/nhận lời hoặc hồ sơ duyệt thành đường găng. Các nội dung có thể tham vấn:
 1. Biến thể nhiệm vụ Tầng 0 và ánh xạ Phước nghiệp sự/Ba-la-mật (§8.2).
 2. Lời nhắc hệ thống của AI phản tỉnh (§8.5).
 3. Điều kiện mở tầng.
 4. Danh mục sản phẩm nhạy cảm về tâm linh trong Chánh Mạng Thị.
 5. Câu chữ của lời nhắc và thông báo Tùy hỷ.
 
-Hermes chỉ soạn nháp; mọi thứ hiển thị cho người dùng phải ở trạng thái `da_duyet`.
+Hermes biên soạn có nguồn; nội dung được chọn phát hành qua Issue/PR thông thường. `da_duyet` chỉ là trạng thái công khai hiện có; không tự ghi dấu duyệt Hội đồng không có thật. Chủ dự án merge PR nội dung là quyết định phát hành, không đòi một lần phê duyệt chuyên môn riêng.
 
 ---
 
@@ -1371,7 +1375,7 @@ Buddha/
 │   └── workflows/             # ci.yml · preview.yml · deploy.yml · android.yml
 ├── scripts/                   # lane-guard.mjs, check-migrations.mjs, size-budget.mjs
 ├── docs/                      # thiết kế, ADR, runbook, reports/ (Hermes)
-├── content/                   # nội dung có duyệt
+├── content/                   # nội dung có nguồn, trạng thái biên tập/phát hành
 │   ├── program/so-nhap-49/    # biến thể nhiệm vụ Tầng 0
 │   ├── sermons/  reminders/
 │   └── catalog/               # sản phẩm Chánh Mạng Thị (ứng viên/đã duyệt)
@@ -1407,7 +1411,7 @@ Ký hiệu: **[C]** Claude · **[AG]** Antigravity · **[H]** Hermes · **[O]** 
 - [O] Tạo tài khoản Cloudflare thứ hai (Free) cho preview/staging; tạo hai API token quyền tối thiểu và lưu thành secrets cấp repo `CF_STAGING_*`, `CF_PROD_*` (§14.8). Không dùng GitHub Environments vì repo private gói Free không hỗ trợ [52]. Secrets nhập qua giao diện web GitHub, vì proxy của phiên agent chặn API secrets.
 - [O] Xác nhận cả hai tài khoản Cloudflare đang ở gói Free; nâng riêng tài khoản production khi chạm ngưỡng §3.3.
 - [O] Ngừng đẩy thẳng lên `main`; từ đây mọi thay đổi qua nhánh + PR. Từ 13/11/2026: workflow chỉ build khi PR/push `main`, production chỉ deploy khi gắn tag `v*`; hook `pre-push` trên máy chủ dự án chặn đẩy thẳng `main` (`scripts/hooks/pre-push`, cài bằng `git config core.hooksPath scripts/hooks`).
-- [O] Bắt đầu song song các việc không phải mã theo các Issue `lane:owner`: hồ sơ pháp nhân Opalina, Hội đồng cố vấn Pháp học, tài khoản affiliate/cổng xác nhận chuyển khoản, tài khoản Google Play tổ chức.
+- [O] Bắt đầu song song các việc không phải mã theo các Issue `lane:owner`: hồ sơ pháp nhân Opalina, tài khoản affiliate/cổng xác nhận chuyển khoản, tài khoản Google Play tổ chức. Tư vấn Pháp học tùy chọn, không chặn GĐ3.
 - [O] Gắn tag `v0.10.0` cho `main` (commit `d3489d5`) làm điểm rollback — **xong 13/11/2026**. [AG] đóng hoặc merge các nhánh và thay đổi còn treo trước T0.1.
 
 ### GĐ0 — Nền móng repo, CI, Node 26 (≈ 1–1,5 tuần)
@@ -1441,10 +1445,15 @@ Ký hiệu: **[C]** Claude · **[AG]** Antigravity · **[H]** Hermes · **[O]** 
 ### GĐ3 — Tầng 0 chuẩn Pháp hành, theo dõi, nhắc nhở (≈ 3 tuần)
 | ID | Việc | Làn | Nghiệm thu |
 |---|---|---|---|
-| T3.1 | Nội dung biến thể 7 tuần × 3 trục × 3–6 biến thể; ánh xạ §8.2; lời nhắc | O + Hội đồng (H soạn nháp) | Trạng thái `da_duyet` |
+| T3.1 | Nội dung biến thể 7 tuần × 3 trục × 3–6 biến thể; ánh xạ §8.2; lời nhắc | O + H (biên tập/phát hành; tư vấn tùy chọn) | Có nguồn, trạng thái phát hành `da_duyet`; không đòi Hội đồng |
 | T3.2 | `variant.js`, "Duyên khởi hành trình", Bia Tích Lũy mới (hoa sen 10 cánh, lịch tu, nhịp thiền, phản tỉnh), chứng thực tuần (UI) | C | Cùng đầu vào → cùng nhiệm vụ trên máy và máy chủ |
 | T3.3 | Migration mới kế tiếp; API practice/deeds/attest/reminders/push; `ReminderClock` DO + Web Push | AG (DO: C) | Nhắc đúng giờ ±1 phút ở múi +7; 410 xóa subscription |
 | T3.4 | Điều kiện Tầng 0 → 1, `tier_progress` | AG + C | Không câu chữ khẳng định chứng đắc |
+| T3.5 | Thiết kế loạt «Đường Xưa Mây Trắng» và hợp đồng bài giảng/giọng đọc R2 (ADR 0002, #47/#52) | C | Thiết kế theo chính sách không bắt buộc Hội đồng tại ADR 0003 |
+| T3.6 | Loạt «Lời Phật dạy» 7 bài chi tiết cho v0.15.0 (#53/#54), sau đó loạt «Đường Xưa Mây Trắng» (#48) | H + O (biên tập/phát hành) | Có nguồn, bài chọn phát hành hiện trên staging; không chờ Hội đồng |
+| T3.7 | Một giọng đọc chung cho các loạt; chọn mẫu, sinh TTS có kiểm lỗi và lưu R2 theo loạt (#49) | H + AG | Chủ dự án nghe mẫu; văn bản vẫn phát hành được khi chưa có giọng thu sẵn |
+| T3.8 | Công cụ nạp D1 (#46), API nội dung và `/media` có Range, metadata (#50); migration mới sau #35 | AG | Bài công khai đọc/phát được; nháp/ngừng không lộ; không đòi dấu duyệt Hội đồng |
+| T3.9 | Client: menu riêng theo loạt, giọng đọc/cues, nhãn AI, dự phòng chữ và SW bỏ qua `/media` (#51) | C | Kiểm khói theo hợp đồng; không yêu cầu `reviewed_at` để mở bài công khai |
 
 ### GĐ4 — Đại Thiền Đường thời gian thực (≈ 2–3 tuần)
 | ID | Việc | Làn | Nghiệm thu |
@@ -1530,7 +1539,7 @@ iOS (Capacitor), sự kiện hồi hướng chung ngày rằm, gian hàng thành
 |---|---|---|
 | 1 | Pháp nhân cho Đại Công Đức | **Đã chốt:** Công ty TNHH Opalina Kim Bảo (§11.1); đăng ký tư cách DNXH là tùy chọn vì ràng buộc cả công ty |
 | 2 | Tỉ lệ phân bổ thặng dư | 2/4 nền tảng · ¼ Quỹ Phụng Sự · ¼ dự phòng (§11.1) |
-| 3 | Hội đồng cố vấn Pháp học | Cần trước GĐ3 |
+| 3 | Tư vấn Pháp học | Tùy chọn theo quyết định chủ dự án 14/11/2026, không là điều kiện GĐ3/phát hành |
 | 4 | Người trực kiểm duyệt cộng đồng | Cần trước GĐ5 |
 | 5 | Cổng xác nhận chuyển khoản | payOS hoặc Casso/SePay (chọn theo ngân hàng của pháp nhân) |
 | 6 | TikTok Shop Affiliate API ở VN | Đăng ký; chưa có thì nhập link thủ công |
@@ -1544,7 +1553,7 @@ iOS (Capacitor), sự kiện hồi hướng chung ngày rằm, gian hàng thành
 - Email Sending còn beta và chỉ có ở gói Paid [12] — đã có đăng nhập không cần email (§6.4).
 - D1 xử lý tuần tự [1] — giữ truy vấn ngắn, ghi theo lô.
 - Điện thoại yếu với cảnh 3D — có ngân sách hiệu năng và chế độ tiết kiệm.
-- Nội dung giáo lý sai lệch — quy trình duyệt §16.
+- Nội dung tham khảo sai lệch — nguồn rõ ràng, biên tập, phản hồi và sửa/rút bài theo §16; tư vấn chuyên gia tùy chọn.
 - Lừa đảo hoặc gây quỹ trá hình trong cộng đồng — cấm gây quỹ cá nhân, kiểm duyệt ba lớp.
 - Tranh cãi về "thương mại hóa" — tách không gian, công khai Sổ Minh Bạch, không cộng điểm theo tiền.
 - Chính sách affiliate của sàn thay đổi — nguồn hàng đa dạng, có Woo của doanh nghiệp.
