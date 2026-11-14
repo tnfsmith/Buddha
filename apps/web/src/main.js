@@ -131,9 +131,41 @@ function updateLabels() {
 }
 function goZone(id) {
   if (world && world.av.where !== 'home') return toast('Bạn đang ở đảo bạn. Hãy về đảo trước.');
+  const here = !!world && world.av.state === 'sit' && world.av.id === id;   // đang ngồi sẵn ở khu này: chỉ đổi góc nhìn, không bắt đứng dậy đi lại
+  if (!here && meditating()) return move(() => goZone(id));
   U.zone = id; U.view = id === 'stele' ? 'board' : 'zone'; render();
-  if (world) { if (!world.goZone(id, () => { if (id === 'pad') toast('Đã an tọa tại Đài Thiền. Bấm ▶ để bắt đầu thời thiền.'); savePos(); })) world.setMode('zone', { zone: id }); }
+  if (world) { if (here || !world.goZone(id, () => { if (id === 'pad') toast('Đã an tọa tại Đài Thiền. Bấm ▶ để bắt đầu thời thiền.'); savePos(); })) world.setMode('zone', { zone: id }); }
 }
+
+// ───────── Xả thiền: đang tọa thiền mà ra lệnh di chuyển thì hỏi trước ─────────
+// U.sit: người dùng đã chủ động an tọa (Tịnh Thất, cùng bạn đồng tu). Nhân vật ngồi sẵn khi mở lại trang thì không tính là đang thiền.
+const meditating = () => !!world && world.av.state === 'sit' && (player.playing || !!U.sit);
+const wakeEl = $('#wake');
+function hideWake() { clearTimeout(U.wakeT); wakeEl.hidden = true; U.wakeFn = null; }
+/** Chạy một lệnh di chuyển. Đang tọa thiền thì hỏi; người dùng đồng ý mới xả thiền rồi chạy lệnh. */
+function move(fn) {
+  if (!meditating()) { U.sit = null; return fn(); }
+  U.wakeFn = fn; wakeEl.querySelector('span').textContent = player.playing ? 'Thời thiền đang diễn ra. Xả thiền để di chuyển?' : 'Bạn đang tọa thiền. Xả thiền để di chuyển?';
+  wakeEl.hidden = false; U.quietManual = false; wake(); clearTimeout(U.wakeT); U.wakeT = setTimeout(hideWake, 12000);   // không trả lời thì coi như ngồi tiếp
+}
+function endSit(then) { if (player.playing) player.pause(); U.sit = null; world.wake(() => { toast('Đã xả thiền.'); if (then) then(); render(); }); render(); }
+wakeEl.addEventListener('click', (e) => { const b = e.target.closest('[data-wake]'); if (!b) return; const fn = U.wakeFn; hideWake(); if (b.dataset.wake === 'yes') endSit(fn); });
+// Rời phân khu bằng chân: bảng trở về Vân Đảo nhưng máy quay ở lại bên nhân vật
+function leaveZone() { if (U.view === 'zone' || U.view === 'board') { U.view = 'home'; U.zone = null; world.mode = 'island'; world.setLimits(); render(); } }
+function walkPoint(x, z) { if (world.walkToPoint(x, z)) leaveZone(); }
+
+// Phím mũi tên hoặc W A S D: bước đi theo hướng đang nhìn
+const typing = (e) => !!(e.target && e.target.matches && e.target.matches('textarea,input,select,[role=slider]'));   // đang gõ chữ hoặc kéo thanh trượt: phím không điều khiển nhân vật
+const KEYS = { arrowup: [0, 1], arrowdown: [0, -1], arrowleft: [-1, 0], arrowright: [1, 0], w: [0, 1], s: [0, -1], a: [-1, 0], d: [1, 0] }, held = new Set();
+function steerNow() { if (!world) return; let x = 0, z = 0; if (!meditating()) held.forEach((k) => { x += KEYS[k][0]; z += KEYS[k][1]; }); world.steer(Math.sign(x), Math.sign(z)); if (x || z) leaveZone(); }
+window.addEventListener('keydown', (e) => {
+  const k = (e.key || '').toLowerCase(); if (!KEYS[k] || e.ctrlKey || e.metaKey || e.altKey || typing(e)) return;
+  if (!world || U.mode !== 'island' || U.view === 'creator' || world.av.where !== 'home') return;
+  e.preventDefault(); if (held.has(k)) return; held.add(k); move(steerNow);
+});
+window.addEventListener('keyup', (e) => { if (held.delete((e.key || '').toLowerCase())) steerNow(); });
+window.addEventListener('blur', () => { held.clear(); steerNow(); });
+$('#cam').addEventListener('click', (e) => { const b = e.target.closest('[data-cam]'); if (!b || !world) return; const k = b.dataset.cam; if (k === 'in') world.dolly(0.7); else if (k === 'out') world.dolly(1.43); else if (U.mode === 'island') world.focusAvatar(); });
 function openFriend(i) { U.friend = i; U.view = 'friend'; U.zone = null; render(); }
 function pickTier(k) { U.tier = k; U.sim = null; if (world) world.setMode(k === 0 ? 'island' : 'tier', { tier: k }); render(); }
 
@@ -144,7 +176,7 @@ $('#gl').addEventListener('pointerup', (e) => {
   if (!down || !world) return; const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y), dt = performance.now() - down.t; down = null;
   if (moved > 6 || dt > 400 || U.mode !== 'island' || U.view === 'creator') return;
   const r = e.target.getBoundingClientRect(), p = world.pickGround(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
-  clearTimeout(U.walkT); if (p) U.walkT = setTimeout(() => world.walkToPoint(p.x, p.z), 260);   // chờ một nhịp: nếu là nhấp đúp thì không đi
+  clearTimeout(U.walkT); if (p) U.walkT = setTimeout(() => move(() => walkPoint(p.x, p.z)), 260);   // chờ một nhịp: nếu là nhấp đúp thì không đi
 });
 $('#gl').addEventListener('dblclick', (e) => { if (!world || U.view === 'creator') return; clearTimeout(U.walkT); world.stopWalk(); const r = e.target.getBoundingClientRect(); world.zoomAt(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); });
 
@@ -264,7 +296,7 @@ function render() {
   } else {
     const sim = U.sim ?? d;
     h = `<h2>Vân Đảo của ${esc(S.name || 'bạn')}</h2><p class="pali">Sơ nhập Tịnh Cảnh · ngày ${d}/49 · tuần ${wk}: ${esc(W.title)}</p>${bars()}
-      <p class="muted">Bấm tên một phân khu, hoặc bấm thẳng lên mặt đảo để đi tới đó. Kéo để xoay cảnh, cuộn để phóng to. Bấm tên bạn đồng tu ở đảo bên để chào.</p>
+      <p class="muted">Bấm tên một phân khu, bấm thẳng lên mặt đảo, hoặc dùng phím mũi tên (W A S D) để đi. Kéo để xoay cảnh; cuộn hoặc nút + − để phóng to, thu nhỏ; ◎ đưa máy quay về bên nhân vật. Bấm tên bạn đồng tu ở đảo bên để chào.</p>
       <div class="row"><button class="btn" data-act="board">Nhiệm vụ hôm nay</button><button class="btn alt" data-act="sit">Đến Đài Thiền</button><button class="btn alt" data-act="creator">${S.name ? 'Sửa nhân vật' : 'Tạo nhân vật'}</button></div>
       <div class="row">${accountHint()}${S.name || accountOn() ? '' : '<button class="ghost" data-act="acct-open" data-v="have">Tôi đã có hành trình</button>'}</div>
       <h3>Xem trước tiến trình</h3>
@@ -280,6 +312,7 @@ function render() {
 // ───────── Trình tạo nhân vật ─────────
 function openCreator() {
   if (!world) return; if (world.av.where !== 'home') return toast('Hãy về đảo của mình rồi sửa nhân vật.');
+  if (meditating()) return move(openCreator);
   if (U.mode !== 'island') setMode('island');
   U.draft = { name: S.name || U.chips[0], look: { ...S.look } }; U.pose = world.fig.pose === 'sit' ? 'sit' : 'stand'; U.view = 'creator'; U.zone = null; panel.scrollTop = 0; render(); world.setMode('creator');
 }
@@ -323,7 +356,9 @@ panel.addEventListener('click', (e) => {
   const act = b.dataset.act;
   if (act !== 'reset') U.resetArm = false;
   if (act.startsWith('acct-')) return accountAct(act.slice(5), b);   // T2.3: Giữ hành trình, Tài khoản (ui/account.js)
-  if (act === 'kuti-sit') { if (world) world.goZone('kuti', () => { world.setFace(S.kface || 0); savePos(); }); return; }
+  if (['board', 'sit', 'visit'].includes(act) && meditating()) return move(() => { const again = panel.querySelector('[data-act="' + act + '"]'); if (again) again.click(); });
+  if (act === 'kuti-sit') { const sat = () => { world.setFace(S.kface || 0); savePos(); U.sit = { at: Date.now(), zone: 'kuti' }; toast('Đã an tọa tại Tịnh Thất.'); render(); };
+    if (world) { if (world.av.state === 'sit' && world.av.id === 'kuti') sat(); else world.goZone('kuti', sat); } return; }
   if (act === 'chirp') { amb.chirp(0, 4, Math.random() * 9, Math.max(0.15, S.birds.vol)); return; }
   if (act === 'sermon-go') { sermonStart(U.sutta || SUTTAS[0].id); return; }
   if (act === 'sermon-stop') { sermonStop(); render(); return; }
@@ -349,7 +384,7 @@ panel.addEventListener('click', (e) => {
   else if (act === 'rejoice') { world.rejoice(U.friend); toast('Sādhu! Tùy hỷ công đức của ' + world.friends[U.friend].name + '.'); }
   else if (act === 'visit') { const i = U.friend; world.setMode('island'); world.visit(i, () => { toast('Đã đến đảo của ' + world.friends[i].name + '.'); world.greet(i); render(); }); toast('Du vân theo vân lộ…'); }
   else if (act === 'gohome') { world.goHome(() => { toast('Đã về Vân Đảo của mình.'); U.view = 'home'; world.setMode('island'); render(); }); toast('Du vân trở về…'); }
-  else if (act === 'sitwith') { world.fig.setPose('sit'); world.av.state = 'sit'; world.av.rotTo = Math.atan2(-world.av.pos.x, -760 - world.av.pos.z); if (!player.playing) togglePlay(); toast('Hai người cùng an tọa, hướng về Tôn tượng.'); }
+  else if (act === 'sitwith') { world.fig.setPose('sit'); world.av.state = 'sit'; world.av.rotTo = Math.atan2(-world.av.pos.x, -760 - world.av.pos.z); if (!player.playing) togglePlay(); U.sit = { at: Date.now(), zone: null }; toast('Hai người cùng an tọa, hướng về Tôn tượng.'); }
   else if (act === 'sacca') { S.sacca++; save(); record('sacca.add'); if (world) world.burst(0xbfeee4); toast('Thành thật nhận lỗi và nguyện phòng hộ ngày mai: mặt hồ trong trở lại.'); }
   else if (act === 'reset') { if (U.resetArm) { const keep = { name: S.name, look: S.look }; resetState(keep); save(); record('journey.reset_cycle'); U.resetArm = false; toast('Đã trở về ngày 1.'); } else U.resetArm = true; }
   else if (act === 'confirm') {
@@ -366,7 +401,7 @@ panel.addEventListener('click', (e) => {
 // ───────── Chuyển không gian ─────────
 function setMode(m) {
   if (U.view === 'creator') closeCreator(false);
-  if (m !== 'hall' && sermon.on) sermon.stop(); U.mode = m; document.body.classList.toggle('hall', m === 'hall');
+  if (m !== 'hall' && sermon.on) sermon.stop(); U.mode = m; document.body.classList.toggle('hall', m === 'hall'); document.body.classList.toggle('journey', m === 'journey');
   document.querySelectorAll('#tabs button').forEach((x) => x.classList.toggle('on', x.dataset.m === m));
   if (m !== 'journey') U.tier = null;
   if (window.innerWidth <= 820) document.body.classList.toggle('pmin', m === 'hall' || m === 'island' || m === 'journey');   // điện thoại: mở cảnh trước, bảng thu gọn
@@ -386,7 +421,7 @@ const wake = () => { U.idleAt = performance.now(); };
 ['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart'].forEach((ev) => window.addEventListener(ev, wake, { passive: true }));
 $('#hide').addEventListener('click', (e) => { e.stopPropagation(); U.quietManual = true; toast('Giao diện đã ẩn. Bấm phím H hoặc chạm vào cảnh để hiện lại.'); });
 window.addEventListener('keydown', (e) => {
-  if (e.target.matches('textarea,input')) return;
+  if (e.target && e.target.matches && e.target.matches('textarea,input')) return;
   if (e.key === 'h' || e.key === 'H') U.quietManual = !U.quietManual;
   if (e.key === ' ') { e.preventDefault(); togglePlay(); }
 });
