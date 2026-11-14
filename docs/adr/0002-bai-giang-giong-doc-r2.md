@@ -189,7 +189,8 @@ Ví dụ, mỗi loạt một thư mục:
 - **Khóa bí mật:**
   - `OPENAI_API_KEY` chỉ ở máy Codex hoặc secret của một workflow chạy tay (`workflow_dispatch`).
   - Không bao giờ ở Worker, client hay repo.
-  - Tải lên R2 bằng token Cloudflare sẵn có: staging khi merge `main`, production khi gắn tag.
+  - Tải lên **cả** `vandao-media-staging` và `vandao-media` ngay khi sinh, bằng token Cloudflare sẵn có. Khóa có băm nên không bao giờ ghi đè, và không phải giữ tệp nhị phân ở đâu chờ đến lúc gắn tag.
+  - Production vẫn chỉ phát sau khi gắn tag: `/media` chỉ phục vụ khóa có trong D1 của môi trường đó với `status = 'da_duyet'`, mà D1 production chỉ được nạp khi gắn tag.
 
 ### 8. Quy trình duyệt
 
