@@ -1,4 +1,4 @@
-# Kiểm tra mọi PR và mọi lần merge (PROJECT_ROADMAP.md §14.4, Phụ lục C). deploy.yml gọi lại khi gắn tag.
+# Kiểm tra PR/main; deploy.yml chỉ nhận đúng SHA đã xanh, hoặc gọi lại khi gắn tag.
 name: ci
 on:
   pull_request:
@@ -36,6 +36,9 @@ jobs:
           PR_LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
       - run: npm run lint
       - run: npm test
+      - name: Kiểm bộ giám sát Hermes khi có trong bản tích hợp
+        if: hashFiles('ops/hermes/vandao-ops/daily-report.test.mjs') != ''
+        run: node --test ops/hermes/vandao-ops/daily-report.test.mjs
       - run: npm run build
       - run: npm run size
       - run: npm run check:migrations
@@ -56,3 +59,25 @@ jobs:
         if: matrix.node == 26
         uses: actions/upload-artifact@v5
         with: { name: van-dao-html, path: apps/web/dist/van-dao.html, retention-days: 14 }
+
+  account:
+    name: account (Worker + D1 cục bộ)
+    runs-on: ubuntu-latest
+    # Hai ca hiện có giới hạn 15 + 10 phút; thêm thời gian cài/dựng, không tăng timeout của ca.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 26, cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - name: Hai ca tài khoản đầy đủ, không giả lập API và không được bỏ qua
+        run: node scripts/account-ci.mjs
+      - name: Lưu kết quả tài khoản của đúng commit
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: account-${{ github.sha }}
+          path: test-results/
+          retention-days: 14
+          if-no-files-found: ignore
