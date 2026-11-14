@@ -1,6 +1,6 @@
 # Loạt bài giảng «Đường Xưa Mây Trắng» — dàn bài và văn phong
 
-- **Ngày:** 14/11/2026 · **Thiết kế:** Claude · **Viết nội dung:** Codex (làn Hermes) · **Duyệt:** chủ dự án (xem #3)
+- **Ngày:** 14/11/2026 · **Thiết kế:** Claude · **Viết nội dung:** Codex (làn Hermes) · **Chọn phát hành:** chủ dự án (Hội đồng là tư vấn tùy chọn, #55)
 - **Hợp đồng kỹ thuật:** [ADR 0002](../adr/0002-bai-giang-giong-doc-r2.md) · **Issue:** #47 thiết kế, #48 nội dung, #49 giọng đọc
 - **Mã loạt:** `duong-xua` · 33 bài, chia ba phần theo ba quyển của sách
 - **Loạt song song:** bảy bài v0.14.0 thuộc loạt riêng «Lời Phật dạy», có menu riêng ([`loi-phat-day.md`](loi-phat-day.md))

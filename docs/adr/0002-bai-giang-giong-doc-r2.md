@@ -2,7 +2,7 @@
 
 - **Ngày:** 14/11/2026
 - **Trạng thái:** đề xuất, chờ chủ dự án merge. Thiết kế: Claude. Triển khai: Codex (nội dung, giọng đọc, máy chủ) và Claude (client).
-- **Issue:** #47 (thiết kế), #48 (nội dung), #49 (giọng đọc), #50 (máy chủ), #51 (client); liên quan #46 (nạp D1), #35 (migration), #3 (người duyệt)
+- **Issue:** #47 (thiết kế), #48 (nội dung), #49 (giọng đọc), #50 (máy chủ), #51 (client); liên quan #46 (nạp D1), #35 (migration), #55 (Hội đồng không bắt buộc)
 - **Dàn bài loạt:** [`duong-xua-may-trang.md`](../noi-dung/duong-xua-may-trang.md) (Đường Xưa Mây Trắng) · [`loi-phat-day.md`](../noi-dung/loi-phat-day.md) (Lời Phật dạy, #53)
 
 ## Bối cảnh
@@ -23,7 +23,7 @@ Ràng buộc:
 - **Thời thiền giữ nguyên.** Âm thanh thời thiền vẫn sinh bằng Web Audio (`AGENTS.md` 1.3). Giọng đọc chỉ phát ở tab Thuyết giảng; không thay chuông, không thay nhạc thiền.
 - **OpenAI ngừng mọi mô hình của `/v1/audio/speech` ngày 06/01/2027** (`tts-1`, `tts-1-hd`, `gpt-4o-mini-tts`), thay bằng `gpt-realtime-2.1-mini` qua Realtime API ([trang ngừng mô hình của OpenAI](https://developers.openai.com/docs/deprecations)). Các mô hình chuyển giọng nói thành chữ dùng để kiểm lỗi (`gpt-4o-transcribe`, `gpt-4o-mini-transcribe`) ngừng ngày 26/02/2027.
 - **Theo chính sách sử dụng của OpenAI**, phải báo rõ cho người nghe rằng giọng đọc do AI tạo.
-- `AGENTS.md` 1.6: chỉ phát nội dung đã duyệt; không bao giờ nói người dùng đã chứng đắc.
+- Chỉ phát bài chủ dự án đã chọn phát hành (`status = 'da_duyet'`); không bao giờ nói người dùng đã chứng đắc. Theo #55 (14/11/2026), Hội đồng cố vấn là tư vấn tùy chọn, không phải điều kiện hiển thị.
 - `AGENTS.md` 1.1: không gắn bài giảng với tiền, Gieo Duyên hay Đại Công Đức.
 
 ## Quyết định
@@ -42,8 +42,8 @@ lang: vi
 title: Con thiên nga bị thương
 source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 4 · Phật truyện (Lalitavistara) · Pháp Cú 129–130"
 status: cho_duyet               # nhap | cho_duyet | da_duyet | ngung
-reviewed_by:                    # điền khi duyệt
-reviewed_at:                    # epoch giây, điền khi duyệt
+reviewed_by:                    # tùy chọn: người chọn phát hành
+reviewed_at:                    # tùy chọn: epoch giây
 meta:
   loat: duong-xua               # loạt
   phan: 1                       # phần của loạt (1–3)
@@ -64,7 +64,7 @@ Bỗng có tiếng dây cung bật lên…
   - Công cụ nạp bỏ cú pháp này khi ghi `body_inline` (chỉ giữ chữ hiển thị); công cụ giọng đọc chỉ dùng cách đọc.
   - Từ lặp lại nhiều bài (tên riêng, Hán Việt khó) đặt trong `content/tu-dien-doc.yml`, áp cho mọi bài.
 - **Không** có văn bản "kịch bản đọc" riêng, để chữ trên màn hình và lời đọc không lệch nhau.
-- Bài thiếu `reviewed_at`, `source_ref` hoặc không có ý nào thì không vào D1 (#46 việc 3).
+- Chỉ bài `status: da_duyet` vào D1. Bài thiếu `source_ref` hoặc không có ý nào thì không vào. `reviewed_at` không bắt buộc (#55).
 - Văn phong và dàn bài theo [`docs/noi-dung/duong-xua-may-trang.md`](../noi-dung/duong-xua-may-trang.md).
 
 ### 2. Danh mục và thứ tự: cột `content_item.meta`
@@ -195,7 +195,7 @@ Ví dụ, mỗi loạt một thư mục:
 
 1. Codex mở PR nội dung (`hermes/…`): các tệp `content/bai-giang/*.md` ở `cho_duyet`, kèm đường dẫn nghe ký sẵn cho từng bài.
 2. Chủ dự án đọc trên GitHub và nghe từng bài. Ghi "Duyệt: id…" hoặc góp ý sửa trong PR.
-3. Codex chuyển bài được duyệt sang `da_duyet`, điền `reviewed_by` (theo quyết định ở #3) và `reviewed_at`; sinh lại giọng nếu chữ đổi. Chủ dự án merge.
+3. Codex chuyển bài chủ dự án đã chọn sang `da_duyet` (có thể ghi `reviewed_by`, `reviewed_at`, không bắt buộc theo #55); sinh lại giọng nếu chữ đổi. Chủ dự án merge.
 4. Merge `main` → công cụ nạp (#46) đưa vào D1 staging và tải âm thanh lên `vandao-media-staging`. Gắn tag → production.
 5. Rút một bài: phiên bản mới `status: ngung`; API thôi trả bài, `/media` thôi phục vụ.
 
