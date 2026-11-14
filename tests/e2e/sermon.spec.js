@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-// Issue #39: Thuyết giảng chỉ phát bài đã được Hội đồng cố vấn Pháp học duyệt (AGENTS.md mục 1.6).
+// Issue #39: Thuyết giảng chỉ phát bài máy chủ trả về (đã phát hành). #55: Hội đồng không bắt buộc, reviewed_at không là điều kiện ở client.
 // API được giả lập; bài trong các ca này là văn bản thử, không phải nội dung giáo lý và không vào D1.
 const BASE = (process.env.E2E_BASE_URL || 'http://127.0.0.1:4173/').replace(/#.*$/, '').replace(/\/?$/, '/');
 const DRAFT = 'Có hai cực đoan người tu không nên theo';   // một câu của bảy bài tóm lược cũ (bản nháp, chưa duyệt)
@@ -12,7 +12,7 @@ const OK = { id: 'bai-thu', version: 2, kind: 'bai_giang', tier: 0, title: 'Bài
 const ITEMS = [
   OK,
   { ...OK, version: 1, title: 'Phiên bản cũ', body_inline: 'Ý của phiên bản cũ.' },   // cùng id, version thấp hơn: không hiện
-  { ...OK, id: 'chua-duyet', title: 'Thiếu dấu duyệt', reviewed_at: null },
+  { ...OK, id: 'khong-dau-duyet', title: 'Không có dấu thời gian duyệt', reviewed_at: null },   // #55: vẫn hiện
   { ...OK, id: 'khong-noi-dung', title: 'Không có nội dung', body_inline: null, body_r2_key: 'r2/x' },
   { ...OK, id: 'khong-nguon', title: 'Không có nguồn kinh', source_ref: '' },
   { ...OK, id: 'bai-thien', kind: 'bai_thien', title: 'Không phải bài giảng' },
@@ -43,11 +43,11 @@ test('bản dựng không còn chứa bảy bài tóm lược chưa duyệt', as
   if (!process.env.E2E_BASE_URL && existsSync(dist)) expect(readFileSync(dist, 'utf8')).not.toContain(DRAFT);
 });
 
-test('chưa có bài nào được duyệt: trạng thái trống, không có nút giảng, #sermon=… không phát gì', async ({ page }) => {
+test('chưa có bài nào được phát hành: trạng thái trống, không có nút giảng, #sermon=… không phát gì', async ({ page }) => {
   test.setTimeout(240_000);
   const calls = await mock(page, []);
   await open(page, 'sermon=1');
-  await slow(panel(page)).toContainText('Chưa có bài giảng nào được Hội đồng cố vấn Pháp học duyệt');
+  await slow(panel(page)).toContainText('Chưa có bài giảng nào được phát hành');
   expect(calls.length).toBeGreaterThan(0); expect(new URL(calls[0]).searchParams.get('kind')).toBe('bai_giang');
   await expect(panel(page).locator('[data-act="sermon-go"], [data-sut]')).toHaveCount(0);
   expect(await live(page)).toEqual({ on: false, sub: '', state: 'ok' });
@@ -56,20 +56,21 @@ test('chưa có bài nào được duyệt: trạng thái trống, không có n�
   // mở thẳng mã của một bài tóm lược cũ
   const p2 = await page.context().newPage(); await mock(p2, []);
   await open(p2, 'sermon=chuyen-phap-luan&sk=20');
-  await slow(panel(p2)).toContainText('Chưa có bài giảng nào được Hội đồng cố vấn Pháp học duyệt');
+  await slow(panel(p2)).toContainText('Chưa có bài giảng nào được phát hành');
   expect(await live(p2)).toEqual({ on: false, sub: '', state: 'ok' });
   await expect(p2.locator('body')).not.toContainText(DRAFT);
 });
 
-test('chỉ hiện và phát bài có dấu duyệt, đủ nguồn và nội dung; bản mới nhất của mỗi bài', async ({ page }) => {
+test('chỉ hiện và phát bài đủ nguồn và nội dung (không bắt buộc dấu duyệt); bản mới nhất của mỗi bài', async ({ page }) => {
   test.setTimeout(240_000);
   await mock(page, ITEMS);
   await open(page, 'sermon=khong-nguon');   // bài thiếu nguồn kinh: không phát dù mở thẳng mã
-  await slow(panel(page).locator('[data-sut]')).toHaveCount(1);
-  await expect(panel(page).locator('[data-sut]')).toHaveText(/Bài thử đã duyệt\s*Nguồn thử 1\.1/);
-  for (const t of ['Phiên bản cũ', 'Thiếu dấu duyệt', 'Không có nội dung', 'Không có nguồn kinh', 'Không phải bài giảng']) await expect(panel(page)).not.toContainText(t);
+  await slow(panel(page).locator('[data-sut]')).toHaveCount(2);
+  await expect(panel(page).locator('[data-sut]').first()).toHaveText(/Bài thử đã duyệt\s*Nguồn thử 1\.1/);
+  await expect(panel(page).locator('[data-sut="khong-dau-duyet"]')).toHaveCount(1);
+  for (const t of ['Phiên bản cũ', 'Không có nội dung', 'Không có nguồn kinh', 'Không phải bài giảng']) await expect(panel(page)).not.toContainText(t);
   expect((await live(page)).on).toBe(false);
-  await slow(page.locator('#toast')).toHaveText('Bài giảng này chưa được Hội đồng cố vấn Pháp học duyệt.');
+  await slow(page.locator('#toast')).toHaveText('Bài giảng này chưa được phát hành.');
 
   await panel(page).locator('[data-act="sermon-go"]').click();
   await slow.poll(async () => (await live(page)).on).toBe(true);
@@ -90,7 +91,7 @@ test('không tải được danh sách: báo lỗi an toàn, Thử lại thì t�
   let fail = true;
   await mock(page, (route) => (fail ? route.abort('internetdisconnected') : route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [OK] }) })));
   await open(page, 'sermon=1');
-  await slow(panel(page)).toContainText('Chưa tải được danh sách bài giảng đã duyệt');
+  await slow(panel(page)).toContainText('Chưa tải được danh sách bài giảng');
   expect(await live(page)).toEqual({ on: false, sub: '', state: 'error' });
   fail = false;
   await panel(page).locator('[data-act="sermon-reload"]').click();
@@ -102,7 +103,7 @@ test('máy chủ trả lỗi hoặc không phải JSON: không hiện bài nào'
   test.setTimeout(240_000);
   await mock(page, (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>x</title>' }));
   await open(page, 'sermon=1');
-  await slow(panel(page)).toContainText('Chưa tải được danh sách bài giảng đã duyệt');
+  await slow(panel(page)).toContainText('Chưa tải được danh sách bài giảng');
   await expect(panel(page).locator('[data-sut]')).toHaveCount(0);
 });
 
@@ -113,4 +114,108 @@ test('bản HTML đơn mở từ tệp trên máy: không gọi được máy ch
   await page.waitForFunction(() => window.__app?.world?.renderer, null, { timeout: 150_000 });
   await slow(panel(page)).toContainText('bản HTML đơn mở từ tệp trên máy không tải được bài giảng');
   expect(await live(page)).toEqual({ on: false, sub: '', state: 'error' });
+});
+
+// Issue #51 / ADR 0002: bài có giọng đọc (MP3 trên R2 qua /media) và loạt bài theo thứ tự chương.
+// /media được giả lập bằng một tệp WAV ngắn sinh tại chỗ; không gọi R2 hay OpenAI thật.
+const KEY = 'bai-giang/duong-xua/co-tieng/v1-aaaa1111/vi-cedar.mp3';
+const VOICED = { ...OK, id: 'co-tieng', title: 'Bài có giọng đọc', body_inline: 'Ý một có tiếng.\nÝ hai có tiếng.', body_r2_key: KEY, meta: { loat: 'duong-xua', phan: 1, thu_tu: 80 } };
+const EARLY = { ...OK, id: 'chuong-dau', title: 'Bài chương đầu', meta: JSON.stringify({ loat: 'duong-xua', phan: 1, thu_tu: 20 }) };
+const CUES = { v: 1, id: 'co-tieng', version: 2, dur: 14, cues: [{ i: 0, t: 0, e: 7.5 }, { i: 1, t: 8, e: 13.5 }] };   // đủ dài để bấm nút trước khi hết ý 1, kể cả trên máy chậm
+const AI = 'Giọng đọc do AI tạo (OpenAI)';
+/** WAV mono 16 bit, tiếng 220 Hz khẽ, dài sec giây */
+function wav(sec = 14, sr = 8000) {
+  const n = Math.round(sec * sr), b = Buffer.alloc(44 + n * 2);
+  b.write('RIFF', 0); b.writeUInt32LE(36 + n * 2, 4); b.write('WAVEfmt ', 8); b.writeUInt32LE(16, 16); b.writeUInt16LE(1, 20); b.writeUInt16LE(1, 22);
+  b.writeUInt32LE(sr, 24); b.writeUInt32LE(sr * 2, 28); b.writeUInt16LE(2, 32); b.writeUInt16LE(16, 34); b.write('data', 36); b.writeUInt32LE(n * 2, 40);
+  for (let i = 0; i < n; i++) b.writeInt16LE(Math.round(Math.sin((i / sr) * 2 * Math.PI * 220) * 1200), 44 + i * 2);
+  return b;
+}
+async function media(page, { mp3 = 200, cues = CUES } = {}) {
+  const hits = [];
+  await page.route('**/media/**', (route) => {
+    const u = route.request().url(); hits.push(new URL(u).pathname);
+    if (u.endsWith('.cues.json')) return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(cues) });
+    if (mp3 !== 200) return route.fulfill({ status: mp3, body: '' });
+    // như /media thật (ADR 0002 mục 4): hỗ trợ Range để tua được
+    const body = wav(), m = /bytes=(\d+)-(\d*)/.exec(route.request().headers().range || '');
+    if (!m) return route.fulfill({ status: 200, contentType: 'audio/wav', headers: { 'accept-ranges': 'bytes' }, body });
+    const a = +m[1], z = m[2] ? Math.min(+m[2], body.length - 1) : body.length - 1;
+    return route.fulfill({ status: 206, contentType: 'audio/wav', headers: { 'accept-ranges': 'bytes', 'content-range': `bytes ${a}-${z}/${body.length}` }, body: body.subarray(a, z + 1) });
+  });
+  return hits;
+}
+/** Chạy tiến trình giảng từng bước 0,05 giây (vòng vẽ đã dừng) cho tới khi tới pha mong muốn */
+const until = (page, phase) => slow.poll(() => page.evaluate(() => { window.__app.sermon.tick(0.05); return window.__app.sermon.phase; }), { intervals: [50] }).toBe(phase);
+async function begin(page, id) {
+  await open(page, 'sermon=khong-co');
+  await slow(panel(page).locator(`[data-sut="${id}"]`)).toHaveCount(1);
+  await panel(page).locator(`[data-sut="${id}"]`).click();
+  await panel(page).locator('[data-act="sermon-go"]').click();
+  await slow.poll(async () => (await live(page)).on).toBe(true);
+  await skip(page, 7);
+}
+
+test('service worker không đụng tới /media/ (phản hồi 206 không lưu cache được)', async ({ request }) => {
+  const sw = await (await request.get(BASE + 'sw.js')).text();
+  expect(sw).toContain("url.pathname.startsWith('/media/')");
+});
+
+test('bài có giọng đọc: xếp theo loạt và thứ tự chương, phát tiếng theo cues, có nhãn giọng AI, điều khiển được', async ({ page }) => {
+  test.setTimeout(240_000);
+  await mock(page, [VOICED, OK, EARLY]);
+  const hits = await media(page);
+  await open(page, 'sermon=khong-co');
+  // menu riêng cho từng loạt: bài chưa có meta vào «Lời Phật dạy» (thẻ đầu), loạt Đường Xưa xếp theo thu_tu
+  const tabs = panel(page).locator('[data-opt="loat"] button');
+  await slow(tabs).toHaveText(['Lời Phật dạy', 'Đường Xưa Mây Trắng']);
+  await expect(panel(page).locator('[data-opt="loat"] .on')).toHaveText('Lời Phật dạy');
+  await expect(panel(page).locator('[data-sut]')).toHaveCount(1); await expect(panel(page).locator('[data-sut="bai-thu"]')).toHaveCount(1);
+  await tabs.nth(1).click();
+  expect(await panel(page).locator('[data-sut]').evaluateAll((els) => els.map((e) => e.dataset.sut))).toEqual(['chuong-dau', 'co-tieng']);
+  for (const t of ['Phần Một — Ánh sao mai', 'Nguồn thử 1.1 · có giọng đọc']) await expect(panel(page)).toContainText(t);
+
+  await panel(page).locator('[data-sut="co-tieng"]').click();
+  await panel(page).locator('[data-act="sermon-go"]').click();
+  await slow.poll(async () => (await live(page)).on).toBe(true);
+  await skip(page, 7);
+  await until(page, 'audio');
+  let a = await live(page);
+  expect(a.sub).toContain('Ý một có tiếng.'); expect(a.sub).toContain(AI); expect(a.sub).toContain('ý 1/2');
+  expect(hits).toEqual(expect.arrayContaining(['/media/' + KEY, '/media/' + KEY.replace(/\.mp3$/, '.cues.json')]));
+  await slow.poll(() => page.evaluate(() => window.__app.sermon.au?.el.currentTime || 0)).toBeGreaterThan(0.1);
+
+  // tạm dừng rồi mới sang ý sau: tiếng đứng yên nên không phụ thuộc tốc độ máy chạy kiểm thử
+  await panel(page).locator('[data-act="sermon-pause"]').click();
+  expect(await page.evaluate(() => [window.__app.sermon.paused, window.__app.sermon.au.el.paused])).toEqual([true, true]);
+  await expect(panel(page).locator('[data-act="sermon-pause"]')).toHaveText('Tiếp tục');
+  await panel(page).locator('[data-act="sermon-next"]').click();
+  a = await live(page); expect(a.sub).toContain('Ý hai có tiếng.'); expect(a.sub).toContain('ý 2/2');
+  expect(await page.evaluate(() => window.__app.sermon.au.el.currentTime)).toBeGreaterThanOrEqual(7.9);
+  await panel(page).locator('[data-act="sermon-pause"]').click();
+  expect(await page.evaluate(() => window.__app.sermon.paused)).toBe(false);
+  await until(page, 'sadhu');   // hết tệp thì sang đảnh lễ kết thúc
+  expect(await page.evaluate(() => window.__app.sermon.au)).toBeNull();
+  await panel(page).locator('[data-act="sermon-stop"]').click();
+});
+
+test('giọng đọc lỗi (thiếu tệp, cues lệch số ý): vẫn giảng bằng chữ, không có nhãn giọng AI', async ({ page }) => {
+  test.setTimeout(240_000);
+  await mock(page, [VOICED]); await media(page, { mp3: 404 });
+  await begin(page, 'co-tieng');
+  await until(page, 'line');
+  let a = await live(page); expect(a.sub).toContain('Ý một có tiếng.'); expect(a.sub).not.toContain(AI);
+
+  const p2 = await page.context().newPage(); await mock(p2, [VOICED]); await media(p2, { cues: { v: 1, cues: [{ i: 0, t: 0, e: 1 }] } });
+  await begin(p2, 'co-tieng');
+  await until(p2, 'line');
+  a = await live(p2); expect(a.sub).toContain('Ý một có tiếng.'); expect(a.sub).not.toContain(AI);
+
+  // mất tiếng ngay khi vừa vào bài (bị chặn phát, tệp hỏng): đọc lại ý đang dở bằng chữ, không bỏ sót ý 1
+  const p3 = await page.context().newPage(); await mock(p3, [VOICED]); await media(p3);
+  await begin(p3, 'co-tieng');
+  await until(p3, 'audio');
+  await p3.evaluate(() => window.__app.sermon.au.fail('play'));
+  await until(p3, 'line');
+  a = await live(p3); expect(a.sub).toContain('Ý một có tiếng.'); expect(a.sub).toContain('ý 1/2'); expect(a.sub).not.toContain(AI);
 });

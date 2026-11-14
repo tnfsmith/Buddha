@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { World, ANCHORS, TIER_LABEL, groundH } from './world.js';
 import { Player, TR, EV, offlineProbe } from './audio.js';
 import { DUR, STAGES, TIERS, ZONES, WEEKS, PILLARS, valueAt, breathEnv, stageAt, kusala } from './data.js';
-import { Sermon, library, loadSermons } from './sermon.js';
+import { Sermon, library, loadSermons, LOAT, LOAT0, AI_VOICE, loatTabs } from './sermon.js';
 import { Ambient, SONGS, SONG, MOODS, GROUPS, songsOf, pickSong, probeSong } from './music.js';
 import { OPTIONS, PRESETS, checkName, suggestNames } from './people.js';
 import { S, mem, save, allDone, today, resetState, stateReady, fixMusic } from './state.js';
@@ -24,13 +24,24 @@ function savePos() { if (!world || !world.av || world.av.where !== 'home' || wor
 setInterval(savePos, 1500); window.addEventListener('pagehide', savePos); document.addEventListener('visibilitychange', () => { if (document.hidden) savePos(); });
 // ── Thuyết giảng ──
 const sermon = new Sermon();
-sermon.online = (o) => { const el = $('#sub'); if (!el) return; el.innerHTML = o ? `<div class="src">${esc(o.src)}</div><div class="ln">${esc(o.ln)}</div>${o.pl ? `<div class="pl">${esc(o.pl)}</div>` : ''}` : ''; };
+sermon.online = (o) => { const el = $('#sub'); if (!el) return; el.innerHTML = o ? `<div class="src">${esc(o.src)}</div><div class="ln">${esc(o.ln)}</div>${o.pl ? `<div class="pl">${esc(o.pl)}</div>` : ''}${o.ai ? `<div class="ai">${esc(AI_VOICE)}</div>` : ''}` : ''; };
 sermon.onend = (done) => { if (world) { world.wide = false; if (U.mode === 'hall') world.setMode('hall'); } document.body.classList.remove('sermon'); amb.setVolume(S.music.vol); if (done) { S.sermons = (S.sermons || 0) + 1; save(); toast('Bài giảng đã viên mãn. Sādhu!'); } render(); };
-// Chỉ phát bài có trong danh sách đã duyệt tải từ máy chủ (#39): mã bài lạ, kể cả qua #sermon=…, không phát gì
-function sermonStart(id) { const su = library.items.find((x) => x.id === id); if (!su) { toast('Bài giảng này chưa được Hội đồng cố vấn Pháp học duyệt.'); return render(); } U.sutta = su.id; if (player.playing) player.pause(); if (U.mode !== 'hall') setMode('hall'); U.hallTab = 'sermon';
+// Chỉ phát bài có trong danh sách đã phát hành tải từ máy chủ (#39): mã bài lạ, kể cả qua #sermon=…, không phát gì
+function sermonStart(id) { const su = library.items.find((x) => x.id === id); if (!su) { toast('Bài giảng này chưa được phát hành.'); return render(); } U.sutta = su.id; U.loat = su.loat; if (player.playing) player.pause(); if (U.mode !== 'hall') setMode('hall'); U.hallTab = 'sermon';
   document.body.classList.add('sermon'); amb.setVolume(S.music.vol * 0.4); if (amb.on && amb.voice && amb.ctx) { try { amb.voice.bowl(amb.ctx.currentTime + 0.1, 136.1, 0.3, 0); } catch (e) { /* bỏ qua */ } }
   sermon.start(su, S.tts !== false); if (world) U.sCam = null; render(); }
 function sermonStop() { sermon.stop(); if (world) { world.wide = false; if (U.mode === 'hall') world.setMode('hall'); } }
+// Menu loạt bài (ADR 0002): mỗi loạt một thẻ; trong loạt chia theo phần nếu có
+const inLoat = () => library.items.filter((x) => x.loat === (U.loat || LOAT0));
+/** Sau khi tải danh sách: chọn thẻ loạt đầu tiên có bài (nếu thẻ đang chọn trống) và bài đầu của loạt */
+function sermonPick() { const L = library.items; if (!L.some((x) => x.loat === U.loat)) { const t = loatTabs(L).find(([k]) => L.some((x) => x.loat === k)); U.loat = t ? t[0] : LOAT0; } const mine = inLoat(); if (!mine.some((x) => x.id === U.sutta)) U.sutta = mine[0] && mine[0].id; }
+function sermonList(list) {
+  const cur = U.loat || LOAT0, mine = list.filter((x) => x.loat === cur); let ph = -1;
+  return seg('loat', loatTabs(list), cur) + (mine.length ? mine.map((x) => {
+    let hd = ''; if (x.phan !== ph) { ph = x.phan; const t = LOAT[cur] && LOAT[cur].phan[x.phan]; if (t) hd = `<p class="phan">${esc(t)}</p>`; }
+    return hd + `<button class="sut ${U.sutta === x.id ? 'on' : ''}" data-sut="${esc(x.id)}"><b>${esc(x.name)}</b><em>${esc(x.ref)}${x.audio ? ' · có giọng đọc' : ''}</em></button>`;
+  }).join('') : '<p class="sermon-empty muted">Loạt này đang được soạn. Bài sẽ hiện ở đây khi được phát hành.</p>');
+}
 // ── Vân Nhạc: nhạc nền toàn Vân Đảo ──
 const amb = new Ambient(); amb.volume = S.music.vol;
 const wantSong = () => pickSong(S.music, S.day, new Date().getHours());
@@ -226,16 +237,16 @@ function render() {
   let h = '';
   if (U.mode === 'hall' && U.hallTab === 'sermon') {
     const hasVoice = !!Sermon.viVoice(), L = library, list = L.items;
-    if (L.state === 'idle') loadSermons().then(render);
+    if (L.state === 'idle') loadSermons().then(() => { sermonPick(); render(); });
     h = `<h2>Đại Thiền Đường Vô Tận</h2>${seg('htab', [['sit', 'Thời thiền'], ['sermon', 'Thuyết giảng']], 'sermon')}` +
       (list.length ? `<p>Chọn một bài. Khi giảng, Tôn tượng mở mắt nhìn xuống hội chúng và giơ ấn thuyết pháp; hội chúng chắp tay lắng nghe, đảnh lễ lúc mở đầu và ba lần khi kết thúc, rồi công đức lan tỏa ra khắp cõi.</p>
-      <div class="row">${sermon.on ? '<button class="btn" data-act="sermon-stop">Dừng giảng</button>' : `<button class="btn" data-act="sermon-go">Thỉnh giảng</button>`}</div>
-      <label class="tog" style="display:block;margin:10px 0 4px"><input type="checkbox" data-tts ${S.tts !== false && hasVoice ? 'checked' : ''} ${hasVoice ? '' : 'disabled'}> Đọc thành tiếng (giọng máy tiếng Việt${hasVoice ? '' : ': thiết bị này chưa có'})</label>
-      <h3>Bài giảng đã duyệt</h3>` + list.map((x) => `<button class="sut ${U.sutta === x.id ? 'on' : ''}" data-sut="${esc(x.id)}"><b>${esc(x.name)}</b><em>${esc(x.ref)}</em></button>`).join('') +
-      '<p class="note">Mọi bài giảng ở đây đã được Hội đồng cố vấn Pháp học duyệt. Nguồn kinh ghi dưới tên bài.</p>'
-      : L.state === 'error' ? `<p class="sermon-empty">Chưa tải được danh sách bài giảng đã duyệt. Cần kết nối mạng; bản HTML đơn mở từ tệp trên máy không tải được bài giảng.</p><div class="row"><button class="btn alt" data-act="sermon-reload">Thử lại</button></div>`
-      : L.state === 'ok' ? '<p class="sermon-empty">Chưa có bài giảng nào được Hội đồng cố vấn Pháp học duyệt. Bài giảng chỉ xuất hiện ở đây sau khi được duyệt.</p>'
-      : '<p class="sermon-empty muted">Đang tải bài giảng đã được Hội đồng cố vấn Pháp học duyệt…</p>') +
+      <div class="row">${sermon.on ? `<button class="btn" data-act="sermon-stop">Dừng giảng</button><button class="btn alt" data-act="sermon-pause">${sermon.paused ? 'Tiếp tục' : 'Tạm dừng'}</button><button class="btn alt" data-act="sermon-prev" aria-label="Ý trước" title="Ý trước">‹</button><button class="btn alt" data-act="sermon-next" aria-label="Ý sau" title="Ý sau">›</button>` : `<button class="btn" data-act="sermon-go">Thỉnh giảng</button>`}</div>
+      <label class="tog" style="display:block;margin:10px 0 4px"><input type="checkbox" data-tts ${S.tts !== false && hasVoice ? 'checked' : ''} ${hasVoice ? '' : 'disabled'}> Đọc thành tiếng bằng giọng máy tiếng Việt khi bài chưa có giọng đọc${hasVoice ? '' : ' (thiết bị này chưa có)'}</label>
+      <h3>Bài giảng</h3>` + sermonList(list) +
+      '<p class="note">Bài giảng tóm lược để tham khảo, viết bằng lời mới theo kinh điển; nguồn kinh ghi dưới tên bài.</p>'
+      : L.state === 'error' ? `<p class="sermon-empty">Chưa tải được danh sách bài giảng. Cần kết nối mạng; bản HTML đơn mở từ tệp trên máy không tải được bài giảng.</p><div class="row"><button class="btn alt" data-act="sermon-reload">Thử lại</button></div>`
+      : L.state === 'ok' ? '<p class="sermon-empty">Chưa có bài giảng nào được phát hành. Bài giảng sẽ xuất hiện ở đây khi được chọn phát hành.</p>'
+      : '<p class="sermon-empty muted">Đang tải bài giảng…</p>') +
       `<p class="muted">Số bài đã nghe trọn: ${S.sermons || 0}.</p>`;
   } else if (U.mode === 'hall') {
     const cur = stageAt(U.drag ?? player.time);
@@ -370,7 +381,8 @@ panel.addEventListener('click', (e) => {
   const ob = e.target.closest('[data-opt] button');
   if (ob && ob.parentElement.dataset.opt === 'bfreq') { S.birds.freq = +ob.dataset.v; save(); render(); return; }
   if (ob && ob.parentElement.dataset.opt === 'kface') { S.kface = +ob.dataset.v; save(); if (world) world.setFace(S.kface); render(); setTimeout(savePos, 1200); return; }
-  if (ob && ob.parentElement.dataset.opt === 'htab') { if (ob.dataset.v !== 'sermon' && sermon.on) sermonStop(); U.hallTab = ob.dataset.v; if (U.hallTab === 'sermon') loadSermons().then(() => { if (!library.items.some((x) => x.id === U.sutta)) U.sutta = library.items[0] && library.items[0].id; render(); }); render(); return; }
+  if (ob && ob.parentElement.dataset.opt === 'loat') { U.loat = ob.dataset.v; if (!sermon.on && !inLoat().some((x) => x.id === U.sutta)) U.sutta = inLoat()[0] && inLoat()[0].id; render(); return; }
+  if (ob && ob.parentElement.dataset.opt === 'htab') { if (ob.dataset.v !== 'sermon' && sermon.on) sermonStop(); U.hallTab = ob.dataset.v; if (U.hallTab === 'sermon') loadSermons().then(() => { sermonPick(); render(); }); render(); return; }
   if (ob && U.draft && !ob.dataset.act) {
     const key = ob.parentElement.dataset.opt, v = ob.dataset.v, D = U.draft;
     if (key === 'chip') D.name = v; else if (key === 'preset') Object.assign(D.look, PRESETS[+v].look); else if (key === 'pose') U.pose = v;
@@ -385,9 +397,11 @@ panel.addEventListener('click', (e) => {
   if (act === 'kuti-sit') { const sat = () => { world.setFace(S.kface || 0); savePos(); U.sit = { at: Date.now(), zone: 'kuti' }; toast('Đã an tọa tại Tịnh Thất.'); render(); };
     if (world) { if (world.av.state === 'sit' && world.av.id === 'kuti') sat(); else world.goZone('kuti', sat); } return; }
   if (act === 'chirp') { amb.chirp(0, 4, Math.random() * 9, Math.max(0.15, S.birds.vol)); return; }
-  if (act === 'sermon-go') { sermonStart(U.sutta || (library.items[0] && library.items[0].id)); return; }
-  if (act === 'sermon-reload') { loadSermons(true).then(() => { U.sutta = library.items[0] && library.items[0].id; render(); }); render(); return; }
+  if (act === 'sermon-go') { const mine = inLoat(); sermonStart(mine.some((x) => x.id === U.sutta) ? U.sutta : mine[0] && mine[0].id); return; }
+  if (act === 'sermon-reload') { loadSermons(true).then(() => { sermonPick(); render(); }); render(); return; }
   if (act === 'sermon-stop') { sermonStop(); render(); return; }
+  if (act === 'sermon-pause') { if (sermon.paused) sermon.resume(); else sermon.pause(); render(); return; }
+  if (act === 'sermon-prev' || act === 'sermon-next') { sermon.step(act === 'sermon-next' ? 1 : -1); return; }
   if (act === 'pmin') { document.body.classList.toggle('pmin'); render(); return; }
   if (act === 'creator') return openCreator();
   if (act === 'chips') { U.chips = suggestNames(6); render(); return; }
@@ -535,7 +549,7 @@ function frame(now) {
   let vis = visAt(t), waves = started ? EV.filter((e) => e.wave && t - e.t >= 0 && t - e.t < 14).map((e) => t - e.t) : [];
   const sm = sermon.tick(dt); if (sm.on || sm.waves.length) { waves = sm.waves; vis = { ...vis, night: 0, amber: 0, haloWhite: 0, beams: Math.max(vis.beams * 0.6, sm.merit), rainbow: Math.max(vis.rainbow * 0.5, sm.merit * 0.9), merit: Math.max(vis.merit, sm.merit) }; }
   // máy quay khi giảng: cận Tôn tượng lúc nói, toàn cảnh hội chúng lúc đảnh lễ
-  if (sm.on && world && U.mode === 'hall') { const want = sermon.phase === 'line' || sermon.phase === 'gap' || sermon.phase === 'dedicate' ? 'close' : 'wide';
+  if (sm.on && world && U.mode === 'hall') { const want = sermon.phase === 'line' || sermon.phase === 'audio' || sermon.phase === 'gap' || sermon.phase === 'dedicate' ? 'close' : 'wide';
     if (U.sCam !== want) { U.sCam = want; const V3 = World.V3; world.wide = true; if (want === 'close') world.flyTo(new V3(-30, 96, -300), new V3(0, 318, -760), 56, 2.6); else world.flyTo(new V3(0, 40, -150), new V3(0, 150, -560), 62, 2.6); } }
   if (world) world.update(dt, { vis, breath: breathEnv(started ? t : now / 1000), waves, isl: islandState(), sermon: sm });
   // bấm ▶ khi nhân vật đang ngồi: thời ngồi tính từ lúc đó
@@ -555,8 +569,8 @@ render();
 if (hash.mode && hash.mode !== 'island') setMode(hash.mode);
 if (hash.tier !== undefined) pickTier(+hash.tier);
 if (hash.realm && world) world.setMode('realm');
-// #sermon=1 (bài đầu) hoặc #sermon=<mã bài>: mở Thuyết giảng; chỉ phát khi bài đó có trong danh sách đã duyệt
-if (hash.sermon) { U.hallTab = 'sermon'; setMode('hall'); loadSermons().then(() => { const id = hash.sermon === '1' ? library.items[0] && library.items[0].id : hash.sermon; if (!id) return render(); sermonStart(id); if (sermon.on && hash.sk) { for (let i = 0; i < +hash.sk * 20; i++) sermon.tick(0.05); } }); }
+// #sermon=1 (bài đầu) hoặc #sermon=<mã bài>: mở Thuyết giảng; chỉ phát khi bài đó có trong danh sách đã phát hành
+if (hash.sermon) { U.hallTab = 'sermon'; setMode('hall'); loadSermons().then(() => { sermonPick(); const id = hash.sermon === '1' ? library.items[0] && library.items[0].id : hash.sermon; if (!id) return render(); sermonStart(id); if (sermon.on && hash.sk) { for (let i = 0; i < +hash.sk * 20; i++) sermon.tick(0.05); } }); }
 if (hash.music) { U.dock = true; renderDock(); }
 if (hash.vandu !== undefined) U.vdForce = +hash.vandu;   // xem thử một chặng Vân Du: #vandu=0…6
 if (hash.view === 'board') { U.view = 'board'; render(); }
