@@ -1,0 +1,79 @@
+{
+  "measured_at": "2026-11-14T17:20:52.853Z",
+  "criteria": "Google STT WER, tên riêng, đuôi câu, nhịp đọc, ổn định 3 lần; chưa chứng nhận vùng miền/độ ấm bằng tai",
+  "scores": [
+    {
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "clips": 48,
+      "wer": 0.00987588713849099,
+      "tailErrors": 0,
+      "nameErrors": 2,
+      "secondsPerWord": 0.3027770745715211,
+      "stability": 0.003065420071234023,
+      "pass": false,
+      "rank": 0.012941307209725013
+    },
+    {
+      "voice": "vi-VN-Chirp3-HD-Orus",
+      "clips": 48,
+      "wer": 0.017209146266069515,
+      "tailErrors": 0,
+      "nameErrors": 3,
+      "secondsPerWord": 0.3104995617381236,
+      "stability": 0.005159328358420815,
+      "pass": false,
+      "rank": 0.02236847462449033
+    },
+    {
+      "voice": "vi-VN-Chirp3-HD-Algenib",
+      "clips": 48,
+      "wer": 0.0189486405369471,
+      "tailErrors": 0,
+      "nameErrors": 3,
+      "secondsPerWord": 0.3166252399938752,
+      "stability": 0.0037968889942574142,
+      "pass": false,
+      "rank": 0.022745529531204515
+    },
+    {
+      "voice": "vi-VN-Chirp3-HD-Charon",
+      "clips": 48,
+      "wer": 0.019453946680347594,
+      "tailErrors": 0,
+      "nameErrors": 7,
+      "secondsPerWord": 0.3197776667457021,
+      "stability": 0.00934166963726048,
+      "pass": false,
+      "rank": 0.028795616317608075
+    },
+    {
+      "voice": "vi-VN-Chirp3-HD-Schedar",
+      "clips": 48,
+      "wer": 0.012743013991899338,
+      "tailErrors": 1,
+      "nameErrors": 2,
+      "secondsPerWord": 0.2988975298424957,
+      "stability": 0.012101112806482166,
+      "pass": false,
+      "rank": 0.04567746013171484
+    },
+    {
+      "voice": "vi-VN-Chirp3-HD-Iapetus",
+      "clips": 48,
+      "wer": 0.021730693994587835,
+      "tailErrors": 2,
+      "nameErrors": 3,
+      "secondsPerWord": 0.320351044865045,
+      "stability": 0.011487603980764037,
+      "pass": false,
+      "rank": 0.07488496464201853
+    }
+  ],
+  "final_name_qa": {
+    "voice": "vi-VN-Chirp3-HD-Sadaltager",
+    "speed": 0.85,
+    "checks": 15,
+    "passed": 15,
+    "attempts": 22
+  }
+}
