@@ -1,6 +1,8 @@
-# Vân Đạo — luật chung cho mọi agent (Claude · Antigravity · Hermes)
+# Vân Đạo — luật chung cho mọi agent (Claude · Codex · Antigravity · Hermes)
 
 Đọc tệp này trước khi nhận việc. Lộ trình, lược đồ dữ liệu và kế hoạch theo giai đoạn ở `PROJECT_ROADMAP.md` (bản 3); hạ tầng và môi trường ở `docs/infra.md`. Khi mâu thuẫn: mục 1 dưới đây > `PROJECT_ROADMAP.md` > `van-dao-tom-tat-thiet-ke.md`.
+
+**Bắt đầu mỗi phiên:** đọc `docs/COORDINATION.md`, rồi mục lộ trình liên quan và Issue/PR hiện tại trên GitHub; cập nhật `origin/main` trước khi nhận việc. Quyết định chủ dự án ngày 14/11/2026: **Codex đảm nhiệm làn Antigravity và Hermes; Claude tiếp tục làn riêng**. Phạm vi và tiền tố `ag/`, `hermes/`, `claude/` giữ nguyên để CI kiểm đúng làn.
 
 ## 1. Nguyên tắc bất di bất dịch
 
@@ -56,6 +58,10 @@ Mỗi bản clone cài hook một lần: `git config core.hooksPath scripts/hook
 - **Vùng dùng chung** (`packages/shared/`, `apps/web/src/{main,state,data}.js`, `ui/`, `package.json`, `AGENTS.md`, `CLAUDE.md`, `PROJECT_ROADMAP.md`, `docs/`…) chỉ sửa khi PR có nhãn `shared-ok`, và mỗi lúc chỉ một agent.
 - **Migration D1:** chỉ Antigravity tạo tệp mới `db/migrations/NNNN_ten.sql`; không ai sửa, xóa, đổi tên migration đã merge.
 - Mỗi việc = một Issue có nhãn `lane:*` + `gdN`; nhận việc bằng `status:claimed`. Nhánh `<tiền tố><số-issue>-<mô-tả>`.
+- **Phối hợp Codex–Claude:** `docs/COORDINATION.md` là bản bàn giao chung, **Codex là người cập nhật duy nhất**; Claude ghi bàn giao/đề nghị khóa tệp trong Issue/PR, Codex tổng hợp. GitHub Issues/PR vẫn là nguồn nhận việc và trạng thái hiện hành. Đây là ngoại lệ chủ dự án yêu cầu cho quy định không dùng bảng việc trong repo (§14.1).
+- Trước khi sửa vùng dùng chung, Issue phải ghi **một người giữ, danh sách tệp, phạm vi và điều kiện trả quyền sửa**; PR có `shared-ok`. Không tự hết quyền theo thời gian; phải có bàn giao rõ trong Issue. Không sửa tệp đang do agent khác giữ.
+- Mỗi tác vụ có worktree/checkout riêng; không đổi nhánh, rebase hay ghi đè thư mục làm việc của agent khác. Hợp đồng API/codec dùng chung được duyệt và merge trước khi hai phía triển khai.
+- Trước khi đề nghị merge: fetch/rebase `main` mới nhất, kiểm xung đột với PR phụ thuộc, chạy lại lint/test/build/size/migrations/e2e trên kết quả tích hợp. Khi `main` hoặc hợp đồng đổi, kết quả cũ không thay cho kiểm tra lại. Không cam kết hết lỗi chỉ vì Git không báo conflict.
 
 ## 4. Từ nhánh đến production
 

@@ -2,6 +2,8 @@
 
 @AGENTS.md
 
+Đọc `docs/COORDINATION.md` trước khi sửa. Codex nhận phần Antigravity + Hermes từ 14/11/2026; Claude giữ phần trải nghiệm và realtime. Bàn giao qua Issue/PR, để Codex tổng hợp tệp phối hợp; không sửa tệp đang được tác vụ khác giữ.
+
 ## Phần riêng cho Claude
 
 - **Làn của Claude:** 3D, âm thanh, trải nghiệm, client và máy chủ thời gian thực (xem bảng làn trong `AGENTS.md`). Nhánh `claude/<issue>-<mô-tả>`. Sửa vùng dùng chung chỉ khi Issue ghi rõ và PR có nhãn `shared-ok`.
