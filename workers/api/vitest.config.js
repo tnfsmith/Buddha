@@ -13,7 +13,8 @@ export default defineConfig(async () => {
       miniflare: {
         compatibilityDate: '2026-11-01',
         compatibilityFlags: ['nodejs_compat'],
-        d1Databases: ['DB'],
+        d1Databases: ['DB', 'OTHER_DB'],
+        r2Buckets: ['MEDIA', 'OTHER_MEDIA'],
         kvNamespaces: ['CONFIG'],
         ratelimits: Object.fromEntries([['RL_AUTH', 5], ['RL_POLL', 60], ['RL_OTP', 3], ['RL_SYNC', 30], ['RL_API', 60], ['RL_TICKET', 20]]
           .map(([n, limit], i) => [n, { namespace_id: String(1001 + i), simple: { limit, period: 60 } }])),

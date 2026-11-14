@@ -115,3 +115,12 @@ cd workers/api && npx wrangler deploy --dry-run --env staging   # kiểm đóng 
 ```
 
 CI chạy thêm `wrangler d1 migrations apply --local` để kiểm SQL trên SQLite của workerd (đúng môi trường D1).
+
+## Media bài giảng (#50)
+
+`GET|HEAD /media/<khóa>` chỉ đọc R2 khi D1 của chính môi trường có dòng `da_duyet`
+với `body_r2_key` tương ứng. Cues đổi đuôi về MP3 để kiểm cùng bài; mẫu giọng riêng không công khai.
+Hỗ trợ Range đơn (206/416), ETag (304), HEAD, If-Range; không có tệp thì 404.
+`run_worker_first` áp dụng `/media/*` ở cả staging và production, không rơi xuống SPA.
+API nội dung trả thêm `body_r2_key`; metadata chờ migration 0008 ở PR riêng.
+Âm thanh được sinh trước và tải lên hai bucket, nhưng chỉ phát sau khi D1 môi trường đó đã nạp bài.

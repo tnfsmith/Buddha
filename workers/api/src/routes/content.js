@@ -1,5 +1,5 @@
 // workers/api/src/routes/content.js
-// Truy vấn nội dung giáo lý và bài giảng đã duyệt (PROJECT_ROADMAP.md §4.3, §16)
+// Nội dung đã chọn phát hành; không yêu cầu Hội đồng (ADR 0003).
 import { Hono } from 'hono';
 
 const contentApp = new Hono();
@@ -9,7 +9,7 @@ contentApp.get('/', async (c) => {
   const tier = c.req.query('tier');
   const kind = c.req.query('kind');
 
-  let sql = `SELECT id, version, kind, tier, lang, title, body_inline, source_ref, reviewed_at
+  let sql = `SELECT id, version, kind, tier, lang, title, body_inline, body_r2_key, source_ref, reviewed_at
              FROM content_item
              WHERE status = 'da_duyet'`;
   const params = [];
