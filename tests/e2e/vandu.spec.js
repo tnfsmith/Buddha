@@ -41,7 +41,8 @@ test('Vân Du theo số phút ngồi yên; chạm vào cảnh thì hỏi; "Ngồ
 
   await page.locator('#panel [data-act="kuti-sit"]').click();
   await slow.poll(() => vd(page)).toMatchObject({ on: true, sit: true, free: false });
-  expect((await vd(page)).cap).toMatch(/^Vân Du · An trú · chặng 1\/7 · ngồi yên 00:0\d$/);
+  // Kiểm đồng hồ hợp lệ; thời gian đọc UI trên CI có thể đã qua 9 giây đầu.
+  expect((await vd(page)).cap).toMatch(/^Vân Du · An trú · chặng 1\/7 · ngồi yên 00:[0-5]\d$/);
 
   // đã ngồi yên 5 phút: đang lướt từ Biển mây (4′) sang Tịnh Cảnh (9′)
   await page.evaluate(() => { window.__app.U.sit.at -= 5 * 60000; });
