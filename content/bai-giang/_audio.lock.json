@@ -2,6 +2,63 @@
   "v": 1,
   "items": [
     {
+      "id": "cau-be-chan-trau",
+      "version": 1,
+      "key": "bai-giang/duong-xua/cau-be-chan-trau/v1-10467c40/vi-sadaltager.mp3",
+      "hash": "10467c40",
+      "fingerprint": "10467c404501b9f36cfcd0c80c99e3a995ea519df5c96c54bacb4a739a8f0e2f",
+      "dur": 203.66595833333332,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T18:29:17.403Z",
+      "wer": 0.06932164734989811,
+      "sha256": "545c3ff6416731b65d8c4f605afab7816bf4dd6a0f0ad974c3bef54c3f917979",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.19,
+        "peak_dbtp": -1.78
+      },
+      "flags": [
+        {
+          "i": 1,
+          "wer": 1,
+          "tail_ok": false,
+          "names_ok": true,
+          "seconds_per_word": 0.3187314814814815
+        },
+        {
+          "i": 4,
+          "wer": 0.02631578947368421,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28932456140350876
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2726752136752137
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29839837398373986
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.26034959349593495
+        }
+      ]
+    },
+    {
       "id": "chuyen-phap-luan",
       "version": 2,
       "key": "bai-giang/loi-phat-day/chuyen-phap-luan/v2-3b48570c/vi-sadaltager.mp3",
@@ -49,6 +106,49 @@
         "channels": 1,
         "bit_rate": 96000
       }
+    },
+    {
+      "id": "con-thien-nga",
+      "version": 1,
+      "key": "bai-giang/duong-xua/con-thien-nga/v1-9e045606/vi-sadaltager.mp3",
+      "hash": "9e045606",
+      "fingerprint": "9e045606d6c8fb214ff2a8842afb2de47f2772f0640b247240bff6ec4b10e340",
+      "dur": 206.47395833333334,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T18:27:53.745Z",
+      "wer": 0.011245307119424577,
+      "sha256": "f3fbceb7f2e8b7d72834c7c21fb0c1386a9324bddc81dcd414a7b3db74e5bae1",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.13,
+        "peak_dbtp": -1.51
+      },
+      "flags": [
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2921623931623932
+        },
+        {
+          "i": 10,
+          "wer": 0.024390243902439025,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.26522764227642276
+        },
+        {
+          "i": 11,
+          "wer": 0.023809523809523808,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29319841269841274
+        }
+      ]
     },
     {
       "id": "diem-lanh",
