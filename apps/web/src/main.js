@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { World, ANCHORS, TIER_LABEL, groundH } from './world.js';
 import { Player, TR, EV, offlineProbe } from './audio.js';
 import { DUR, STAGES, TIERS, ZONES, WEEKS, PILLARS, valueAt, breathEnv, stageAt, kusala } from './data.js';
-import { Sermon, library, loadSermons, LOAT, LOAT0, AI_VOICE, loatTabs } from './sermon.js';
+import { Sermon, library, loadSermons, LOAT, LOAT0, loatTabs, aiVoiceLabel, providerOf } from './sermon.js';
 import { Ambient, SONGS, SONG, MOODS, GROUPS, songsOf, pickSong, probeSong } from './music.js';
 import { OPTIONS, PRESETS, checkName, suggestNames } from './people.js';
 import { S, mem, save, allDone, today, resetState, stateReady, fixMusic } from './state.js';
@@ -24,7 +24,7 @@ function savePos() { if (!world || !world.av || world.av.where !== 'home' || wor
 setInterval(savePos, 1500); window.addEventListener('pagehide', savePos); document.addEventListener('visibilitychange', () => { if (document.hidden) savePos(); });
 // ── Thuyết giảng ──
 const sermon = new Sermon();
-sermon.online = (o) => { const el = $('#sub'); if (!el) return; el.innerHTML = o ? `<div class="src">${esc(o.src)}</div><div class="ln">${esc(o.ln)}</div>${o.pl ? `<div class="pl">${esc(o.pl)}</div>` : ''}${o.ai ? `<div class="ai">${esc(AI_VOICE)}</div>` : ''}` : ''; };
+sermon.online = (o) => { const el = $('#sub'); if (!el) return; el.innerHTML = o ? `<div class="src">${esc(o.src)}</div><div class="ln">${esc(o.ln)}</div>${o.pl ? `<div class="pl">${esc(o.pl)}</div>` : ''}${o.ai ? `<div class="ai">${esc(o.ai)}</div>` : ''}` : ''; };
 sermon.onend = (done) => { if (world) { world.wide = false; if (U.mode === 'hall') world.setMode('hall'); } document.body.classList.remove('sermon'); amb.setVolume(S.music.vol); if (done) { S.sermons = (S.sermons || 0) + 1; save(); toast('Bài giảng đã viên mãn. Sādhu!'); } render(); };
 // Chỉ phát bài có trong danh sách đã phát hành tải từ máy chủ (#39): mã bài lạ, kể cả qua #sermon=…, không phát gì
 function sermonStart(id) { const su = library.items.find((x) => x.id === id); if (!su) { toast('Bài giảng này chưa được phát hành.'); return render(); } U.sutta = su.id; U.loat = su.loat; if (player.playing) player.pause(); if (U.mode !== 'hall') setMode('hall'); U.hallTab = 'sermon';
@@ -245,7 +245,7 @@ function render() {
       <h3>Bài giảng</h3>` + sermonList(list) +
       '<p class="note">Bài giảng tóm lược để tham khảo, viết bằng lời mới theo kinh điển; nguồn kinh ghi dưới tên bài.</p>'
       : L.state === 'error' ? `<p class="sermon-empty">Chưa tải được danh sách bài giảng. Cần kết nối mạng; bản HTML đơn mở từ tệp trên máy không tải được bài giảng.</p><div class="row"><button class="btn alt" data-act="sermon-reload">Thử lại</button></div>`
-      : L.state === 'ok' ? '<p class="sermon-empty">Chưa có bài giảng nào được phát hành. Bài giảng sẽ xuất hiện ở đây khi được chọn phát hành.</p>'
+      : L.state === 'ok' ? '<p class="sermon-empty">Chưa có bài chia sẻ. Nội dung đang được cập nhật.</p>'
       : '<p class="sermon-empty muted">Đang tải bài giảng…</p>') +
       `<p class="muted">Số bài đã nghe trọn: ${S.sermons || 0}.</p>`;
   } else if (U.mode === 'hall') {
@@ -578,7 +578,7 @@ if (hash.view === 'creator') openCreator();
 if (hash.at && world && World.NODES[hash.at]) { const n = World.NODES[hash.at]; world.av.pos.set(n[0], 0, n[1]); world.av.pos.y = World.floorH(n[0], n[1]); world.snap = true; }
 if (hash.zone) goZone(hash.zone);
 if (world && world.tween && hash.snap !== undefined) world.tween.k = 0.999;
-window.__app = { player, world, offlineProbe, amb, probeSong, SONGS, state: () => S, U, stateReady, sermon, library };
+window.__app = { player, world, offlineProbe, amb, probeSong, SONGS, state: () => S, U, stateReady, sermon, library, voiceLabel: (j) => aiVoiceLabel(providerOf(j)) };
 registerPWA();
 startMetrics();   // T1.3 (#8): số liệu ẩn danh, chỉ khi chạy qua http(s) và không bật Do Not Track
 if (S.name) persistStorage();

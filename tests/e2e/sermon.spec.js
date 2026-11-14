@@ -47,7 +47,7 @@ test('chưa có bài nào được phát hành: trạng thái trống, không c�
   test.setTimeout(240_000);
   const calls = await mock(page, []);
   await open(page, 'sermon=1');
-  await slow(panel(page)).toContainText('Chưa có bài giảng nào được phát hành');
+  await slow(panel(page)).toContainText('Chưa có bài chia sẻ. Nội dung đang được cập nhật.');
   expect(calls.length).toBeGreaterThan(0); expect(new URL(calls[0]).searchParams.get('kind')).toBe('bai_giang');
   await expect(panel(page).locator('[data-act="sermon-go"], [data-sut]')).toHaveCount(0);
   expect(await live(page)).toEqual({ on: false, sub: '', state: 'ok' });
@@ -56,7 +56,7 @@ test('chưa có bài nào được phát hành: trạng thái trống, không c�
   // mở thẳng mã của một bài tóm lược cũ
   const p2 = await page.context().newPage(); await mock(p2, []);
   await open(p2, 'sermon=chuyen-phap-luan&sk=20');
-  await slow(panel(p2)).toContainText('Chưa có bài giảng nào được phát hành');
+  await slow(panel(p2)).toContainText('Chưa có bài chia sẻ. Nội dung đang được cập nhật.');
   expect(await live(p2)).toEqual({ on: false, sub: '', state: 'ok' });
   await expect(p2.locator('body')).not.toContainText(DRAFT);
 });
@@ -121,8 +121,8 @@ test('bản HTML đơn mở từ tệp trên máy: không gọi được máy ch
 const KEY = 'bai-giang/duong-xua/co-tieng/v1-aaaa1111/vi-cedar.mp3';
 const VOICED = { ...OK, id: 'co-tieng', title: 'Bài có giọng đọc', body_inline: 'Ý một có tiếng.\nÝ hai có tiếng.', body_r2_key: KEY, meta: { loat: 'duong-xua', phan: 1, thu_tu: 80 } };
 const EARLY = { ...OK, id: 'chuong-dau', title: 'Bài chương đầu', meta: JSON.stringify({ loat: 'duong-xua', phan: 1, thu_tu: 20 }) };
-const CUES = { v: 1, id: 'co-tieng', version: 2, dur: 14, cues: [{ i: 0, t: 0, e: 7.5 }, { i: 1, t: 8, e: 13.5 }] };   // đủ dài để bấm nút trước khi hết ý 1, kể cả trên máy chậm
-const AI = 'Giọng đọc do AI tạo (OpenAI)';
+const CUES = { v: 1, id: 'co-tieng', version: 2, provider: 'google', voice: 'vi-VN-Chirp3-HD-Charon', dur: 14, cues: [{ i: 0, t: 0, e: 7.5 }, { i: 1, t: 8, e: 13.5 }] };   // đủ dài để bấm nút trước khi hết ý 1, kể cả trên máy chậm
+const AI = 'Giọng đọc do AI tạo (Google)';   // #63: nhãn theo nhà cung cấp trong cues.json
 /** WAV mono 16 bit, tiếng 220 Hz khẽ, dài sec giây */
 function wav(sec = 14, sr = 8000) {
   const n = Math.round(sec * sr), b = Buffer.alloc(44 + n * 2);
@@ -175,6 +175,9 @@ test('bài có giọng đọc: xếp theo loạt và thứ tự chương, phát 
   expect(await panel(page).locator('[data-sut]').evaluateAll((els) => els.map((e) => e.dataset.sut))).toEqual(['chuong-dau', 'co-tieng']);
   for (const t of ['Phần Một — Ánh sao mai', 'Nguồn thử 1.1 · có giọng đọc']) await expect(panel(page)).toContainText(t);
 
+  // nhãn giọng AI theo nhà cung cấp khai trong cues.json, hoặc suy từ tên giọng / mô hình (#63)
+  expect(await page.evaluate(() => [{ provider: 'google' }, { voice: 'vi-VN-Chirp3-HD-Orus' }, { model: 'gpt-4o-mini-tts', voice: 'cedar' }, { voice: 'la' }].map(window.__app.voiceLabel)))
+    .toEqual(['Giọng đọc do AI tạo (Google)', 'Giọng đọc do AI tạo (Google)', 'Giọng đọc do AI tạo (OpenAI)', 'Giọng đọc do AI tạo']);
   await panel(page).locator('[data-sut="co-tieng"]').click();
   await panel(page).locator('[data-act="sermon-go"]').click();
   await slow.poll(async () => (await live(page)).on).toBe(true);
@@ -204,12 +207,12 @@ test('giọng đọc lỗi (thiếu tệp, cues lệch số ý): vẫn giảng b
   await mock(page, [VOICED]); await media(page, { mp3: 404 });
   await begin(page, 'co-tieng');
   await until(page, 'line');
-  let a = await live(page); expect(a.sub).toContain('Ý một có tiếng.'); expect(a.sub).not.toContain(AI);
+  let a = await live(page); expect(a.sub).toContain('Ý một có tiếng.'); expect(a.sub).not.toContain('Giọng đọc do AI tạo');
 
   const p2 = await page.context().newPage(); await mock(p2, [VOICED]); await media(p2, { cues: { v: 1, cues: [{ i: 0, t: 0, e: 1 }] } });
   await begin(p2, 'co-tieng');
   await until(p2, 'line');
-  a = await live(p2); expect(a.sub).toContain('Ý một có tiếng.'); expect(a.sub).not.toContain(AI);
+  a = await live(p2); expect(a.sub).toContain('Ý một có tiếng.'); expect(a.sub).not.toContain('Giọng đọc do AI tạo');
 
   // mất tiếng ngay khi vừa vào bài (bị chặn phát, tệp hỏng): đọc lại ý đang dở bằng chữ, không bỏ sót ý 1
   const p3 = await page.context().newPage(); await mock(p3, [VOICED]); await media(p3);
@@ -217,5 +220,5 @@ test('giọng đọc lỗi (thiếu tệp, cues lệch số ý): vẫn giảng b
   await until(p3, 'audio');
   await p3.evaluate(() => window.__app.sermon.au.fail('play'));
   await until(p3, 'line');
-  a = await live(p3); expect(a.sub).toContain('Ý một có tiếng.'); expect(a.sub).toContain('ý 1/2'); expect(a.sub).not.toContain(AI);
+  a = await live(p3); expect(a.sub).toContain('Ý một có tiếng.'); expect(a.sub).toContain('ý 1/2'); expect(a.sub).not.toContain('Giọng đọc do AI tạo');
 });
