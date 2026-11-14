@@ -1165,9 +1165,11 @@ apps/android/
 
 ## 14. QUY TRÌNH CỘNG TÁC SONG SONG CLAUDE ↔ ANTIGRAVITY ↔ HERMES
 
+> **Cập nhật phân công 14/11/2026 theo chủ dự án:** Codex thực hiện cả làn Antigravity và Hermes; Claude tiếp tục làn riêng. Ký hiệu [AG]/[H] và các tiền tố `ag/`/`hermes/` bên dưới vẫn chỉ phạm vi công việc, không phải mở quyền sửa mọi nơi. Bản bàn giao hiện tại ở `docs/COORDINATION.md`; phần kiểm định §1 là mốc lịch sử 12–13/11, không phải trạng thái triển khai hôm nay.
+
 ### 14.1 Luật dùng chung cho mọi agent
 - Tạo **`AGENTS.md`** ở gốc repo làm luật chung; Antigravity đọc `AGENTS.md` và `GEMINI.md`, cùng thư mục `.agents/rules/` [21]. `CLAUDE.md` giữ ngắn: nhập `@AGENTS.md` + phần riêng cho Claude. Antigravity giới hạn 12.000 ký tự mỗi tệp luật [21b] → luật ngắn gọn, chi tiết để trong `docs/`.
-- Mỗi việc = **một GitHub Issue** có: phạm vi thư mục được sửa, tiêu chí nghiệm thu, phụ thuộc. Nhận việc bằng nhãn `lane:claude` / `lane:antigravity` / `lane:hermes` + `status:claimed`. Không dùng tệp "bảng việc" trong repo (chính nó sẽ xung đột).
+- Mỗi việc = **một GitHub Issue** có: phạm vi thư mục được sửa, tiêu chí nghiệm thu, phụ thuộc. Nhận việc bằng nhãn `lane:claude` / `lane:antigravity` / `lane:hermes` + `status:claimed`. Không nhân bản bảng việc GitHub trong repo. **Ngoại lệ được chủ dự án yêu cầu ngày 14/11:** `docs/COORDINATION.md` lưu phân công, hợp đồng, quyền sửa tệp và bản bàn giao đã xác minh; chỉ Codex cập nhật. Claude ghi bàn giao qua Issue/PR. Trạng thái nhận việc vẫn lấy từ GitHub.
 - Nhánh ngắn: `claude/<số-issue>-<mô-tả>`, `ag/<số-issue>-<mô-tả>` hoặc `hermes/<số-issue>-<mô-tả>`; rebase lên `main` trước khi mở PR; PR < ~400 dòng thay đổi (không tính tệp sinh); **squash merge**.
 - **Không ai đẩy thẳng lên `main`, kể cả từ máy cá nhân.** Quyết định ngày 13/11/2026: **không nâng GitHub Pro** (repo private trên gói Free không có branch protection [22]). Thay bằng ba lớp: CI `lane-guard` (§14.7), production chỉ deploy từ **tag** và workflow tag tự chạy lại toàn bộ kiểm thử (§14.8), chỉ chủ dự án tạo tag.
 
@@ -1184,6 +1186,8 @@ apps/android/
 
 Thay đổi chạm lane khác → mở Issue cho lane đó hoặc ghi rõ trong PR và chờ lane đó xác nhận.
 
+Codex nhận cả [AG] và [H] nhưng mỗi PR vẫn theo một làn; không ghép thay đổi API, vận hành và 3D vào cùng PR. Vùng dùng chung phải được Issue giao đích danh một người, có danh sách tệp và điều kiện trả quyền sửa; PR có `shared-ok`. Mỗi tác vụ dùng worktree/checkout riêng.
+
 ### 14.3 Điểm nóng xung đột và cách khóa
 1. **File build trong repo:** ngừng commit `van-dao.html`, `dist/`, `public/`; bản HTML đơn để tải offline lấy từ GitHub Release do CI đính kèm.
 2. **Lockfile:** commit `package-lock.json`, CI dùng `npm ci`. Xung đột lockfile → không sửa tay, chạy lại `npm install` sau khi rebase.
@@ -1192,6 +1196,7 @@ Thay đổi chạm lane khác → mở Issue cho lane đó hoặc ghi rõ trong 
 5. **Lớp Durable Object:** chỉ lane Thời gian thực sửa `migrations` trong `workers/realtime/wrangler.jsonc`.
 6. **Xuống dòng:** thêm `.gitattributes` (`* text=auto eol=lf`) và `.editorconfig` — người dùng đẩy từ Windows.
 7. **Hợp đồng trước, cài đặt sau:** schema API (`packages/shared/api.ts`) và codec giao thức (`packages/shared/rt-codec.js`) được merge **trước**; sau đó hai lane làm song song với dữ liệu giả (mock) theo cùng hợp đồng.
+8. **Kiểm kết quả tích hợp:** trước khi đề nghị merge, cập nhật/rebase `main`, kiểm cả PR phụ thuộc và chạy lại bộ kiểm tra trên cây mã đã tích hợp. Git không báo conflict chưa chứng minh tương thích API, lược đồ, nội dung hay runtime. Khi `main` đổi phải kiểm lại; không sửa nhánh của agent khác. PR xếp chồng phải ghi rõ base và thứ tự merge.
 
 ### 14.4 Dòng chảy từ nhánh đến production
 ```
@@ -1438,7 +1443,7 @@ Ký hiệu: **[C]** Claude · **[AG]** Antigravity · **[H]** Hermes · **[O]** 
 |---|---|---|---|
 | T3.1 | Nội dung biến thể 7 tuần × 3 trục × 3–6 biến thể; ánh xạ §8.2; lời nhắc | O + Hội đồng (H soạn nháp) | Trạng thái `da_duyet` |
 | T3.2 | `variant.js`, "Duyên khởi hành trình", Bia Tích Lũy mới (hoa sen 10 cánh, lịch tu, nhịp thiền, phản tỉnh), chứng thực tuần (UI) | C | Cùng đầu vào → cùng nhiệm vụ trên máy và máy chủ |
-| T3.3 | Migration 0006; API practice/deeds/attest/reminders/push; `ReminderClock` DO + Web Push | AG (DO: C) | Nhắc đúng giờ ±1 phút ở múi +7; 410 xóa subscription |
+| T3.3 | Migration mới kế tiếp; API practice/deeds/attest/reminders/push; `ReminderClock` DO + Web Push | AG (DO: C) | Nhắc đúng giờ ±1 phút ở múi +7; 410 xóa subscription |
 | T3.4 | Điều kiện Tầng 0 → 1, `tier_progress` | AG + C | Không câu chữ khẳng định chứng đắc |
 
 ### GĐ4 — Đại Thiền Đường thời gian thực (≈ 2–3 tuần)
@@ -1452,14 +1457,14 @@ Ký hiệu: **[C]** Claude · **[AG]** Antigravity · **[H]** Hermes · **[O]** 
 ### GĐ5 — Cộng đồng Hộ Trì và xã hội tu tập (≈ 3 tuần)
 | ID | Việc | Làn | Nghiệm thu |
 |---|---|---|---|
-| T5.1 | Migration 0007; API help/events/moderation; Llama Guard; Cloudflare Access cho `/admin` | AG | Bài vi phạm mẫu bị giữ lại; tài khoản mới phải qua duyệt |
+| T5.1 | Migration mới kế tiếp; API help/events/moderation; Llama Guard; Cloudflare Access cho `/admin` | AG | Bài vi phạm mẫu bị giữ lại; tài khoản mới phải qua duyệt |
 | T5.2 | UI Bảng Hộ Trì ở Cổng Vân Môn, sự kiện, đồng tu, thăm đảo (IslandRoom), nhóm, phòng nhóm | C | Hai người thật thăm đảo nhau, cùng an tọa |
 | T5.3 | Tóm tắt kiểm duyệt hằng ngày; xác minh đối tác sự kiện | H + O | Không việc kiểm duyệt nào tồn quá 24 giờ |
 
 ### GĐ6 — Đại Công Đức (≈ 3 tuần; chỉ mở khi xong các việc pháp lý của [O])
 | ID | Việc | Làn | Nghiệm thu |
 |---|---|---|---|
-| T6.1 | Migration 0008; danh mục, `/go/{id}`, connector Shopee (GraphQL HMAC) và WooCommerce REST, TikTok nếu được cấp quyền; nhập báo cáo chuyển đổi | AG | Link có subId; không lộ danh tính người bấm |
+| T6.1 | Migration mới kế tiếp; danh mục, `/go/{id}`, connector Shopee (GraphQL HMAC) và WooCommerce REST, TikTok nếu được cấp quyền; nhập báo cáo chuyển đổi | AG | Link có subId; không lộ danh tính người bấm |
 | T6.2 | `/gieo/intent`, webhook cổng chuyển khoản (chữ ký, chống trùng, đối soát), chiến dịch, pledge, sổ cái băm chuỗi + Workflows duyệt | AG | Webhook gửi lại 3 lần chỉ ghi 1 dòng; chuỗi hash kiểm lại được |
 | T6.3 | Đảo Đại Công Đức Viên (4 gian), UI danh mục, Gieo Duyên (VietQR), Bia Minh Bạch; ẩn Gieo trên bản Play | C | Không thấy từ camera Đại Thiền Đường; nhãn affiliate luôn hiện |
 | T6.4 | Pipeline ứng viên sản phẩm, nháp Sổ Minh Bạch, PR `head_hash` vào repo ledger công khai | H | Không sản phẩm nào lên `hien` mà thiếu người duyệt |
@@ -1486,6 +1491,8 @@ Ký hiệu: **[C]** Claude · **[AG]** Antigravity · **[H]** Hermes · **[O]** 
 iOS (Capacitor), sự kiện hồi hướng chung ngày rằm, gian hàng thành viên (giai đoạn B của §11.3, cần luật sư), tra cứu kinh có trích dẫn, xác thực thời thiền bằng nhịp thở trên máy, phân vùng dữ liệu khi vượt ngưỡng §4.4.
 
 **Song song hóa:** GĐ0 (tuần tự) → (GĐ1 ∥ GĐ2) → (GĐ3 ∥ GĐ4 ∥ GĐ8) → (GĐ5 ∥ GĐ7) → GĐ6 → GĐ9. Việc pháp lý của [O] chạy song song từ ngày đầu vì GĐ6 phụ thuộc vào nó.
+
+**Đánh số migration thực tế (14/11/2026):** `0006_better_auth_passkey.sql` và `0007_recovery_code.sql` đã dùng. Tệp mới tiếp theo là `0008_…`, kiểm lại `origin/main` trước khi tạo. Số cũ trong thiết kế §4 không phải quyền tái dùng hoặc sửa migration đã merge.
 
 ---
 
