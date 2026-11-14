@@ -18,4 +18,15 @@ node scripts/tts/publish-bench.mjs --bench-dir <cache> --date 20261115 --upload
 - `benchmark.json` là số đo thật của lần chọn hiện hành. ASR có thể nhận nhầm tên hiếm; giữ lỗi gốc để đối chiếu, không bỏ dấu thanh để làm đẹp điểm.
 - R2 không ghi đè khóa đã có nội dung khác. Mỗi lần upload đều tải lại và so SHA-256. Không đưa âm thanh lớn, thông tin xác thực hay URL nghe tạm vào Git.
 
-Sinh bộ bài và sổ khóa được bổ sung ở PR công cụ sản xuất tiếp theo; dữ liệu đi qua PR `hermes/`, không thay trạng thái phát hành.
+Sinh bộ bài (mặc định chỉ kiểm đầu vào; thêm `--upload` mới gọi dịch vụ):
+
+```text
+node scripts/tts/generate.mjs --series loi-phat-day --batch A --content-root <worktree-hermes>/content/bai-giang
+node scripts/tts/generate.mjs --series loi-phat-day --batch A --content-root <worktree-hermes>/content/bai-giang --upload
+```
+
+Đường Xưa dùng `--series duong-xua --batch B` (rồi C, D), thêm `--allow-drafts` để tạo tệp nghe bản nháp. Không đổi trạng thái. Công cụ chỉ ghi `body_r2_key` và `_audio.lock.json` trong worktree nhánh `hermes/`, sau khi MP3+cues được kiểm trên **cả hai** bucket. Bản nháp chỉ nghe qua URL ký, không qua `/media`.
+
+Mỗi ý TTS→STT tối đa bốn lần; chưa đạt giữ cờ trong sổ để người nghe kiểm. MP3 mono 24 kHz/64 kbps, loudnorm −16 LUFS/−1,5 dBTP; cues đo từ PCM thật, nghỉ 0,9 giây (1,5 trước ý cuối). Cache `.wrangler/tts-generated` giữ WAV/điểm/tệp cuối; cùng băm không gọi lại dịch vụ hoặc mã hóa lại. Mạng/upload lỗi thì chạy lại cùng lệnh; không ghi sổ nửa chừng cho bài chỉ có một bucket. Không xóa cache trước khi tải xong.
+
+`tts-lock.test.js` tự kiểm sổ hiện có trong repo khi chạy `npm test`: bài có khóa phải có dòng và băm khớp lời đọc, cùng giọng; sửa chữ phải sinh khóa mới. Cues được kiểm số ý/khoảng nghỉ/đuôi trước upload. CI không gọi dịch vụ thật. PR vẫn cần link nghe/cờ QA và kiểm staging sau merge.
