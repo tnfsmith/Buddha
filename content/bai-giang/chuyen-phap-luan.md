@@ -13,6 +13,7 @@ meta:
   loat: loi-phat-day
   thu_tu: 10
   dot: A
+body_r2_key: bai-giang/loi-phat-day/chuyen-phap-luan/v2-3042aac1/vi-sadaltager.mp3
 ---
 Sau đêm thành đạo, Đức Phật đi bộ nhiều ngày đến vườn Lộc Uyển gần thành Ba La Nại để tìm năm người bạn tu cũ. Đây là bài giảng đầu tiên của Ngài, được ví như lần đầu bánh xe Chánh pháp bắt đầu lăn.
 > Idaṃ kho pana, bhikkhave, dukkhaṃ ariyasaccaṃ.

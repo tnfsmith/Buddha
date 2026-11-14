@@ -13,6 +13,7 @@ meta:
   loat: loi-phat-day
   thu_tu: 40
   dot: A
+body_r2_key: bai-giang/loi-phat-day/diem-lanh/v2-a7c57eac/vi-sadaltager.mp3
 ---
 Một đêm ở tu viện Kỳ Viên, gần thành Xá Vệ, kinh kể có một vị trời đến hỏi Đức Phật: người đời bàn mãi về điềm lành, vậy điều gì mới thật sự là phúc lành?
 > Etaṃ maṅgalamuttamaṃ.

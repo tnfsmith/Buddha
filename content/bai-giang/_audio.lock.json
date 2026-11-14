@@ -1,0 +1,205 @@
+{
+  "v": 1,
+  "items": [
+    {
+      "id": "chuyen-phap-luan",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/chuyen-phap-luan/v2-3042aac1/vi-sadaltager.mp3",
+      "hash": "3042aac1",
+      "fingerprint": "3042aac1e88bae84cbdc5ca21c5b04b1ae8250393ad552bdef8c879b0a7d68c0",
+      "dur": 168.43395833333332,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T17:35:04.320Z",
+      "wer": 0.010648336890572915,
+      "sha256": "28ab285e5728889c55b9a9ea73907f30026d39ec024a1875b5f1aee07d1f50e7",
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0.043478260869565216,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2850942028985507
+        },
+        {
+          "i": 12,
+          "wer": 0.05,
+          "tail_ok": false,
+          "names_ok": true,
+          "seconds_per_word": 0.30785833333333334
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2836881720430107
+        }
+      ],
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.13,
+        "peak_dbtp": -1.79
+      },
+      "rendered_at": "2026-11-14T17:45:01.134Z"
+    },
+    {
+      "id": "diem-lanh",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/diem-lanh/v2-a7c57eac/vi-sadaltager.mp3",
+      "hash": "a7c57eac",
+      "fingerprint": "a7c57eac4eaa6ad6c8a922e06e9135376d38b2cc53547ddc1283b17dcb7a0df8",
+      "dur": 150.00195833333333,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T17:33:38.603Z",
+      "wer": 0.005911041514756686,
+      "sha256": "beadb6c2e3802a33a23cb1f589a39eafb686e694630b9c1dc66d8b0d96891b9d",
+      "flags": [],
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.13,
+        "peak_dbtp": -1.75
+      },
+      "rendered_at": "2026-11-14T17:45:22.625Z"
+    },
+    {
+      "id": "kalama",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/kalama/v2-ab666936/vi-sadaltager.mp3",
+      "hash": "ab666936",
+      "fingerprint": "ab666936baa00a92dc3e7cfa00ddfe2498a9a8afa18db5f5ebf541a3dc36e5e7",
+      "dur": 162.60195833333333,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T17:33:59.076Z",
+      "wer": 0.013627245770102912,
+      "sha256": "e05b8305f047238a6b05dcec4961a58231c726d95e8b048b40980e3c71b101d3",
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0.07692307692307693,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.33216239316239315
+        }
+      ],
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.14,
+        "peak_dbtp": -1.86
+      },
+      "rendered_at": "2026-11-14T17:45:45.985Z"
+    },
+    {
+      "id": "niem-xu",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/niem-xu/v2-38aa7ae7/vi-sadaltager.mp3",
+      "hash": "38aa7ae7",
+      "fingerprint": "38aa7ae70afc5ce0f7c63904ab888abdbf1d8deaf258bc619e35a4185f122243",
+      "dur": 152.80995833333333,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T17:37:24.127Z",
+      "wer": 0.006672447848918438,
+      "sha256": "8957e360edde486c9d75696d6e1dcd9b63ca7df5c41bfcb568ce9f7ef314ad9a",
+      "flags": [],
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.17,
+        "peak_dbtp": -1.8
+      },
+      "rendered_at": "2026-11-14T17:46:06.692Z"
+    },
+    {
+      "id": "phap-cu",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/phap-cu/v2-1131703e/vi-sadaltager.mp3",
+      "hash": "1131703e",
+      "fingerprint": "1131703e843573250897928b19189d2c9fb752f392008a679baa0dd8b680f62a",
+      "dur": 145.22595833333332,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T17:38:00.122Z",
+      "wer": 0.007010082079942901,
+      "sha256": "ba030bd78a4e9f19c65e3f1b958e704ed929358d1dbec6ac6b8d3ed710dc80da",
+      "flags": [],
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.08,
+        "peak_dbtp": -1.85
+      },
+      "rendered_at": "2026-11-14T17:46:26.755Z"
+    },
+    {
+      "id": "tu-bi",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/tu-bi/v2-a8bf31d2/vi-sadaltager.mp3",
+      "hash": "a8bf31d2",
+      "fingerprint": "a8bf31d20cee8b7ad6c76c54b7477b77ec38656871ffcf598ec17d38829ab239",
+      "dur": 147.16995833333334,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T17:38:29.888Z",
+      "wer": 0.009017298490982702,
+      "sha256": "29fcc64b06f56ed9122644040abdc72fbfb597fdd7d18944d7cd39005d0bff43",
+      "flags": [
+        {
+          "i": 2,
+          "wer": 0.09090909090909091,
+          "tail_ok": false,
+          "names_ok": true,
+          "seconds_per_word": 0.40225252525252525
+        }
+      ],
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.19,
+        "peak_dbtp": -1.85
+      },
+      "rendered_at": "2026-11-14T17:46:47.560Z"
+    },
+    {
+      "id": "vo-nga-tuong",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/vo-nga-tuong/v2-12086c55/vi-sadaltager.mp3",
+      "hash": "12086c55",
+      "fingerprint": "12086c556a1e8c3f2b80ac2e8586bb6aa17d189d88ec10e0a12c410ba33d7a2c",
+      "dur": 147.72195833333333,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T17:39:34.143Z",
+      "wer": 0.006938725231408159,
+      "sha256": "f87b85a9c9d5014e8339ec6ccd96fa789d1e5bfbc7135c6f3de157115a7e80cc",
+      "flags": [
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.294287037037037
+        }
+      ],
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.15,
+        "peak_dbtp": -1.57
+      },
+      "rendered_at": "2026-11-14T17:47:08.388Z"
+    }
+  ]
+}

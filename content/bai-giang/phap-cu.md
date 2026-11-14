@@ -13,6 +13,7 @@ meta:
   loat: loi-phat-day
   thu_tu: 70
   dot: A
+body_r2_key: bai-giang/loi-phat-day/phap-cu/v2-1131703e/vi-sadaltager.mp3
 ---
 Kinh Pháp Cú là những câu kệ ngắn Đức Phật nói vào nhiều dịp khác nhau, được người xưa gom lại. Phẩm đầu tiên tên là Song Yếu, vì các câu đi thành từng cặp, như hai mặt của bàn tay.
 > Manopubbaṅgamā dhammā manoseṭṭhā manomayā.
