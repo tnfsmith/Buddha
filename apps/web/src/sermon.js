@@ -3,8 +3,12 @@
 // Giọng đọc (ADR 0002): tệp MP3 sinh trước, trên R2, phát qua /media/<body_r2_key>; chữ từng ý chạy theo <khóa>.cues.json.
 export const HOMAGE = 'Namo tassa bhagavato arahato sammāsambuddhassa.';
 export const AI_VOICE = 'Giọng đọc do AI tạo (OpenAI)';
-/** Nhãn nhóm của các loạt bài (chỉ là tên loạt và tên phần; nội dung bài nằm ở máy chủ) */
-export const LOAT = { 'duong-xua': { name: 'Đường Xưa Mây Trắng', phan: ['', 'Phần Một — Ánh sao mai', 'Phần Hai — Thương là hiểu', 'Phần Ba — Về với mây trắng'] } };
+/** Menu các loạt bài (chỉ là tên loạt và tên phần; nội dung bài nằm ở máy chủ). Bài chưa có meta.loat vào loạt mặc định. */
+export const LOAT = {
+  'loi-phat-day': { name: 'Lời Phật dạy', phan: [] },
+  'duong-xua': { name: 'Đường Xưa Mây Trắng', phan: ['', 'Phần Một — Ánh sao mai', 'Phần Hai — Thương là hiểu', 'Phần Ba — Về với mây trắng'] },
+};
+export const LOAT0 = 'loi-phat-day';
 const R2KEY = /^[a-z0-9][a-z0-9._/-]*\.mp3$/i;
 const metaOf = (m) => { if (typeof m === 'string') { try { m = JSON.parse(m); } catch (e) { m = null; } } return m && typeof m === 'object' ? m : {}; };
 
@@ -21,12 +25,14 @@ export function toSermon(it) {
   const m = metaOf(it.meta), k = typeof it.body_r2_key === 'string' && R2KEY.test(it.body_r2_key) && !it.body_r2_key.includes('..') ? it.body_r2_key : '';
   return { id: String(it.id), version: it.version, name: String(it.title), ref: String(it.source_ref), key: pali.length ? pali[0].replace(/^>\s*/, '') : '', lines,
     audio: k ? { src: '/media/' + k, cues: '/media/' + k.replace(/\.mp3$/i, '.cues.json') } : null,
-    loat: typeof m.loat === 'string' ? m.loat : '', phan: Number(m.phan) || 0, order: m.thu_tu != null && m.thu_tu !== '' && Number.isFinite(+m.thu_tu) ? +m.thu_tu : null };
+    loat: typeof m.loat === 'string' && /^[a-z0-9-]{1,40}$/.test(m.loat) ? m.loat : LOAT0, phan: Number(m.phan) || 0, order: m.thu_tu != null && m.thu_tu !== '' && Number.isFinite(+m.thu_tu) ? +m.thu_tu : null };
 }
-/** Xếp theo loạt rồi thu_tu; bài không có thu_tu giữ thứ tự máy chủ, đứng sau cùng */
+/** Trong mỗi loạt: xếp theo thu_tu; bài không có thu_tu giữ thứ tự máy chủ, đứng sau */
 export function sortSermons(list) {
-  return list.map((x, i) => ({ x, i })).sort((a, b) => (a.x.order == null) - (b.x.order == null) || a.x.loat.localeCompare(b.x.loat) || (a.x.order || 0) - (b.x.order || 0) || a.i - b.i).map((o) => o.x);
+  return list.map((x, i) => ({ x, i })).sort((a, b) => (a.x.order == null) - (b.x.order == null) || (a.x.order || 0) - (b.x.order || 0) || a.i - b.i).map((o) => o.x);
 }
+/** Các thẻ menu: mọi loạt đã biết, thêm loạt lạ có trong danh sách */
+export function loatTabs(list) { return [...new Set([...Object.keys(LOAT), ...list.map((x) => x.loat)])].map((k) => [k, (LOAT[k] && LOAT[k].name) || k]); }
 
 /** Danh sách bài đã duyệt của phiên này. state: idle → loading → ok (items có thể rỗng) | error (mất mạng, bản HTML đơn mở từ máy, máy chủ lỗi) */
 export const library = { state: 'idle', items: [] };

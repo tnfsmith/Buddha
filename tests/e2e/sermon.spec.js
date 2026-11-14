@@ -160,9 +160,14 @@ test('bài có giọng đọc: xếp theo loạt và thứ tự chương, phát 
   await mock(page, [VOICED, OK, EARLY]);
   const hits = await media(page);
   await open(page, 'sermon=khong-co');
-  await slow(panel(page).locator('[data-sut]')).toHaveCount(3);
-  expect(await panel(page).locator('[data-sut]').evaluateAll((els) => els.map((e) => e.dataset.sut))).toEqual(['chuong-dau', 'co-tieng', 'bai-thu']);
-  for (const t of ['Đường Xưa Mây Trắng', 'Phần Một — Ánh sao mai', 'Bài giảng khác', 'Nguồn thử 1.1 · có giọng đọc']) await expect(panel(page)).toContainText(t);
+  // menu riêng cho từng loạt: bài chưa có meta vào «Lời Phật dạy» (thẻ đầu), loạt Đường Xưa xếp theo thu_tu
+  const tabs = panel(page).locator('[data-opt="loat"] button');
+  await slow(tabs).toHaveText(['Lời Phật dạy', 'Đường Xưa Mây Trắng']);
+  await expect(panel(page).locator('[data-opt="loat"] .on')).toHaveText('Lời Phật dạy');
+  await expect(panel(page).locator('[data-sut]')).toHaveCount(1); await expect(panel(page).locator('[data-sut="bai-thu"]')).toHaveCount(1);
+  await tabs.nth(1).click();
+  expect(await panel(page).locator('[data-sut]').evaluateAll((els) => els.map((e) => e.dataset.sut))).toEqual(['chuong-dau', 'co-tieng']);
+  for (const t of ['Phần Một — Ánh sao mai', 'Nguồn thử 1.1 · có giọng đọc']) await expect(panel(page)).toContainText(t);
 
   await panel(page).locator('[data-sut="co-tieng"]').click();
   await panel(page).locator('[data-act="sermon-go"]').click();
