@@ -5,14 +5,17 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Lấy cỏ che bùn
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 46–48 · MN 128; Pháp Cú 5–6; Luật tạng Đại phẩm X, tranh chấp tại Câu Thiểm Di · https://suttacentral.net/mn128/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 46–48 · MN
+  128; Pháp Cú 5–6; Luật tạng Đại phẩm X, tranh chấp tại Câu Thiểm Di ·
+  https://suttacentral.net/mn128/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 2
   thu_tu: 220
-  chuong: [46, 47, 48]
+  chuong: [ 46, 47, 48 ]
   dot: C
+body_r2_key: bai-giang/duong-xua/cau-thiem-di/v1-72bde96a/vi-sadaltager.mp3
 ---
 Trong cộng đồng tu học ở Câu Thiểm Di, một bất đồng nhỏ dần trở thành cuộc tranh cãi kéo dài. Những người từng sống và học bên nhau bắt đầu chia thành hai phía, mỗi bên giữ chặt cách hiểu của mình.
 Điều cần làm rõ ban đầu bị phủ thêm nhiều lời phê phán và sự bênh vực. Người nghe câu chuyện từ một phía lại tiếp lời phía ấy, khiến khoảng cách lớn lên và bầu không khí chung trở nên nặng nề hơn.

@@ -5,14 +5,17 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Nước mắt ai cũng mặn
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 43 · Thag 12.2, lời kể của Sunita về thân phận bị khinh rẻ và việc được đón nhận · https://suttacentral.net/thag12.2/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 43 · Thag
+  12.2, lời kể của Sunita về thân phận bị khinh rẻ và việc được đón nhận ·
+  https://suttacentral.net/thag12.2/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 2
   thu_tu: 190
-  chuong: [43]
+  chuong: [ 43 ]
   dot: C
+body_r2_key: bai-giang/duong-xua/nuoc-mat-ai-cung-man/v1-9c444a7f/vi-sadaltager.mp3
 ---
 Trên một con đường trong thành, người làm công việc dọn sạch những thứ bị bỏ đi đang tìm cách nép mình sang bên. Anh tên Sunita, quen với việc bị người khác tránh xa và ít khi được đón bằng một lời nói tử tế.
 Trong cảnh kể của sách, công việc gánh chất thải khiến sự xa lánh càng nặng nề hơn. Anh làm điều thành phố cần mỗi ngày, nhưng chính người làm công việc ấy lại thường bị đối xử như thể không đáng được nhìn nhận.

@@ -5,14 +5,19 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Ngày trở về
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 34 · Phật truyện về cuộc trở về Ca Tỳ La Vệ; đối chiếu Luật tạng Đại phẩm I.54 về gia đình Đức Phật · https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chuong-34-mua-xuan-doan-tu/"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 34 · Phật
+  truyện về cuộc trở về Ca Tỳ La Vệ; đối chiếu Luật tạng Đại phẩm I.54 về gia
+  đình Đức Phật ·
+  https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chu\
+  ong-34-mua-xuan-doan-tu/"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 2
   thu_tu: 140
-  chuong: [34]
+  chuong: [ 34 ]
   dot: C
+body_r2_key: bai-giang/duong-xua/sum-hop/v1-1bed6ba4/vi-sadaltager.mp3
 ---
 Mùa xuân trở lại với những lối đi trong thành Ca Tỳ La Vệ. Sau nhiều năm xa nhà, Đức Phật cùng các vị khất sĩ trở về, để cuộc gặp với gia đình diễn ra giữa những điều vừa quen vừa khác.
 Vua Tịnh Phạn đón người con mà mình từng đặt nhiều mong đợi. Trước mắt vua vẫn là gương mặt thân thuộc, nhưng nếp sống và con đường người con lựa chọn đã vượt khỏi những dự tính ngày trước.

@@ -5,14 +5,17 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Làm lành, lánh dữ
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 30 · Pháp Cú 183–185, lời nhắc về không gây hại, làm lành và thanh lọc tâm · https://suttacentral.net/dhp179-196/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 30 · Pháp
+  Cú 183–185, lời nhắc về không gây hại, làm lành và thanh lọc tâm ·
+  https://suttacentral.net/dhp179-196/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 2
   thu_tu: 120
-  chuong: [30]
+  chuong: [ 30 ]
   dot: C
+body_r2_key: bai-giang/duong-xua/lam-lanh-lanh-du/v1-80a433d2/vi-sadaltager.mp3
 ---
 Trong khu vườn Trúc Lâm gần thành Vương Xá, những thân tre đứng sát nhau dưới ánh chiều. Người đến nghe Đức Phật mang theo nhiều câu hỏi, còn các vị khất sĩ ngồi gần để cùng lắng nghe.
 Có người mới bước vào con đường tu học, chưa biết phải bắt đầu từ đâu. Giữa rất nhiều lời giảng và cách thực hành, họ mong một điều đủ rõ để có thể đem về sống ngay trong ngày.

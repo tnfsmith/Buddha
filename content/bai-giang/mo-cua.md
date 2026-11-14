@@ -5,14 +5,17 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Mở cửa
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 45 · AN 8.51, truyền thống kể về Ma Ha Ba Xà Ba Đề và việc thành lập tăng đoàn nữ · https://suttacentral.net/an8.51/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 45 · AN
+  8.51, truyền thống kể về Ma Ha Ba Xà Ba Đề và việc thành lập tăng đoàn nữ ·
+  https://suttacentral.net/an8.51/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 2
   thu_tu: 200
-  chuong: [45]
+  chuong: [ 45 ]
   dot: C
+body_r2_key: bai-giang/duong-xua/mo-cua/v1-2a823920/vi-sadaltager.mp3
 ---
 Bên ngoài nơi Đức Phật đang cư trú, những người phụ nữ dừng lại sau một hành trình dài. Bụi đường còn trên áo, chân đã sưng vì đi bộ, nhưng điều họ mong được trình bày vẫn rất rõ trong lòng.
 Người đi đầu là Ma Ha Ba Xà Ba Đề, người đã nuôi dưỡng Tất Đạt Đa từ thuở nhỏ. Bà cùng những người phụ nữ dòng họ Thích muốn được bước vào nếp sống tu học như những người đã đi trước.

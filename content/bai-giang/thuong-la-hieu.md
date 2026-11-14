@@ -5,14 +5,19 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Thương là hiểu
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 42: đối thoại với vua Ba Tư Nặc do tác giả sách kể · đối chiếu Sn 1.8 và SN 3.8 về lòng thương không hại · https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chuong-42-khong-hieu-biet-thi-khong-the-thuong-yeu-1/"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 42: đối
+  thoại với vua Ba Tư Nặc do tác giả sách kể · đối chiếu Sn 1.8 và SN 3.8 về
+  lòng thương không hại ·
+  https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chu\
+  ong-42-khong-hieu-biet-thi-khong-the-thuong-yeu-1/"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 2
   thu_tu: 180
-  chuong: [42]
+  chuong: [ 42 ]
   dot: C
+body_r2_key: bai-giang/duong-xua/thuong-la-hieu/v1-35bdf799/vi-sadaltager.mp3
 ---
 Trong một cuộc gặp được kể ở sách, vua Ba Tư Nặc đến trò chuyện với Đức Phật về đời sống và tình thương. Một vị vua cũng mang những nỗi lo rất người, dù bên ngoài là trách nhiệm đối với cả một xứ sở.
 Vua thương người thân và quan tâm đến dân chúng, nhưng cũng biết cảm giác đau khi người mình thương gặp điều bất hạnh. Từ kinh nghiệm ấy, ông đặt câu hỏi: tình thương có thể nào đi cùng sự tự do và bình an?

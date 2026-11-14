@@ -5,14 +5,17 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Sống trọn hôm nay
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 53 · MN 131, không bị quá khứ, tương lai hay sự chấp giữ hiện tại cuốn đi · https://suttacentral.net/mn131/en/sujato"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 53 · MN
+  131, không bị quá khứ, tương lai hay sự chấp giữ hiện tại cuốn đi ·
+  https://suttacentral.net/mn131/en/sujato"
 status: cho_duyet
 meta:
   loat: duong-xua
   phan: 2
   thu_tu: 240
-  chuong: [53]
+  chuong: [ 53 ]
   dot: C
+body_r2_key: bai-giang/duong-xua/song-trong-hien-tai/v1-782df793/vi-sadaltager.mp3
 ---
 Trong khu vườn Kỳ Viên gần thành Xá Vệ, Đức Phật nói với các vị khất sĩ về một đời sống biết có mặt. Bên ngoài là cảnh của một ngày đang trôi, còn trong mỗi người có thể vẫn vang lên nhiều chuyện đã xa.
 Người nghe ai cũng có một quá khứ để nhớ và một ngày mai để nghĩ tới. Chỉ một hình ảnh hay một câu nói vừa gặp cũng có thể đưa tâm đi rất xa khỏi nơi thân mình đang ngồi và điều mình đang làm.
