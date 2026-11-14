@@ -140,7 +140,10 @@ Ví dụ: `bai-giang/duong-xua/con-thien-nga/v1-3fa94c1d/vi-cedar.mp3`.
   - nhóm theo loạt rồi theo phần ("Đường Xưa Mây Trắng · Phần Một…"), xếp theo `thu_tu`;
   - bài không có `meta` xếp sau cùng.
 - **Khi phát:**
-  - `HTMLAudioElement` → `MediaElementAudioSourceNode` vào đồ thị Web Audio sẵn có, để hạ nhạc nền khi có giọng và lấy biên độ cho hiệu ứng cảnh;
+  - `HTMLAudioElement` phát trực tiếp, không đi qua Web Audio, để tránh im tiếng khi `AudioContext` bị treo trên iOS;
+  - mở khóa phát ngay trong cú chạm "Thỉnh giảng" (Safari iOS chặn phát sau đó nếu không có cú chạm);
+  - hạ Vân Nhạc như hiện nay khi giảng;
+  - Tôn tượng "nói" trong khoảng `t`–`e` của từng ý;
   - chữ từng ý hiện theo `cues`;
   - nút tạm dừng / tiếp, ý trước / ý sau.
 - **Nhãn cố định khi có tiếng:** "Giọng đọc do AI tạo (OpenAI)".
