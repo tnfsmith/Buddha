@@ -8,7 +8,7 @@ import { idbGet, idbSet } from './net/idb.js';
 
 export const KEY = 'vandao.v1';
 export const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-export const fresh = () => ({ v: 1, day: 1, lastDate: null, done: {}, totals: { duc: 0, thien: 0, tue: 0 }, sacca: 0, sessions: 0, completed: false, open: false, name: '', look: defaultLook(), birds: { n: 6, freq: 1, vol: 0.6 }, music: { on: false, source: 'time', song: 'van-thuy', mood: 'an', order: 'loop', len: 0, genre: 'all', vol: 0.6 } });
+export const fresh = () => ({ v: 1, day: 1, lastDate: null, done: {}, totals: { duc: 0, thien: 0, tue: 0 }, sacca: 0, sessions: 0, completed: false, open: false, name: '', look: defaultLook(), birds: { n: 6, freq: 1, vol: 0.6 }, music: { on: false, source: 'time', song: 'van-thuy', mood: 'an', order: 'loop', len: 0, genre: 'all', vol: 0.6 }, vandu: false });
 // Cài đặt nhạc bản cũ (và bản từ thiết bị chưa cập nhật): 'one' = phát liên tục một khúc → 'loop' không giới hạn; 'đổi khúc sau 3/5/10 phút' → thời lượng khúc
 export function fixMusic(M) { if (M.order === 'one') M.order = 'loop'; if (!['loop', 'seq', 'shuf', 'once'].includes(M.order)) M.order = 'loop'; if (typeof M.len !== 'number') M.len = M.order === 'loop' ? 0 : M.span >= 10 ? 15 : 5; if (!M.genre) M.genre = 'all'; delete M.span; return M; }
 

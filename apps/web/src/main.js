@@ -38,7 +38,7 @@ const musicSync = () => { musBtn(); renderDock(); if (U.view === 'zone') render(
 const musicStart = (id, again) => amb.play(id || wantSong(), { len: fixMusic(S.music).len, again }).then(() => { S.music.on = true; save(); musicSync(); }).catch((e) => toast('Chưa phát được nhạc: ' + e.message));
 const musicStop = () => { amb.stop(); S.music.on = false; save(); musicSync(); };
 // Hết một khúc "phát 1 lần": ba tiếng chuông bát rồi lắng hẳn
-const musicEnd = () => { amb.end(); S.music.on = false; save(); musicSync(); toast('Khúc nhạc đã trọn.'); };
+const musicEnd = () => { amb.end(); S.music.on = false; save(); musicSync(); toast('Khúc nhạc đã trọn.'); if (!player.playing) U.sit = null; };   // thời ngồi theo nhạc đã trọn: Vân Du (nếu có) trở về bên nhân vật
 // Khúc kế tiếp trong thể loại đang chọn. `manual`: người dùng bấm "Khúc khác" → từ nay giữ khúc tự chọn, không để lịch/giờ đổi lại
 function musicNext(manual) {
   const M = S.music, pool = songsOf(M.genre), i = pool.findIndex((x) => x.id === amb.cur); let id = pool[(i + 1) % pool.length].id;
@@ -102,7 +102,7 @@ $('#bio').addEventListener('click', (e) => {
   document.querySelectorAll('#bio button').forEach((x) => x.classList.toggle('on', x === b));
   toast({ samadhi: 'Định tĩnh: trở về kịch bản chuẩn', uddhacca: 'Trị phóng dật: âm trầm 136,1 Hz dâng từ dưới Vân Tọa', thina: 'Trị hôn trầm: chuông tỉnh giác từ đỉnh đầu' }[U.bio] + (player.playing ? '' : ' (nghe được khi đang phát)'));
 });
-player.onend = () => { S.sessions++; save(); record('session.done', { kind: 'thien15', duration_s: 900 }); toast('Sādhu! Thời thiền đã viên mãn. Hồi hướng công đức.'); render(); };
+player.onend = () => { U.sit = null; S.sessions++; save(); record('session.done', { kind: 'thien15', duration_s: 900 }); toast('Sādhu! Thời thiền đã viên mãn. Hồi hướng công đức.'); render(); };
 function toast(msg) { const el = $('#toast'); el.textContent = msg; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 3800); }
 
 // ───────── Nhãn trong cảnh ─────────
@@ -155,7 +155,7 @@ function hideWake() { clearTimeout(U.wakeT); wakeEl.hidden = true; U.wakeFn = nu
 /** Chạy một lệnh di chuyển. Đang tọa thiền thì hỏi; người dùng đồng ý mới xả thiền rồi chạy lệnh. */
 function move(fn) {
   if (!meditating()) { U.sit = null; return fn(); }
-  U.wakeFn = fn; wakeEl.querySelector('span').textContent = player.playing ? 'Thời thiền đang diễn ra. Xả thiền để di chuyển?' : 'Bạn đang tọa thiền. Xả thiền để di chuyển?';
+  U.wakeFn = fn; wakeEl.querySelector('span').textContent = U.vd ? `Đang Vân Du, đã ngồi yên ${Math.floor(sitMin())} phút. Xả thiền để trở về?` : player.playing ? 'Thời thiền đang diễn ra. Xả thiền để di chuyển?' : 'Bạn đang tọa thiền. Xả thiền để di chuyển?';
   wakeEl.hidden = false; U.quietManual = false; wake(); clearTimeout(U.wakeT); U.wakeT = setTimeout(hideWake, 12000);   // không trả lời thì coi như ngồi tiếp
 }
 function endSit(then) { if (player.playing) player.pause(); U.sit = null; world.wake(() => { toast('Đã xả thiền.'); if (then) then(); render(); }); render(); }
@@ -163,6 +163,28 @@ wakeEl.addEventListener('click', (e) => { const b = e.target.closest('[data-wake
 // Rời phân khu bằng chân: bảng trở về Vân Đảo nhưng máy quay ở lại bên nhân vật
 function leaveZone() { if (U.view === 'zone' || U.view === 'board') { U.view = 'home'; U.zone = null; world.mode = 'island'; world.setLimits(); render(); } }
 function walkPoint(x, z) { if (world.walkToPoint(x, z)) leaveZone(); }
+
+// ───────── Vân Du: khi tọa thiền, máy quay rời chỗ ngồi đi viếng các cảnh ─────────
+// Chặng tính theo số phút NGỒI YÊN liên tục, không phải thước đo tầng thiền hay quả vị (AGENTS.md mục 1.6): chỉ gọi tên cảnh đang viếng.
+const VD = [['An trú', 0], ['Vân Đảo', 1], ['Biển mây', 4], ['Tịnh Cảnh', 9], ['Thanh Lương', 16], ['Tịnh Quang', 26], ['Vô Biên', 40]];
+const CALM = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches, vdEl = $('#vd');
+const sitMin = () => (U.sit ? (Date.now() - U.sit.at) / 60000 : 0);
+/** Vị trí trên hành trình Vân Du (0…6, có phần lẻ khi đang lướt giữa hai cảnh); null khi không Vân Du */
+function vanduK() {
+  if (U.vdForce !== undefined) return U.vdForce;
+  if (!S.vandu || !world || U.mode !== 'island' || U.view === 'creator' || !U.sit || !meditating()) return null;
+  const T = sitMin(); let i = VD.length - 1; while (i > 0 && T < VD[i][1]) i--;
+  if (i === VD.length - 1 || CALM) return i;   // người chọn "giảm chuyển động": chỉ đổi cảnh ở mốc, không lướt liên tục
+  const f = (T - VD[i][1]) / (VD[i + 1][1] - VD[i][1]); return i + f * f * (3 - 2 * f);
+}
+function vanduTick() {
+  const k = vanduK(), on = k !== null; if (world) { world.calm = CALM; world.setVandu(k); }
+  if (on !== !!U.vd) { U.vd = on; document.body.classList.toggle('vandu', on); vdEl.hidden = !on;
+    // giữ màn hình sáng suốt thời ngồi dài (điện thoại không tự tắt giữa chừng); trình duyệt không hỗ trợ thì bỏ qua
+    if (on && navigator.wakeLock) navigator.wakeLock.request('screen').then((l) => { if (U.vd) U.lock = l; else l.release(); }).catch(() => {});
+    if (!on && U.lock) { U.lock.release().catch(() => {}); U.lock = null; } }
+  if (on) { const i = Math.min(VD.length - 1, Math.floor(k + 0.5)), T = sitMin() * 60, txt = `Vân Du · ${VD[i][0]} · chặng ${i + 1}/${VD.length}` + (U.sit ? ` · ngồi yên ${fmt(T)}` : ''); if (vdEl.textContent !== txt) vdEl.textContent = txt; }
+}
 
 // Phím mũi tên hoặc W A S D: bước đi theo hướng đang nhìn
 const typing = (e) => !!(e.target && e.target.matches && e.target.matches('textarea,input,select,[role=slider]'));   // đang gõ chữ hoặc kéo thanh trượt: phím không điều khiển nhân vật
@@ -184,11 +206,12 @@ let down = null;
 $('#gl').addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, t: performance.now() }; U.quietManual = false; });
 $('#gl').addEventListener('pointerup', (e) => {
   if (!down || !world) return; const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y), dt = performance.now() - down.t; down = null;
+  if (U.vd) return move(() => {});   // đang Vân Du: mọi cái chạm vào cảnh đều là lời hỏi xả thiền hay ngồi tiếp
   if (moved > 6 || dt > 400 || U.mode !== 'island' || U.view === 'creator') return;
   const r = e.target.getBoundingClientRect(), p = world.pickGround(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
   clearTimeout(U.walkT); if (p) U.walkT = setTimeout(() => move(() => walkPoint(p.x, p.z)), 260);   // chờ một nhịp: nếu là nhấp đúp thì không đi
 });
-$('#gl').addEventListener('dblclick', (e) => { if (!world || U.view === 'creator') return; clearTimeout(U.walkT); world.stopWalk(); const r = e.target.getBoundingClientRect(); world.zoomAt(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); });
+$('#gl').addEventListener('dblclick', (e) => { if (!world || U.view === 'creator' || U.vd) return; clearTimeout(U.walkT); world.stopWalk(); const r = e.target.getBoundingClientRect(); world.zoomAt(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); });
 
 // ───────── Bảng bên phải ─────────
 const panel = $('#panel');
@@ -291,6 +314,8 @@ function render() {
       (z.action === 'board' ? '<button class="btn" data-act="board">Mở bảng nhiệm vụ</button>' : '') + '<button class="ghost" data-act="home">← Vân Đảo</button></div>' + (z.id === 'kuti' ? '<h3>Hướng ngồi</h3>' + seg('kface', [[0, 'Cửa chính'], [1, 'Bên phải'], [2, 'Vào trong'], [3, 'Bên trái']], S.kface || 0) : '') +
       ((z.id === 'kuti' || z.id === 'tea') && ok ? `<h3>Nhạc thiền</h3><div class="row"><button class="btn alt" data-act="mus-toggle">${amb.on ? 'Tạm ngưng nhạc' : 'Mở nhạc thiền'}</button><button class="ghost" data-act="mus-open">Chọn khúc và thời lượng</button></div>
         <p class="muted">${amb.on && amb.cur ? 'Đang phát: ' + esc(SONG[amb.cur].name) + leftTxt() + '.' : 'Nhạc đang tắt.'} ${S.music.len ? 'Mỗi khúc ' + S.music.len + ' phút, ' + ORDER[S.music.order].toLowerCase() + '.' : 'Phát liên tục.'}</p>` : '') +
+      (['kuti', 'pad', 'tea'].includes(z.id) && ok ? `<h3>Vân Du</h3><label class="chk"><input type="checkbox" data-vandu ${S.vandu ? 'checked' : ''}> Khi tọa thiền, máy quay rời chỗ ngồi đi viếng cảnh</label>
+        <p class="muted">Ngồi yên càng lâu, cảnh càng xa: ${VD.slice(1).map((v) => v[0] + ' (' + v[1] + '′)').join(', ')}. Vân Du chỉ đếm thời gian ngồi yên; đó không phải thước đo tầng thiền hay quả vị. Chạm vào cảnh để xả thiền hoặc ngồi tiếp.</p>` : '') +
       (z.action === 'gate' && ok ? `<p class="muted">Hiện tại: ${S.open ? 'Nghênh khách. Bấm tên một bạn đồng tu ở đảo bên để chào hoặc sang thăm.' : 'Độc cư.'}</p>` : '');
   } else {
     const sim = U.sim ?? d;
@@ -323,6 +348,7 @@ panel.addEventListener('input', (e) => {
   if (t.dataset.bn !== undefined) { S.birds.n = +t.value; const o = panel.querySelector('[data-bnv]'); if (o) o.textContent = S.birds.n; save(); return; }
   if (t.dataset.bvol !== undefined) { S.birds.vol = +t.value; const o = panel.querySelector('[data-bvv]'); if (o) o.textContent = S.birds.vol > 0 ? Math.round(S.birds.vol * 100) + '%' : 'tắt'; save(); return; }
   if (t.dataset.tts !== undefined) { S.tts = t.checked; save(); return; }
+  if (t.dataset.vandu !== undefined) { S.vandu = t.checked; save(); return; }
   if (t.id === 'sim') { U.sim = +t.value; U.tier = null; $('#simv').textContent = t.value; $('#simt').textContent = WEEKS[Math.ceil(U.sim / 7) - 1].reward; return; }
   if (t.id === 'nm') { U.draft.name = t.value; const nb = nameBlock(t.value); $('#nmBox').innerHTML = nb.html; const b = panel.querySelector('[data-act="saveLook"]'); if (b) b.disabled = !nb.c.ok; return; }
   if (t.dataset.opt === 'height') { U.draft.look.height = +t.value; applyDraft(); return; }
@@ -506,9 +532,12 @@ function frame(now) {
   if (sm.on && world && U.mode === 'hall') { const want = sermon.phase === 'line' || sermon.phase === 'gap' || sermon.phase === 'dedicate' ? 'close' : 'wide';
     if (U.sCam !== want) { U.sCam = want; const V3 = World.V3; world.wide = true; if (want === 'close') world.flyTo(new V3(-30, 96, -300), new V3(0, 318, -760), 56, 2.6); else world.flyTo(new V3(0, 40, -150), new V3(0, 150, -560), 62, 2.6); } }
   if (world) world.update(dt, { vis, breath: breathEnv(started ? t : now / 1000), waves, isl: islandState(), sermon: sm });
+  // bấm ▶ khi nhân vật đang ngồi: thời ngồi tính từ lúc đó
+  if (player.playing && !U.sit && world && U.mode === 'island' && world.av.state === 'sit') U.sit = { at: Date.now(), zone: world.av.id };
+  if (frames % 6 === 0) vanduTick();
   updateBar(t); updateLabels();
   if (U.mode === 'hall' && S.radar && frames % 2 === 0) { drawRadar(t); drawScope(); }
-  document.body.classList.toggle('quiet', U.quietManual || (player.playing && U.mode === 'hall' && now - U.idleAt > 9000 && U.drag === null));
+  document.body.classList.toggle('quiet', U.quietManual || (now - U.idleAt > 9000 && U.drag === null && wakeEl.hidden && ((player.playing && U.mode === 'hall') || !!U.vd)));
   requestAnimationFrame(frame);
 }
 
@@ -522,6 +551,7 @@ if (hash.tier !== undefined) pickTier(+hash.tier);
 if (hash.realm && world) world.setMode('realm');
 if (hash.sermon) { U.hallTab = 'sermon'; setMode('hall'); sermonStart(hash.sermon === '1' ? SUTTAS[0].id : hash.sermon); if (hash.sk) { for (let i = 0; i < +hash.sk * 20; i++) sermon.tick(0.05); } }
 if (hash.music) { U.dock = true; renderDock(); }
+if (hash.vandu !== undefined) U.vdForce = +hash.vandu;   // xem thử một chặng Vân Du: #vandu=0…6
 if (hash.view === 'board') { U.view = 'board'; render(); }
 if (hash.view === 'creator') openCreator();
 if (hash.at && world && World.NODES[hash.at]) { const n = World.NODES[hash.at]; world.av.pos.set(n[0], 0, n[1]); world.av.pos.y = World.floorH(n[0], n[1]); world.snap = true; }
