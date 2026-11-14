@@ -55,13 +55,14 @@ test.describe('giao diện (API giả lập)', () => {
       if (path === '/api/auth/recovery-code/generate') { secured = true; return json(route, { code: 'ABCD-EFGH-JKMN-PQRS-TVWX-YZ01-23', created_at: Date.now() }); }
       if (path === '/api/auth/list-sessions') return json(route, [{}]);
       if (path === '/api/auth/passkey/list-user-passkeys') return json(route, []);
+      if (path === '/api/auth/passkey/generate-register-options') return json(route, { challenge: 'AAAA', rp: { name: 'Vân Đạo', id: 'localhost' }, user: { id: 'AAAA', name: 'x', displayName: 'x' }, pubKeyCredParams: [{ type: 'public-key', alg: -7 }], excludeCredentials: [] });
       return json(route, { error: { code: 'not_found', message: 'x' } }, 404);
     });
-    await open(page, BASE);
+    await open(page, BASE); await park(page);   // ca này chỉ kiểm giao diện 2D: cho cảnh 3D ngừng vẽ để máy kiểm thử (vẽ bằng CPU) phản hồi nhanh
     await page.locator('#panel [data-act="acct-open"]').first().click();
     await slow(panel(page)).toContainText('Không cần email, không cần mật khẩu');
     await act(page, 'keep');
-    await slow(panel(page).locator('h2')).toHaveText('Tài khoản');
+    await slow(panel(page).locator('h2')).toHaveText('Tài khoản', { timeout: 150_000 });   // máy kiểm thử vẽ 3D bằng CPU: mỗi lượt gọi API chờ vài giây
     await slow(panel(page)).toContainText('Chưa có cách đăng nhập lại');
     const patch = calls.find((c) => c.path === '/api/v1/profile');
     expect(patch.body).toMatchObject({ tinh_danh: 'Tâm An', look: { hair: 'ngan', robe: 1 } });
@@ -75,12 +76,21 @@ test.describe('giao diện (API giả lập)', () => {
     await act(page, 'code-done');
     await slow(panel(page)).not.toContainText('Chưa có cách đăng nhập lại');
     await slow(panel(page)).toContainText('Mã khôi phục: đã tạo');
+    // Thiết bị đã gắn vân tay / Face ID mà bấm gắn lại: trình duyệt ném InvalidStateError bằng tiếng Anh → phải thành câu tiếng Việt, không phải báo lỗi
+    await page.evaluate(() => { navigator.credentials.create = () => Promise.reject(new DOMException('The user attempted to register an authenticator that contains one of the credentials already registered with the relying party.', 'InvalidStateError')); });
+    await act(page, 'passkey');
+    await slow(panel(page).locator('[role="status"]')).toContainText('đã gắn vân tay / Face ID cho hành trình này rồi, không cần gắn lại');
+    await expect(panel(page)).not.toContainText('relying party'); await expect(panel(page).locator('[role="alert"]')).toHaveCount(0);
+    // Hủy giữa chừng: câu báo cũng bằng tiếng Việt
+    await page.evaluate(() => { navigator.credentials.create = () => Promise.reject(new DOMException('The operation either timed out or was not allowed.', 'NotAllowedError')); });
+    await act(page, 'passkey');
+    await slow(panel(page).locator('[role="alert"]')).toContainText('Chưa gắn được: bạn đã hủy');
   });
 
   test('máy mới: màn "Tôi đã có hành trình" có đủ ba cách; mã quá ngắn báo ngay, không gọi máy chủ', async ({ page }) => {
     test.setTimeout(240_000);
     let n = 0; await page.route('**/api/**', (route) => { n++; return route.fulfill({ status: 500, body: '{}' }); });
-    await open(page, BASE);
+    await open(page, BASE); await park(page);
     await page.locator('#panel [data-act="acct-open"][data-v="have"]').first().click();
     await slow(panel(page).locator('h2')).toHaveText('Tôi đã có hành trình');
     await slow(panel(page)).toContainText('Mã khôi phục');
@@ -106,7 +116,8 @@ test.describe('đầy đủ với Worker thật (E2E_ACCOUNT)', () => {
     await act(a, 'code-done');
     const cdp = await A.newCDPSession(a); await cdp.send('WebAuthn.enable');
     await cdp.send('WebAuthn.addVirtualAuthenticator', { options: { protocol: 'ctap2', transport: 'internal', hasResidentKey: true, hasUserVerification: true, isUserVerified: true, automaticPresenceSimulation: true } });
-    await act(a, 'passkey'); await slow(panel(a)).toContainText('Passkey đã gắn: 1', { timeout: 90_000 });
+    await act(a, 'passkey'); await slow(panel(a)).toContainText('Vân tay / Face ID đã gắn: 1 thiết bị', { timeout: 90_000 });
+    await act(a, 'passkey'); await slow(panel(a)).toContainText('không cần gắn lại', { timeout: 90_000 });   // gắn lần hai trên cùng thiết bị
 
     await park(a);
 

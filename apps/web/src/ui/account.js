@@ -15,9 +15,29 @@ let ctx = null, pollT = 0;
 const ERR = {
   offline: 'Không kết nối được máy chủ. Hãy thử lại khi có mạng.', turnstile_failed: 'Chưa xác minh được trình duyệt. Hãy thử lại.',
   rate_limited: 'Thao tác quá nhanh, xin thử lại sau một phút.', invalid_recovery_code: 'Mã khôi phục không đúng.',
+  passkey_not_found: 'Máy chủ không còn giữ passkey này (có thể đã được gỡ). Hãy dùng mã khôi phục, hoặc liên kết với máy đang giữ hành trình.', challenge_not_found: 'Lần xác nhận đã hết hạn. Hãy bấm lại.',
+  authentication_failed: 'Chưa xác nhận được passkey. Hãy thử lại, hoặc dùng mã khôi phục.', failed_to_verify_registration: 'Chưa gắn được passkey. Hãy thử lại.',
   link_expired: 'Mã liên kết đã hết hạn hoặc không đúng.', auth_unavailable: 'Máy chủ chưa sẵn sàng cho việc đăng nhập.', unauthorized: 'Phiên đăng nhập đã hết hạn.',
 };
-const human = (e) => ERR[e.code] || (e.name === 'NotAllowedError' || e.name === 'AbortError' ? 'Thiết bị chưa xác nhận (bạn đã hủy, hoặc máy không có passkey cho Vân Đạo).' : e.message || 'Có lỗi, xin thử lại.');
+// Lỗi của trình duyệt khi dùng passkey (WebAuthn) là DOMException bằng tiếng Anh: đổi theo tên lỗi và theo việc đang làm, không hiện nguyên văn
+const PK_BUSY = 'Thiết bị này đã gắn vân tay / Face ID cho hành trình này rồi, không cần gắn lại. Lần sau chọn "Tôi đã có hành trình" → Vân tay / Face ID.';
+const PK = {
+  NotAllowedError: { reg: 'Chưa gắn được: bạn đã hủy, hoặc thiết bị chưa kịp xác nhận. Bấm lại khi sẵn sàng.', in: 'Chưa vào được: bạn đã hủy, hoặc thiết bị này chưa gắn vân tay / Face ID cho hành trình nào. Hãy dùng mã khôi phục, hoặc liên kết với máy đang giữ hành trình.' },
+  InvalidStateError: { reg: PK_BUSY, in: 'Thiết bị chưa sẵn sàng để xác nhận. Hãy thử lại.' },
+  NotSupportedError: { reg: 'Thiết bị hoặc trình duyệt này chưa dùng được vân tay / Face ID cho Vân Đạo. Hãy lấy mã khôi phục để thay thế.', in: 'Thiết bị hoặc trình duyệt này chưa dùng được vân tay / Face ID cho Vân Đạo. Hãy dùng mã khôi phục.' },
+  SecurityError: { reg: 'Trình duyệt không cho dùng vân tay / Face ID ở địa chỉ này. Hãy mở Vân Đạo bằng địa chỉ chính thức rồi thử lại.' },
+};
+PK.AbortError = PK.NotAllowedError; PK.SecurityError.in = PK.SecurityError.reg;
+const PK_OTHER = 'Thiết bị chưa hoàn tất được việc xác nhận. Hãy kiểm tra khóa màn hình (vân tay, Face ID hoặc mã PIN) đã bật rồi thử lại, hoặc dùng mã khôi phục.';
+const vi = (t) => /[à-ỹđ]/i.test(t || '');   // thông điệp của máy chủ Vân Đạo viết bằng tiếng Việt; của thư viện thì không
+/** Câu báo lỗi cho người dùng. `pk`: 'reg' khi đang gắn passkey, 'in' khi đang đăng nhập bằng passkey. */
+function human(e, pk) {
+  const code = typeof e.code === 'string' ? e.code : '';   // lỗi của API có mã dạng chữ; DOMException của trình duyệt mang mã số cũ (InvalidStateError = 11), không dùng
+  if (ERR[code]) return ERR[code];
+  if (pk && !code) return (PK[e.name] && PK[e.name][pk]) || PK_OTHER;
+  if (vi(e.message)) return e.message;
+  return 'Có lỗi, xin thử lại' + (code ? ' (mã lỗi: ' + code + ').' : '.');
+}
 const date = (ms) => new Date(ms).toLocaleDateString('vi-VN');
 const btn = (act, text, cls = 'btn', extra = '') => `<button class="${cls}" data-act="acct-${act}"${A.busy ? ' disabled' : ''}${extra}>${text}</button>`;
 const back = (to = 'home') => (to === 'home' ? '<button class="ghost" data-act="home">← Vân Đảo</button>' : btn('tab', '← Quay lại', 'ghost', ` data-v="${to}"`));
@@ -34,9 +54,9 @@ function applyFields(fields, reload) {
   Object.assign(ctx.S, fields); ctx.save();
   if (reload) { try { sessionStorage.setItem('vandao.welcome', '1'); } catch { /* không sao */ } location.reload(); } else ctx.remote();
 }
-async function run(label, fn) {
+async function run(label, fn, pk) {
   A.busy = label; A.err = ''; A.msg = ''; ctx.render();
-  try { await fn(); } catch (e) { A.err = human(e); if (e.code === 'unauthorized' && acct.on && A.tab === 'main') { await signOutHere(); A.info = null; } }
+  try { await fn(); } catch (e) { A.err = human(e, pk); if (e.code === 'unauthorized' && acct.on && A.tab === 'main') { await signOutHere(); A.info = null; } }
   A.busy = ''; ctx.render();
 }
 async function loadInfo() {
@@ -70,7 +90,7 @@ function mainOn() {
     (guest ? `<p class="note">Chưa có cách đăng nhập lại. Hãy gắn passkey hoặc lấy mã khôi phục: nếu mất máy này sẽ không lấy lại được hành trình. Hành trình chưa gắn cách đăng nhập sẽ bị dọn nếu không hoạt động 90 ngày${me && me.guest_purge_after ? ' (hạn hiện tại: ' + date(me.guest_purge_after) + ')' : ''}.</p>` : '') +
     (acct.rejected.length ? `<p class="note">Có ${acct.rejected.length} thao tác máy chủ chưa nhận (thường do lệch ngày giữa máy và máy chủ). Tiến trình trên máy này vẫn giữ nguyên.</p>` : '') + status() +
     `<h3>Cách đăng nhập lại</h3><div class="row">${api.passkeySupported() ? btn('passkey', 'Gắn vân tay / Face ID') : ''}${btn('code', I && I.code.has_code ? 'Tạo mã khôi phục mới' : 'Lấy mã khôi phục', 'btn alt')}</div>
-    <p class="muted">${I ? `Passkey đã gắn: ${I.passkeys.length}. Mã khôi phục: ${I.code.has_code ? 'đã tạo ngày ' + date(I.code.created_at) : 'chưa có'}.` : 'Đang tải…'}</p>
+    <p class="muted">${I ? `Vân tay / Face ID đã gắn: ${I.passkeys.length ? I.passkeys.length + ' thiết bị' : 'chưa có'}. Mã khôi phục: ${I.code.has_code ? 'đã tạo ngày ' + date(I.code.created_at) : 'chưa có'}.` : 'Đang tải…'}</p>
     <h3>Thêm thiết bị</h3><p class="muted">Trên máy mới chọn "Tôi đã có hành trình" → "Liên kết với máy đang giữ hành trình", rồi nhập mã hiện ở máy đó vào đây (hoặc dùng máy này quét mã QR).</p>
     <input id="acLink" type="text" maxlength="9" placeholder="XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Mã liên kết"><div class="row">${btn('ask', 'Xem yêu cầu', 'btn alt')}</div>
     <h3>Hiển thị với người khác</h3><div class="seg wrap">${seg}</div>
@@ -126,11 +146,15 @@ export function accountAct(act, b) {
   if (act === 'open') return accountOpen(b.dataset.v || 'main');
   if (act === 'tab') return accountOpen(b.dataset.v);
   if (act === 'keep') return run('Đang giữ hành trình', async () => settle(await keepJourney(ctx.S), 'Đã giữ hành trình. Hãy gắn một cách đăng nhập lại bên dưới.'));
-  if (act === 'passkey') return run('Chờ thiết bị xác nhận', async () => { await api.passkeyRegister(ctx.S.name || 'Vân Đạo'); markSecured(); A.msg = 'Đã gắn passkey. Lần sau chọn "Tôi đã có hành trình" → Vân tay / Face ID.'; await loadInfo(); });
+  if (act === 'passkey') return run('Chờ thiết bị xác nhận', async () => {
+    // Thiết bị đã gắn rồi thì trình duyệt báo InvalidStateError: đó không phải lỗi, chỉ cần nói rõ là không phải gắn lại
+    try { await api.passkeyRegister(ctx.S.name || 'Vân Đạo'); A.msg = 'Đã gắn vân tay / Face ID. Lần sau chọn "Tôi đã có hành trình" → Vân tay / Face ID.'; } catch (e) { if (e.name !== 'InvalidStateError' || typeof e.code === 'string') throw e; A.msg = PK_BUSY; }
+    markSecured(); await loadInfo();
+  }, 'reg');
   if (act === 'code') return run('Đang tạo mã', async () => { A.code = (await api.generateRecoveryCode()).code; markSecured(); A.tab = 'code'; });
   if (act === 'copy') return run('Đang chép', async () => { await navigator.clipboard.writeText(A.code); A.msg = 'Đã chép mã.'; });
   if (act === 'code-done') { A.code = ''; return accountOpen('main'); }
-  if (act === 'in-passkey') return run('Chờ thiết bị xác nhận', async () => { await api.passkeySignIn(); await finishSignIn(); });
+  if (act === 'in-passkey') return run('Chờ thiết bị xác nhận', async () => { await api.passkeySignIn(); await finishSignIn(); }, 'in');
   if (act === 'in-code') { const c = val('acCode'); if (c.replace(/[\s-]/g, '').length < 26) { A.err = 'Mã khôi phục có 26 ký tự.'; return ctx.render(); } return run('Đang kiểm tra mã', async () => { await api.signInRecoveryCode(c, await turnstileToken(document.getElementById('acTs'))); await finishSignIn(); }); }
   if (act === 'in-link') return run('Đang tạo mã liên kết', async () => {
     const L = await api.linkStart(await turnstileToken(document.getElementById('acTs'))); A.link = L; A.tab = 'link';
