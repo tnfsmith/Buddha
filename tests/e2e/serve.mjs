@@ -2,8 +2,10 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = new URL('../../apps/web/public/', import.meta.url).pathname;
+// fileURLToPath, không dùng .pathname: trên Windows .pathname ra "/D:/…" và giữ nguyên %20, %26 nên thư mục có khoảng trắng hoặc dấu & sẽ không tìm thấy
+const ROOT = fileURLToPath(new URL('../../apps/web/public/', import.meta.url));
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.webmanifest': 'application/manifest+json' };
 const port = +(process.env.PORT || 4173);
 
