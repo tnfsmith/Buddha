@@ -50,7 +50,7 @@ self.addEventListener('activate', (e) => {
 });
 self.addEventListener('fetch', (e) => {
   const req = e.request, url = new URL(req.url);
-  if (req.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/') || url.pathname.startsWith('/ws/')) return;
+  if (req.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/') || url.pathname.startsWith('/ws/') || url.pathname.startsWith('/media/')) return;
   const cacheP = caches.open(CACHE);
   if (req.mode === 'navigate') {
     // Trang: ưu tiên mạng để luôn có bản mới; mất mạng hoặc chậm quá 3 giây thì dùng bản đã lưu
