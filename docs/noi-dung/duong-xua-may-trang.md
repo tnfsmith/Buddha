@@ -2,7 +2,8 @@
 
 - **Ngày:** 14/11/2026 · **Thiết kế:** Claude · **Viết nội dung:** Codex (làn Hermes) · **Duyệt:** chủ dự án (xem #3)
 - **Hợp đồng kỹ thuật:** [ADR 0002](../adr/0002-bai-giang-giong-doc-r2.md) · **Issue:** #47 thiết kế, #48 nội dung, #49 giọng đọc
-- **Mã loạt:** `duong-xua` · 37 bài (7 bài cũ giữ `id`, 30 bài mới), chia ba phần theo ba quyển của sách
+- **Mã loạt:** `duong-xua` · 33 bài, chia ba phần theo ba quyển của sách
+- **Loạt song song:** bảy bài v0.14.0 thuộc loạt riêng «Lời Phật dạy», có menu riêng ([`loi-phat-day.md`](loi-phat-day.md))
 
 ## 1. Tinh thần
 
@@ -44,14 +45,14 @@ App dành cho mọi người hướng thiện, không riêng người tu. Vì v�
 - Gắn với tiền, cúng dường, Gieo Duyên hay Đại Công Đức (`AGENTS.md` 1.1). Chuyện Cấp Cô Độc nói về lòng rộng rãi và niềm vui sống lương thiện, không kêu gọi đóng góp.
 - Dồn quá một thuật ngữ vào một ý; viết tắt; dùng chữ Hán khó mà không giải nghĩa.
 
-## 3. Dàn bài 37 bài theo trình tự sách
+## 3. Dàn bài 33 bài theo trình tự sách
 
 **Cột Chương:**
 
 - Số theo bản 81 chương. Codex đối chiếu bản tiếng Việt và phụ lục nguồn kinh của sách trước khi viết.
 - ✓ = chuyện đã rõ theo tên chương; ? = cần xác nhận chương. Khi xác nhận, Codex sửa `thu_tu` cho đúng vị trí (bước 10 để chèn).
 
-**Cột Đợt:** A = bảy bài cũ, B/C/D = bài mới theo phần (mục 5). **CŨ** = giữ `id` của v0.14.0, viết lại chi tiết hơn.
+**Cột Đợt:** B/C/D theo phần (mục 5). Ba bài 80, 180, 220 kể chuyện; bài kinh cùng tên giảng kỹ ở loạt «Lời Phật dạy».
 
 ### Phần Một — Ánh sao mai (quyển 1, chương 1–29)
 
@@ -64,8 +65,7 @@ App dành cho mọi người hướng thiện, không riêng người tu. Vì v�
 | 50 | `con-duong-o-giua` | Con đường ở giữa | 13–17 ✓ | Sáu năm khổ hạnh đến kiệt sức; nhận bát sữa của cô bé Sujata; năm bạn tu bỏ đi | Hành hạ thân hay chiều theo ham muốn đều không đưa đến bình an; chăm thân và tâm vừa đủ | MN 36; MN 26 | B · gộp nháp `con-duong-o-giua` |
 | 60 | `sao-mai-da-moc` | Sao mai đã mọc | 18 ✓ | Đêm dưới cội bồ đề; những cám dỗ và sợ hãi kéo đến; tay chạm đất; sao mai mọc | Bình an đến từ hiểu và thương, không từ chiến thắng ai; tâm thương trải khắp | MN 26; MN 36 | B |
 | 70 | `qua-quyt-chanh-niem` | Quả quýt chánh niệm | 19 ✓ | Đức Phật dạy lũ trẻ trong làng ăn quýt từng múi, thấy cả cây, mưa, nắng trong quả quýt | Sống trọn từng phút; biết ơn những gì đang có | Cảnh do tác giả sách kể | B |
-| 80 | `chuyen-phap-luan` | Lần đầu chuyển bánh xe Pháp | 20–22 ✓ | Lộc Uyển: năm bạn tu cũ định không đứng dậy chào, nhưng thấy sự an tĩnh của Ngài thì tự đứng lên | Con đường ở giữa; bốn sự thật nói như thầy thuốc: bệnh, nguyên nhân, khỏi bệnh, phương thuốc; tám việc làm đúng, nói đời thường | SN 56.11 | **A · CŨ** |
-| 90 | `vo-nga-tuong` | Thân này không phải của ta | 22–23 ? | Mấy hôm sau ở Lộc Uyển, Ngài hỏi năm vị: thân này nếu là của ta, sao ta không bảo nó đừng bệnh? | Thân, cảm giác, suy nghĩ luôn đổi thay; buông bớt cái tôi thì lòng nhẹ và dễ thương người | SN 22.59 | **A · CŨ** |
+| 80 | `loc-uyen` | Lần đầu ở Lộc Uyển | 20–22 ✓ | Năm bạn tu cũ hẹn nhau không đứng dậy chào, nhưng thấy sự an tĩnh của Ngài thì tự đứng lên; Ngài kiên nhẫn giảng cho họ nhiều ngày; Kiều Trần Như hiểu ra đầu tiên | Lòng kiên nhẫn và tôn trọng với những người từng bỏ mình mà đi; con đường ở giữa (bài kinh giảng kỹ ở «Lời Phật dạy» › Chuyển Pháp Luân, Vô Ngã Tướng) | SN 56.11; SN 22.59; Luật tạng, Đại phẩm I.6 | B |
 | 100 | `lua-dang-chay` | Lửa đang cháy | 27 ✓ | Trên núi Tượng Đầu, trước ngàn người thờ lửa theo anh em Ca Diếp | Tham, giận, si mê là lửa đốt chính mình; biết dừng thì lửa tắt, lòng mát | SN 35.28 | B |
 | 110 | `nhan-duyen` | Gặp gỡ trên đường Vương Xá | 29 ✓ | Xá Lợi Phất gặp A Thuyết Thị đi khất thực, nghe một câu về nhân duyên rồi cùng Mục Kiền Liên tìm đến Đức Phật | Mọi sự do nhiều duyên mà có; thấy vậy thì bớt trách người, thêm hiểu và thương | Luật tạng, Đại phẩm I.23 | B |
 
@@ -74,19 +74,16 @@ App dành cho mọi người hướng thiện, không riêng người tu. Vì v�
 | thu_tu | id | Tên bài | Chương | Chuyện | Lời dạy, hướng thương | Nguồn kinh | Đợt |
 |---|---|---|---|---|---|---|---|
 | 120 | `lam-lanh-lanh-du` | Làm lành, lánh dữ | 30 ✓ | Vua Tần Bà Sa La dâng rừng Trúc Lâm; đêm trăng tròn, đông đủ đệ tử tụ hội | Không làm điều ác, làm mọi điều lành, giữ tâm trong sạch | Dhp 183–185 | C · gộp nháp `lam-lanh-lanh-du` |
-| 130 | `kalama` | Đừng vội tin | sau 32 ? | Dân làng Kalama bối rối giữa nhiều vị thầy khen đạo mình, chê đạo người. Mở bằng hình ảnh ngón tay chỉ mặt trăng (chương 32) | Đừng tin chỉ vì nghe kể, vì truyền thống, vì người nói là thầy; điều gì đem an vui cho mình và người thì làm | AN 3.65 | **A · CŨ** · gộp nháp `dung-voi-tin` |
 | 140 | `sum-hop` | Ngày trở về | 34 ✓ | Về Ca Tỳ La Vệ: vua Tịnh Phạn, Da Du Đà La, bé La Hầu La; Ngài ôm bát đi khất thực trên con phố cũ | Thương gia đình bằng cách sống tỉnh thức, tử tế; đem bình an về cho người thân | Luật tạng, Đại phẩm I.54; chú giải Pháp Cú | C |
 | 150 | `oi-hanh-phuc` | Ôi, hạnh phúc! | 38 ✓ | Bạt Đề, vốn là vua, ngồi dưới gốc cây giữa đêm và reo lên "Ôi, hạnh phúc!" | Hạnh phúc đến từ lòng nhẹ và không sợ hãi, không từ quyền lực hay của cải | Ud 2.10 | C |
 | 160 | `phu-dat-bang-vang` | Phủ đất bằng vàng | 40 ✓ | Ông Cấp Cô Độc, người hay giúp kẻ không nơi nương tựa, trải tiền vàng mua vườn của thái tử Kỳ Đà để dựng chỗ ở cho Tăng | Lòng rộng rãi; bốn niềm vui của người sống đời gia đình: làm ra của lương thiện, dùng của ấy, không nợ, sống không điều đáng chê | Luật tạng, Tiểu phẩm VI.4; AN 4.62 | C · gộp nháp `bon-niem-vui` |
-| 170 | `diem-lanh` | Những điều lành | sau 40 ✓ | Một đêm ở Kỳ Viên, có người đến hỏi điều gì thật sự là phúc lành (kinh kể là một vị trời) | Gần người hiền, phụng dưỡng cha mẹ, thương người nhà, làm việc ngay thẳng, khiêm cung, biết đủ, biết ơn, nhẫn nại | Sn 2.4 | **A · CŨ** |
-| 180 | `tu-bi` | Thương như mẹ hiền | 42 ? | Một nhóm tăng sĩ vào rừng tu, đêm đêm sợ hãi bỏ về; Đức Phật dạy họ trải lòng thương rồi trở lại rừng | Thương là hiểu; thương mọi loài như mẹ che chở đứa con một | Sn 1.8 | **A · CŨ** · gộp nháp `thuong-nhu-me-hien` |
+| 180 | `thuong-la-hieu` | Thương là hiểu | 42 ? | Một nhóm tăng sĩ vào rừng tu, đêm đêm sợ hãi bỏ về; Đức Phật dạy họ trải lòng thương rồi trở lại rừng | Thương là hiểu; thương mọi loài như mẹ che chở đứa con một (bài kinh giảng kỹ ở «Lời Phật dạy» › Tâm Từ) | Sn 1.8 và chú giải | C · gộp nháp `thuong-nhu-me-hien` |
 | 190 | `nuoc-mat-ai-cung-man` | Nước mắt ai cũng mặn | 43 ✓ | Sunita, người gánh phân bị cả thành xa lánh, nép vào tường tránh đường; Đức Phật dừng lại, gọi anh, nhận anh làm đệ tử | Máu ai cũng đỏ, nước mắt ai cũng mặn; không ai sinh ra đã thấp hèn | Thag 12.2 | C |
 | 200 | `mo-cua` | Mở cửa | 45 ✓ | Bà Ma Ha Ba Xà Ba Đề cùng nhiều phụ nữ cắt tóc, đi chân trần đến xin tu; A Nan thưa giúp; Đức Phật mở cửa | Nữ giới cũng đi được trọn con đường; lòng thương không phân biệt | AN 8.51 | C |
 | 210 | `nam-la-simsapa` | Nắm lá trong tay | 46 ✓ | Trong rừng, Ngài nắm một nắm lá, hỏi lá trong tay nhiều hay lá trong rừng nhiều | Ngài chỉ dạy điều giúp người bớt khổ; sống được một điều còn hơn biết thật nhiều | SN 56.31 | C |
-| 220 | `phap-cu` | Hận thù không dập tắt hận thù | 48 ✓ | Câu Thiểm Di: hai nhóm tăng sĩ tranh cãi không dứt; Ngài một mình vào rừng Pārileyyaka, có voi chúa chăm sóc; hai bên tỉnh ra tìm Ngài làm hòa ("lấy cỏ che bùn") | Tâm dẫn đầu mọi việc; hận thù chỉ lắng xuống bằng lòng không hận thù | MN 128; Dhp 1–6 | **A · CŨ** · gộp nháp `han-thu` |
+| 220 | `cau-thiem-di` | Lấy cỏ che bùn | 48 ✓ | Câu Thiểm Di: hai nhóm tăng sĩ tranh cãi không dứt; Ngài một mình vào rừng Pārileyyaka, có voi chúa chăm sóc; hai bên tỉnh ra tìm Ngài làm hòa ("lấy cỏ che bùn") | Ngài không ép ai, lặng lẽ ra đi bằng lòng thương; hận thù chỉ lắng xuống bằng lòng không hận thù (câu kệ giảng kỹ ở «Lời Phật dạy» › Pháp Cú) | MN 128; Dhp 5–6; Luật tạng, Đại phẩm X | C · gộp nháp `han-thu` |
 | 230 | `bai-hoc-cua-dat` | Bài học của đất | 49 ✓ | Đức Phật dạy La Hầu La: tấm gương soi lại việc làm; tập như đất nhận mọi thứ mà không giận, như nước, lửa, gió | Lòng rộng như đất thì không gì làm mình tổn thương; từ, bi, hỷ, xả | MN 61; MN 62 | C · gộp nháp `tam-guong` |
 | 240 | `song-trong-hien-tai` | Sống trọn hôm nay | 53 ✓ | Một buổi chiều, Ngài dạy về người biết sống một ngày cho trọn | Quá khứ đã qua, tương lai chưa tới; sống sâu sắc phút này | MN 131 | C |
-| 250 | `niem-xu` | Bốn chỗ đặt tâm | 54 ? | Ở xứ Kuru, giữa những người dân cần cù, Ngài dạy cách giữ tâm trong mọi việc | Chú tâm vào thân, cảm giác, tâm ý và mọi điều đang xảy ra, nói bằng việc thường ngày | MN 10 | **A · CŨ** |
 
 ### Phần Ba — Về với mây trắng (quyển 3, chương 56–81)
 
@@ -107,14 +104,12 @@ App dành cho mọi người hướng thiện, không riêng người tu. Vì v�
 
 **Ngoài loạt:** bản nháp `le-sau-phuong` (DN 31) chưa thấy trong mục lục sách. Giữ trong kho nháp cho một loạt sau ("Đời sống gia đình"), không chặn loạt này.
 
-## 4. Bảy bài cũ: viết chi tiết hơn
+## 4. Quan hệ với loạt «Lời Phật dạy»
 
-Văn bản gốc ở `apps/web/src/sermon.js` tại commit `6215eb1`.
+Bảy bài v0.14.0 (Chuyển Pháp Luân, Vô Ngã Tướng, Tâm Từ, Điềm Lành, Kālāma, Niệm Xứ, Pháp Cú) là một loạt riêng, có menu riêng trong app (chủ dự án quyết định ngày 14/11/2026).
 
-- Giữ `id`, giữ câu Pāli cũ (nếu khớp SuttaCentral).
-- Viết lại theo năm nhịp ở mục 2: thêm cảnh và chuyện đi kèm như cột "Chuyện" ở bảng trên, đưa lời dạy về lời đời thường, thêm nhịp 4 và 5.
-- `version: 2`, vì bản tóm lược cũ coi là phiên bản 1.
-- Gộp ý hay của bản nháp tương ứng (cột Đợt) vào bài cũ, không tạo `id` mới.
+- Loạt Đường Xưa không chép lại các bài ấy. Ở chương có bài kinh tương ứng (bài 80, 180, 220), Đường Xưa **kể chuyện**; lời kinh giảng kỹ để ở «Lời Phật dạy».
+- Không dùng chung `id` giữa hai loạt.
 
 ## 5. Đợt sản xuất và mốc
 
@@ -123,9 +118,9 @@ Bảng tiến độ chung nằm ở `PROJECT_ROADMAP.md` §19 GĐ3 (T3.5–T3.9)
 | Đợt | Bài | Codex viết xong (PR `cho_duyet` + giọng đọc) | Ghi chú |
 |---|---|---|---|
 | Mẫu giọng | đoạn `con-thien-nga`, 6 giọng | 18/11/2026 | Chủ dự án nghe xác nhận giọng chính |
-| A | 7 bài cũ | 20/11/2026 | Mục tiêu duyệt trước 27/11 → phát hành cùng client giọng đọc (v0.16.0) |
-| B | 9 bài mới Phần Một | 01/12/2026 | |
-| C | 9 bài mới Phần Hai | 10/12/2026 | |
+| Lời Phật dạy | 7 bài v0.14.0 bản chi tiết | Claude viết xong 14/11 ([PR #54](https://github.com/tnfsmith/Buddha/pull/54)) | Chủ dự án duyệt → v0.15.0 (chữ); có tiếng ở bản kế tiếp |
+| B | 10 bài Phần Một | 01/12/2026 | |
+| C | 11 bài Phần Hai | 10/12/2026 | |
 | D | 12 bài Phần Ba | 20/12/2026 | |
 | Hạn cứng | giọng đọc mọi bài đã có văn bản | **05/01/2027** | OpenAI ngừng Speech API ngày 06/01/2027 (ADR 0002 mục 7) |
 

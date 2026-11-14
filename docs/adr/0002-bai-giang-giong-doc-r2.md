@@ -3,7 +3,7 @@
 - **Ngày:** 14/11/2026
 - **Trạng thái:** đề xuất, chờ chủ dự án merge. Thiết kế: Claude. Triển khai: Codex (nội dung, giọng đọc, máy chủ) và Claude (client).
 - **Issue:** #47 (thiết kế), #48 (nội dung), #49 (giọng đọc), #50 (máy chủ), #51 (client); liên quan #46 (nạp D1), #35 (migration), #3 (người duyệt)
-- **Dàn bài loạt:** [`docs/noi-dung/duong-xua-may-trang.md`](../noi-dung/duong-xua-may-trang.md)
+- **Dàn bài loạt:** [`duong-xua-may-trang.md`](../noi-dung/duong-xua-may-trang.md) (Đường Xưa Mây Trắng) · [`loi-phat-day.md`](../noi-dung/loi-phat-day.md) (Lời Phật dạy, #53)
 
 ## Bối cảnh
 
@@ -11,7 +11,8 @@ Ngày 14/11/2026 chủ dự án yêu cầu:
 
 - dựng loạt bài giảng theo đúng trình tự tác phẩm *Đường Xưa Mây Trắng*, mỗi bài là một câu chuyện cùng lời Đức Phật dạy trong chuyện đó;
 - nội dung cô đọng, gợi hình, để người nghe thấy tấm lòng bao dung, bác ái của Ngài với mọi loài;
-- giữ bảy bài của v0.14.0, viết chi tiết hơn và đặt chung một nơi;
+- giữ bảy bài của v0.14.0, viết chi tiết hơn;
+- **(chỉnh cùng ngày)** bảy bài ấy thành loạt riêng «Lời Phật dạy» có **menu riêng**, để sau này thêm nhiều bài theo cách này song song với loạt Đường Xưa; **một giọng đọc duy nhất** cho mọi loạt; thư mục R2 tách theo loạt;
 - Codex viết nội dung, chọn giọng OpenAI trầm ấm, sinh giọng đọc từng bài và đưa lên R2 `vandao-media` theo thư mục dễ quản lý khi số bài tăng.
 
 Hiện trạng sau #39 / PR #45: client chỉ phát bài `da_duyet` lấy từ `GET /api/v1/content?kind=bai_giang`. Hợp đồng `body_inline` là mỗi dòng một ý, dòng `>` là câu Pāli. Chưa có `content/`, công cụ nạp, đường `/media`, và API chưa trả `body_r2_key`.
@@ -71,7 +72,9 @@ Bỗng có tiếng dây cung bật lên…
 - Migration kế tiếp `0008_content_meta.sql` thêm `meta TEXT` (JSON, có thể rỗng) vào `content_item`. Codex tạo sau khi #35 tuần tự hóa migration.
 - Nội dung `meta` là khối front-matter ở mục 1, thêm `audio` (mục 3).
 - Trong khi chờ 0008, client vẫn chạy: thiếu `meta` thì hiện theo thứ tự API trả về.
-- Bảy bài cũ giữ nguyên `id`, được đặt vào loạt `duong-xua` ở đúng vị trí chương. Danh sách trong app vì vậy là **một nơi duy nhất**, xếp theo `thu_tu`.
+- **Loạt hiện có:** `loi-phat-day` (Lời Phật dạy: bảy bài v0.14.0 giữ `id`, `version: 2`) và `duong-xua` (Đường Xưa Mây Trắng). Mỗi loạt là một menu riêng trong app, xếp theo `thu_tu`.
+- Bài thiếu `meta.loat` (kể cả khi API chưa trả `meta`) vào loạt mặc định `loi-phat-day`.
+- Thêm loạt mới chỉ cần giá trị `meta.loat` mới (chữ thường, gạch nối) và một dòng tên loạt trong client.
 
 ### 3. Âm thanh trên R2
 
@@ -85,7 +88,10 @@ bai-giang/
   _khung/                                                    # để dành: đảnh lễ, hồi hướng có tiếng (giai đoạn sau)
 ```
 
-Ví dụ: `bai-giang/duong-xua/con-thien-nga/v1-3fa94c1d/vi-cedar.mp3`.
+Ví dụ, mỗi loạt một thư mục:
+
+- `bai-giang/loi-phat-day/chuyen-phap-luan/v2-8c01d2aa/vi-cedar.mp3`
+- `bai-giang/duong-xua/con-thien-nga/v1-3fa94c1d/vi-cedar.mp3`
 
 - **`<hash8>`** là 8 ký tự đầu của SHA-256, băm trên: lời đọc sau từ điển, giọng, mô hình, câu chỉ dẫn, tốc độ.
   - Khóa vì thế không bao giờ bị ghi đè, nên cache được vĩnh viễn.
@@ -137,8 +143,8 @@ Ví dụ: `bai-giang/duong-xua/con-thien-nga/v1-3fa94c1d/vi-cedar.mp3`.
   - `audio = { src: '/media/' + key, cues: '/media/' + key.replace(/\.mp3$/, '.cues.json') }`;
   - `loat`, `phan`, `order`.
 - **Tab Thuyết giảng:**
-  - nhóm theo loạt rồi theo phần ("Đường Xưa Mây Trắng · Phần Một…"), xếp theo `thu_tu`;
-  - bài không có `meta` xếp sau cùng.
+  - menu riêng cho từng loạt (thẻ «Lời Phật dạy», «Đường Xưa Mây Trắng»); trong loạt chia theo phần nếu có, xếp theo `thu_tu`;
+  - bài không có `thu_tu` xếp sau cùng; loạt chưa có bài báo "đang được soạn và duyệt".
 - **Khi phát:**
   - `HTMLAudioElement` phát trực tiếp, không đi qua Web Audio, để tránh im tiếng khi `AudioContext` bị treo trên iOS;
   - mở khóa phát ngay trong cú chạm "Thỉnh giảng" (Safari iOS chặn phát sau đó nếu không có cú chạm);
@@ -157,6 +163,7 @@ Ví dụ: `bai-giang/duong-xua/con-thien-nga/v1-3fa94c1d/vi-cedar.mp3`.
 - **Mô hình:** `gpt-4o-mini-tts` (dùng tên gọi chung; có báo cáo tên kèm ngày bị từ chối 400). Tốc độ khoảng 0,9.
   - Câu chỉ dẫn tiếng Việt cố định, ghi trong `scripts/tts/giong.json` và tính vào băm.
   - Ví dụ: *"Giọng trầm ấm, chậm rãi, nhẹ nhàng như người kể chuyện bên ngọn đèn. Phát âm tiếng Việt chuẩn, đúng dấu thanh. Ngắt nghỉ ở dấu phẩy, dấu chấm. Không đọc như quảng cáo."*
+- **Một giọng duy nhất cho mọi loạt** (Lời Phật dạy, Đường Xưa và các loạt sau), để người nghe nhận ra cùng một người giảng. Đổi giọng là quyết định của chủ dự án và phải sinh lại cả kho.
 - **Giọng ứng viên:** `cedar`, `marin`, `ash`, `ballad`, `sage`, `verse`.
   - Chỉ chọn giọng có cả ở Speech API lẫn Realtime API, để sau 06/01/2027 các bài mới vẫn cùng một giọng.
   - Loại `onyx`, `fable`, `nova` vì không có trong Realtime. Codex xác nhận lại danh sách với tài liệu OpenAI khi làm.
@@ -194,7 +201,7 @@ Ví dụ: `bai-giang/duong-xua/con-thien-nga/v1-3fa94c1d/vi-cedar.mp3`.
 
 ## Hệ quả
 
-- Bảy bài cũ trở lại app với giọng đọc, ngay khi đợt A được duyệt. Không cần đợi cả loạt.
+- Bảy bài «Lời Phật dạy» trở lại app bằng chữ ở v0.15.0 (PR #54, sau khi chủ dự án duyệt và Codex nạp D1). Có tiếng ở bản kế tiếp. Không cần đợi loạt Đường Xưa.
 - `AGENTS.md` §6 ("mọi âm thanh sinh bằng `audio.js`, `music.js`") cần thêm ngoại lệ: giọng đọc bài giảng đã duyệt, lưu trên R2, tải theo yêu cầu. Codex giữ `AGENTS.md` nên Codex sửa (#33). Mục 1.3 về thời thiền không đổi.
 - Rủi ro và cách giảm:
   - Giọng AI tối ưu cho tiếng Anh, có thể sai dấu thanh tiếng Việt → bộ kiểm lỗi, từ điển cách đọc, chủ dự án nghe duyệt.
