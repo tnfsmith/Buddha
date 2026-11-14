@@ -6,9 +6,9 @@ tier: 0
 lang: vi
 title: Tâm Từ
 source_ref: "Kinh Tâm Từ (Karaṇīyamettā Sutta) · Kinh Tập, Sn 1.8 · bối cảnh theo chú giải"
-status: cho_duyet
-reviewed_by:
-reviewed_at:
+status: da_duyet
+reviewed_by: tnfsmith
+reviewed_at: 1794671452
 meta:
   loat: loi-phat-day
   thu_tu: 30

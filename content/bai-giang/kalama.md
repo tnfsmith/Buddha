@@ -6,9 +6,9 @@ tier: 0
 lang: vi
 title: Kālāma
 source_ref: "Kinh Kālāma (Kesamutti Sutta) · Tăng Chi Bộ, AN 3.65"
-status: cho_duyet
-reviewed_by:
-reviewed_at:
+status: da_duyet
+reviewed_by: tnfsmith
+reviewed_at: 1794671452
 meta:
   loat: loi-phat-day
   thu_tu: 50

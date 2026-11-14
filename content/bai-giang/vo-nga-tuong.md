@@ -6,9 +6,9 @@ tier: 0
 lang: vi
 title: Vô Ngã Tướng
 source_ref: "Kinh Vô Ngã Tướng (Anattalakkhaṇa Sutta) · Tương Ưng Bộ, SN 22.59"
-status: cho_duyet
-reviewed_by:
-reviewed_at:
+status: da_duyet
+reviewed_by: tnfsmith
+reviewed_at: 1794671452
 meta:
   loat: loi-phat-day
   thu_tu: 20

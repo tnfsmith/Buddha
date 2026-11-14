@@ -115,14 +115,21 @@ Bảy bài v0.14.0 (Chuyển Pháp Luân, Vô Ngã Tướng, Tâm Từ, Điềm 
 
 Bảng tiến độ chung nằm ở `PROJECT_ROADMAP.md` §19 GĐ3 (T3.5–T3.9), do Codex cập nhật. Trạng thái từng việc theo dõi trên Issue.
 
-| Đợt | Bài | Codex viết xong (PR `cho_duyet` + giọng đọc) | Ghi chú |
+Chủ dự án chỉnh ngày 14/11/2026: **làm giọng đọc cho bảy bài «Lời Phật dạy» trước**. Bảy bài có tiếng thì gắn tag v0.15.0 ngay. Đường Xưa làm liền sau, không để lâu.
+
+| Thứ tự | Việc | Ai | Mốc |
 |---|---|---|---|
-| Mẫu giọng | đoạn `con-thien-nga`, 6 giọng | 18/11/2026 | Chủ dự án nghe xác nhận giọng chính |
-| Lời Phật dạy | 7 bài v0.14.0 bản chi tiết | Claude viết xong 14/11 ([PR #54](https://github.com/tnfsmith/Buddha/pull/54)) | Chủ dự án duyệt → v0.15.0 (chữ); có tiếng ở bản kế tiếp |
-| B | 10 bài Phần Một | 01/12/2026 | |
-| C | 11 bài Phần Hai | 10/12/2026 | |
-| D | 12 bài Phần Ba | 20/12/2026 | |
-| Hạn cứng | giọng đọc mọi bài đã có văn bản | **05/01/2027** | OpenAI ngừng Speech API ngày 06/01/2027 (ADR 0002 mục 7) |
+| 1 | «Lời Phật dạy»: 7 bài đã phát hành (chủ dự án duyệt PR #54 ngày 14/11) | Claude | xong 14/11 |
+| 2 | Công cụ nạp D1 (#46), API `body_r2_key`, `/media` (#50) | Codex | 16/11 |
+| 3 | Giọng đọc: Codex tự chọn giọng theo bảng điểm rồi sinh ngay 7 bài, tải lên R2 `bai-giang/loi-phat-day/` (#49) | Codex | 17/11 |
+| 4 | Kiểm phát tiếng trên staging → chủ dự án gắn tag **v0.15.0** | Claude, chủ dự án | 18/11 |
+| 5 | Migration 0008 `content_item.meta`, bắt buộc trước bài Đường Xưa đầu tiên (thiếu `meta`, bài sẽ lạc sang menu «Lời Phật dạy») | Codex | 19/11 |
+| 6 | Đường Xưa đợt B: 10 bài Phần Một, văn bản + giọng đọc trong cùng PR | Codex | 20/11 |
+| 7 | Đợt C: 11 bài Phần Hai | Codex | 25/11 |
+| 8 | Đợt D: 12 bài Phần Ba | Codex | 30/11 |
+| Hạn cứng | Giọng đọc mọi bài đã có văn bản | Codex | **05/01/2027**, vì OpenAI ngừng Speech API ngày 06/01/2027 (ADR 0002 mục 7) |
+
+Mỗi đợt Đường Xưa: chủ dự án duyệt PR → merge → staging → gắn tag bản kế tiếp.
 
 ## 6. Tên riêng thường gặp
 

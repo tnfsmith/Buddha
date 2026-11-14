@@ -6,9 +6,9 @@ tier: 0
 lang: vi
 title: Điềm Lành
 source_ref: "Kinh Điềm Lành (Maṅgala Sutta) · Kinh Tập, Sn 2.4"
-status: cho_duyet
-reviewed_by:
-reviewed_at:
+status: da_duyet
+reviewed_by: tnfsmith
+reviewed_at: 1794671452
 meta:
   loat: loi-phat-day
   thu_tu: 40
