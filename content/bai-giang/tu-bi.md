@@ -13,7 +13,7 @@ meta:
   loat: loi-phat-day
   thu_tu: 30
   dot: A
-body_r2_key: bai-giang/loi-phat-day/tu-bi/v2-a8bf31d2/vi-sadaltager.mp3
+body_r2_key: bai-giang/loi-phat-day/tu-bi/v2-80fda0cc/vi-sadaltager.mp3
 ---
 Chú giải kể rằng có lần một nhóm tăng sĩ vào rừng sâu tu tập suốt mùa mưa. Đêm đêm họ sợ hãi, lòng bất an, không ngồi yên được, liền trở về xin Đức Phật chỉ dạy.
 > Sabbe sattā bhavantu sukhitattā.

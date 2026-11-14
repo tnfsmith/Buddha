@@ -13,7 +13,7 @@ meta:
   loat: loi-phat-day
   thu_tu: 50
   dot: A
-body_r2_key: bai-giang/loi-phat-day/kalama/v2-ab666936/vi-sadaltager.mp3
+body_r2_key: bai-giang/loi-phat-day/kalama/v2-36c5a1a4/vi-sadaltager.mp3
 ---
 Có lần Đức Phật đi qua thị trấn Kesaputta của người Kalama. Dân ở đây kể: nhiều vị thầy ghé qua, ai cũng khen giáo lý của mình, chê giáo lý người khác, nên họ không biết tin ai.
 > Etha tumhe, kālāmā, mā anussavena, mā paramparāya, mā itikirāya.

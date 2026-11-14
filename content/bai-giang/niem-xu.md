@@ -13,7 +13,7 @@ meta:
   loat: loi-phat-day
   thu_tu: 60
   dot: A
-body_r2_key: bai-giang/loi-phat-day/niem-xu/v2-38aa7ae7/vi-sadaltager.mp3
+body_r2_key: bai-giang/loi-phat-day/niem-xu/v2-e9db9d4f/vi-sadaltager.mp3
 ---
 Có lần Đức Phật ở xứ Kuru, nơi người dân nổi tiếng cần cù và tỉnh táo. Ở đó Ngài dạy một bài kinh về cách giữ tâm có mặt trong từng giây phút: Kinh Niệm Xứ.
 > Ekāyano ayaṃ, bhikkhave, maggo sattānaṃ visuddhiyā.
