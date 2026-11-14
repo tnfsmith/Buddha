@@ -31,13 +31,13 @@ Khuôn khổ và điều cấm giống loạt Đường Xưa ([`duong-xua-may-tr
 
 | thu_tu | id | Tên | Nguồn | Trạng thái |
 |---|---|---|---|---|
-| 10 | `chuyen-phap-luan` | Chuyển Pháp Luân | SN 56.11 | v2 chờ duyệt (PR #54) |
-| 20 | `vo-nga-tuong` | Vô Ngã Tướng | SN 22.59 | v2 chờ duyệt |
-| 30 | `tu-bi` | Tâm Từ | Sn 1.8 | v2 chờ duyệt |
-| 40 | `diem-lanh` | Điềm Lành | Sn 2.4 | v2 chờ duyệt |
-| 50 | `kalama` | Kālāma | AN 3.65 | v2 chờ duyệt |
-| 60 | `niem-xu` | Niệm Xứ | MN 10 | v2 chờ duyệt |
-| 70 | `phap-cu` | Pháp Cú · Song Yếu | Dhp 1–6 | v2 chờ duyệt |
+| 10 | `chuyen-phap-luan` | Chuyển Pháp Luân | SN 56.11 | v2 đã phát hành (duyệt 14/11) |
+| 20 | `vo-nga-tuong` | Vô Ngã Tướng | SN 22.59 | v2 đã phát hành |
+| 30 | `tu-bi` | Tâm Từ | Sn 1.8 | v2 đã phát hành |
+| 40 | `diem-lanh` | Điềm Lành | Sn 2.4 | v2 đã phát hành |
+| 50 | `kalama` | Kālāma | AN 3.65 | v2 đã phát hành |
+| 60 | `niem-xu` | Niệm Xứ | MN 10 | v2 đã phát hành |
+| 70 | `phap-cu` | Pháp Cú · Song Yếu | Dhp 1–6 | v2 đã phát hành |
 
 **Bài có thể thêm sau** (chủ dự án chọn): Lễ sáu phương (DN 31, đã có nháp), Kinh Hạnh phúc của người tại gia (AN 4.62), Ba điều ai cũng làm được (Dhp 183), Tấm gương (MN 61), Hơi thở (MN 118).
 
@@ -47,4 +47,4 @@ Khuôn khổ và điều cấm giống loạt Đường Xưa ([`duong-xua-may-tr
 - **Thư mục R2 tách theo loạt:**
   - `bai-giang/loi-phat-day/<id>/v<version>-<hash8>/vi-<voice>.mp3` (+ `.cues.json`);
   - `bai-giang/duong-xua/…` cho loạt kia.
-- Bảy bài lên v0.15.0 bằng chữ. Có tiếng khi giọng đã chọn, `/media` (#50) và client (#51) đã merge.
+- Chủ dự án chỉnh ngày 14/11/2026: **v0.15.0 phát hành khi bảy bài đã có giọng đọc**. Cần công cụ nạp D1 (#46), `/media` (#50) và TTS (#49); client đã sẵn (#51).

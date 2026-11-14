@@ -170,8 +170,8 @@ Ví dụ, mỗi loạt một thư mục:
 - **Chọn giọng:**
   1. Sinh đoạn mẫu bằng bài `con-thien-nga` (có tên riêng, Hán Việt, số) cho mỗi ứng viên, mỗi giọng 3 lần.
   2. Chấm theo: đúng dấu thanh (tỉ lệ lỗi chữ khi chuyển ngược thành văn bản), độ ấm và chậm, đọc đúng tên riêng, ổn định giữa 3 lần, có trên Realtime.
-  3. Codex đề xuất **một giọng chính, một dự phòng**, tải mẫu lên `_mau-giong/` và gửi đường dẫn ký sẵn.
-  4. Chủ dự án nghe xác nhận một lần trước khi sinh cả loạt.
+  3. Codex **tự chọn một giọng chính, một dự phòng** theo bảng điểm và sinh ngay, không chờ (chủ dự án chỉnh 14/11/2026 để kịp v0.15.0). Mẫu tải lên `_mau-giong/`, gửi đường dẫn ký sẵn.
+  4. Chủ dự án nghe sau; muốn đổi giọng thì sinh lại cả kho (chi phí nhỏ). Giọng vẫn phải thống nhất một cho mọi loạt.
 - **Cách sinh:**
   - Mỗi ý một lần gọi, cùng giọng, cùng câu chỉ dẫn; ghép bằng `ffmpeg` với khoảng lặng ở mục 3.
   - Mốc `cues` lấy từ độ dài từng đoạn.
@@ -189,7 +189,8 @@ Ví dụ, mỗi loạt một thư mục:
 - **Khóa bí mật:**
   - `OPENAI_API_KEY` chỉ ở máy Codex hoặc secret của một workflow chạy tay (`workflow_dispatch`).
   - Không bao giờ ở Worker, client hay repo.
-  - Tải lên R2 bằng token Cloudflare sẵn có: staging khi merge `main`, production khi gắn tag.
+  - Tải lên **cả** `vandao-media-staging` và `vandao-media` ngay khi sinh, bằng token Cloudflare sẵn có. Khóa có băm nên không bao giờ ghi đè, và không phải giữ tệp nhị phân ở đâu chờ đến lúc gắn tag.
+  - Production vẫn chỉ phát sau khi gắn tag: `/media` chỉ phục vụ khóa có trong D1 của môi trường đó với `status = 'da_duyet'`, mà D1 production chỉ được nạp khi gắn tag.
 
 ### 8. Quy trình duyệt
 
@@ -201,7 +202,8 @@ Ví dụ, mỗi loạt một thư mục:
 
 ## Hệ quả
 
-- Bảy bài «Lời Phật dạy» trở lại app bằng chữ ở v0.15.0 (PR #54, sau khi chủ dự án duyệt và Codex nạp D1). Có tiếng ở bản kế tiếp. Không cần đợi loạt Đường Xưa.
+- Bảy bài «Lời Phật dạy» trở lại app **có giọng đọc** ở v0.15.0. Chủ dự án duyệt ngày 14/11; v0.15.0 chờ công cụ nạp D1 (#46), `/media` (#50) và TTS (#49). Không cần đợi loạt Đường Xưa.
+- Migration 0008 (`meta`) phải có trước bài Đường Xưa đầu tiên. Thiếu `meta`, client xếp bài vào loạt mặc định «Lời Phật dạy».
 - `AGENTS.md` §6 ("mọi âm thanh sinh bằng `audio.js`, `music.js`") cần thêm ngoại lệ: giọng đọc bài giảng đã duyệt, lưu trên R2, tải theo yêu cầu. Codex giữ `AGENTS.md` nên Codex sửa (#33). Mục 1.3 về thời thiền không đổi.
 - Rủi ro và cách giảm:
   - Giọng AI tối ưu cho tiếng Anh, có thể sai dấu thanh tiếng Việt → bộ kiểm lỗi, từ điển cách đọc, chủ dự án nghe duyệt.

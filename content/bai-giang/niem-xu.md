@@ -6,9 +6,9 @@ tier: 0
 lang: vi
 title: Niệm Xứ
 source_ref: "Kinh Niệm Xứ (Satipaṭṭhāna Sutta) · Trung Bộ, MN 10"
-status: cho_duyet
-reviewed_by:
-reviewed_at:
+status: da_duyet
+reviewed_by: tnfsmith
+reviewed_at: 1794671452
 meta:
   loat: loi-phat-day
   thu_tu: 60
