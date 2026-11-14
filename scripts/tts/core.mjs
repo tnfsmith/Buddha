@@ -17,7 +17,7 @@ export function spokenLines(body, dictionary = {}) {
 
 export function fingerprint(lines, config) {
   return createHash('sha256').update(JSON.stringify({ lines, provider: config.provider, voice: config.voice, model: config.model,
-    instructions: config.instructions || '', speed: config.speed, format: 'mono24k-64k-lufs16-tp1.5-gap0.9-last1.5-v1' })).digest('hex');
+    instructions: config.instructions || '', speed: config.speed, format: 'mono24k-64k-lufs16-tp1.5-gap0.9-last1.5-verified-v2' })).digest('hex');
 }
 
 export function audioKey(article, hash, voice) {
