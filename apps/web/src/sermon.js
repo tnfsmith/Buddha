@@ -1,22 +1,42 @@
-// Thuyết giảng: các bài TÓM LƯỢC Ý KINH do nhóm dự án soạn lại bằng lời mới (không phải bản dịch nguyên văn),
-// kèm nguồn kinh Nikāya và một câu Pāli gốc. Cần hội đồng cố vấn Pháp học duyệt trước khi dùng rộng rãi.
+// Thuyết giảng: CHỈ phát bài giảng đã được Hội đồng cố vấn Pháp học duyệt (AGENTS.md mục 1.6, PROJECT_ROADMAP.md §16).
+// Văn bản bài giảng không nằm trong mã client: tải từ GET /api/v1/content?kind=bai_giang, máy chủ chỉ trả status = 'da_duyet'.
+// Bảy bài tóm lược Nikāya trước đây viết cứng ở đây đã rút khỏi client (#39); bản nháp chờ chuyển vào content/ ở trạng thái cho_duyet.
 export const HOMAGE = 'Namo tassa bhagavato arahato sammāsambuddhassa.';
-export const SUTTAS = [
-  { id: 'chuyen-phap-luan', name: 'Chuyển Pháp Luân', pali: 'Dhammacakkappavattana Sutta', ref: 'Tương Ưng Bộ, SN 56.11', key: 'Idaṃ kho pana, bhikkhave, dukkhaṃ ariyasaccaṃ.',
-    lines: ['Có hai cực đoan người tu không nên theo: đắm say dục lạc, và tự hành hạ thân mình.', 'Tránh hai cực đoan ấy là con đường Trung đạo, đưa đến an tịnh, thắng trí, giác ngộ, Niết-bàn.', 'Trung đạo ấy là Thánh đạo tám ngành: chánh kiến, chánh tư duy, chánh ngữ, chánh nghiệp, chánh mạng, chánh tinh tấn, chánh niệm, chánh định.', 'Đây là sự thật về khổ: sinh, già, bệnh, chết là khổ; gần điều không ưa, xa điều yêu thích, cầu mà không được là khổ.', 'Đây là nguyên nhân của khổ: khát ái đi cùng hỷ và tham, tìm vui hết chỗ này đến chỗ khác.', 'Đây là sự chấm dứt khổ: khát ái ấy được buông bỏ, lìa xa, đoạn tận không còn dư.', 'Khổ cần được hiểu rõ. Nguyên nhân của khổ cần được buông bỏ. Sự chấm dứt khổ cần được chứng ngộ. Con đường cần được tu tập.'] },
-  { id: 'vo-nga-tuong', name: 'Vô Ngã Tướng', pali: 'Anattalakkhaṇa Sutta', ref: 'Tương Ưng Bộ, SN 22.59', key: 'Rūpaṃ, bhikkhave, anattā.',
-    lines: ['Thân này không phải là tự ngã. Nếu là tự ngã, thân đã không đưa đến bệnh hoạn, và ta có thể bảo: thân hãy thế này, đừng thế kia.', 'Cảm thọ, tri giác, các hành và thức cũng vậy: không sai khiến được theo ý mình, nên không phải là tự ngã.', 'Thân là thường hay vô thường? Là vô thường. Cái gì vô thường thì đưa đến khổ.', 'Cái gì vô thường, khổ, chịu biến đổi, có nên xem: cái này là của tôi, là tôi, là tự ngã của tôi? Không nên.', 'Vậy mọi thân, mọi cảm thọ, tri giác, hành, thức, dù quá khứ, vị lai hay hiện tại, trong hay ngoài, thô hay tế, cần được thấy đúng như thật: không phải của tôi, không phải là tôi.', 'Thấy như vậy, người học Pháp nhàm chán năm uẩn; do nhàm chán nên ly tham; do ly tham nên được giải thoát.'] },
-  { id: 'tu-bi', name: 'Tâm Từ', pali: 'Karaṇīyamettā Sutta', ref: 'Kinh Tập, Sn 1.8', key: 'Sabbe sattā bhavantu sukhitattā.',
-    lines: ['Người khéo tu, muốn đạt an tịnh, nên sống ngay thẳng, nhu hòa, khiêm tốn, biết đủ, ít bận rộn, các căn lắng dịu.', 'Không làm điều gì, dù nhỏ, mà bậc trí có thể chê trách.', 'Hãy mong cho mọi loài được an vui: dù yếu hay mạnh, lớn hay nhỏ, thấy được hay không thấy, ở gần hay ở xa, đã sinh hay sắp sinh.', 'Đừng lừa dối ai, đừng khinh rẻ ai ở bất cứ đâu; đừng vì giận hờn mà mong ai chịu khổ.', 'Như người mẹ lấy mạng mình che chở đứa con một, hãy nuôi tâm rộng lớn không giới hạn với mọi loài.', 'Hãy trải tâm từ khắp thế gian: bên trên, bên dưới, bốn phía, không hẹp hòi, không oán thù.', 'Khi đi, đứng, ngồi, nằm, lúc nào còn thức, hãy giữ niệm này. Đó gọi là sống với phạm trú.'] },
-  { id: 'diem-lanh', name: 'Điềm Lành', pali: 'Maṅgala Sutta', ref: 'Kinh Tập, Sn 2.4', key: 'Etaṃ maṅgalamuttamaṃ.',
-    lines: ['Không gần kẻ ngu, thân cận bậc trí, kính trọng người đáng kính: là điềm lành tối thượng.', 'Ở nơi thích hợp, có phước đã tạo, tự hướng mình theo đường chánh: là điềm lành tối thượng.', 'Học rộng, giỏi nghề, giữ kỷ luật, nói lời khéo léo: là điềm lành tối thượng.', 'Phụng dưỡng mẹ cha, chăm sóc gia đình, làm việc không rối loạn: là điềm lành tối thượng.', 'Bố thí, sống đúng Pháp, giúp đỡ người thân, việc làm không lỗi: là điềm lành tối thượng.', 'Kính trọng, khiêm nhường, biết đủ, biết ơn, đúng lúc nghe Pháp: là điềm lành tối thượng.', 'Khi chạm việc đời mà tâm không dao động, không sầu, không nhiễm, an ổn: là điềm lành tối thượng.'] },
-  { id: 'kalama', name: 'Kālāma', pali: 'Kesamutti Sutta', ref: 'Tăng Chi Bộ, AN 3.65',
-    lines: ['Chớ vội tin chỉ vì nghe truyền lại, vì truyền thống, vì lời đồn, hay vì kinh sách ghi như vậy.', 'Chớ vội tin chỉ vì lý luận, suy diễn, vì xét bề ngoài, vì hợp định kiến, vì người nói có vẻ đáng tin, hay vì đó là thầy mình.', 'Khi tự mình biết: các điều này bất thiện, có lỗi, bị người trí chê, làm theo thì đưa đến hại và khổ; khi ấy hãy từ bỏ.', 'Khi tự mình biết: các điều này là thiện, không lỗi, được người trí khen, làm theo thì đưa đến lợi ích và an vui; khi ấy hãy sống theo.', 'Tham, sân, si khởi lên trong một người là đem lại bất hạnh cho người ấy.', 'Người lìa tham, sân, si, tỉnh giác, chánh niệm, trải tâm từ, bi, hỷ, xả khắp các phương, sống an ổn ngay trong hiện tại.'] },
-  { id: 'niem-xu', name: 'Niệm Xứ', pali: 'Satipaṭṭhāna Sutta', ref: 'Trung Bộ, MN 10', key: 'Ekāyano ayaṃ, bhikkhave, maggo sattānaṃ visuddhiyā.',
-    lines: ['Đây là con đường thẳng đưa đến thanh tịnh cho chúng sinh, vượt sầu bi, dứt khổ ưu, chứng ngộ Niết-bàn: đó là bốn niệm xứ.', 'Quán thân trên thân, quán thọ trên thọ, quán tâm trên tâm, quán pháp trên pháp: nhiệt tâm, tỉnh giác, chánh niệm, bỏ tham ưu ở đời.', 'Chánh niệm, hít vào; chánh niệm, thở ra. Hơi dài biết là dài, hơi ngắn biết là ngắn.', 'Khi đi biết mình đang đi; đứng, ngồi, nằm cũng biết rõ như vậy.', 'Cảm thọ vui biết là vui, khổ biết là khổ, không khổ không vui cũng biết rõ.', 'Tâm có tham biết có tham; tâm có sân biết có sân; tâm tán loạn hay định tĩnh đều biết rõ.', 'Quán sự sinh khởi, quán sự hoại diệt; sống không nương tựa, không chấp trước một vật gì ở đời.'] },
-  { id: 'phap-cu', name: 'Pháp Cú · Song Yếu', pali: 'Dhammapada, Yamakavagga', ref: 'Tiểu Bộ, Dhp 1–5', key: 'Manopubbaṅgamā dhammā manoseṭṭhā manomayā.',
-    lines: ['Tâm dẫn đầu mọi pháp; tâm làm chủ, tâm tạo tác.', 'Nói hay làm với tâm ô nhiễm, khổ sẽ theo sau, như bánh xe lăn theo chân con vật kéo.', 'Nói hay làm với tâm trong sạch, an vui sẽ theo sau, như bóng không rời hình.', 'Ai cứ ôm ý nghĩ: nó mắng tôi, đánh tôi, thắng tôi, lấy của tôi; hận thù trong người ấy không nguôi.', 'Ai không ôm ý nghĩ ấy, hận thù tự lắng.', 'Ở đời này, hận thù không bao giờ dứt bằng hận thù; chỉ dứt bằng không hận. Đó là định luật ngàn xưa.'] },
-];
+
+/**
+ * Đổi một dòng content_item (API) thành bài giảng; không đủ điều kiện thì trả null và bài đó không hiện.
+ * Điều kiện: kind 'bai_giang', có dấu duyệt (reviewed_at), có id, tên, nguồn kinh, và ít nhất một ý.
+ * body_inline (đề xuất, chốt ở hợp đồng nội dung GĐ3): mỗi dòng không trống là một ý; dòng bắt đầu bằng '>' là câu Pāli gốc.
+ * Nội dung chỉ để ở body_r2_key (bài dài trên R2) chưa hỗ trợ ở client này nên cũng bỏ qua.
+ */
+export function toSermon(it) {
+  if (!it || (it.kind && it.kind !== 'bai_giang') || !it.reviewed_at || !it.id || !it.title || !it.source_ref || typeof it.body_inline !== 'string') return null;
+  const rows = it.body_inline.split(/\r?\n/).map((x) => x.trim()).filter(Boolean), pali = rows.filter((x) => x.startsWith('>')), lines = rows.filter((x) => !x.startsWith('>'));
+  return lines.length ? { id: String(it.id), version: it.version, name: String(it.title), ref: String(it.source_ref), key: pali.length ? pali[0].replace(/^>\s*/, '') : '', lines } : null;
+}
+
+/** Danh sách bài đã duyệt của phiên này. state: idle → loading → ok (items có thể rỗng) | error (mất mạng, bản HTML đơn mở từ máy, máy chủ lỗi) */
+export const library = { state: 'idle', items: [] };
+let pending = null;
+export function loadSermons(force) {
+  if (pending) return pending;
+  if (library.state === 'ok' && !force) return Promise.resolve(library);
+  library.state = 'loading';
+  pending = (async () => {
+    try {
+      if (!/^https?:$/.test(location.protocol)) throw new Error('Bản mở từ tệp trên máy không gọi được máy chủ');
+      const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 8000);
+      const r = await fetch('/api/v1/content?kind=bai_giang', { signal: ac.signal, headers: { accept: 'application/json' } }).finally(() => clearTimeout(tm));
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json(), seen = new Set();
+      // máy chủ xếp các phiên bản cùng id theo version giảm dần: giữ bản đầu tiên (mới nhất đã duyệt)
+      library.items = (Array.isArray(j.items) ? j.items : []).map(toSermon).filter((x) => x && !seen.has(x.id) && seen.add(x.id));
+      library.state = 'ok';
+    } catch (e) { library.items = []; library.state = 'error'; library.why = e.message; }
+    pending = null; return library;
+  })();
+  return pending;
+}
 const DEDICATE = 'Nguyện công đức nghe Pháp này lan đến mọi loài: cho ai khổ được hết khổ, ai sợ được hết sợ, ai sầu được hết sầu.';
 
 export class Sermon {
@@ -24,7 +44,7 @@ export class Sermon {
   static viVoice() { try { return (speechSynthesis.getVoices() || []).find((v) => /^vi/i.test(v.lang)) || null; } catch (e) { return null; } }
   start(sutta, tts) {
     this.stop(true); this.s = sutta; this.on = true; this.tts = !!tts && !!(this.voice = Sermon.viVoice()); this.t = 0; this.i = -1; this.phase = 'homage'; this.left = 6.5; this.waves = []; this.spoken = false;
-    this._show({ src: `${sutta.pali} · ${sutta.ref}`, ln: HOMAGE, pl: 'Thành kính đảnh lễ đức Thế Tôn, bậc Ứng Cúng, Chánh Đẳng Giác.' });
+    this._show({ src: [sutta.pali, sutta.ref].filter(Boolean).join(' · '), ln: HOMAGE, pl: 'Thành kính đảnh lễ đức Thế Tôn, bậc Ứng Cúng, Chánh Đẳng Giác.' });
   }
   stop(silent) { if (!this.on && !silent) return; this.on = false; try { speechSynthesis.cancel(); } catch (e) { /* không có TTS */ } this.st = { on: false, speak: 0, bow: 0, anjali: false, waves: [], merit: 0 }; if (!silent) { this._show(null); if (this.onend) this.onend(false); } }
   _show(o) { if (this.online) this.online(o); }
