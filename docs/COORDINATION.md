@@ -8,7 +8,7 @@ Ngày cập nhật: 14/11/2026. Người tổng hợp duy nhất: **Codex**. Quy
 
 ## 1. Mốc đã xác minh
 
-- Repo: `tnfsmith/Buddha`. Baseline của #55 là `main` `c8edea4` (PR #30, #31, #32, #41, #44, #36–38, #42, #45 đã merge). Không dùng kết quả trên `20d73dc` hoặc `9b7264e` để kết luận cây mới đã đạt.
+- Repo: `tnfsmith/Buddha`. Baseline triển khai hiện hành là `main` `4697c6e` sau #58; baseline lịch sử của #55 là `c8edea4` (PR #30, #31, #32, #41, #44, #36–38, #42, #45 đã merge). Không dùng kết quả trên `20d73dc` hoặc `9b7264e` để kết luận cây mới đã đạt.
 - Production đã phát hành `v0.14.0`; [deploy 43536527634](https://github.com/tnfsmith/Buddha/actions/runs/43536527634) thành công. 100 kiểm thử logic đạt; Playwright 12 đạt, 2 bỏ qua. Hai ca Worker thật trong `account.spec.js` chưa chạy ở CI này.
 - Phần lớn mã GĐ0–2 đã có; chưa đánh dấu mọi tiêu chí nghiệm thu đã đạt. GĐ3–9 còn nhiều việc và điều kiện của chủ dự án.
 - [CI main `c8edea4`](https://github.com/tnfsmith/Buddha/actions/runs/43596092074) đạt 107 unit/API, 21 ops, 26 smoke và 2 account thật; [staging](https://github.com/tnfsmith/Buddha/actions/runs/43597451413) migration/deploy/25 smoke đạt. Đây là mã trước quyết định bỏ Hội đồng; không dùng để nói UI của #55 đã triển khai.
@@ -113,3 +113,14 @@ Mỗi bàn giao ghi: Issue/PR, SHA/base, tệp đã đổi, hợp đồng ảnh 
 - Codex giữ sáu tệp ở #55; không sửa hai tệp Claude giữ tại #47 hoặc mã UI/test/build của #51. Claude bỏ câu thông báo thiếu Hội đồng và yêu cầu `reviewed_at`, cập nhật thiết kế và kiểm thử; Codex làm công cụ nạp/API ở tác vụ riêng #46/#50. Không tự coi PR tài liệu là mã đã deploy.
 - Trạng thái trống mới: "Chưa có bài chia sẻ. Nội dung đang được cập nhật." Bài cần tên, nguồn và nội dung hợp lệ; không chặn chỉ vì không có Hội đồng. Bài được chọn phát hành qua PR nội dung không cần thêm một biên bản duyệt riêng.
 - Bàn giao qua bình luận #51/#52 và các Issue nội dung liên quan; kết quả CI/SHA và phản hồi mới nhất ghi tại [#55](https://github.com/tnfsmith/Buddha/issues/55) và [bàn giao chung #33](https://github.com/tnfsmith/Buddha/issues/33#issuecomment-6875028304).
+
+
+## 11. Lệnh cập nhật lần 2 — A/B và giọng Google (#60)
+
+- Nguồn quyết định: hai bình luận cập nhật lần 2 ở #33/#49, thay các mốc cũ; chủ dự án sau đó chỉ định Google Chirp 3: HD vi-VN nam, ưu tiên gần miền Nam. Một giọng cho toàn kho. Không chờ chủ dự án chọn giọng; chỉ ghi điểm/mô tả đã đo thật.
+- #52/#54/#56/#57 đã merge; #58 cũng đã merge vào 4697c6e, bảy bài v2 ở da_duyet. Trạng thái cũ trong các mục lịch sử không phải PR đang mở.
+- A: #59 ag/46-nap-noi-dung, fa0d64c (nạp/deploy; 119 kiểm thử tại máy); #61 ag/50-media, 3fcdb3d (API/media; 129 kiểm thử, hai môi trường D1/R2). Cả hai đã mở, chưa tự merge; theo dõi CI đúng SHA trên PR.
+- B: ag/49-tts-cong-cu nối sau #59 cho công cụ; hermes/49-tts-loi-phat-day chỉ nội dung/body_r2_key/audio lock sau khi sinh và tải thật. Google TTS/Service Account và hai bucket đã kết nối; không lưu khóa hoặc tệp âm thanh vào Git. Chưa có điểm giọng/sản phẩm âm thanh thì không ghi hoàn tất.
+- Codex giữ AGENTS §6, năm dòng T3.5–T3.9, mục 5 dàn bài và tệp này trong #60; Claude giữ apps/web. Đã báo #51 đổi nhãn giọng AI cho đúng Google, không sửa đè client.
+- Mốc: A 14/11; B 15/11 → chủ dự án merge → Claude kiểm staging → chủ dự án tag v0.15.0 (15/11). Ngay sau đó #35 tuần tự hóa migration và 0008/meta trước bài Đường Xưa đầu tiên; B=10 → C=11 → D=12, mỗi đợt một PR văn bản+giọng đọc nối tiếp 15/11. Xong việc nào chuyển việc kế ngay.
+- Mỗi PR mới báo ở #33; báo khi staging phát tiếng thật. Không tự merge/tag, không sửa apps/web; upload hai bucket không tự công khai vì /media kiểm D1 của chính môi trường. Tài khoản/khóa giữ cục bộ hoặc GitHub Secrets, đặc biệt khi repo tạm public.

@@ -65,6 +65,9 @@ jobs:
         if: steps.tip.outputs.current == 'true' && steps.ready.outputs.current == 'true'
         working-directory: workers/api
         run: npx wrangler d1 migrations apply vandao-core-staging --remote --env staging
+      - name: Nạp nội dung đã chọn phát hành vào D1 staging
+        if: steps.tip.outputs.current == 'true' && steps.ready.outputs.current == 'true'
+        run: node scripts/import-content.mjs --env staging --remote
       - name: Deploy staging
         if: steps.tip.outputs.current == 'true' && steps.ready.outputs.current == 'true'
         id: dep
@@ -105,6 +108,8 @@ jobs:
       - name: Áp dụng migration D1 production
         working-directory: workers/api
         run: npx wrangler d1 migrations apply vandao-core --remote --env=""
+      - name: Nạp nội dung đã chọn phát hành vào D1 production
+        run: node scripts/import-content.mjs --env production --remote
       - name: Deploy production
         working-directory: workers/api
         run: npx wrangler deploy --env="" --message "${GITHUB_REF_NAME} ${GITHUB_SHA::7}"

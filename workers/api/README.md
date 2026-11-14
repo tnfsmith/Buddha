@@ -115,6 +115,19 @@ cd workers/api && npx wrangler deploy --dry-run --env staging   # kiểm đóng 
 ```
 
 CI chạy thêm `wrangler d1 migrations apply --local` để kiểm SQL trên SQLite của workerd (đúng môi trường D1).
+## Nạp bài giảng (#46)
+
+Từ gốc repo: `node scripts/import-content.mjs --check` kiểm Markdown/front-matter YAML (có khối `meta` lồng).
+Chỉ bài `da_duyet` đủ id, version, tên, nguồn và ý được nạp; `reviewed_*` tùy chọn.
+`[[hiển thị|cách đọc]]` chỉ ghi phần hiển thị vào D1; giữ câu Pāli bắt đầu bằng `>`.
+
+- Cục bộ: áp migration trước, rồi `node scripts/import-content.mjs --env staging --local`.
+- CI staging: sau migration, `node scripts/import-content.mjs --env staging --remote`.
+- CI production (chỉ khi chủ dự án gắn tag): `node scripts/import-content.mjs --env production --remote`.
+
+Mặc định chỉ kiểm, không gọi D1. Công cụ upsert theo `(id, version)`, không xóa bản khác;
+ghi `body_r2_key` khi có, không bịa thông tin duyệt. `meta` được đọc nhưng chưa ghi trước migration 0008;
+phải bổ sung ghi/trả `meta` trước bài Đường Xưa đầu tiên. Bí mật lấy từ biến môi trường của đúng job deploy.
 
 ## Media bài giảng (#50)
 
