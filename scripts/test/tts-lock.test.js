@@ -16,6 +16,7 @@ it('chặn lời sửa nhưng giữ khóa cũ, thiếu dòng, trộn giọng và
   expect(() => validateAudioLock([a], { v: 1, items: [] }, config)).toThrow();
   expect(() => validateAudioLock([a], { v: 1, items: [{ ...row, voice: 'khác' }] }, config)).toThrow('trộn giọng');
   expect(() => validateAudioLock([a], { v: 1, items: [row, row] }, config)).toThrow('Trùng');
+  expect(() => validateAudioLock([a], { v: 1, items: [{ ...row, loudness: { lufs: -16, peak_dbtp: 0 } }] }, config)).toThrow('Loudness');
 });
 it('cues bỏ Pāli, đủ ý và đúng khoảng nghỉ cuối, phát hiện cắt đuôi', () => {
   const cues = { v: 1, id: article.id, version: 2, dur: 5, cues: [{ i: 0, t: 0, e: 1 }, { i: 1, t: 2.5, e: 5 }] };

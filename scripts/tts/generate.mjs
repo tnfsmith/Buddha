@@ -77,7 +77,7 @@ try {
       saveJson(join(dir, 'result.json'), { id: article.id, version: article.version, key, hash: hash.slice(0, 8), fingerprint: hash, dur: audio.dur,
         voice: config.voice, model: config.model, provider: config.provider, generated_at: new Date().toISOString(),
         wer: scores.reduce((sum, x) => sum + x.wer, 0) / scores.length,
-        sha256: createHash('sha256').update(readFileSync(mp3)).digest('hex'), flags });
+        sha256: createHash('sha256').update(readFileSync(mp3)).digest('hex'), loudness: audio.loudness, flags });
       }
       const row = readJson(join(dir, 'result.json'));
       validateCues(article, readJson(cueFile), dictionary);
