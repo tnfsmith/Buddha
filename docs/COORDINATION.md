@@ -28,8 +28,8 @@ Tên làn CI không đổi. Codex dùng `ag/<issue>-...` hoặc `hermes/<issue>-
 | Người | Issue | Phạm vi nhận | Trạng thái tại lần cập nhật |
 |---|---|---|---|
 | Codex | [#33](https://github.com/tnfsmith/Buddha/issues/33) | `AGENTS.md`, `CLAUDE.md`, `PROJECT_ROADMAP.md`, tệp này | Đang cập nhật phân công và bàn giao; chỉ Codex sửa các tệp này trong tác vụ |
-| Codex [AG] | [#34](https://github.com/tnfsmith/Buddha/issues/34) | `ci.yml`, `deploy.yml`, runner trong `scripts/` | Nhận gia cố kiểm tài khoản Worker thật và cửa kiểm staging; không sửa test/UI của Claude |
-| Codex [H] | [#13](https://github.com/tnfsmith/Buddha/issues/13) | `ops/hermes/` | Nhận hoàn thiện báo cáo hạn mức, lỗi thu thập và kiểm thử; chưa nghiệm thu chạy thật |
+| Codex [AG] | [#34](https://github.com/tnfsmith/Buddha/issues/34), [PR #37](https://github.com/tnfsmith/Buddha/pull/37) | `ci.yml`, `deploy.yml`, runner trong `scripts/` | Mã `88c5619`; CI và preview đạt, account Worker thật 2/2 đạt; chưa merge |
+| Codex [H] | [#13](https://github.com/tnfsmith/Buddha/issues/13), [PR #38](https://github.com/tnfsmith/Buddha/pull/38) | `ops/hermes/` | Mã `dd13643`; 21 kiểm thử báo cáo và CI/preview đạt; gói Workers/D1/KV, T2.4 còn thiếu nguồn và nghiệm thu chạy thật |
 | Claude | [#26](https://github.com/tnfsmith/Buddha/issues/26), [PR #30](https://github.com/tnfsmith/Buddha/pull/30) | `ui/account.js`, `tests/e2e/account.spec.js` | Đang mở; Codex không sửa các tệp này |
 | Claude | [#27](https://github.com/tnfsmith/Buddha/issues/27), [PR #31](https://github.com/tnfsmith/Buddha/pull/31) | `main.js`, `world.js`, template, kiểm di chuyển | Đang mở; base `main` |
 | Claude | [#28](https://github.com/tnfsmith/Buddha/issues/28), [PR #32](https://github.com/tnfsmith/Buddha/pull/32) | `main.js`, `state.js`, `music.js`, template, kiểm âm nhạc | Đang mở; base nhánh PR #31, merge #31 trước rồi cập nhật base #32 |
@@ -62,14 +62,23 @@ Quyền sửa chỉ trả khi người đang giữ ghi bàn giao trong Issue/PR.
 - Trước đề nghị merge: kiểm kết quả tích hợp của các PR liên quan. Kiểm cả conflict văn bản lẫn API/lược đồ/khả năng chạy; chạy lint → unit/API → build → size → migrations → smoke 3D/PWA → account Worker thật. Khi SHA/base thay đổi, chạy lại kiểm liên quan; CI cũ không chứng minh cây mã mới đạt.
 - Migration chỉ thêm, Codex [AG] giữ số thứ tự. `0006`/`0007` đã dùng; tệp tiếp theo `0008_...`, kiểm lại main trước tạo. Thay đổi schema phải tương thích client và API v0.14 trong giai đoạn chuyển tiếp.
 - PR Claude #32 đang xếp sau #31: không merge #32 trước #31 hoặc coi CI chỉ trên #32 là kiểm độc lập với main. #30 độc lập về file nhưng phải chạy cùng account Worker thật.
-- Chủ dự án merge sau CI/preview và kiểm điện thoại. Merge từng PR, chờ staging của đúng SHA đạt trước PR phụ thuộc; giữ deploy tuần tự. Agent không tự merge/tag.
+- Chủ dự án merge sau CI/preview và kiểm điện thoại. Với ba PR tiếp quản: #36 (điều phối) → #37 (CI) → cập nhật/rebase và kiểm lại #38 (Hermes), để bước CI mới tự chạy 21 kiểm thử Hermes. Merge từng PR, chờ staging của đúng SHA đạt trước PR phụ thuộc; giữ deploy tuần tự. Agent không tự merge/tag.
 - Production chỉ khi chủ dự án tạo tag; chạy lại toàn bộ CI trên đúng SHA rồi mới migration/deploy. Kiểm khói sau deploy; lỗi thì thực hiện runbook, không sửa/xóa migration đã merge.
 
 ## 6. Ghi nhận bằng chứng và điều kiện ngoài mã
 
 Mỗi bàn giao ghi: Issue/PR, SHA/base, tệp đã đổi, hợp đồng ảnh hưởng, kiểm tra đã chạy/kết quả, điều kiện chưa đạt và người nhận. Phân biệt **đã có mã / kiểm cục bộ đạt / CI đạt / staging đạt / production đã phát hành**.
 
-- Hermes: còn cần token Cloudflare chỉ đọc, GitHub chỉ đọc, máy homelab/kênh nhận được xác nhận. Không dùng token deploy làm token giám sát. Không ghi bí mật hay dữ liệu cá nhân vào báo cáo.
-- Pháp học: UI thuyết giảng hiện lấy `SUTTAS` trực tiếp, chưa chặn theo `da_duyet`; giao Claude xử lý trong Issue riêng sau khi chốt nguồn nội dung duyệt. Codex không sửa UI đang được Claude giữ.
+- Hermes: chủ dự án đã chọn **Telegram** trong phiên 14/11; đích chat, máy homelab và chứng thực hoàn chỉnh sau. Còn cần token Cloudflare/GitHub chỉ đọc; không dùng token deploy làm token giám sát, không ghi bí mật hay dữ liệu cá nhân vào báo cáo. Chưa tạo lịch hay gửi tin thật.
+- Pháp học: UI thuyết giảng hiện lấy `SUTTAS` trực tiếp, chưa chặn theo `da_duyet`; đã bàn giao Claude ở [#39](https://github.com/tnfsmith/Buddha/issues/39). Codex không sửa UI đang được Claude giữ.
+- Kiểm thử Windows: server E2E cũ dùng URL pathname như đường dẫn filesystem và lỗi khi có ổ đĩa/khoảng trắng; bàn giao Claude ở [#40](https://github.com/tnfsmith/Buddha/issues/40). Khi kiểm cây tích hợp, dùng server tạm tương đương và `E2E_BASE_URL`; không commit bản vá vào test Claude.
 - Quyền riêng tư: bảng consent đã có nhưng chưa thấy luồng đồng ý có phiên bản; cần tác vụ API/UI phối hợp và chính sách do chủ dự án duyệt trước mở rộng đăng ký.
 - Chưa có nghiệm thu máy thật, hồ sơ pháp nhân/affiliate/Play, nội dung Hội đồng duyệt thì ghi **chờ điều kiện**, không tự đánh dấu hoàn thành.
+
+## 7. Bằng chứng kiểm tích hợp của phiên tiếp quản
+
+- Cây kiểm cục bộ `69c5211` gộp thử `d8cee01` (tài liệu), `88c5619` (CI), `dd13643` (Hermes), `39ae189` (Claude #30), `43fa607` (Claude #32, đã chứa #31). Không đẩy cây kiểm lên main; không đổi nhánh Claude. Git gộp sạch, không conflict.
+- Trên cây này: lint không lỗi (2 cảnh báo cũ), 107/107 unit/API, 21/21 kiểm thử Hermes, 7 migration hợp lệ; build và ngân sách kích thước đạt trần.
+- Kiểm khói gồm 3D, offline/IndexedDB và di chuyển/âm nhạc mới của Claude: 17 ca đạt. Runner account trên cùng cây tích hợp: 2/2 ca đạt trong 3,2 phút, không skip/retry; QR khôi phục 3,6 giây (<10 giây).
+- HTML tích hợp khoảng 1040 KB, +7,5% so mốc lịch sử 967 KB, vẫn dưới trần 1074 KB; phần Codex không sửa HTML/app, baseline main dựng mới đã khoảng 1022 KB. Không tự nâng ngưỡng hoặc cập nhật mốc để bỏ cảnh báo.
+- CI nguồn: [điều phối](https://github.com/tnfsmith/Buddha/actions/runs/43555583854), [Antigravity, gồm job account thật](https://github.com/tnfsmith/Buddha/actions/runs/43556284233), [Hermes](https://github.com/tnfsmith/Buddha/actions/runs/43556287684). Kiểm trạng thái mới trên PR nếu SHA thay đổi; kết quả trên không thay nghiệm thu điện thoại vật lý hay staging sau merge.
