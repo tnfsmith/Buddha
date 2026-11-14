@@ -8,6 +8,14 @@ describe('nạp bài giảng đã chọn phát hành', () => {
     expect(parsed.meta).toEqual({ chuong: [4, 5], loat: 'duong-xua' });
     expect(publishedRow(article)).toMatchObject({ reviewed_at: null, reviewed_by: null, body_r2_key: null });
   });
+  it('giữ khối meta dưới dạng JSON, không ép bài thiếu meta hoặc mở bản nháp', () => {
+    const meta = { loat: 'duong-xua', phan: 1, thu_tu: 20, chuong: [4], dot: 'B', note: "Dấu 'nháy' và tiếng Việt" };
+    expect(JSON.parse(publishedRow({ ...article, meta }).meta)).toEqual(meta);
+    expect(publishedRow(article).meta).toBeNull();
+    expect(publishedRow({ ...article, meta, status: 'cho_duyet' })).toBeNull();
+    expect(() => publishedRow({ ...article, meta: [] })).toThrow('meta');
+    expect(contentSql([publishedRow({ ...article, meta })])).toContain('meta=excluded.meta');
+  });
   it.each(['nhap', 'cho_duyet', 'ngung'])('không nạp %s kể cả có dấu reviewed', status => {
     expect(publishedRow({ ...article, status, reviewed_at: 123 })).toBeNull();
   });
@@ -30,9 +38,10 @@ describe('nạp bài giảng đã chọn phát hành', () => {
     expect(sql).toContain('||char(10)||');
     expect(sql).not.toMatch(/DELETE|DROP|\n/);
   });
-  it('đọc đúng bảy bài v2 đã phát hành trên main', () => {
+  it('giữ đủ bảy bài Lời Phật dạy v2 khi bổ sung loạt khác', () => {
     const rows = readPublished('content/bai-giang');
-    expect(rows).toHaveLength(7);
-    expect(rows.every(row => row.version === 2 && row.source_ref)).toBe(true);
+    const baseline = rows.filter(row => JSON.parse(row.meta || '{}').loat === 'loi-phat-day');
+    expect(baseline).toHaveLength(7);
+    expect(baseline.every(row => row.version === 2 && row.source_ref)).toBe(true);
   });
 });

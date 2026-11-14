@@ -43,6 +43,7 @@ export function publishedRow(article) {
     title: textField(article.title, 'title'), body_inline: body, body_r2_key: key,
     source_ref: textField(article.source_ref, 'source_ref'), status: 'da_duyet',
     reviewed_by: article.reviewed_by == null || article.reviewed_by === '' ? null : textField(article.reviewed_by, 'reviewed_by'), reviewed_at: reviewedAt,
+    meta: article.meta == null ? null : JSON.stringify(article.meta),
   };
 }
 
@@ -64,6 +65,6 @@ export function readPublished(dir) {
 const literal = value => value == null ? 'NULL' : typeof value === 'number' ? String(value)
   : String(value).split('\n').map(x => `'${x.replaceAll("'", "''")}'`).join('||char(10)||');
 export function contentSql(rows) {
-  const columns = ['id', 'version', 'kind', 'tier', 'lang', 'title', 'body_inline', 'body_r2_key', 'source_ref', 'status', 'reviewed_by', 'reviewed_at'];
+  const columns = ['id', 'version', 'kind', 'tier', 'lang', 'title', 'body_inline', 'body_r2_key', 'source_ref', 'status', 'reviewed_by', 'reviewed_at', 'meta'];
   return rows.map(row => `INSERT INTO content_item (${columns.join(',')}) VALUES (${columns.map(key => literal(row[key])).join(',')}) ON CONFLICT(id,version) DO UPDATE SET ${columns.slice(2).map(key => `${key}=excluded.${key}`).join(',')};`).join('\n');
 }

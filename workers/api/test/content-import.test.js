@@ -3,7 +3,8 @@ import { env, call } from './helpers.js';
 import { publishedRow, contentSql } from '../../../scripts/content-data.mjs';
 
 it('SQL công cụ nạp chạy thật trên D1: upsert idempotent, giữ bản khác và đọc lại API', async () => {
-  const row = publishedRow({ id: 'kiem-nap', version: 2, kind: 'bai_giang', title: "Tên 'thử'", source_ref: 'Nguồn thử', status: 'da_duyet', body: 'Ý đầu.\n> Pāli.\nÝ sau.' });
+  const meta = { loat: 'duong-xua', phan: 1, thu_tu: 20, chuong: [4], dot: 'B' };
+  const row = publishedRow({ id: 'kiem-nap', version: 2, kind: 'bai_giang', title: "Tên 'thử'", source_ref: 'Nguồn thử', status: 'da_duyet', meta, body: 'Ý đầu.\n> Pāli.\nÝ sau.' });
   await env.DB.exec(contentSql([row]));
   await env.DB.exec(contentSql([{ ...row, title: 'Đã cập nhật' }]));
   const stored = await env.DB.prepare('SELECT * FROM content_item WHERE id = ?').bind(row.id).all();
@@ -13,4 +14,7 @@ it('SQL công cụ nạp chạy thật trên D1: upsert idempotent, giữ bản 
   const res = await call('/api/v1/content?kind=bai_giang');
   const { items } = await res.json();
   expect(items.filter(x => x.id === row.id).map(x => x.version)).toEqual([3, 2]);
+  expect(items.filter(x => x.id === row.id).every(x => JSON.stringify(JSON.parse(x.meta)) === JSON.stringify(meta))).toBe(true);
+  await env.DB.prepare('UPDATE content_item SET status = ? WHERE id = ?').bind('cho_duyet', row.id).run();
+  expect((await (await call('/api/v1/content?kind=bai_giang')).json()).items.some(x => x.id === row.id)).toBe(false);
 });
