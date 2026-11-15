@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-15T14:39:20.774Z",
+  "checked_at": "2026-11-15T15:46:32.474Z",
   "issue": 87,
   "design_pr": 86,
   "design_base": "a45dceb1c80c3225ea687ee7a8c01637d92a8c0c",
@@ -13,7 +13,7 @@
     "trai": 1
   },
   "statuses": {
-    "cho_duyet": 73
+    "da_duyet": 73
   },
   "max_action_characters": 76,
   "home_no_money_per_precept": {
@@ -59,7 +59,8 @@
   "uposatha_precepts": 8,
   "published_import": {
     "bai_giang": 42,
-    "nhiem_vu": 0
+    "nhiem_vu": 73,
+    "total": 115
   },
   "old_42_sermon_rows_deep_equal_legacy": true,
   "local_checks": {
@@ -68,7 +69,8 @@
     "migrations": 8,
     "build_size_kb": 1057,
     "html_delta_vs_base": "0 vs main after A; +8 KB from Claude A relative to pre-A baseline",
-    "targeted_content_and_api": "37 passed"
+    "targeted_content_and_api": "37 passed",
+    "approved_sql_rehearsal": "8 migrations + 115 rows, repeated import idempotent, in-memory SQLite; no remote D1 writes"
   },
   "coordination": {
     "claude_issue": 88,
@@ -76,8 +78,8 @@
     "apps_web_or_packages_shared_edits": false,
     "remote_d1_writes": false,
     "merge_or_tag": false,
-    "ci": "pending new PR head",
-    "preview": "pending new PR head",
+    "ci": "pending approval commit head",
+    "preview": "pending approval commit head",
     "integration_with_claude": {
       "head": "7be7f6de2d621c45bb12cd23806cf36f463a0b9f",
       "merged_as": "6cfb8dda00e9e294780dc8ae224cd98da45f7699",
@@ -100,5 +102,11 @@
     "with_shared_ok": 0,
     "without_shared_ok": 5
   },
-  "base_after_claude_A_merge": "6cfb8dda00e9e294780dc8ae224cd98da45f7699"
+  "base_after_claude_A_merge": "6cfb8dda00e9e294780dc8ae224cd98da45f7699",
+  "owner_approval": {
+    "approved_at": "2026-11-15T15:46:32.129Z",
+    "channel": "Owner in Codex chat",
+    "statement": "Duyệt nội dung bảng 73 mục. Chuyển sang trạng thái da_duyet ngay",
+    "record": "https://github.com/tnfsmith/Buddha/issues/87#issuecomment-6897073087"
+  }
 }

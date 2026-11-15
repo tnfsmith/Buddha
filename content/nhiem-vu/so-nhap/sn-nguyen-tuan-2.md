@@ -6,7 +6,9 @@ tier: 0
 lang: vi
 title: Nguyện tuần 2
 source_ref: "Vân Đạo tự biên soạn theo docs/noi-dung/nhiem-vu-so-nhap.md §5.1 (chủ dự án duyệt #85); tham khảo thực hành Ba-la-mật trong đời thường (https://sati.org/an-introduction-to-the-ten-paramis/)."
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt bảng 73 mục qua chat 15/11/2026"
+reviewed_at: 1794757592
 meta:
   gioi: null
   tuan: 2

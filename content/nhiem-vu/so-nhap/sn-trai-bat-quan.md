@@ -6,7 +6,9 @@ tier: 0
 lang: vi
 title: Bát quan trai tự nguyện
 source_ref: Vân Đạo tự biên soạn; tham khảo Bát quan trai AN 8.43, Bhikkhu Khantipalo (https://accesstoinsight.org/tipitaka/an/an08/an08.043.khan.html); ghi chú an toàn rượu/chất gây nghiện (https://www.nhs.uk/conditions/alcohol-use-disorder/).
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt bảng 73 mục qua chat 15/11/2026"
+reviewed_at: 1794757592
 meta:
   gioi: null
   tuan: null

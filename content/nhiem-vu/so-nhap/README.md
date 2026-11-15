@@ -1,6 +1,6 @@
 # Danh mục nhiệm vụ Sơ nhập — đợt B (#87)
 
-73 mục, `kind: nhiem_vu`, `tier: 0`, `lang: vi`, `version: 1`; **toàn bộ đang `cho_duyet`** để chủ dự án đọc và chọn phát hành. Theo chỉ thị trực tiếp mới nhất ở #87: 25 Ngũ giới, 40 Hạnh, 7 Nguyện tuần, **một** thẻ Bát quan trai. Các biến thể T3.1 chưa thuộc đợt giao này.
+73 mục, `kind: nhiem_vu`, `tier: 0`, `lang: vi`, `version: 1`; **toàn bộ đã `da_duyet`** theo quyết định duyệt bảng 73 mục của chủ dự án ngày 15/11/2026 ([ghi nhận #87](https://github.com/tnfsmith/Buddha/issues/87#issuecomment-6897073087)). Theo chỉ thị trực tiếp mới nhất ở #87: 25 Ngũ giới, 40 Hạnh, 7 Nguyện tuần, **một** thẻ Bát quan trai. Các biến thể T3.1 chưa thuộc đợt giao này.
 
 Đây là câu hành động do Vân Đạo viết mới, có nguồn tham khảo trong từng tệp; không phải lời trích kinh hoặc văn bản Năm Giới Tân Tu. Mỗi việc là một bước nhỏ để thực hành, không đồng nghĩa đã giữ trọn một giới hoặc hoàn thành cả ngày trai. Không cộng Kusala, không tự đánh dấu trục Tuệ, không xếp hạng hay trao huy hiệu.
 
@@ -31,14 +31,14 @@ Thẻ Bát quan trai là lời mời tự nguyện. `minutes: 3` dành để đ�
 ## Nạp và duyệt
 
 - `node scripts/import-content.mjs --check`: kiểm cả thư mục con và cả nháp nhiệm vụ; chỉ chọn `da_duyet`.
-- Với trạng thái hiện tại: vẫn chọn 42 bài giảng, **0 nhiệm vụ**. Nháp không vào SQL nạp, D1 hay API công khai.
+- Sau duyệt: bộ nạp chọn **115 mục = 42 bài giảng + 73 nhiệm vụ**. API môi trường thật chỉ có dữ liệu mới sau khi chủ dự án merge và workflow nạp/deploy; không nạp thủ công trong lúc review. Các bản nháp khác vẫn không được chọn.
 - Chỉ đổi trạng thái các mục chủ dự án đã chọn sau khi có quyết định duyệt ghi trong #87/PR. Không cần Hội đồng hoặc dấu `reviewed_*` để mở nội dung, theo ADR 0003.
 - Sau duyệt, công cụ deploy hiện hành nạp cùng pipeline; không cần nạp thủ công vào tài khoản thật trong lúc review.
 - Bộ chọn việc, ghi nhận người dùng, hiển thị và thống kê thuộc Claude A/C; máy chủ đồng bộ là đợt D, không triển khai trong PR này.
 
 Nguồn đã đối chiếu: [Ngũ giới, AN 8.39](https://www.dhammatalks.org/suttas/AN/AN8_39.html), [tinh thần diễn đạt tích cực của Làng Mai](https://plumvillage.org/mindfulness/the-5-mindfulness-trainings), [Ba-la-mật trong đời thường, Gil Fronsdal](https://sati.org/an-introduction-to-the-ten-paramis/), [Bát quan trai, AN 8.43](https://accesstoinsight.org/tipitaka/an/an08/an08.043.khan.html), [NHS về phụ thuộc rượu và hỗ trợ y tế](https://www.nhs.uk/conditions/alcohol-use-disorder/). Không chép lại đoạn văn từ các nguồn.
 
-## Bảng đọc duyệt 73 mục
+## Bảng 73 mục đã được chủ dự án duyệt
 
 Tất cả `money: false`. Mỗi liên kết mở tệp nguồn có đủ metadata, ghi chú an toàn và nguồn tham khảo. Bảng dưới là bản tổng hợp để đọc duyệt, không thay trạng thái trong tệp.
 
