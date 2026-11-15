@@ -18,3 +18,19 @@ it('SQL công cụ nạp chạy thật trên D1: upsert idempotent, giữ bản 
   await env.DB.prepare('UPDATE content_item SET status = ? WHERE id = ?').bind('cho_duyet', row.id).run();
   expect((await (await call('/api/v1/content?kind=bai_giang')).json()).items.some(x => x.id === row.id)).toBe(false);
 });
+
+it('nhiem_vu: nạp cùng SQL, đọc đúng kind/meta và không lộ nháp trong API', async () => {
+  const meta = { nhom: 'gioi', gioi: 1, parami: ['sila', 'metta'], punna: 'sila', tuan: null, minutes: 2, money: false, at_home: true, outdoors: false, needs_others: false, scope: 'doi_thuc' };
+  const row = publishedRow({ id: 'kiem-nhiem-vu-87', version: 1, kind: 'nhiem_vu', tier: 0, lang: 'vi', title: 'Bảo vệ sự sống', source_ref: 'Tham khảo AN 8.39', status: 'da_duyet', meta, body: 'Dọn một vật sắc khỏi lối đi trong nhà.' });
+  await env.DB.exec(contentSql([row]));
+  await env.DB.exec(contentSql([row, { ...row, id: 'kiem-nhiem-vu-87-nhap', status: 'cho_duyet' }]));
+  const res = await call('/api/v1/content?kind=nhiem_vu&tier=0'); expect(res.status).toBe(200);
+  const { items } = await res.json();
+  expect(items.every(x => x.kind === 'nhiem_vu')).toBe(true);
+  expect(items.filter(x => x.id === row.id)).toHaveLength(1);
+  const found = items.find(x => x.id === row.id);
+  expect(found).toMatchObject({ body_inline: row.body_inline, body_r2_key: null, reviewed_at: null });
+  expect(JSON.parse(found.meta)).toEqual(meta);
+  expect(items.some(x => x.id === 'kiem-nhiem-vu-87-nhap')).toBe(false);
+  expect((await (await call('/api/v1/content?kind=bai_giang')).json()).items.some(x => x.id === row.id)).toBe(false);
+});

@@ -1,0 +1,26 @@
+---
+id: sn-gioi-3-02
+version: 1
+kind: nhiem_vu
+tier: 0
+lang: vi
+title: Thủy chung và tôn trọng
+source_ref: Vân Đạo tự biên soạn; tham khảo Ngũ giới AN 8.39 (https://www.dhammatalks.org/suttas/AN/AN8_39.html) và cách tiếp cận tích cực của Làng Mai (https://plumvillage.org/mindfulness/the-5-mindfulness-trainings); không chép văn bản Năm Giới Tân Tu.
+status: cho_duyet
+meta:
+  gioi: 3
+  tuan: null
+  money: false
+  at_home: true
+  outdoors: false
+  needs_others: false
+  scope: doi_thuc
+  nhom: gioi
+  parami:
+    - sila
+    - nekkhamma
+    - metta
+  punna: sila
+  minutes: 1
+---
+Giữ một khoảng riêng tư của người khác bằng cách không xem tin nhắn của họ.
