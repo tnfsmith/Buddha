@@ -15,7 +15,7 @@ meta:
   thu_tu: 360
   chuong: [ 80 ]
   dot: D
-body_r2_key: bai-giang/duong-xua/hay-tinh-tan/v1-a59154e2/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/hay-tinh-tan/v1-fb7b004c/vi-sadaltager.mp3
 ---
 Trong rừng cây sa la ở Câu Thi Na, các vị đệ tử quây quần bên Đức Phật trong những giờ cuối. Trước một cuộc chia lìa đang đến gần, mỗi người đều phải gặp phần bối rối và thương kính đang có trong lòng mình.
 Một người du sĩ tên Tu Bạt Đà La tìm đến, mong được hỏi điều còn băn khoăn. A Nan lo Đức Phật đã rất mệt, nhưng Ngài vẫn cho người ấy vào để một sự tìm hiểu chân thành có cơ hội được lắng nghe.

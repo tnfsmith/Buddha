@@ -14,7 +14,7 @@ meta:
   thu_tu: 290
   chuong: [ 66 ]
   dot: D
-body_r2_key: bai-giang/duong-xua/bon-trai-nui/v1-398cd9cf/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/bon-trai-nui/v1-c4724015/vi-sadaltager.mp3
 ---
 Vua Ba Tư Nặc đến gặp Đức Phật sau những công việc của một người đứng đầu đất nước. Chung quanh nhà vua là quyền lực và nhiều việc phải lo, những điều có thể khiến một ngày trôi qua mà tâm chưa kịp dừng lại.
 Đức Phật đưa ra một hình ảnh để nhà vua suy xét. Nếu từ bốn phía đều có tin đáng tin cậy rằng những trái núi rất lớn đang tiến đến, nghiền qua mọi thứ trên đường, nhà vua sẽ chọn làm điều gì?

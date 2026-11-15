@@ -17,7 +17,7 @@ meta:
   thu_tu: 340
   chuong: [ 74 ]
   dot: D
-body_r2_key: bai-giang/duong-xua/voi-say/v1-684febae/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/voi-say/v1-ced6bb72/vi-sadaltager.mp3
 ---
 Trên con đường Đức Phật đi qua, một con voi đã bị làm cho say rồi thả ra. Tiếng động và sức mạnh của nó khiến người chung quanh hoảng sợ, còn cuộc khất thực bình thường bỗng đứng trước một hiểm nguy rất gần.
 Trong bản kể của Đường Xưa Mây Trắng, con voi ấy tên là Na La Ghi Ri. Âm mưu làm hại Đức Phật đã đặt cả người lẫn con vật vào một tình thế bị thúc đẩy bởi sợ hãi và sự kích động.

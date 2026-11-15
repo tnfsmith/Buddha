@@ -16,7 +16,7 @@ meta:
   thu_tu: 235
   chuong: [ 52 ]
   dot: D
-body_r2_key: bai-giang/duong-xua/bong-mat-ho-hang/v1-e5c85c42/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/bong-mat-ho-hang/v1-4a528d72/vi-sadaltager.mp3
 ---
 Trong câu chuyện ở chương năm mươi hai, một dòng nước trở thành điều hai bên cùng muốn giữ lấy. Người của dòng họ Thích Ca và dòng họ Câu Ly đều lo cho ruộng đồng của mình, rồi sự lo lắng dần hóa thành đối đầu.
 Khi lời qua tiếng lại đã kéo theo ý muốn dùng sức mạnh, những người có họ hàng với nhau đứng trước nguy cơ làm nhau đổ máu. Điều ban đầu liên quan đến nước tưới ruộng đang thành chuyện sinh mạng của chính những người cần nước.

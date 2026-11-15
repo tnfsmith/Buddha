@@ -15,7 +15,7 @@ meta:
   thu_tu: 300
   chuong: [ 69 ]
   dot: D
-body_r2_key: bai-giang/duong-xua/chim-cut-va-chim-ung/v1-88e5e357/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/chim-cut-va-chim-ung/v1-22c094ec/vi-sadaltager.mp3
 ---
 Trong câu chuyện ngụ ngôn Đức Phật kể, một con chim cút rời chỗ quen thuộc của mình và bị chim ưng chộp lấy. Đang bị mang đi, nó than rằng nếu còn ở ruộng mới cày, nó đã có nơi để tránh nạn.
 Chim ưng hỏi nơi ấy có gì đặc biệt. Chim cút nói đến những luống đất vừa lật lên, có các tảng đất che chở. Nghe vậy, chim ưng thả nó về, tin rằng mình vẫn đủ sức bắt được con mồi.

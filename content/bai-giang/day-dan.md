@@ -15,7 +15,7 @@ meta:
   thu_tu: 310
   chuong: [ 71 ]
   dot: D
-body_r2_key: bai-giang/duong-xua/day-dan/v1-c5973e52/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/day-dan/v1-ccd3c418/vi-sadaltager.mp3
 ---
 Sona đã dành rất nhiều sức cho việc tu học, đi kinh hành đến khi bàn chân bị tổn thương. Thầy mong có tiến bộ, nhưng càng cố lại càng thất vọng, rồi nghĩ đến chuyện rời bỏ nếp sống mà mình đã chọn.
 Đức Phật biết tâm trạng ấy và gặp thầy để hướng dẫn. Ngài không chỉ nhìn vào số giờ hay mức chịu đựng, mà hỏi về một kinh nghiệm Sona từng rất quen trong đời sống trước đây, đó là chơi đàn.

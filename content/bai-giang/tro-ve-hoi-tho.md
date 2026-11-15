@@ -14,7 +14,7 @@ meta:
   thu_tu: 260
   chuong: [ 56 ]
   dot: D
-body_r2_key: bai-giang/duong-xua/tro-ve-hoi-tho/v1-9253762a/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/tro-ve-hoi-tho/v1-40587cd9/vi-sadaltager.mp3
 ---
 Sau mùa mưa, các vị khất sĩ cùng trở về bên Đức Phật. Có những người mới học còn đang tìm một chỗ đứng vững cho tâm, giữa bao nhiêu điều được nghe và những đổi thay trong nếp sống hằng ngày.
 Trong khung cảnh ấy, Ngài dành thêm thời gian ở lại cùng đại chúng. Sự hướng dẫn bắt đầu từ điều gần đến mức ta vẫn thường đi qua mà ít nhận ra, đó là hơi thở đang nâng đỡ sự sống của mình.
