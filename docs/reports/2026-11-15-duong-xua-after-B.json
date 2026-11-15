@@ -1,0 +1,86 @@
+{
+  "checked_at": "2026-11-15T08:17:24.569Z",
+  "main": "57f947641b4cf58b3c856547eeade33f83c8cf1b",
+  "merged_pr": 76,
+  "main_ci": 43690489428,
+  "staging_deploy": 43691581757,
+  "staging_api_count": 19,
+  "normal_articles": 17,
+  "rituals": 2,
+  "duong_xua": 10,
+  "api_range_cues": {
+    "status": "passed",
+    "items": 19,
+    "test": "tests/e2e/live-sermon.spec.js: API trả đủ bài",
+    "duration_seconds": 48.6
+  },
+  "publication_approval": "https://github.com/tnfsmith/Buddha/issues/48#issuecomment-6890917861",
+  "claude_request": "https://github.com/tnfsmith/Buddha/issues/83#issuecomment-6891540663",
+  "next_merge": 77,
+  "held_pr": 78,
+  "tag_ready": false,
+  "remaining": "C/D sequential merge, Claude #83/full staging acceptance and owner physical-phone verification. No self merge/tag.",
+  "live_browser": {
+    "checked_at": "2026-11-15T08:16:13.492Z",
+    "main": "57f947641b4cf58b3c856547eeade33f83c8cf1b",
+    "api_count": 19,
+    "mode": "Live staging API and /media; no route interception, no content injection; desktop and mobile emulation. Diagnostic does not replace Claude full live suite or physical-phone acceptance.",
+    "results": [
+      {
+        "mobile_emulation": false,
+        "id": "dem-trang-ra-di",
+        "currentTime": 0.567331,
+        "provider": "google",
+        "cues": 16,
+        "ideas": 16,
+        "src": "https://vandao-staging.vandao-staging.workers.dev/media/bai-giang/duong-xua/dem-trang-ra-di/v1-52acab01/vi-sadaltager.mp3"
+      },
+      {
+        "mobile_emulation": false,
+        "id": "goc-cay-hong-tao",
+        "currentTime": 0.576136,
+        "provider": "google",
+        "cues": 16,
+        "ideas": 16,
+        "src": "https://vandao-staging.vandao-staging.workers.dev/media/bai-giang/duong-xua/goc-cay-hong-tao/v1-5e6294d9/vi-sadaltager.mp3"
+      },
+      {
+        "mobile_emulation": false,
+        "id": "loc-uyen",
+        "currentTime": 0.581791,
+        "provider": "google",
+        "cues": 16,
+        "ideas": 16,
+        "src": "https://vandao-staging.vandao-staging.workers.dev/media/bai-giang/duong-xua/loc-uyen/v1-09811acc/vi-sadaltager.mp3"
+      },
+      {
+        "mobile_emulation": true,
+        "id": "dem-trang-ra-di",
+        "currentTime": 0.514051,
+        "provider": "google",
+        "cues": 16,
+        "ideas": 16,
+        "src": "https://vandao-staging.vandao-staging.workers.dev/media/bai-giang/duong-xua/dem-trang-ra-di/v1-52acab01/vi-sadaltager.mp3"
+      },
+      {
+        "mobile_emulation": true,
+        "id": "goc-cay-hong-tao",
+        "currentTime": 0.581312,
+        "provider": "google",
+        "cues": 16,
+        "ideas": 16,
+        "src": "https://vandao-staging.vandao-staging.workers.dev/media/bai-giang/duong-xua/goc-cay-hong-tao/v1-5e6294d9/vi-sadaltager.mp3"
+      },
+      {
+        "mobile_emulation": true,
+        "id": "loc-uyen",
+        "currentTime": 0.57211,
+        "provider": "google",
+        "cues": 16,
+        "ideas": 16,
+        "src": "https://vandao-staging.vandao-staging.workers.dev/media/bai-giang/duong-xua/loc-uyen/v1-09811acc/vi-sadaltager.mp3"
+      }
+    ],
+    "errors": []
+  }
+}

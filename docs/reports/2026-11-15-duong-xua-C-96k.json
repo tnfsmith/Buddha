@@ -1,0 +1,1518 @@
+{
+  "v": 1,
+  "checked_at": "2026-11-14T20:27:03.417Z",
+  "batch": "C",
+  "series": "duong-xua",
+  "voice": "vi-VN-Chirp3-HD-Sadaltager",
+  "speed": 0.85,
+  "ffprobe_version": "9.0.2",
+  "checked_remote_files": 44,
+  "buckets": [
+    "vandao-media-staging",
+    "vandao-media"
+  ],
+  "status": "cho_duyet",
+  "entries": [
+    {
+      "id": "bai-hoc-cua-dat",
+      "version": 1,
+      "key": "bai-giang/duong-xua/bai-hoc-cua-dat/v1-ec268a4a/vi-sadaltager.mp3",
+      "hash": "ec268a4a",
+      "fingerprint": "ec268a4ab9c3d6390f9bf0c5b8b9036fe245a6344a15aedb3a6cc1e480bcbbcc",
+      "dur": 238.99395833333332,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:07:27.824Z",
+      "wer": 0.004137845849802372,
+      "sha256": "dc87ac824707cc7d8fa6bac4c72df913beb3446efd4195bca358f148a9814d56",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.15,
+        "peak_dbtp": -1.9
+      },
+      "selected_attempts": [
+        3,
+        3,
+        2,
+        2,
+        4,
+        2,
+        2,
+        2,
+        1,
+        4,
+        1,
+        1,
+        1,
+        4,
+        2,
+        1
+      ],
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2990072463768116,
+          "at_seconds": 15.5343,
+          "selected_attempt": 3,
+          "reference": "Dưới chân là đất, bên cạnh là nước, còn hơi ấm và sự chuyển động vẫn đang có trong từng khoảnh khắc sống. Những điều bình thường ấy được dùng làm hình ảnh để người học nhận ra một cách chăm sóc tâm rộng rãi hơn.",
+          "transcript": "dưới chân là đất bên cạnh là nước còn hơi ấm và sự chuyển động vẫn đang có trong từng khoảnh khắc sống những điều bình thường ấy được dùng làm hình ảnh để người học nhận ra một cách chăm sóc tâm rộng rãi hơn"
+        },
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2824326241134752,
+          "at_seconds": 30.1887,
+          "selected_attempt": 2,
+          "reference": "Đất có thể nhận cả những gì sạch đẹp lẫn những thứ bị người ta bỏ đi. Trong hình ảnh của bài giảng, đất không vì được đặt lên hoa thơm mà tự cao, cũng không vì gặp điều dơ bẩn mà nổi giận và xua đuổi.",
+          "transcript": "đất có thể nhận cả những gì sạch đẹp lẫn những thứ bị người ta bỏ đi trong hình ảnh của bài giảng đất không vì được đặt lên hoa thơm mà tự cao cũng không vì gặp điều dơ bẩn mà nổi giận và xua đuổi"
+        },
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2772074074074074,
+          "at_seconds": 44.363,
+          "selected_attempt": 2,
+          "reference": "Ngài mời La Hầu La học cách có mặt như thế, để điều dễ chịu hay khó chịu không lập tức chiếm hết tâm mình. Khi tiếp xúc với một sự việc, người học còn có một khoảng để biết rõ điều đang xảy ra.",
+          "transcript": "ngài mời La Hầu La học cách có mặt như thế để điều dễ chịu hay khó chịu không lập tức Chiếm hết tâm mình khi tiếp xúc với một sự việc người học còn có một khoảng để biết rõ điều đang xảy ra"
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2852074074074074,
+          "at_seconds": 57.7373,
+          "selected_attempt": 4,
+          "reference": "Nước cũng là một hình ảnh gần gũi, có thể rửa những thứ khác nhau mà không chọn điều mình thích mới chịu nhận. Học từ nước, ta tập bớt phản ứng theo sự ghê bỏ và giữ được khả năng nhìn lại hoàn cảnh.",
+          "transcript": "nước cũng là một hình ảnh gần gũi có thể rửa những thứ khác nhau mà không chọn điều mình thích mới chịu nhận học từ nước ta tập bớt phản ứng theo sự ghê bỏ và giữ được khả năng nhìn lại hoàn cảnh"
+        },
+        {
+          "i": 5,
+          "wer": 0.022727272727272728,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.26168939393939394,
+          "at_seconds": 71.4717,
+          "selected_attempt": 2,
+          "reference": "Lửa và gió tiếp tục mở rộng cách nhìn ấy. Một yếu tố có thể tiếp xúc với nhiều thứ, còn người học tập nhận biết cảm giác sinh lên mà không để sự ưa ghét quyết định ngay mọi lời mình sắp nói.",
+          "transcript": "lửa và gió tiếp tục mở rộng cách nhìn ấy một yếu tố có thể tiếp xúc với nhiều thứ con người học tập nhận biết cảm giác sinh lên mà không để sự ưa Ghét quyết định ngay mọi lời mình sắp nói"
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2940486111111111,
+          "at_seconds": 133.809,
+          "selected_attempt": 4,
+          "reference": "Nếu nhận ra đã gây hại, người học cần thừa nhận, tìm cách sửa và giữ gìn hơn về sau. Cái nhìn thành thật có ích khi giúp ta thay đổi việc làm, thay vì chỉ kéo dài sự tự trách mà không biết bắt đầu từ đâu.",
+          "transcript": "Nếu nhận ra đã gây hại người học cần thừa nhận tìm cách sửa và giữ gìn hơn về sau cái nhìn thành thật có ích khi giúp ta thay đổi việc làm thay vì chỉ kéo dài sự tự trách mà không biết bắt đầu từ đâu"
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2877028985507247,
+          "at_seconds": 179.812,
+          "selected_attempt": 1,
+          "reference": "Sự sáng rõ cũng giúp ta giữ giới hạn cần thiết. Ta có thể từ chối một việc không phù hợp bằng lời bình tĩnh, và tìm sự nâng đỡ khi cần, trong khi vẫn chăm để cơn giận không dẫn mình đến sự trả đũa.",
+          "transcript": "sự sáng rõ cũng giúp ta giữ giới hạn cần thiết ta có thể từ chối một việc không phù hợp bằng lời bình tĩnh và tìm sự nâng đỡ khi cần trong khi vẫn chăm để cơn giận không dẫn mình đến sự trả đũa"
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ffprobe": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "ideas": 16,
+      "cues_sha256": "080ab97511fe6161d00e4b0ca611b9533e748fcfd91c7d1814a225bd28776a77"
+    },
+    {
+      "id": "cau-thiem-di",
+      "version": 1,
+      "key": "bai-giang/duong-xua/cau-thiem-di/v1-72bde96a/vi-sadaltager.mp3",
+      "hash": "72bde96a",
+      "fingerprint": "72bde96a4cd38b1f3009da5ce277fd42f852ed6f211c2ce1d79f104574e30d97",
+      "dur": 233.06595833333333,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:07:57.806Z",
+      "wer": 0.008163597833381104,
+      "sha256": "112e5bd6808f0e7c08752581861b1045aa41009a7139d8fd8df9071759369a24",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.11,
+        "peak_dbtp": -1.99
+      },
+      "selected_attempts": [
+        2,
+        3,
+        2,
+        3,
+        3,
+        1,
+        2,
+        2,
+        1,
+        2,
+        1,
+        1,
+        1,
+        1,
+        4,
+        3
+      ],
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2962348484848485,
+          "at_seconds": 14.2143,
+          "selected_attempt": 3,
+          "reference": "Điều cần làm rõ ban đầu bị phủ thêm nhiều lời phê phán và sự bênh vực. Người nghe câu chuyện từ một phía lại tiếp lời phía ấy, khiến khoảng cách lớn lên và bầu không khí chung trở nên nặng nề hơn.",
+          "transcript": "điều cần làm rõ ban đầu bị phủ thêm nhiều lời phê phán và sự bênh vực người nghe câu chuyện từ một phía lại tiếp lời phía ấy khiến khoảng cách lớn lên và bầu không khí chung trở nên nặng nề hơn"
+        },
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2949851851851852,
+          "at_seconds": 28.1487,
+          "selected_attempt": 2,
+          "reference": "Đức Phật khuyên mọi người dừng cuộc tranh chấp, nhìn lại cách mình đang sống với nhau. Nhưng khi tâm đã đặt hết vào việc chứng minh mình đúng, lời khuyên cũng có thể bị nghe như một điều cản trở phần thắng của mình.",
+          "transcript": "Đức Phật khuyên mọi người dừng cuộc tranh chấp nhìn lại cách mình đang sống với nhau nhưng khi Tâm đã đặt hết vào việc Chứng minh mình đúng lời khuyên cũng có thể bị nghe như một điều cản trở phần thắng của mình"
+        },
+        {
+          "i": 3,
+          "wer": 0.022727272727272728,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28987121212121214,
+          "at_seconds": 42.323,
+          "selected_attempt": 3,
+          "reference": "Các bên tiếp tục giữ lập trường và chưa chịu lắng nghe. Một nơi được lập để cùng học cách bớt khổ lại trở thành chỗ những người sống gần nhau làm nhau thêm mệt, dù ai cũng có lý lẽ để trình bày.",
+          "transcript": "các bên Tiếp tục giữ lập trường và chưa chịu lắng nghe một nơi được lập để cùng học cách bớt khổ là trở thành chỗ những người sống gần nhau làm nhau thêm mệt dù ai cũng có lý lẽ để trình bày"
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2971439393939394,
+          "at_seconds": 55.9773,
+          "selected_attempt": 3,
+          "reference": "Đức Phật rời cộng đồng ấy và đi vào rừng. Sự rời đi tạo nên một khoảng im lặng khác với những lời qua lại, để điều đang xảy ra có cơ hội được nhìn bằng trải nghiệm và hậu quả của chính nó.",
+          "transcript": "Đức Phật rời cộng đồng ấy và đi vào rừng sự rời đi tạo nên một khoảng im lặng khác với những lời qua lại để điều đang xảy ra có cơ hội được nhìn bằng trải nghiệm và hậu quả của chính nó"
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2916893939393939,
+          "at_seconds": 69.9517,
+          "selected_attempt": 1,
+          "reference": "Trên hành trình, Ngài còn gặp những người tu sống với nhau bằng sự hòa thuận. Họ chia việc, biết chăm nhu cầu của nhau và có thể đặt sự thuận hòa của cộng đồng bên cạnh những sở thích riêng của từng người.",
+          "transcript": "trên hành trình ngài còn gặp những người tu sống với nhau bằng sự hòa thuận họ chia việc biết chăm nhu cầu của nhau và có thể đặt Sự thuận hòa của cộng đồng Bên cạnh những sở thích riêng của từng người"
+        },
+        {
+          "i": 7,
+          "wer": 0.02127659574468085,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.25434751773049646,
+          "at_seconds": 99.5803,
+          "selected_attempt": 2,
+          "reference": "Trong khi đó, các vị ở Câu Thiểm Di dần cảm nhận hậu quả của sự chia rẽ. Cuộc sống chung mất đi sự nâng đỡ vốn có, và những người thân cận cũng không còn muốn góp phần nuôi thêm một cuộc tranh chấp không dứt.",
+          "transcript": "trong khi đó các vị ở câu thiền di dần Cảm nhận hậu quả của sự chia rẽ cuộc sống chung mất đi sự nâng đỡ vốn có và những người thân cận cũng không còn muốn góp phần nuôi thêm một cuộc tranh chấp không dứt"
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2932074074074074,
+          "at_seconds": 129.729,
+          "selected_attempt": 2,
+          "reference": "Pháp Cú nhắc rằng sự hận thù không được làm lắng dịu bằng hận thù. Nếu mỗi câu làm đau lại được đáp bằng một câu sắc hơn, cả hai bên có thể cùng mất đi điều mình vốn muốn gìn giữ từ lúc đầu.",
+          "transcript": "pháp cú nhắc rằng sự hận thù không được làm lắng dịu bằng Hận Thù nếu mỗi câu làm đau lại được đáp bằng một câu sắc hơn cả hai bên có thể cùng mất đi điều mình vốn muốn gìn giữ từ lúc đầu"
+        },
+        {
+          "i": 12,
+          "wer": 0.022727272727272728,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2916893939393939,
+          "at_seconds": 174.852,
+          "selected_attempt": 1,
+          "reference": "Một khoảng dừng có thể hữu ích khi hai bên đều mệt. Ta có thể hẹn lại thời điểm nói chuyện, làm rõ từng vấn đề và nhờ một người đáng tin giúp giữ cuộc đối thoại ở gần điều cần được giải quyết.",
+          "transcript": "một khoảng rừng có thể hữu ích khi hai bên đều mệt ta có thể hẹn lại thời điểm nói chuyện làm rõ từng vấn đề và nhờ một người đáng tin giúp giữ cuộc đối thoại ở gần điều cần được giải quyết"
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29488194444444443,
+          "at_seconds": 203.2807,
+          "selected_attempt": 4,
+          "reference": "Trong một nhóm đang căng thẳng, ta có thể bớt kể tiếp lời từ hai phía và cùng tìm một công việc cần làm. Đôi khi sự hợp tác nhỏ giúp mọi người nhớ rằng ngoài bất đồng, họ vẫn còn những điều đáng gìn giữ cùng nhau.",
+          "transcript": "Trong một nhóm đang căng thẳng ta có thể bớt kể tiếp lời từ hai phía và cùng tìm một công việc cần làm đôi khi sự hợp tác nhỏ giúp mọi người nhớ rằng ngoài bất đồng họ vẫn còn những điều đáng gìn giữ cùng nhau"
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ffprobe": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "ideas": 16,
+      "cues_sha256": "21603a9cc88575bcbde1cbaa45794070dae8ccf41a50334bfcae1777d73b91c8"
+    },
+    {
+      "id": "lam-lanh-lanh-du",
+      "version": 1,
+      "key": "bai-giang/duong-xua/lam-lanh-lanh-du/v1-80a433d2/vi-sadaltager.mp3",
+      "hash": "80a433d2",
+      "fingerprint": "80a433d2010faaf9c27176911559a29aeae396e07937b2241653728453e90b93",
+      "dur": 214.58595833333334,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:06:31.290Z",
+      "wer": 0.005990364097993139,
+      "sha256": "1cc38c08120874aecafa0d2c370e9a061acd064b9db19f817a73af3ff621531b",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.13,
+        "peak_dbtp": -2.04
+      },
+      "selected_attempts": [
+        2,
+        4,
+        2,
+        4,
+        1,
+        3,
+        1,
+        3,
+        1,
+        3,
+        1,
+        1,
+        1,
+        2,
+        3,
+        1
+      ],
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2838583333333333,
+          "at_seconds": 13.6543,
+          "selected_attempt": 4,
+          "reference": "Có người mới bước vào con đường tu học, chưa biết phải bắt đầu từ đâu. Giữa rất nhiều lời giảng và cách thực hành, họ mong một điều đủ rõ để có thể đem về sống ngay trong ngày.",
+          "transcript": "có người mới bước vào con đường tu học chưa biết phải bắt đầu từ đâu giữa rất nhiều lời giảng và cách thực hành Họ mong một điều đủ rõ để có thể đem về sống ngay trong ngày"
+        },
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29986507936507933,
+          "at_seconds": 25.9087,
+          "selected_attempt": 2,
+          "reference": "Lời nhắc được truyền lại trong Pháp Cú bắt đầu từ việc tránh làm điều gây hại. Điều ấy ở ngay trong bàn tay, lời nói và cách ta đối xử, trước khi thành một ý tưởng xa xôi để bàn luận.",
+          "transcript": "Lời nhắc được truyền lại trong pháp cú bắt đầu từ việc tránh làm điều gây hại điều ấy ở ngay trong bàn tay lời nói và cách ta đối xử trước khi thành một ý tưởng xa xôi để bàn luận"
+        },
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29034126984126984,
+          "at_seconds": 39.403,
+          "selected_attempt": 4,
+          "reference": "Rồi lời dạy hướng đến việc chủ động làm lành. Chỉ đứng yên để khỏi mắc lỗi chưa phải tất cả; một người đang buồn có thể cần được hỏi thăm, một việc chung có thể đang chờ bàn tay giúp đỡ.",
+          "transcript": "rồi Lời dạy hướng đến việc chủ động làm lành chỉ đứng yên để khỏi mắc lỗi chưa phải tất cả một người đang buồn có thể cần được hỏi thăm một việc chung có thể đang chờ bàn tay giúp đỡ"
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2911367521367521,
+          "at_seconds": 66.7917,
+          "selected_attempt": 3,
+          "reference": "Ba hướng ấy ở gần nhau trong đời sống. Khi bớt nóng giận, ta dễ giữ lời hơn; khi làm một việc có ích bằng lòng ngay thẳng, tâm cũng có thêm một chỗ nhẹ nhõm để trở về.",
+          "transcript": "ba hướng ấy ở gần nhau trong đời sống khi bớt nóng giận ta dễ giữ lời hơn khi làm một việc có ích bằng lòng ngay thẳng Tâm cũng có thêm một chỗ nhẹ nhõm để trở về"
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2876666666666666,
+          "at_seconds": 79.046,
+          "selected_attempt": 1,
+          "reference": "Pháp Cú còn nhắc đến sự nhẫn nại, không làm tổn thương và không nói lời công kích. Người nghe được mời nhìn cách mình sống giữa người khác, chứ không chỉ chú ý đến hình thức của một người tu.",
+          "transcript": "pháp cú còn nhắc đến sự nhẫn nại không làm tổn thương và không nói lời công kích người nghe được mời nhìn cách mình sống giữa người khác chứ không chỉ chú ý đến hình thức của một người tu"
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2970079365079365,
+          "at_seconds": 91.7403,
+          "selected_attempt": 3,
+          "reference": "Trong khoảng vườn yên, lời dạy không cần trở thành một bảng thành tích để so ai tốt hơn ai. Mỗi người có thể tự biết một việc mình đang cần dừng lại, và một việc lành mình có thể bắt đầu.",
+          "transcript": "trong khoảng vườn Yên lời dạy không cần trở thành một bảng thành tích để so Ai Tốt Hơn Ai Mỗi người có thể tự biết một việc mình đang cần dừng lại và một việc lành mình có thể bắt đầu"
+        },
+        {
+          "i": 9,
+          "wer": 0.023255813953488372,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28544961240310074,
+          "at_seconds": 118.689,
+          "selected_attempt": 3,
+          "reference": "Lánh dữ có khi là không kể tiếp một chuyện khiến người vắng mặt bị tổn thương. Có khi là dừng một câu mỉa mai đã ở đầu môi, để cơn bực không biến thành vết đau kéo dài trong lòng người khác.",
+          "transcript": "lãnh dữ Có khi là không kể tiếp một chuyện khiến người vắng mặt bị tổn thương có khi là dừng một câu mỉa mai đã ở đầu môi để cơn bực không biến thành vết đau kéo dài trong lòng người khác"
+        },
+        {
+          "i": 11,
+          "wer": 0.023809523809523808,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2912936507936508,
+          "at_seconds": 145.5577,
+          "selected_attempt": 1,
+          "reference": "Chăm tâm không đòi ta phải có một nội tâm luôn đẹp. Khi nhận ra mình đang ganh tỵ hay muốn hơn người, ta đã có cơ hội hiểu thêm điều đang xảy ra, rồi chọn một cách đáp lại lành hơn.",
+          "transcript": "chăm tâm không đòi ta phải có một nội tâm luôn đẹp khi nhận ra mình đang ganh tị hay muốn hơn người ta đã có cơ hội hiểu thêm điều đang xảy ra rồi chọn một cách đáp lại lành hơn"
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29059349593495937,
+          "at_seconds": 172.0263,
+          "selected_attempt": 2,
+          "reference": "Hôm nay, ta thử chọn một việc gây hại mình có thể bớt, dù rất nhỏ. Có thể là bớt nói chen, bớt quát lúc mệt, hay thôi gửi một tin chưa được kiểm chứng làm người khác thêm hoang mang.",
+          "transcript": "hôm nay ta thử chọn một việc gây hại mình có thể bớt dù rất nhỏ có thể là bớt nói chen bớt quát lúc mệt hay thôi gửi một tin chưa được kiểm chứng làm người khác thêm hoang mang"
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ffprobe": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "ideas": 16,
+      "cues_sha256": "4730504f80db5e05c0853a763d004f2d48d73ba95350a379c27fadb97e84e5d4"
+    },
+    {
+      "id": "mo-cua",
+      "version": 1,
+      "key": "bai-giang/duong-xua/mo-cua/v1-2a823920/vi-sadaltager.mp3",
+      "hash": "2a823920",
+      "fingerprint": "2a8239208acb9a9c1862c88c5e58d7327749a6640bc8bd1fafac4987c259c192",
+      "dur": 233.30595833333334,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:14:49.966Z",
+      "wer": 0.019158387347711938,
+      "sha256": "489990951cc9195948b5b357738774b047b6d58c92febe1b78aaa4045925a5ec",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.1,
+        "peak_dbtp": -1.8
+      },
+      "selected_attempts": [
+        3,
+        3,
+        3,
+        4,
+        3,
+        1,
+        3,
+        1,
+        2,
+        4,
+        3,
+        1,
+        2,
+        1,
+        2,
+        2
+      ],
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0.06976744186046512,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27893798449612406,
+          "at_seconds": 14.7343,
+          "selected_attempt": 3,
+          "reference": "Người đi đầu là Ma Ha Ba Xà Ba Đề, người đã nuôi dưỡng Tất Đạt Đa từ thuở nhỏ. Bà cùng những người phụ nữ dòng họ Thích muốn được bước vào nếp sống tu học như những người đã đi trước.",
+          "transcript": "người đi đầu là mahaba xà ba đề người đã nuôi dưỡng Tất Đạt Đa từ thuở nhỏ bà cùng những người phụ nữ dòng họ thích muốn được bước vào nếp sống tu học như những người đã đi trước"
+        },
+        {
+          "i": 6,
+          "wer": 0.023809523809523808,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2846269841269841,
+          "at_seconds": 88.686,
+          "selected_attempt": 3,
+          "reference": "Cuộc trao đổi không đi đến sự chấp nhận ngay từ lần đầu. A Nan tiếp tục hỏi về một điểm cốt yếu: người nữ có khả năng đi trọn con đường tu học mà giáo pháp đang chỉ dẫn hay không?",
+          "transcript": "cuộc trao đổi không đi đến sự chấp nhận ngay từ lần đầu a nan tiếp tục hỏi về một điểm cốt yếu người nữ có khả năng đi chọn con đường tu học mà Giáo Pháp đang chỉ dẫn hay không"
+        },
+        {
+          "i": 7,
+          "wer": 0.08,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.3094866666666667,
+          "at_seconds": 101.5403,
+          "selected_attempt": 1,
+          "reference": "Đức Phật xác nhận khả năng ấy. Trong mạch kể của kinh, câu trả lời mở ra một hướng để nguyện vọng của Ma Ha Ba Xà Ba Đề được xem xét. Bà và những người cùng đi có thể được nhìn bằng chính khả năng tu tập của họ.",
+          "transcript": "Đức Phật xác nhận khả năng ấy trong mạch kể của Kinh câu trả lời mở ra một hướng để nguyện vọng của ma-habasaba đề được xem xét bà và những người cùng đi có thể được nhìn bằng chính khả năng tu tập của họ"
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2806732026143791,
+          "at_seconds": 117.9147,
+          "selected_attempt": 2,
+          "reference": "Việc tiếp nhận đi cùng những điều kiện về nếp sinh hoạt được bản kinh ghi lại. Câu chuyện thuộc bối cảnh tổ chức của một thời kỳ xa xưa, còn điều gần với ta là một cánh cửa học hỏi đã được mở cho những người đang mong bước vào.",
+          "transcript": "việc tiếp nhận đi cùng những điều kiện về nếp sinh hoạt được bản kinh ghi lại câu chuyện thuộc bối cảnh tổ chức của một thời kỳ xa xưa còn điều gần với ta là một cánh cửa học hỏi đã được mở cho những người đang mong bước vào"
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27498639455782314,
+          "at_seconds": 133.129,
+          "selected_attempt": 4,
+          "reference": "Một khả năng có thể bị che khuất nếu ta chỉ nhìn người khác qua giới tính hay vai trò quen thuộc. Chịu nghe câu chuyện và nhìn việc họ làm giúp ta biết thêm con người trước mặt, thay vì chỉ lặp lại điều đã được mặc định.",
+          "transcript": "một khả năng có thể bị che khuất nếu ta chỉ nhìn người khác qua giới tính hay vai trò quen thuộc chịu nghe câu chuyện và nhìn việc họ làm giúp ta biết thêm con người trước mặt thay vì chỉ lặp lại điều đã được mặc định"
+        },
+        {
+          "i": 10,
+          "wer": 0.0425531914893617,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29945390070921984,
+          "at_seconds": 147.5033,
+          "selected_attempt": 3,
+          "reference": "Sự quan tâm của A Nan bắt đầu từ những điều rất cụ thể: thấy đôi chân đau, hỏi lý do và mang tiếng nói ấy đến nơi cần được nghe. Lòng thương có thể trở thành chiếc cầu khi một người đang khó tự lên tiếng.",
+          "transcript": "sự quan tâm của An An bắt đầu từ những điều rất cụ thể thấy đôi chân đau hỏi lý do và mang tiếng nói ấy đến nơi cần được nghe lòng thương có thể trở thành chiếc cầu khi một người đang khó tự lên tiếng"
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29292028985507246,
+          "at_seconds": 162.4777,
+          "selected_attempt": 1,
+          "reference": "Cánh cửa mở còn cần được tiếp nối bằng điều kiện học tập thật sự. Người mới cần được hướng dẫn rõ, được hỏi điều chưa biết và có cơ hội góp phần, để sự đón nhận không chỉ dừng ở một lời tuyên bố đẹp.",
+          "transcript": "cánh cửa mở còn cần được tiếp nối bằng điều kiện học tập thật sự người mới cần được hướng dẫn rõ được hỏi điều chưa biết và có cơ hội góp phần để sự đón nhận không chỉ dừng ở một lời tuyên bố đẹp"
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2869851851851852,
+          "at_seconds": 176.852,
+          "selected_attempt": 2,
+          "reference": "Ta cũng có thể nhìn lại những cánh cửa nhỏ trong nhà, nơi làm việc hay nhóm bạn. Ai thường bị bỏ ngoài quyết định, ai có ý kiến mà ít khi được hỏi, và ai đang cần một cách tham gia phù hợp hơn?",
+          "transcript": "ta cũng có thể nhìn lại những cánh cửa nhỏ trong nhà nơi làm việc hay nhóm bạn ai thường bị bỏ ngoài quyết định Ai có ý kiến mà ít khi được hỏi và ai đang cần một cách tham gia phù hợp hơn"
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2962348484848485,
+          "at_seconds": 205.5607,
+          "selected_attempt": 2,
+          "reference": "Khi có điều kiện giúp một người học điều mới, ta có thể hướng dẫn bằng sự kiên nhẫn và tôn trọng. Việc người khác tiến bộ có thể đem lại niềm vui chung, chứ không làm phần giá trị của mình nhỏ đi.",
+          "transcript": "khi có điều kiện giúp một người học điều mới ta có thể hướng dẫn bằng sự kiên nhẫn và tôn trọng việc người khác tiến bộ có thể đem lại niềm vui chung chứ không làm phần giá trị của mình nhỏ đi"
+        },
+        {
+          "i": 15,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28683333333333333,
+          "at_seconds": 220.095,
+          "selected_attempt": 2,
+          "reference": "Cánh cửa ở cuối đường xa rồi cũng có người bước qua. Bụi đường có thể được rửa, đôi chân có thể được nghỉ, còn việc một tiếng nói đã được lắng nghe sẽ ở lại như một điều kiện mới cho cuộc đời phía trước.",
+          "transcript": "cánh cửa ở cuối đường xa rồi cũng có người bước qua bụi đường có thể được rửa đôi chân có thể được nghỉ còn việc một tiếng nói Đã được lắng nghe sẽ ở lại như một điều kiện mới cho cuộc đời phía trước"
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ffprobe": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "ideas": 16,
+      "cues_sha256": "dbcf4559355d4f3d8999b07f4c07bcf30164e2e6f7694f50eebde2d784223f27"
+    },
+    {
+      "id": "nam-la-simsapa",
+      "version": 1,
+      "key": "bai-giang/duong-xua/nam-la-simsapa/v1-ca3aad87/vi-sadaltager.mp3",
+      "hash": "ca3aad87",
+      "fingerprint": "ca3aad87e4320bac7f96503703713f8f49e88e1f04d83b78bd9162e104f1ce3f",
+      "dur": 176.35395833333334,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:11:50.482Z",
+      "wer": 0.01309105548235983,
+      "sha256": "27461a331081956b059211bf3363f1ff78c534b83a16fc4db0add084621ea62d",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.1,
+        "peak_dbtp": -1.73
+      },
+      "selected_attempts": [
+        3,
+        1,
+        3,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        1,
+        1,
+        1
+      ],
+      "flags": [
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2963985507246377,
+          "at_seconds": 44.083,
+          "selected_attempt": 1,
+          "reference": "Đức Phật dùng sự so sánh ấy để nói về những điều mình đã biết và những điều mình đang giảng dạy. Phần được nói ra có một hướng rõ ràng, liên hệ với việc hiểu khổ và con đường đi đến sự chấm dứt khổ.",
+          "transcript": "Đức Phật dùng sự so sánh ấy để nói về những điều mình đã biết và những điều mình đang giảng dạy phần được Nói ra có một hướng rõ ràng liên hệ với việc hiểu khổ và con đường đi đến sự Chấm dứt khổ"
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28254074074074076,
+          "at_seconds": 89.086,
+          "selected_attempt": 2,
+          "reference": "Ta có thể biết nhiều điều mà vẫn chưa biết cách nghe người thân lúc họ buồn. Ta cũng có thể học một điều giản dị rồi sống được với nó, để một cuộc trò chuyện thường ngày bớt đi một lời làm đau nhau.",
+          "transcript": "ta có thể biết nhiều điều mà vẫn chưa biết cách nghe người thân lúc họ buồn ta cũng có thể học một điều giản dị rồi sống được với nó để một cuộc trò chuyện thường ngày bớt đi một lời làm đau nhau"
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2940486111111111,
+          "at_seconds": 102.7003,
+          "selected_attempt": 2,
+          "reference": "Sự học vẫn quý, và lòng tò mò có thể mở nhiều cánh cửa hiểu biết. Hình ảnh nắm lá mời ta nhận thêm một câu hỏi: trong điều đang học, có phần nào giúp mình nhìn rõ nỗi khổ và sống có trách nhiệm hơn hôm nay?",
+          "transcript": "sự học vẫn quý và lòng tò mò có thể mở nhiều cánh cửa hiểu biết hình ảnh nắm lá mời ta nhận thêm một câu hỏi trong điều đang học có phần nào giúp mình nhìn rõ nỗi khổ và sống có trách nhiệm hơn hôm nay"
+        },
+        {
+          "i": 8,
+          "wer": 0.021739130434782608,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29378985507246375,
+          "at_seconds": 117.7147,
+          "selected_attempt": 2,
+          "reference": "Khi thông tin đến quá nhiều, tâm dễ đi hết chuyện này sang chuyện khác mà chưa kịp thực hành điều nào. Chọn một việc cần thiết để làm đến nơi giúp sự hiểu biết có cơ hội bén rễ trong đời sống của chính mình.",
+          "transcript": "khi thông tin đến quá nhiều tâm dễ đi hết chuyện này sang chuyện khác mà chưa kịp thực hành điều nào chọn một việc cần thiết để làm đến nơi giúp sự hiểu biết có cơ hội bén dễ trong đời sống của chính mình"
+        },
+        {
+          "i": 11,
+          "wer": 0.022727272727272728,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.290780303030303,
+          "at_seconds": 163.5577,
+          "selected_attempt": 1,
+          "reference": "Lá trong rừng vẫn xanh, còn bàn tay đang mở chỉ giữ một nắm nhỏ. Giữa nhiều điều muốn biết, có một điều vừa đủ gần để ta đem ra sống, chăm cho bén rễ như một mầm cây bên lối đi mỗi ngày.",
+          "transcript": "lá trong rừng vẫn xanh còn bàn tay đang mở chỉ giữ một nắm nhỏ giữa nhiều điều muốn biết có một điều vừa đủ gần để ta đem ra sống chăm cho bén dễ như một mầm cây bên lối đi mỗi ngày"
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ffprobe": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "ideas": 12,
+      "cues_sha256": "a9b0ee8fee70423d5f0b47c1a1a6500bbc13b2dfbcc98c45d1ef7f2de8e12f35"
+    },
+    {
+      "id": "nuoc-mat-ai-cung-man",
+      "version": 1,
+      "key": "bai-giang/duong-xua/nuoc-mat-ai-cung-man/v1-9c444a7f/vi-sadaltager.mp3",
+      "hash": "9c444a7f",
+      "fingerprint": "9c444a7f20edd5e69d3aa3618076f02fd6a2676f46419732006931d8527e646b",
+      "dur": 233.83395833333333,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:14:21.189Z",
+      "wer": 0.005495169082125604,
+      "sha256": "a29b35440c135cdf749e8ed64279f673d399d1e1af382f2b51eccb0645af5bce",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.12,
+        "peak_dbtp": -1.87
+      },
+      "selected_attempts": [
+        4,
+        3,
+        4,
+        4,
+        3,
+        1,
+        3,
+        1,
+        3,
+        3,
+        1,
+        3,
+        2,
+        1,
+        3,
+        2
+      ],
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0.021739130434782608,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28944202898550725,
+          "at_seconds": 0,
+          "selected_attempt": 4,
+          "reference": "Trên một con đường trong thành, người làm công việc dọn sạch những thứ bị bỏ đi đang tìm cách nép mình sang bên. Anh tên Sunita, quen với việc bị người khác tránh xa và ít khi được đón bằng một lời nói tử tế.",
+          "transcript": "trên một con đường trong thành người làm công việc dọn sạch những thứ bị bỏ đi Đang tìm cách nép mình sang bên anh tên sonita quen với việc bị người khác tránh xa và ít khi được đón bằng một lời nói tử tế"
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29942962962962966,
+          "at_seconds": 104.3003,
+          "selected_attempt": 1,
+          "reference": "Sự đón nhận ấy không làm những vết đau cũ biến mất ngay trong một ngày. Nhưng nó tạo một điều kiện mới: có những người cùng sống, có việc để học và có cơ hội được nhìn khác với nhãn dán của quá khứ.",
+          "transcript": "sự đón nhận ấy không làm những vết đau cũ biến mất ngay trong một ngày nhưng nó tạo một điều kiện mới có những người cùng sống có việc để học và có cơ hội được nhìn khác với nhãn dán của quá khứ"
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2953257575757576,
+          "at_seconds": 163.1177,
+          "selected_attempt": 3,
+          "reference": "Tôn trọng còn thể hiện trong cách mình phân chia công việc và nói về người làm chúng. Một lời đùa dựa trên nghề nghiệp hay thân phận có thể làm vết đau cũ sâu thêm, dù người nói tưởng mình chỉ đang vui.",
+          "transcript": "tôn trọng còn thể hiện trong cách mình phân chia công việc và nói về người làm chúng một lời đùa dựa trên nghề nghiệp hay thân phận có thể làm Vết Đau cũ sâu thêm dù người nói tưởng mình chỉ đang vui"
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2850942028985507,
+          "at_seconds": 177.012,
+          "selected_attempt": 2,
+          "reference": "Một cộng đồng biết đón nhận cũng cần tạo điều kiện để người mới được học và góp sức. Bên cạnh lời chào là sự kiên nhẫn, cách hướng dẫn dễ hiểu và cơ hội được sửa lỗi mà không bị làm nhục trước người khác.",
+          "transcript": "một cộng đồng biết đón nhận cũng cần tạo điều kiện để người mới được học và góp sức bên cạnh lời chào là sự kiên nhẫn cách hướng dẫn dễ hiểu và cơ hội được sửa lỗi mà không bị làm nhục trước người khác"
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29292028985507246,
+          "at_seconds": 191.0263,
+          "selected_attempt": 1,
+          "reference": "Hôm nay, ta có thể cảm ơn một người đang chăm sóc nơi mình sống và giữ phần việc của mình gọn gàng hơn. Đừng để sự biết ơn chỉ nằm trong lời nói, trong khi sự bất cẩn lại làm việc của họ nặng thêm.",
+          "transcript": "hôm nay ta có thể cảm ơn một người đang chăm sóc nơi mình sống và giữ phần việc của mình gọn gàng hơn đừng để sự biết ơn chỉ nằm trong lời nói trong khi sự bất cẩn lại làm việc của họ nặng thêm"
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28944202898550725,
+          "at_seconds": 205.4007,
+          "selected_attempt": 3,
+          "reference": "Nếu thấy ai bị gạt ra ngoài một cuộc trò chuyện, ta có thể mời họ vào bằng một câu hỏi tôn trọng. Khi họ nói, ta thử để ý xem mình có đang nghe thật hay chỉ đợi đến lượt mình tiếp tục câu chuyện.",
+          "transcript": "nếu thấy ai bị gạt ra ngoài một cuộc trò chuyện ta có thể mời họ vào bằng một câu hỏi tôn trọng khi họ nói ta thử để ý xem mình có đang nghe thật hay chỉ đợi đến lượt mình tiếp tục câu chuyện"
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ffprobe": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "ideas": 16,
+      "cues_sha256": "bacf9a6f9c2718defb1e0743f14ccbe82dea3ef398850c9b4e5f6ca02101204d"
+    },
+    {
+      "id": "oi-hanh-phuc",
+      "version": 1,
+      "key": "bai-giang/duong-xua/oi-hanh-phuc/v1-36ca5789/vi-sadaltager.mp3",
+      "hash": "36ca5789",
+      "fingerprint": "36ca5789f016bc872aad2544488ec2a6f0610785a244d348c0cdb6214d615d35",
+      "dur": 222.07395833333334,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:18:07.959Z",
+      "wer": 0.00891053391053391,
+      "sha256": "dd8c9459fd27247f75cd90cf26e733c797ed8e2c0668689bdbe7d8bb01a18b9f",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.11,
+        "peak_dbtp": -1.99
+      },
+      "selected_attempts": [
+        1,
+        3,
+        1,
+        1,
+        3,
+        1,
+        1,
+        1,
+        2,
+        4,
+        1,
+        4,
+        1,
+        1,
+        4,
+        1
+      ],
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2880530303030303,
+          "at_seconds": 0,
+          "selected_attempt": 1,
+          "reference": "Trong một chỗ nghỉ yên giữa rừng, thầy Bạt Đề thốt lên lời vui mừng về hạnh phúc. Những người nghe thấy băn khoăn, vì trước kia thầy từng sống ở vị trí được nhiều người trọng vọng và có đầy đủ tiện nghi.",
+          "transcript": "trong một chỗ nghỉ yên Giữa Rừng thầy bạt đề thốt lên lời vui mừng về hạnh phúc những người nghe thấy băn khoăn vì trước kia thầy từng sống ở vị trí được nhiều người trọng vọng và có đầy đủ tiện nghi"
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29605555555555557,
+          "at_seconds": 55.4173,
+          "selected_attempt": 3,
+          "reference": "Thầy từng phải lo điều gì có thể xảy đến, ai đang muốn chống lại mình và làm sao giữ được vị trí đang có. Nỗi lo không chỉ đứng ngoài cánh cửa, mà còn đi theo vào bên trong tâm trí.",
+          "transcript": "thầy từng phải lo Điều gì có thể xảy đến ai đang muốn chống lại mình và làm sao giữ được vị trí đang có nỗi lo không chỉ đứng ngoài cánh cửa mà còn đi theo vào bên trong tâm trí"
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27056589147286825,
+          "at_seconds": 96.9003,
+          "selected_attempt": 1,
+          "reference": "Đức Phật đón nhận lời giải thích ấy. Câu chuyện được truyền lại trong kinh gợi một niềm vui không chỉ tùy vào những lớp che chở bên ngoài, mà còn liên hệ với cách tâm đang mang lấy đời sống của mình.",
+          "transcript": "Đức Phật đón nhận lời giải thích ấy câu chuyện được truyền lại trong kinh gợi một niềm vui không chỉ tùy vào những lớp che chở bên ngoài mà còn liên hệ với cách Tâm đang mang lấy đời sống của mình"
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2789851851851852,
+          "at_seconds": 123.809,
+          "selected_attempt": 4,
+          "reference": "Ta vẫn cần những điều kiện an toàn cụ thể trong đời sống. Câu chuyện mời ta nhìn thêm một phần khác: có những nỗi bất an được nuôi bởi việc so sánh, phải giữ hình ảnh hoặc sợ mất điều mình đang sở hữu.",
+          "transcript": "ta vẫn cần những điều kiện an toàn cụ thể trong đời sống câu chuyện mời ta nhìn thêm một phần khác có những nỗi bất an được nuôi bởi việc So sánh phải giữ hình ảnh hoặc sợ mất điều Mình đang sở hữu"
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2832152777777778,
+          "at_seconds": 137.2633,
+          "selected_attempt": 1,
+          "reference": "Một việc vừa đạt được có thể chưa đem lại nghỉ ngơi, nếu ngay sau đó ta lại phải chứng minh thêm điều khác. Nhìn thấy vòng chạy ấy giúp ta tự hỏi đâu là nhu cầu thật và đâu là một sức ép có thể bớt đi.",
+          "transcript": "một việc vừa đạt được có thể chưa đem lại nghỉ ngơi nếu ngay sau đó ta lại phải chứng minh thêm điều khác nhìn thấy vòng chạy ấy giúp ta tự hỏi đâu là nhu cầu thật và đâu là một sức ép có thể bớt đi"
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.277077519379845,
+          "at_seconds": 166.852,
+          "selected_attempt": 1,
+          "reference": "Hiểu người khác cũng cần sự kiên nhẫn ấy. Khi nghe một câu làm mình ngạc nhiên, ta có thể hỏi thêm thay vì gán ngay một động cơ, nhất là khi điều họ đang trải qua khác với kinh nghiệm của mình.",
+          "transcript": "hiểu người khác cũng cần sự kiên nhẫn ấy khi nghe một câu làm mình ngạc nhiên ta có thể hỏi thêm thay vì gán ngay một động cơ nhất là khi điều họ đang trải qua khác với kinh nghiệm của mình"
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.290780303030303,
+          "at_seconds": 194.4007,
+          "selected_attempt": 4,
+          "reference": "Khi một người kể rằng họ đang vui với lựa chọn giản dị hơn, ta có thể nghe mà không vội đánh giá thành bại. Sự tôn trọng giúp họ có thêm chỗ đứng vững trong điều đã cân nhắc và chịu trách nhiệm.",
+          "transcript": "Khi một người kể rằng họ đang vui với lựa chọn giản dị hơn ta có thể nghe mà không vội đánh giá thành bại sự tôn trọng giúp họ có thêm chỗ đứng vững trong điều đã cân nhắc và chịu trách nhiệm"
+        },
+        {
+          "i": 15,
+          "wer": 0.022222222222222223,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29676296296296295,
+          "at_seconds": 208.695,
+          "selected_attempt": 1,
+          "reference": "Buổi rừng yên chỉ có những âm thanh rất nhỏ đi qua. Chỗ ngồi giản dị ấy vẫn còn trong câu chuyện, với tiếng vui của một người vừa thấy lòng nhẹ đi, như đôi vai đã được đặt xuống một gánh nặng lâu ngày.",
+          "transcript": "bùa rừng Yên chỉ có những âm thanh rất nhỏ đi qua chỗ ngồi giản dị ấy vẫn còn trong câu chuyện với tiếng vui của một người vừa thấy lòng nhẹ đi như đôi vai đã được đặt xuống một gánh nặng lâu ngày"
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ffprobe": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "ideas": 16,
+      "cues_sha256": "318f8074d55274ac521adbc2442e5b43ed36d9d0da403675ff5191b26bf21317"
+    },
+    {
+      "id": "phu-dat-bang-vang",
+      "version": 1,
+      "key": "bai-giang/duong-xua/phu-dat-bang-vang/v1-93c2d1c8/vi-sadaltager.mp3",
+      "hash": "93c2d1c8",
+      "fingerprint": "93c2d1c87b12ac7b49654764fa2cce0f4666d283f73f437e5ff196d9e5e5af20",
+      "dur": 227.71395833333332,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:21:32.451Z",
+      "wer": 0.00433047249907715,
+      "sha256": "f0742a58795d8199516f3de746bc61117b60495b7200f9070e77e0d3a1d16543",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.08,
+        "peak_dbtp": -1.93
+      },
+      "selected_attempts": [
+        4,
+        1,
+        2,
+        1,
+        4,
+        1,
+        1,
+        1,
+        1,
+        4,
+        1,
+        4,
+        1,
+        3,
+        1,
+        2
+      ],
+      "flags": [
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29847286821705427,
+          "at_seconds": 42.843,
+          "selected_attempt": 1,
+          "reference": "Cấp Cô Độc vẫn giữ ý định đã cân nhắc. Vàng được mang đến, nhưng điều ông hướng tới nằm ở những ngày sau đó, khi khu vườn có thể trở thành nơi người ta gặp nhau và học cách sống bớt khổ.",
+          "transcript": "Cấp Cô Độc vẫn giữ ý định đã cân nhắc vàng được mang đến nhưng điều ông hướng tới nằm ở những ngày sau đó khi khu vườn có thể trở thành nơi người ta gặp nhau và học cách sống bớt khổ"
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28683333333333333,
+          "at_seconds": 56.5773,
+          "selected_attempt": 4,
+          "reference": "Thái tử Kỳ Đà nhìn thấy sự nghiêm túc trong việc chuẩn bị ấy. Câu chuyện kể rằng thái tử cũng góp phần vào khu vườn, để nơi ở mới mang dấu của nhiều người cùng tạo điều kiện, thay vì chỉ một người đứng tên.",
+          "transcript": "thái tử kỳ đà nhìn thấy sự nghiêm túc trong việc chuẩn bị ấy Câu Chuyện Kể Rằng thái tử cũng góp phần vào khu vườn để Nơi ở mới mang dấu của nhiều người cùng tạo điều kiện thay vì chỉ một người đứng tên"
+        },
+        {
+          "i": 5,
+          "wer": 0.023255813953488372,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2835891472868217,
+          "at_seconds": 70.6717,
+          "selected_attempt": 1,
+          "reference": "Từ một cuộc mua bán đất, công việc dần chuyển thành sự chăm sóc một không gian chung. Nơi nghỉ, đường đi và những việc cần làm hằng ngày đều đòi sự tính toán cẩn thận, cùng công sức của nhiều bàn tay.",
+          "transcript": "từ một cuộc mua bán đất công việc Dần chuyển thành sự chăm sóc một không gian chung nơi nghỉ đường đi và những việc cần làm hàng ngày đều đòi sự tính toán cẩn thận cùng công sức của nhiều bàn tay"
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27987121212121213,
+          "at_seconds": 98.3803,
+          "selected_attempt": 1,
+          "reference": "Câu chuyện không chỉ có ánh vàng trong một lần trao đổi. Phía sau một nơi nương tựa còn là việc giữ gìn lâu dài, để sự rộng rãi ban đầu tiếp tục thành những điều kiện có ích cho người đang sử dụng.",
+          "transcript": "câu chuyện không Chỉ có ánh vàng trong một lần trao đổi phía sau một nơi nương tựa còn là việc giữ gìn lâu dài để sự rộng rãi ban đầu tiếp tục thành những điều kiện có ích cho người đang sử dụng"
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29224603174603175,
+          "at_seconds": 143.1433,
+          "selected_attempt": 1,
+          "reference": "Lòng rộng rãi có nhiều hình thức vừa với hoàn cảnh của mỗi người. Có người góp công, có người dành thời gian lắng nghe, có người giữ gìn một chỗ chung sạch sẽ để người đến sau được dễ chịu hơn.",
+          "transcript": "lòng rộng rãi có nhiều hình thức vừa với hoàn cảnh của mỗi người có người góp công có người dành thời gian lắng nghe có người giữ gìn một chỗ chung sạch sẽ để người đến sau được dễ chịu hơn"
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29434751773049644,
+          "at_seconds": 156.3177,
+          "selected_attempt": 4,
+          "reference": "Ta có thể nhìn vào điều thực sự cần được nâng đỡ, thay vì chỉ chú ý món quà lớn hay nhỏ. Khi cho bằng sự tôn trọng, ta cũng để người nhận được tự do, không phải đáp lại bằng lời khen hay sự lệ thuộc.",
+          "transcript": "ta có thể nhìn vào điều thực sự cần được nâng đỡ thay vì chỉ chú ý món quà lớn hay nhỏ khi cho bằng sự tôn trọng ta cũng để người nhận được tự do không phải đáp lại bằng lời khen hay sự lệ thuộc"
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29805303030303026,
+          "at_seconds": 171.052,
+          "selected_attempt": 1,
+          "reference": "Việc chăm sóc chung cần cả sự cẩn thận sau phút hào hứng ban đầu. Một lời hứa vừa sức và được giữ đều đặn thường giúp người khác yên lòng hơn một dự định rất lớn nhưng không có điều kiện thực hiện.",
+          "transcript": "việc chăm sóc chung cần cả sự cẩn thận sau phút hào hứng ban đầu một lời hứa vừa sức và được giữ đều đặn thường giúp người khác yên lòng hơn một dự định rất lớn nhưng không có điều kiện thực hiện"
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29034126984126984,
+          "at_seconds": 185.0663,
+          "selected_attempt": 3,
+          "reference": "Hôm nay, ta thử nhìn xem nơi mình sống có việc nhỏ nào đang cần người làm. Có thể là dọn một lối đi, chia một phần việc trong nhà, hoặc giúp một người đang thiếu thời gian được nghỉ một chút.",
+          "transcript": "hôm nay ta thử nhìn xem nơi mình sống có việc nhỏ nào đang cần người làm có thể là dọn một lối đi chia một phần việc trong nhà hoặc Giúp một người đang thiếu thời gian được nghỉ một chút"
+        },
+        {
+          "i": 15,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.292645390070922,
+          "at_seconds": 213.935,
+          "selected_attempt": 2,
+          "reference": "Bóng cây trong khu vườn vẫn đón những người chưa từng biết nhau. Một chỗ ngồi được chuẩn bị chu đáo có thể nâng đỡ rất nhiều cuộc gặp, như lòng rộng rãi còn tiếp tục thành bóng mát sau khi người trao tặng đã ra về.",
+          "transcript": "bóng cây trong khu vườn vẫn đón những người chưa từng biết nhau một chỗ ngồi được chuẩn bị chu đáo có thể nâng đỡ rất nhiều cuộc gặp như lòng rộng rãi còn tiếp tục thành bóng mát sau khi người trao tặng đã ra về"
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ffprobe": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "ideas": 16,
+      "cues_sha256": "dd3e9ed1994f8293a3bae2098261e96b03c6e50289d2f2ca61be7ee25c24d6fe"
+    },
+    {
+      "id": "song-trong-hien-tai",
+      "version": 1,
+      "key": "bai-giang/duong-xua/song-trong-hien-tai/v1-782df793/vi-sadaltager.mp3",
+      "hash": "782df793",
+      "fingerprint": "782df7930ff64d4ded6206cc2a7c52978b64ff47cd149c6807e7d7112460b799",
+      "dur": 213.96195833333334,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:19:28.196Z",
+      "wer": 0.0030408902691511385,
+      "sha256": "2c4f58076d74485f9695419ee327df40842bfea8250636a7d98e72f70d15ae0f",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.13,
+        "peak_dbtp": -1.96
+      },
+      "selected_attempts": [
+        1,
+        1,
+        3,
+        1,
+        3,
+        1,
+        2,
+        3,
+        2,
+        1,
+        3,
+        1,
+        3,
+        1
+      ],
+      "flags": [
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29054074074074077,
+          "at_seconds": 29.7487,
+          "selected_attempt": 3,
+          "reference": "Ngài nhắc đến việc không bị cuốn trở lại quá khứ, cũng không bị mong tưởng tương lai lôi đi. Điều đã qua không còn ở đây như cũ, còn điều chưa tới vẫn chưa phải một kinh nghiệm đang có mặt trong tay mình.",
+          "transcript": "ngài nhắc đến việc không bị cuốn trở lại quá khứ cũng không bị mong tưởng tương lai lôi đi điều đã qua không còn ở đây như cũ còn điều chưa tới vẫn chưa phải một kinh nghiệm đang có mặt trong tay mình"
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27221985815602834,
+          "at_seconds": 105.7403,
+          "selected_attempt": 3,
+          "reference": "Người biết sống trọn một ngày vì thế không chỉ là người có một ngày vui vẻ. Đó còn là người có thể ở gần điều đang xảy ra, nhìn bằng sự thành thật và chăm con đường thực hành trong những hoàn cảnh thật của mình.",
+          "transcript": "người biết sống trọn một ngày vì thế không chỉ là người có một ngày vui vẻ đó còn là người có thể ở gần điều đang xảy ra nhìn bằng sự thành thật và chăm con đường thực hành trong những hoàn cảnh thật của mình"
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2983525641025641,
+          "at_seconds": 119.4347,
+          "selected_attempt": 2,
+          "reference": "Với ta, nhớ quá khứ để học và chuẩn bị cho ngày mai vẫn có thể là những việc cần thiết. Điều có thể quan sát thêm là lúc sự hồi tưởng hay lo xa chiếm hết chú ý, làm mình bỏ quên công việc và con người đang ở trước mặt.",
+          "transcript": "với ta nhớ quá khứ để học và chuẩn bị cho ngày mai vẫn có thể là những việc cần thiết điều có thể quan sát thêm là lúc sự hồi tưởng hay lo xa chiếm hết chú ý làm mình bỏ quên công việc và con người đang ở trước mặt"
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2940065359477124,
+          "at_seconds": 152.5033,
+          "selected_attempt": 3,
+          "reference": "Sự có mặt còn giúp ta nhận rõ nhu cầu của người bên cạnh. Một câu chuyện đang được kể có thể chỉ cần ta nghe, một việc chung có thể đang cần được làm. Một lời cảm ơn cũng có thể được nói ngay khi người ấy còn ở đây.",
+          "transcript": "sự có mặt còn giúp ta nhận rõ nhu cầu của người bên cạnh một câu chuyện đang được kể có thể chỉ cần ta nghe một việc chung có thể đang cần được làm một lời cảm ơn cũng có thể được nói ngay khi người ấy còn ở đây"
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ffprobe": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "ideas": 14,
+      "cues_sha256": "a2c342f3b29c6f257550d341d7527162a6cb1f60739b915a9cfc3534780830f1"
+    },
+    {
+      "id": "sum-hop",
+      "version": 1,
+      "key": "bai-giang/duong-xua/sum-hop/v1-1bed6ba4/vi-sadaltager.mp3",
+      "hash": "1bed6ba4",
+      "fingerprint": "1bed6ba4704252f06b2ce352ce300985355a461b0d230767eac9facbaa2eccad",
+      "dur": 220.17795833333332,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:24:25.426Z",
+      "wer": 0.00701178876734994,
+      "sha256": "03f9b8c9c8aff3a511ae2357fd8abd34d5a9d49693d5f2d48e9756a8e0c6df58",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.12,
+        "peak_dbtp": -1.88
+      },
+      "selected_attempts": [
+        3,
+        1,
+        1,
+        3,
+        4,
+        2,
+        4,
+        2,
+        1,
+        3,
+        3,
+        2,
+        1,
+        2,
+        2,
+        1
+      ],
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2966124031007752,
+          "at_seconds": 0,
+          "selected_attempt": 3,
+          "reference": "Mùa xuân trở lại với những lối đi trong thành Ca Tỳ La Vệ. Sau nhiều năm xa nhà, Đức Phật cùng các vị khất sĩ trở về, để cuộc gặp với gia đình diễn ra giữa những điều vừa quen vừa khác.",
+          "transcript": "mùa xuân trở lại với những lối đi trong thành Ca Tỳ La vệ sau nhiều năm xa nhà đức phật cùng các vị Khất Sĩ trở về để cuộc gặp với gia đình diễn ra giữa những điều vừa quen vừa khác"
+        },
+        {
+          "i": 6,
+          "wer": 0.043478260869565216,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27900724637681157,
+          "at_seconds": 83.526,
+          "selected_attempt": 4,
+          "reference": "Da Du Đà La cũng có những năm tháng riêng đã đi qua, với trách nhiệm và nỗi lòng không thể hiểu hết bằng một lời hỏi vội. Sự trở về cần cả thời gian có mặt và sự tôn trọng dành cho người ở lại.",
+          "transcript": "Gia Du Đà La cũng có những năm tháng giêng đã đi qua với trách nhiệm và nỗi lòng không thể hiểu hết bằng một lời Hỏi vội sự trở về cần cả thời gian có mặt và sự tôn trọng dành cho người ở lại"
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2998712121212121,
+          "at_seconds": 97.2603,
+          "selected_attempt": 2,
+          "reference": "Người cha, người vợ và những người trong gia đình không chỉ là nhân vật đứng ngoài hành trình của một người ra đi. Họ có đời sống, sự chịu đựng và những cách trưởng thành của chính mình trong thời gian xa cách.",
+          "transcript": "người cha người vợ và những người trong gia đình không chỉ là nhân vật đứng ngoài hành trình của một người ra đi họ có Đời sống sự chịu đựng và những cách trưởng thành của chính mình trong thời gian xa cách"
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2949851851851852,
+          "at_seconds": 111.3547,
+          "selected_attempt": 1,
+          "reference": "Điều ấm áp trong câu chuyện là khả năng gặp lại nhau bằng đôi mắt mới. Một người đã thay đổi vẫn có thể trở về với tình thân, và người ở lại cũng có thể được nhìn nhận vượt khỏi vai trò quen thuộc.",
+          "transcript": "điều ấm áp trong câu chuyện là khả năng gặp lại nhau bằng đôi mắt mới một người đã thay đổi vẫn có thể trở về với tình thân và người ở lại cũng có thể được nhìn nhận vượt khỏi vai trò quen thuộc"
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2835891472868217,
+          "at_seconds": 139.3833,
+          "selected_attempt": 3,
+          "reference": "Lắng nghe giúp ta biết thêm con người đang có mặt hôm nay. Một câu hỏi thật lòng có thể mở ra điều mới, nếu ta đợi câu trả lời thay vì chỉ tìm bằng chứng cho nhận xét đã giữ từ trước.",
+          "transcript": "lắng nghe giúp ta biết thêm con người đang có mặt hôm nay một câu hỏi thật lòng có thể mở ra điều mới nếu ta đợi câu trả lời thay vì chỉ tìm bằng chứng cho nhận xét đã giữ từ trước"
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2869851851851852,
+          "at_seconds": 152.4777,
+          "selected_attempt": 2,
+          "reference": "Tình thương cũng có thể đi cùng nỗi lo và sự mong đợi rất nặng. Nhận ra điều đó, ta có thể nói rõ mình đang lo gì, để người thân hiểu phần mềm yếu phía sau một lời trách hoặc một sự im lặng.",
+          "transcript": "tình thương cũng có thể đi cùng nỗi lo và sự mong đợi rất nặng nhận ra điều đó ta có thể nói rõ mình đang lo gì để người thân hiểu phần mềm yếu phía sau một lời trách hoặc một sự im lặng"
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29839837398373986,
+          "at_seconds": 179.5863,
+          "selected_attempt": 2,
+          "reference": "Hôm nay, khi về nhà hoặc gọi cho người thân, ta thử hỏi về một điều trong ngày của họ mà mình chưa biết. Nghe thêm một chút trước khi khuyên, và để họ có quyền kể theo nhịp của họ.",
+          "transcript": "hôm nay khi về nhà hoặc gọi cho người thân ta thử hỏi về một điều trong ngày của họ mà mình chưa biết nghe thêm một chút trước khi khuyên và để họ có quyền kể theo nhịp của họ"
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28168939393939396,
+          "at_seconds": 192.7207,
+          "selected_attempt": 2,
+          "reference": "Nếu đã có một khoảng cách lâu ngày, ta có thể bắt đầu bằng một việc vừa sức: giữ cuộc hẹn, nhận một thiếu sót hoặc làm chung một việc nhỏ. Sự tin cậy thường trở lại qua những lần có mặt như vậy.",
+          "transcript": "Nếu đã có một khoảng cách lâu ngày ta có thể bắt đầu bằng một việc vừa sức giữ cuộc hẹn nhận một thiếu sót hoặc làm chung một việc nhỏ sự tin cậy thường trở lại qua những lần có mặt như vậy"
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ffprobe": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "ideas": 16,
+      "cues_sha256": "c32b4183732e7e727e78d307da8278a7653f94fbf4bc771bbeebb9c62eb19574"
+    },
+    {
+      "id": "thuong-la-hieu",
+      "version": 1,
+      "key": "bai-giang/duong-xua/thuong-la-hieu/v1-35bdf799/vi-sadaltager.mp3",
+      "hash": "35bdf799",
+      "fingerprint": "35bdf799605e685f11336ab2c8642fcb014d2055e3ec1b2a47ef687e50b80662",
+      "dur": 228.45795833333332,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "generated_at": "2026-11-14T20:26:12.906Z",
+      "wer": 0.005558300395256918,
+      "sha256": "677604b6aae434ad7402a26bd488c50cfd216bc7560d018f074c4cc9e223a90f",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.1,
+        "peak_dbtp": -1.98
+      },
+      "selected_attempts": [
+        2,
+        1,
+        3,
+        1,
+        3,
+        1,
+        1,
+        3,
+        4,
+        1,
+        4,
+        3,
+        2,
+        1,
+        2,
+        4
+      ],
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29942962962962966,
+          "at_seconds": 14.8943,
+          "selected_attempt": 1,
+          "reference": "Vua thương người thân và quan tâm đến dân chúng, nhưng cũng biết cảm giác đau khi người mình thương gặp điều bất hạnh. Từ kinh nghiệm ấy, ông đặt câu hỏi: tình thương có thể nào đi cùng sự tự do và bình an?",
+          "transcript": "vua thương người thân và quan tâm đến dân chúng nhưng cũng biết cảm giác đau khi người mình thương gặp điều bất hạnh từ kinh nghiệm ấy ông đặt câu hỏi tình thương có thể nào đi cùng sự tự do và bình an"
+        },
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2737898550724638,
+          "at_seconds": 29.2687,
+          "selected_attempt": 3,
+          "reference": "Đức Phật gợi cho vua nhìn kỹ vào những gì mình gọi chung là thương. Có khi trong đó là mong người khác được an lành, nhưng cũng có khi lẫn vào nỗi sợ mất, sự đòi hỏi hoặc ý muốn họ phải thuộc về mình.",
+          "transcript": "Đức Phật gợi cho vua nhìn kỹ vào những gì mình gọi chung là thương có khi trong đó là mong người khác được an lành nhưng cũng có khi lẫn vào nỗi sợ mất sự đòi hỏi hoặc ý muốn họ phải thuộc về mình"
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2835075757575758,
+          "at_seconds": 71.5517,
+          "selected_attempt": 1,
+          "reference": "Vua hỏi thêm về sự xót xa trước nỗi đau của dân chúng. Cảm thấy đau khi thấy người khác đau có phải cũng là một gánh nặng, và liệu lòng từ bi có làm người ta yếu đi trước những điều mất mát?",
+          "transcript": "vua hỏi thêm về sự xót xa trước nỗi đau của dân chúng cảm thấy đau khi thấy người khác đau có phải cũng là một gánh nặng và liệu lòng từ bi có làm người ta yếu đi trước những điều mất mát"
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29519858156028367,
+          "at_seconds": 84.926,
+          "selected_attempt": 1,
+          "reference": "Lời giải thích phân biệt sự chìm đắm với niềm xót thương có thể đưa đến hành động. Khi hiểu thêm nỗi khổ và các điều kiện của nó, người thương có thể chăm sóc bằng sự sáng rõ, thay vì chỉ bị cuốn theo hoảng hốt.",
+          "transcript": "lời giải thích Phân biệt sự chìm đắm với niềm xót thương có thể đưa đến hành động khi hiểu thêm nỗi khổ và các điều kiện của nó người thương có thể chăm sóc bằng sự sáng rõ thay vì chỉ bị cuốn theo hoảng hốt"
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27893798449612406,
+          "at_seconds": 114.6347,
+          "selected_attempt": 4,
+          "reference": "Cuộc gặp mở ra cho vua một cách nhìn sâu hơn về tình thương. Những câu hỏi không bị gạt đi vì đến từ một người bận việc nước; chính kinh nghiệm đang sống trở thành nơi bắt đầu của sự tìm hiểu.",
+          "transcript": "cuộc gặp mở ra cho vua một cách nhìn sâu hơn về tình thương những câu hỏi không bị gạt đi vì đến từ một người bận việc nước chính kinh nghiệm Đang sống trở thành nơi bắt đầu của sự tìm hiểu"
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28924113475177304,
+          "at_seconds": 156.6777,
+          "selected_attempt": 3,
+          "reference": "Chăm sóc cũng cần tôn trọng giới hạn của cả hai bên. Ta có thể ở cạnh, tìm sự giúp đỡ phù hợp và chia phần trách nhiệm, trong khi vẫn nhìn nhận sức lực có hạn của chính mình và quyền lựa chọn của người kia.",
+          "transcript": "chăm sóc cũng cần tôn trọng giới hạn của cả hai bên ta có thể ở cạnh tìm sự giúp đỡ phù hợp và chia phần trách nhiệm trong khi vẫn nhìn nhận sức lực có hạn của chính mình và quyền lựa chọn của người kia"
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28248550724637683,
+          "at_seconds": 171.172,
+          "selected_attempt": 2,
+          "reference": "Khi ai đó thay đổi, ta có thể thấy buồn mà vẫn không buộc họ trở lại phiên bản quen thuộc. Khoảng chấp nhận ấy cho phép tình thương được tiếp tục lớn lên, thay vì trở thành cuộc kéo co kéo dài giữa hai người.",
+          "transcript": "khi ai đó thay đổi ta có thể thấy buồn mà vẫn không buộc họ trở lại phiên bản quen thuộc khoảng chấp nhận ấy cho phép tình thương được tiếp tục lớn lên thay vì trở thành cuộc kéo co kéo dài giữa hai người"
+        },
+        {
+          "i": 15,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29350757575757574,
+          "at_seconds": 215.535,
+          "selected_attempt": 4,
+          "reference": "Cuộc trò chuyện đã hết, còn câu hỏi của nhà vua vẫn gần với mỗi mái nhà hôm nay. Bên một người đang cần được thương, có thể bắt đầu bằng một chỗ ngồi yên và một đôi tai chịu nghe cho thật rõ.",
+          "transcript": "cuộc trò chuyện đã hết Còn câu hỏi của nhà vua vẫn gần với mỗi mái nhà hôm nay bên một người đang cần được thương có thể bắt đầu bằng một chỗ ngồi yên và một đôi tai chịu nghe cho thật rõ"
+        }
+      ],
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ffprobe": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "ideas": 16,
+      "cues_sha256": "ec9cc16545d2872c883cf4a1ab79da8aff90300cf6472c489e29a43065d1ca78"
+    }
+  ]
+}
