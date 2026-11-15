@@ -8,6 +8,7 @@ import { OPTIONS, PRESETS, checkName, suggestNames } from './people.js';
 import { S, mem, save, allDone, today, resetState, stateReady, fixMusic } from './state.js';
 import { PASSIVE, MIN_VANDU, heardEnough, listenCode, logPassive, lotus, weakest, calendar, weekSitMinutes, heardIds } from '@vandao/shared/missions.js';
 import { PARAMI } from '@vandao/shared/parami.js';
+import { nv, loadMissions, soNhapView, soNhapAct } from './ui/so-nhap.js';
 import { registerPWA, persistStorage } from './boot.js';
 import { startMetrics } from './net/metrics.js';
 import { $, fmt, esc } from './ui/dom.js';
@@ -264,12 +265,12 @@ function lotusSvg(L) {
 }
 /** «Tích lũy tu học» (quyết định 1, #85): hoa sen, lịch tu 49 ngày, nhịp thiền, sổ nghe Pháp. Không xếp hạng, không điểm thưởng. */
 function tichLuy() {
-  const t = today(), L = lotus(S.tu, S.done, S.sacca), cal = calendar(S.tu, S.done, t), mins = weekSitMinutes(S.tu, t), hd = heardIds(S.tu), lib = library.items;
+  const t = today(), L = lotus(S.tu, S.done, S.sacca, S.viec), cal = calendar(S.tu, S.done, t, 49, S.viec), mins = weekSitMinutes(S.tu, t), hd = heardIds(S.tu), lib = library.items;
   const nL = lib.filter((x) => x.loat === 'loi-phat-day').length, nD = lib.filter((x) => x.loat === 'duong-xua').length, weak = weakest(L), days = cal.filter((c) => c.any).length;
   const top = Object.keys(PARAMI).filter((k) => L.norm[k] >= 0.6).map((k) => PARAMI[k]);
   return `<h3>Tích lũy tu học</h3><div class="tlhoc">${lotusSvg(L)}<div><p>${L.total ? `Cánh sáng rõ: ${esc(top.join(', '))}.` : 'Hoa sen sẽ sáng dần theo từng việc bạn thực hành.'}</p>` +
     (weak ? `<p class="muted">Cánh còn nhạt: ${esc(PARAMI[weak])}. Tuần này thử thêm một việc nhỏ của hạnh này.</p>` : '') + `</div></div>` +
-    `<div class="cal" aria-label="Lịch tu 49 ngày">${cal.map((c) => `<i class="${c.any ? 'on' : ''}${c.sit ? ' s' : ''}${c.listen ? ' l' : ''}" title="${c.date}${c.sit ? ' · thiền' : ''}${c.listen ? ' · nghe Pháp' : ''}${c.confirm ? ' · ghi nhận' : ''}"></i>`).join('')}</div>` +
+    `<div class="cal" aria-label="Lịch tu 49 ngày">${cal.map((c) => `<i class="${c.any ? 'on' : ''}${c.sit ? ' s' : ''}${c.listen ? ' l' : ''}${c.gioi ? ' g' : ''}" title="${c.date}${c.sit ? ' · thiền' : ''}${c.listen ? ' · nghe Pháp' : ''}${c.gioi ? ' · giữ đủ năm giới' : ''}${c.confirm ? ' · ghi nhận' : ''}"></i>`).join('')}</div>` +
     `<p class="muted">49 ngày qua: ${days} ngày có thực hành · nhịp thiền 7 ngày: ${mins} phút · đã nghe trọn: Lời Phật dạy ${hd['loi-phat-day'].size}${nL ? '/' + nL : ''}, Đường Xưa ${hd['duong-xua'].size}${nD ? '/' + nD : ''}</p>`;
 }
 function render() {
@@ -362,6 +363,9 @@ function render() {
             <textarea data-c="note" placeholder="Một hai dòng quán chiếu (không bắt buộc)"></textarea>
             <div class="row"><button class="btn" data-act="confirm">Xác nhận đã thực hành</button><span class="muted">Năng lượng thiện: <b data-e>10.00</b></span></div></details>`) + '</div>';
     });
+    // đợt C (#91): Giữ giới hôm nay, Hạnh của tuần, Nguyện tuần, ngày trai (danh mục đợt B, chỉ mục đã phát hành)
+    if (nv.state === 'idle') loadMissions().then(render);
+    h += soNhapView(S, today());
     h += `<h3>Tự ghi nhận hôm nay</h3>` + (ev.length ? `<ul class="auto">${ev.map((x) => `<li>✓ ${esc(x)}</li>`).join('')}</ul>` : '<p class="muted">Ngồi một thời thiền hay nghe trọn một bài Pháp, Vân Đạo sẽ tự ghi nhận ở đây.</p>') + tichLuy();
     h += `<p class="note">Phần thưởng của tuần: ${esc(W.reward)}</p>` +
       (allDone(d) ? `<p><strong>${d < 49 ? 'Đã trọn ba việc hôm nay. Ngày mai sẽ mở ngày ' + (d + 1) + '.' : 'Đã viên mãn 49 ngày: Cổng Vân Môn mở, bước lên Tầng 1.'}</strong></p>` : '') +
@@ -442,6 +446,7 @@ panel.addEventListener('click', (e) => {
   const act = b.dataset.act;
   if (act !== 'reset') U.resetArm = false;
   if (act.startsWith('acct-')) return accountAct(act.slice(5), b);   // T2.3: Giữ hành trình, Tài khoản (ui/account.js)
+  if (act.startsWith('nv-')) { const msg = soNhapAct(act, b, S, today()); save(); if (msg) { toast(msg); if (world && /cánh sen|Đã giữ|thọ trì|giữ nguyện/.test(msg)) world.burst(0xf3d27a); } render(); return; }   // đợt C (#91): ui/so-nhap.js
   if (['board', 'sit', 'visit'].includes(act) && meditating()) return move(() => { const again = panel.querySelector('[data-act="' + act + '"]'); if (again) again.click(); });
   if (act === 'kuti-sit') { const sat = () => { world.setFace(S.kface || 0); savePos(); U.sit = { at: Date.now(), zone: 'kuti' }; toast('Đã an tọa tại Tịnh Thất.'); render(); };
     if (world) { if (world.av.state === 'sit' && world.av.id === 'kuti') sat(); else world.goZone('kuti', sat); } return; }

@@ -62,9 +62,11 @@ const PARAMI_KEYS = ['dana', 'sila', 'nekkhamma', 'panna', 'viriya', 'khanti', '
  * - log: sổ tự ghi nhận; mỗi mã chỉ tính 1 lần mỗi ngày, nghe mười bài không thành "cày điểm".
  * - done: S.done ({ [ngày hành trình]: { duc|thien|tue: {...} } }); mỗi trục đã ghi nhận tính theo WEEK_PARAMI.
  * - sacca: số lần Sám hối chân thật.
+ * - act: sổ việc chủ động (đợt C); mỗi Ba-la-mật tính một lần mỗi ngày.
  */
-export function lotus(log = {}, done = {}, sacca = 0) {
+export function lotus(log = {}, done = {}, sacca = 0, act = {}) {
   const counts = Object.fromEntries(PARAMI_KEYS.map((k) => [k, 0]));
+  for (const day of Object.values(act || {})) for (const p of actParami(day)) counts[p]++;
   for (const day of Object.values(log || {})) for (const code of Object.keys(day || {})) if (isPassive(code)) for (const p of PASSIVE[code].parami) counts[p]++;
   for (const [d, rec] of Object.entries(done || {})) {
     const w = WEEK_PARAMI[Math.min(6, Math.max(0, Math.ceil(Number(d) / 7) - 1))];
@@ -88,13 +90,15 @@ export function shiftDate(date, days) { const [y, m, d] = String(date).split('-'
  * Lịch tu: các ngày từ `from` tới `to` (gồm cả hai), mỗi ngày cho biết có thực hành gì.
  * Ngày trống để trống (giao diện không tô đỏ).
  */
-export function calendar(log = {}, done = {}, to, n = 49) {
+export function calendar(log = {}, done = {}, to, n = 49, act = {}) {
   const confirmed = new Set();
   for (const rec of Object.values(done || {})) for (const v of Object.values(rec || {})) if (v && v.at) confirmed.add(ymd(v.at));
   const out = [];
   for (let i = n - 1; i >= 0; i--) {
     const date = shiftDate(to, -i), day = (log || {})[date] || {};
-    out.push({ date, sit: !!day.thoi_thien, listen: !!(day.nghe_loi_phat_day || day.nghe_duong_xua), confirm: confirmed.has(date), any: confirmed.has(date) || Object.keys(day).some(isPassive) });
+    const a = (act || {})[date];
+    out.push({ date, sit: !!day.thoi_thien, listen: !!(day.nghe_loi_phat_day || day.nghe_duong_xua), confirm: confirmed.has(date), gioi: fullGioi(a),
+      any: confirmed.has(date) || Object.keys(day).some(isPassive) || actParami(a).size > 0 });
   }
   return out;
 }
@@ -112,3 +116,90 @@ export function heardIds(log = {}) {
 /** Kiểm danh mục (dùng trong kiểm thử và khi máy chủ nhận sự kiện) */
 export const catalogOk = () => Object.values(PASSIVE).every((x) => isPunna(x.punna) && x.parami.every(isParami))
   && WEEK_PARAMI.every((w) => ['duc', 'thien', 'tue'].every((k) => w[k].every(isParami))) && WEEK_FOCUS.every((f) => f.every(isParami));
+
+// ───────── Đợt C (#85): việc chủ động — Giữ giới hôm nay, Hạnh của tuần, Nguyện tuần, ngày trai ─────────
+// Danh mục là nội dung `kind: nhiem_vu` (đợt B, content/nhiem-vu/so-nhap/). Người dùng tự xác nhận; không cộng Kusala.
+
+/** Ngày trai theo âm lịch (§8.3; tùy chọn `uposatha` ở §4.6). lunar = { day, monthLength } từ amlich.js. Tháng thiếu thì ngày cuối là 29. */
+export function isTraiDay(lunar, mode = 'vn_4') {
+  if (!lunar || !(lunar.day >= 1)) return false;
+  const last = lunar.monthLength === 29 ? 29 : 30, d = lunar.day, fromEnd = last - d;   // fromEnd: 0 = ngày cuối tháng, 1 = áp chót, 2 = trước nữa
+  const R = { vn_2: [[1, 15], []], vn_4: [[1, 14, 15], [0]], vn_6: [[8, 14, 15, 23], [0, 1]], vn_10: [[1, 8, 14, 15, 18, 23, 24], [0, 1, 2]] }[mode];
+  return !!R && (R[0].includes(d) || R[1].includes(fromEnd));
+}
+
+/** Băm FNV-1a 32 bit: chọn việc tất định theo (ngày, hạt giống) để offline và máy chủ ra cùng kết quả */
+export function hash32(s) { let h = 0x811c9dc5; for (const ch of String(s)) { h ^= ch.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0; } return h >>> 0; }
+/** Chọn tất định k mục khác nhau theo khóa */
+export function pickN(items, k, key) {
+  return (items || []).map((x) => [hash32(`${key}|${x.id}`), x]).sort((a, b) => a[0] - b[0] || (a[1].id < b[1].id ? -1 : 1)).slice(0, Math.max(0, k)).map((p) => p[1]);
+}
+
+const NHOM = ['gioi', 'hanh', 'nguyen', 'trai'];
+/**
+ * Một mục nội dung `nhiem_vu` (API trả meta là chuỗi JSON) → nhiệm vụ, hoặc null nếu sai hợp đồng (#87).
+ * Giữ lại: id, title, text (câu hành động), nhom, gioi, tuan, parami[], punna, minutes, safety, trai (8 mô tả của thẻ trai).
+ */
+export function toMission(it) {
+  if (!it || it.kind !== 'nhiem_vu' || typeof it.body_inline !== 'string' || !it.body_inline.trim()) return null;
+  let m = it.meta; if (typeof m === 'string') { try { m = JSON.parse(m); } catch (e) { return null; } }
+  if (!m || typeof m !== 'object' || !NHOM.includes(m.nhom)) return null;
+  const parami = Array.isArray(m.parami) ? m.parami.filter(isParami) : [];
+  if (!parami.length) return null;
+  const gioi = m.nhom === 'gioi' ? Number(m.gioi) : null, tuan = m.nhom === 'nguyen' ? Number(m.tuan) : null;
+  if (m.nhom === 'gioi' && !(gioi >= 1 && gioi <= 5)) return null;
+  if (m.nhom === 'nguyen' && !(tuan >= 1 && tuan <= 7)) return null;
+  return { id: String(it.id), title: String(it.title || ''), text: it.body_inline.trim(), nhom: m.nhom, gioi, tuan, parami, punna: isPunna(m.punna) ? m.punna : null,
+    minutes: Number(m.minutes) || 0, safety: typeof m.safety_note === 'string' ? m.safety_note : '', trai: Array.isArray(m.gioi_trai) ? m.gioi_trai.map(String).slice(0, 8) : [] };
+}
+/** Gom danh mục theo nhóm: gioi[1..5], hanh[mã Ba-la-mật], nguyen[1..7], trai */
+export function catalog(items) {
+  const c = { gioi: { 1: [], 2: [], 3: [], 4: [], 5: [] }, hanh: {}, nguyen: {}, trai: null, n: 0 }, seen = new Set();
+  for (const x of (items || []).map(toMission)) {
+    if (!x || seen.has(x.id)) continue; seen.add(x.id); c.n++;
+    if (x.nhom === 'gioi') c.gioi[x.gioi].push(x);
+    else if (x.nhom === 'hanh') { const p = x.parami[0]; (c.hanh[p] = c.hanh[p] || []).push(x); }
+    else if (x.nhom === 'nguyen') { if (!c.nguyen[x.tuan]) c.nguyen[x.tuan] = x; }
+    else if (x.nhom === 'trai' && !c.trai) c.trai = x;
+  }
+  for (const k of Object.keys(c.gioi)) c.gioi[k].sort((a, b) => (a.id < b.id ? -1 : 1));
+  return c;
+}
+/**
+ * Việc của một ngày (quyết định 2: 3 việc chính + thẻ giới + 1 hạnh): mỗi giới một việc gợi ý,
+ * 3 việc nhỏ của hai Ba-la-mật trọng tâm của tuần để chọn 1, Nguyện tuần.
+ */
+export function dayPlan(cat, { date, week, seed = 0 }) {
+  const w = Math.min(7, Math.max(1, Number(week) || 1)), key = `${date}|${seed}`;
+  const gioi = {}; for (let g = 1; g <= 5; g++) gioi[g] = pickN(cat.gioi[g], 1, `${key}|g${g}`)[0] || null;
+  // 3 việc hạnh: 2 của một Ba-la-mật trọng tâm, 1 của Ba-la-mật kia (đổi bên theo ngày), thiếu thì bù từ phần còn lại
+  const focus = WEEK_FOCUS[w - 1], flip = hash32(`${key}|f`) & 1, A = focus[flip], B = focus[1 - flip];
+  let hanh = [...pickN(cat.hanh[A] || [], 2, `${key}|${A}`), ...pickN(cat.hanh[B] || [], 1, `${key}|${B}`)];
+  if (hanh.length < 3) hanh = [...hanh, ...pickN([...(cat.hanh[A] || []), ...(cat.hanh[B] || [])].filter((x) => !hanh.includes(x)), 3 - hanh.length, `${key}|r`)];
+  return { week: w, focus, gioi, hanh, nguyen: cat.nguyen[w] || null };
+}
+
+/**
+ * Sổ việc chủ động theo ngày (bất biến): { [ngày]: { gioi: { [1..5]: { id, parami } }, hanh: { id, parami, done }, nguyen: { tuan, parami }, trai: { id, parami } } }.
+ * Không có chữ tự do. value = null để bỏ (người dùng sửa lại trong ngày).
+ */
+export function setAct(act, date, path, value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date))) return act || {};
+  const A = { ...(act || {}) }, day = { ...(A[date] || {}) };
+  if (path.startsWith('gioi.')) { const g = path.slice(5); if (!['1', '2', '3', '4', '5'].includes(g)) return act || {}; const G = { ...(day.gioi || {}) }; if (value) G[g] = clean(value); else delete G[g]; day.gioi = G; }
+  else if (['hanh', 'nguyen', 'trai'].includes(path)) { if (value) day[path] = clean(value); else delete day[path]; }
+  else return act || {};
+  A[date] = day;
+  return A;
+}
+const clean = (v) => ({ ...(v.id ? { id: String(v.id).slice(0, 60) } : {}), ...(v.tuan ? { tuan: Number(v.tuan) } : {}), parami: (v.parami || []).filter(isParami), ...(v.done !== undefined ? { done: !!v.done } : {}) });
+/** Ba-la-mật được rèn trong một ngày từ việc chủ động (mỗi mã tính một lần): giới đã giữ, hạnh đã làm xong, nguyện đã giữ, ngày trai */
+export function actParami(day) {
+  const s = new Set(); if (!day) return s;
+  for (const v of Object.values(day.gioi || {})) for (const p of v.parami || []) s.add(p);
+  if (day.hanh && day.hanh.done) for (const p of day.hanh.parami || []) s.add(p);
+  for (const k of ['nguyen', 'trai']) if (day[k]) for (const p of day[k].parami || []) s.add(p);
+  return s;
+}
+/** Hôm đó giữ đủ năm giới */
+export const fullGioi = (day) => !!day && ['1', '2', '3', '4', '5'].every((g) => day.gioi && day.gioi[g]);
