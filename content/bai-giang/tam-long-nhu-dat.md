@@ -8,7 +8,9 @@ title: Tấm lòng như đất
 source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 62 · AN
   9.11, lời trình bày của Xá Lợi Phất khi bị cáo buộc ·
   https://suttacentral.net/an9.11/en/sujato"
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt phát hành qua chat 15/11/2026"
+reviewed_at: 1794726890
 meta:
   loat: duong-xua
   phan: 3

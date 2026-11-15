@@ -8,7 +8,9 @@ title: Dây đàn
 source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 71 · AN
   6.55, Sona và sự quân bình trong tinh tấn ·
   https://suttacentral.net/an6.55/en/sujato"
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt phát hành qua chat 15/11/2026"
+reviewed_at: 1794726890
 meta:
   loat: duong-xua
   phan: 3

@@ -8,7 +8,9 @@ title: Ta đã dừng lại
 source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 53 · MN
   86, Ương Quật Ma La dừng việc sát hại và thay đổi đời sống ·
   https://suttacentral.net/mn86/en/sujato"
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt phát hành qua chat 15/11/2026"
+reviewed_at: 1794726890
 meta:
   loat: duong-xua
   phan: 2

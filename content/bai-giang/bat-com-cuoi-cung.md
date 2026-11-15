@@ -8,7 +8,9 @@ title: Bữa cơm cuối cùng
 source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 79 · DN
   16, bữa ăn của Thuần Đà và lời nhắn giúp ông khỏi hối tiếc; không kết luận món
   ăn hay nguyên nhân bệnh · https://suttacentral.net/dn16/en/sujato"
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt phát hành qua chat 15/11/2026"
+reviewed_at: 1794726890
 meta:
   loat: duong-xua
   phan: 3

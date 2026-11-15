@@ -7,7 +7,9 @@ lang: vi
 title: Trở về hơi thở
 source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 56 · MN
   118, niệm hơi thở · https://suttacentral.net/mn118/en/sujato"
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt phát hành qua chat 15/11/2026"
+reviewed_at: 1794726890
 meta:
   loat: duong-xua
   phan: 3

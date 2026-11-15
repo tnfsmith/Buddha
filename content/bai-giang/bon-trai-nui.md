@@ -7,7 +7,9 @@ lang: vi
 title: Bốn trái núi
 source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 66 · SN
   3.25, ví dụ núi và sự già chết · https://suttacentral.net/sn3.25/en/sujato"
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt phát hành qua chat 15/11/2026"
+reviewed_at: 1794726890
 meta:
   loat: duong-xua
   phan: 3
