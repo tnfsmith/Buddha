@@ -9,13 +9,15 @@ source_ref: "Sādhu và câu hồi hướng Pāli Idaṃ me ñātīnaṃ hotu, s
   ñātayo theo truyền thống tụng; đối chiếu Khuddakapāṭha 7 (bản kinh dùng vo) ·
   https://suttacentral.net/kp7/pli/ms · Lời Việt do Vân Đạo biên soạn, không
   phải nguyên văn lời Phật."
-status: cho_duyet
+status: da_duyet
 meta:
   loat: nghi-thuc
   vai: ket-thuc
   audio:
     speed: 0.85
 body_r2_key: bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-290b9390/vi-sadaltager.mp3
+reviewed_by: Chủ dự án — nghe duyệt trong chat ngày 15/11/2026
+reviewed_at: 1794711388
 ---
 [[Sādhu! Sādhu! Sādhu!|Sa đu! [pause long] Sa đu! [pause long] Sa đu!]]
 > Lành thay! Lành thay! Lành thay!

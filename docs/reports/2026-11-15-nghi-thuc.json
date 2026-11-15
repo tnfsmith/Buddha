@@ -1,13 +1,20 @@
 {
   "checked_at": "2026-11-15T02:37:17.289Z",
-  "status": "cho_duyet",
-  "owner_approval": "pending",
-  "provisional_rate": 0.85,
+  "status": "da_duyet",
+  "owner_approval": {
+    "state": "approved",
+    "by": "owner",
+    "at": "2026-11-15T02:56:28.921Z",
+    "speed": 0.85,
+    "source": "Direct owner reply in chat 2026-11-15: 0,85 cho mở đầu và kết thúc, Namo, Sahu đã nghe đúng.",
+    "namo_variant": "B",
+    "pali_listening": "Namo and Sādhu accepted by owner"
+  },
   "method": "Google LINEAR16 24k -> MP3 libmp3lame 96k; inter-cue gap 1.2s; AI ID3v2.4; per-cue Google ASR. Original VI words; Pali liturgy with source_ref.",
   "limitations": [
-    "VI ASR does not certify Pali pronunciation. B is provisional based on raw ASR ranking and requested phonetic form; owner must listen.",
+    "Raw VI ASR scores do not certify Pali; all flags and transcripts retained. Owner has listened and approved the selected 0.85 recordings.",
     "The same one benchmark B take is reused three times at each rate; not three independent synthesis calls.",
-    "Three Vietnamese cue/rate pairs retain WER/pace flags. No score normalization, threshold relaxation, or claim of human listening."
+    "0.80 is unselected. Three Vietnamese cue/rate pairs retain raw WER/pace flags; no score or threshold changes after owner approval."
   ],
   "results": [
     {
@@ -503,6 +510,14 @@
           "cues_sha256": "84e628e87d7d346ade0e817e71f452edd85b261d66e98e9b76b3cbc8d7d3ca93",
           "ai_id3": true
         }
+      },
+      "listening_approval": {
+        "by": "owner",
+        "at": "2026-11-15T02:56:28.921Z",
+        "speed": 0.85,
+        "source": "Direct owner reply in chat 2026-11-15: 0,85 cho mở đầu và kết thúc, Namo, Sahu đã nghe đúng.",
+        "namo_variant": "B",
+        "pali_listening": "Namo and Sādhu accepted by owner"
       }
     },
     {
@@ -1029,6 +1044,14 @@
           "cues_sha256": "edf2ec4d5d9264130ba23c1290b08a94f0c075edd28d6cdaf5e1f40d28a096ad",
           "ai_id3": true
         }
+      },
+      "listening_approval": {
+        "by": "owner",
+        "at": "2026-11-15T02:56:28.921Z",
+        "speed": 0.85,
+        "source": "Direct owner reply in chat 2026-11-15: 0,85 cho mở đầu và kết thúc, Namo, Sahu đã nghe đúng.",
+        "namo_variant": "B",
+        "pali_listening": "Namo and Sādhu accepted by owner"
       }
     }
   ],
@@ -1112,5 +1135,6 @@
       "pass": false
     }
   ],
-  "namo_chosen_provisionally": "B"
+  "selected_rate": 0.85,
+  "namo_selected": "B"
 }

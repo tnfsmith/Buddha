@@ -169,7 +169,15 @@
           "names_ok": true,
           "seconds_per_word": 0.29888405797101447
         }
-      ]
+      ],
+      "listening_approval": {
+        "by": "owner",
+        "at": "2026-11-15T02:56:28.921Z",
+        "speed": 0.85,
+        "source": "Direct owner reply in chat 2026-11-15: 0,85 cho mở đầu và kết thúc, Namo, Sahu đã nghe đúng.",
+        "namo_variant": "B",
+        "pali_listening": "Namo and Sādhu accepted by owner"
+      }
     },
     {
       "id": "nghi-thuc-mo-dau",
@@ -228,7 +236,15 @@
           "names_ok": true,
           "seconds_per_word": 0.34190740740740744
         }
-      ]
+      ],
+      "listening_approval": {
+        "by": "owner",
+        "at": "2026-11-15T02:56:28.921Z",
+        "speed": 0.85,
+        "source": "Direct owner reply in chat 2026-11-15: 0,85 cho mở đầu và kết thúc, Namo, Sahu đã nghe đúng.",
+        "namo_variant": "B",
+        "pali_listening": "Namo and Sādhu accepted by owner"
+      }
     },
     {
       "id": "niem-xu",

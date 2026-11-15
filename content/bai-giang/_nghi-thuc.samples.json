@@ -1,14 +1,21 @@
 {
   "v": 1,
-  "owner_approval": "pending",
+  "owner_approval": {
+    "state": "approved",
+    "by": "owner",
+    "at": "2026-11-15T02:56:28.921Z",
+    "speed": 0.85,
+    "source": "Direct owner reply in chat 2026-11-15: 0,85 cho mở đầu và kết thúc, Namo, Sahu đã nghe đúng.",
+    "namo_variant": "B",
+    "pali_listening": "Namo and Sādhu accepted by owner"
+  },
   "default_speed": 0.85,
-  "note": "Both rates are review samples; cho_duyet. Owner must listen and choose before publishing.",
+  "note": "Owner selected 0.85 for both rituals and accepted Namo/Sādhu; 0.80 remains an unselected review sample. Publication still requires PR dependencies and owner merge.",
   "items": [
     {
       "id": "nghi-thuc-mo-dau",
       "speed": 0.85,
-      "status": "cho_duyet",
-      "selected_provisionally": true,
+      "status": "da_duyet",
       "version": 1,
       "key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-abbb0ffe/vi-sadaltager.mp3",
       "hash": "abbb0ffe",
@@ -64,13 +71,21 @@
           "seconds_per_word": 0.34190740740740744
         }
       ],
-      "cues_key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-abbb0ffe/vi-sadaltager.cues.json"
+      "cues_key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-abbb0ffe/vi-sadaltager.cues.json",
+      "selected": true,
+      "listening_approval": {
+        "by": "owner",
+        "at": "2026-11-15T02:56:28.921Z",
+        "speed": 0.85,
+        "source": "Direct owner reply in chat 2026-11-15: 0,85 cho mở đầu và kết thúc, Namo, Sahu đã nghe đúng.",
+        "namo_variant": "B",
+        "pali_listening": "Namo and Sādhu accepted by owner"
+      }
     },
     {
       "id": "nghi-thuc-mo-dau",
       "speed": 0.8,
       "status": "cho_duyet",
-      "selected_provisionally": false,
       "version": 1,
       "key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-897627db/vi-sadaltager.mp3",
       "hash": "897627db",
@@ -126,13 +141,13 @@
           "seconds_per_word": 0.3747407407407407
         }
       ],
-      "cues_key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-897627db/vi-sadaltager.cues.json"
+      "cues_key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-897627db/vi-sadaltager.cues.json",
+      "selected": false
     },
     {
       "id": "nghi-thuc-ket-thuc",
       "speed": 0.8,
       "status": "cho_duyet",
-      "selected_provisionally": false,
       "version": 1,
       "key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-8c2a7290/vi-sadaltager.mp3",
       "hash": "8c2a7290",
@@ -181,13 +196,13 @@
           "seconds_per_word": 0.2823859649122807
         }
       ],
-      "cues_key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-8c2a7290/vi-sadaltager.cues.json"
+      "cues_key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-8c2a7290/vi-sadaltager.cues.json",
+      "selected": false
     },
     {
       "id": "nghi-thuc-ket-thuc",
       "speed": 0.85,
-      "status": "cho_duyet",
-      "selected_provisionally": true,
+      "status": "da_duyet",
       "version": 1,
       "key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-290b9390/vi-sadaltager.mp3",
       "hash": "290b9390",
@@ -243,7 +258,16 @@
           "seconds_per_word": 0.29888405797101447
         }
       ],
-      "cues_key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-290b9390/vi-sadaltager.cues.json"
+      "cues_key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-290b9390/vi-sadaltager.cues.json",
+      "selected": true,
+      "listening_approval": {
+        "by": "owner",
+        "at": "2026-11-15T02:56:28.921Z",
+        "speed": 0.85,
+        "source": "Direct owner reply in chat 2026-11-15: 0,85 cho mở đầu và kết thúc, Namo, Sahu đã nghe đúng.",
+        "namo_variant": "B",
+        "pali_listening": "Namo and Sādhu accepted by owner"
+      }
     }
   ]
 }
