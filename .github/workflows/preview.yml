@@ -10,9 +10,23 @@ permissions:
   contents: read
   pull-requests: write
 jobs:
+  migration-policy:
+    runs-on: ubuntu-latest
+    permissions: { contents: read }
+    outputs:
+      remote_allowed: ${{ steps.policy.outputs.remote_allowed }}
+    steps:
+      - uses: actions/checkout@v5
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v5
+        with: { node-version: 26 }
+      - name: Chặn preview có migration chưa merge (#35)
+        id: policy
+        run: node scripts/preview-migration-check.mjs
   preview:
+    needs: [migration-policy]
     # chỉ PR từ chính repo mới được dùng secrets
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event.pull_request.head.repo.full_name == github.repository && needs.migration-policy.outputs.remote_allowed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
