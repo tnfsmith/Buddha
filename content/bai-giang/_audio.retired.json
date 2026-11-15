@@ -676,6 +676,21 @@
         "vandao-media"
       ],
       "reason": "ID3 AI metadata added for #80; MPEG/LAME audio unchanged. Keep old key at least 30 days; verify no D1 references before deleting."
+    },
+    {
+      "id": "mo-cua",
+      "version": 1,
+      "key": "bai-giang/duong-xua/mo-cua/v1-683d6544/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/duong-xua/mo-cua/v1-683d6544/vi-sadaltager.cues.json",
+      "sha256": "657e30dac21898d41d5408fbb929799e9450400f35f279f5d117b7af0baf18c1",
+      "bit_rate": 96000,
+      "retired_at": "2026-11-15T07:02:15.890Z",
+      "delete_after": "2026-12-15T07:02:15.890Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Clarify flagged names/words before publication; unchanged original WAVs reused; keep old master >=30 days, no objects deleted."
     }
   ]
 }
