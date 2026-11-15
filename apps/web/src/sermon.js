@@ -36,8 +36,11 @@ export function toSermon(it) {
   for (const r of rows) { if (!r.startsWith('>')) { lines.push(r); continue; } const j = Math.max(0, lines.length - 1), t = r.replace(/^>\s*/, ''); if (t && !notes[j]) notes[j] = t; }
   if (!lines.length) return null;
   const m = metaOf(it.meta), k = typeof it.body_r2_key === 'string' && R2KEY.test(it.body_r2_key) && !it.body_r2_key.includes('..') ? it.body_r2_key : '';
+  // API chưa trả meta (trước migration 0008): nhận mục nghi thức chung theo mã, để không lọt vào danh sách bài
+  const byId = /^nghi-thuc-(mo-dau|ket-thuc)$/.exec(String(it.id)), vai = VAI.includes(m.vai) ? m.vai : byId ? byId[1] : '';
+  if (byId && !m.loat) m.loat = 'nghi-thuc';
   return { id: String(it.id), version: it.version, name: String(it.title), ref: String(it.source_ref), key: notes.find(Boolean) || '', lines, notes,
-    audio: k ? { src: '/media/' + k, cues: '/media/' + k.replace(/\.mp3$/i, '.cues.json') } : null, vai: VAI.includes(m.vai) ? m.vai : '',
+    audio: k ? { src: '/media/' + k, cues: '/media/' + k.replace(/\.mp3$/i, '.cues.json') } : null, vai,
     loat: typeof m.loat === 'string' && /^[a-z0-9-]{1,40}$/.test(m.loat) ? m.loat : LOAT0, phan: Number(m.phan) || 0, order: m.thu_tu != null && m.thu_tu !== '' && Number.isFinite(+m.thu_tu) ? +m.thu_tu : null };
 }
 /** Trong mỗi loạt: xếp theo thu_tu; bài không có thu_tu giữ thứ tự máy chủ, đứng sau */

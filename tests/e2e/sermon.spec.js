@@ -235,7 +235,8 @@ const next = (page) => panel(page).locator('[data-act="sermon-next"]').click();
 
 test('lời mở đầu và lời kết có giọng đọc: không vào danh sách, phát trước và sau bài, chữ theo cues, hội chúng lạy khi Sādhu', async ({ page }) => {
   test.setTimeout(300_000);
-  await mock(page, [VOICED, OK, RITE_MO, RITE_KET, RITE_DX]); const hits = await media(page, { cues: riteCues });
+  // RITE_KET thiếu meta (API trước 0008): vẫn nhận ra theo mã nghi-thuc-ket-thuc
+  await mock(page, [VOICED, OK, RITE_MO, { ...RITE_KET, meta: undefined }, RITE_DX]); const hits = await media(page, { cues: riteCues });
   await open(page, 'sermon=khong-co');
   await slow(panel(page).locator('[data-sut]')).toHaveCount(1);   // thẻ «Lời Phật dạy»: chỉ bai-thu
   for (const t of ['Lời mở đầu', 'Lời kết và hồi hướng']) await expect(panel(page)).not.toContainText(t);
