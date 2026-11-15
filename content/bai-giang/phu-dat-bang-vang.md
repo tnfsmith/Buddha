@@ -8,7 +8,9 @@ title: Phủ đất bằng vàng
 source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 40 · Luật
   tạng Tiểu phẩm VI.4; AN 4.62 về niềm vui của người sống đời gia đình ·
   https://suttacentral.net/an4.62/en/sujato"
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt phát hành qua chat 15/11/2026"
+reviewed_at: 1794726890
 meta:
   loat: duong-xua
   phan: 2

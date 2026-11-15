@@ -8,7 +8,9 @@ title: Bài học của đất
 source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 49 · MN 62
   về các yếu tố và tâm rộng; đối chiếu bài học soi lại hành vi trong MN 61 ·
   https://suttacentral.net/mn62/en/sujato"
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt phát hành qua chat 15/11/2026"
+reviewed_at: 1794726890
 meta:
   loat: duong-xua
   phan: 2

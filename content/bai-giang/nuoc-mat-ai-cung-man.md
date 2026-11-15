@@ -8,7 +8,9 @@ title: Nước mắt ai cũng mặn
 source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 43 · Thag
   12.2, lời kể của Sunita về thân phận bị khinh rẻ và việc được đón nhận ·
   https://suttacentral.net/thag12.2/en/sujato"
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt phát hành qua chat 15/11/2026"
+reviewed_at: 1794726890
 meta:
   loat: duong-xua
   phan: 2

@@ -8,7 +8,9 @@ title: Sống trọn hôm nay
 source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 53 · MN
   131, không bị quá khứ, tương lai hay sự chấp giữ hiện tại cuốn đi ·
   https://suttacentral.net/mn131/en/sujato"
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt phát hành qua chat 15/11/2026"
+reviewed_at: 1794726890
 meta:
   loat: duong-xua
   phan: 2

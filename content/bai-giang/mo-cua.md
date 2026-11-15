@@ -8,7 +8,9 @@ title: Mở cửa
 source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 45 · AN
   8.51, truyền thống kể về Ma Ha Ba Xà Ba Đề và việc thành lập tăng đoàn nữ ·
   https://suttacentral.net/an8.51/en/sujato"
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt phát hành qua chat 15/11/2026"
+reviewed_at: 1794726890
 meta:
   loat: duong-xua
   phan: 2

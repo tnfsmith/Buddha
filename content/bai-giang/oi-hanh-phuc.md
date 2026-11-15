@@ -8,7 +8,9 @@ title: Ôi, hạnh phúc!
 source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 38 · Ud
   2.10, Bạt Đề nhớ đời sống phải canh phòng và niềm an ổn khi tu tập ·
   https://suttacentral.net/ud2.10/en/sujato"
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt phát hành qua chat 15/11/2026"
+reviewed_at: 1794726890
 meta:
   loat: duong-xua
   phan: 2
