@@ -6,6 +6,8 @@ import { Sermon, library, loadSermons, LOAT, LOAT0, loatTabs, aiVoiceLabel, prov
 import { Ambient, SONGS, SONG, MOODS, GROUPS, songsOf, pickSong, probeSong } from './music.js';
 import { OPTIONS, PRESETS, checkName, suggestNames } from './people.js';
 import { S, mem, save, allDone, today, resetState, stateReady, fixMusic } from './state.js';
+import { PASSIVE, MIN_VANDU, heardEnough, listenCode, logPassive, lotus, weakest, calendar, weekSitMinutes, heardIds } from '@vandao/shared/missions.js';
+import { PARAMI } from '@vandao/shared/parami.js';
 import { registerPWA, persistStorage } from './boot.js';
 import { startMetrics } from './net/metrics.js';
 import { $, fmt, esc } from './ui/dom.js';
@@ -27,7 +29,7 @@ const sermon = new Sermon();
 // #79: chữ khi giảng chỉ gồm nguồn, câu đang đọc và chữ phụ; không còn dòng nhãn giọng AI (ghi ở chú thích của bảng)
 sermon.online = (o) => { const el = $('#sub'); if (!el) return; el.innerHTML = o ? `<div class="src">${esc(o.src)}</div><div class="ln">${esc(o.ln)}</div>${o.pl ? `<div class="pl">${esc(o.pl)}</div>` : ''}` : ''; };
 sermon.onend = (done) => {
-  if (done) { S.sermons = (S.sermons || 0) + 1; save(); }
+  if (done) { S.sermons = (S.sermons || 0) + 1; heardLog(sermon.report); save(); }
   // nghe lần lượt: còn bài thì sang bài tiếp, giữ máy quay và Vân Nhạc nhỏ
   const q = U.queue; if (done && q && q.k < q.ids.length - 1) { q.k++; return queuePlay(); }
   U.queue = null; if (world) { world.wide = false; if (U.mode === 'hall') world.setMode('hall'); } document.body.classList.remove('sermon'); amb.setVolume(S.music.vol);
@@ -38,6 +40,8 @@ function sermonStart(id, o) { const su = library.items.find((x) => x.id === id);
   document.body.classList.add('sermon'); amb.setVolume(S.music.vol * 0.4); if (amb.on && amb.voice && amb.ctx) { try { amb.voice.bowl(amb.ctx.currentTime + 0.1, 136.1, 0.3, 0); } catch (e) { /* bỏ qua */ } }
   sermon.start(su, true, o); if (world) U.sCam = null; render(); }
 function sermonStop() { U.queue = null; sermon.stop(); if (world) { world.wide = false; if (U.mode === 'hall') world.setMode('hall'); } }
+/** Tự ghi nhận nghe Pháp (#88): nghe thật ≥ 70 % bài (giọng đọc hoặc đọc trọn bằng chữ); nghe ≥ 80 % hồi hướng. Không cộng Kusala. */
+function heardLog(r) { if (!r) return; const t = today(); if (heardEnough(r.ratio, 1)) S.tu = logPassive(S.tu, t, listenCode(r.loat), { ref: r.id }); if (r.rite) S.tu = logPassive(S.tu, t, 'hoi_huong'); }
 // Nghe lần lượt (#79): mọi bài của loạt đang chọn, từ bài đang chọn tới cuối; lời mở đầu trước bài đầu, lời kết sau bài cuối
 function sermonAll() { const ids = inLoat().map((x) => x.id); if (!ids.length) return; const k = Math.max(0, ids.indexOf(U.sutta)); U.queue = { ids, k, k0: k }; queuePlay(); }
 function queuePlay() { const q = U.queue, last = q.k === q.ids.length - 1, nx = !last && library.items.find((x) => x.id === q.ids[q.k + 1]);
@@ -47,10 +51,10 @@ const inLoat = () => library.items.filter((x) => x.loat === (U.loat || LOAT0));
 /** Sau khi tải danh sách: chọn thẻ loạt đầu tiên có bài (nếu thẻ đang chọn trống) và bài đầu của loạt */
 function sermonPick() { const L = library.items; if (!L.some((x) => x.loat === U.loat)) { const t = loatTabs(L).find(([k]) => L.some((x) => x.loat === k)); U.loat = t ? t[0] : LOAT0; } const mine = inLoat(); if (!mine.some((x) => x.id === U.sutta)) U.sutta = mine[0] && mine[0].id; }
 function sermonList(list) {
-  const cur = U.loat || LOAT0, mine = list.filter((x) => x.loat === cur); let ph = -1;
+  const cur = U.loat || LOAT0, mine = list.filter((x) => x.loat === cur), heard = heardIds(S.tu)[cur] || new Set(); let ph = -1;
   return seg('loat', loatTabs(list), cur) + (mine.length ? mine.map((x) => {
     let hd = ''; if (x.phan !== ph) { ph = x.phan; const t = LOAT[cur] && LOAT[cur].phan[x.phan]; if (t) hd = `<p class="phan">${esc(t)}</p>`; }
-    return hd + `<button class="sut ${U.sutta === x.id ? 'on' : ''}" data-sut="${esc(x.id)}"><b>${esc(x.name)}</b><em>${esc(x.ref)}${x.audio ? ' · có giọng đọc' : ''}</em></button>`;
+    return hd + `<button class="sut ${U.sutta === x.id ? 'on' : ''}" data-sut="${esc(x.id)}"><b>${esc(x.name)}</b><em>${esc(x.ref)}${x.audio ? ' · có giọng đọc' : ''}${heard.has(x.id) ? ' · <span class="heard">❀ đã nghe</span>' : ''}</em></button>`;
   }).join('') : '<p class="sermon-empty muted">Loạt này đang được soạn. Bài sẽ hiện ở đây khi được phát hành.</p>');
 }
 // ── Vân Nhạc: nhạc nền toàn Vân Đảo ──
@@ -128,7 +132,10 @@ $('#bio').addEventListener('click', (e) => {
   document.querySelectorAll('#bio button').forEach((x) => x.classList.toggle('on', x === b));
   toast({ samadhi: 'Định tĩnh: trở về kịch bản chuẩn', uddhacca: 'Trị phóng dật: âm trầm 136,1 Hz dâng từ dưới Vân Tọa', thina: 'Trị hôn trầm: chuông tỉnh giác từ đỉnh đầu' }[U.bio] + (player.playing ? '' : ' (nghe được khi đang phát)'));
 });
-player.onend = () => { U.sit = null; S.sessions++; save(); record('session.done', { kind: 'thien15', duration_s: 900 }); toast('Sādhu! Thời thiền đã viên mãn. Hồi hướng công đức.'); render(); };
+// Tự ghi nhận (#88): thời thiền viên mãn; đang Vân Du trên đảo đủ 5 phút thì ghi thêm Vân Du
+player.onend = () => { const vd = S.vandu && U.mode === 'island' && sitMin() >= MIN_VANDU ? Math.round(sitMin()) : 0;
+  S.tu = logPassive(S.tu, today(), 'thoi_thien', { minutes: 15, ref: U.mode === 'hall' ? 'dai-thien-duong' : 'dai-thien' }); if (vd) S.tu = logPassive(S.tu, today(), 'van_du', { minutes: vd });
+  U.sit = null; S.sessions++; save(); record('session.done', { kind: 'thien15', duration_s: 900 }); toast('Sādhu! Thời thiền đã viên mãn. Hồi hướng công đức.'); render(); };
 function toast(msg) { const el = $('#toast'); el.textContent = msg; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 3800); }
 
 // ───────── Nhãn trong cảnh ─────────
@@ -246,6 +253,25 @@ const seg = (key, list, cur) => `<div class="seg wrap" data-opt="${key}">` + lis
 const sw = (key, list, cur) => `<div class="sws" data-opt="${key}">` + list.map(([t, hex], i) => `<button class="sw${i === cur ? ' on' : ''}" data-v="${i}" title="${esc(t)}" aria-label="${esc(t)}" style="background:${hex || 'linear-gradient(135deg,#888 50%,#ccc 50%)'}"></button>`).join('') + '</div>';
 function nameBlock(raw) { const c = checkName(raw); return { c, html: `<div id="nmMean" class="pali">${c.meaning ? esc(c.name) + ': ' + esc(c.meaning) : '&nbsp;'}</div><ul class="rules">` + c.rules.map((r) => `<li class="${r.ok ? 'ok' : 'no'}">${esc(r.text)}</li>`).join('') + '</ul>' }; }
 
+/** Các dòng tự ghi nhận của một ngày, theo thứ tự danh mục */
+function passiveLines(day) { return Object.keys(PASSIVE).filter((c) => day[c]).map((c) => { const x = day[c]; return PASSIVE[c].name + (x.min ? ` ${Math.round(x.min)} phút` : '') + (x.n > 1 ? ` (${x.n} lần)` : ''); }); }
+/** Hoa sen 10 cánh (§9.1): độ sáng mỗi cánh theo tỉ lệ so với cánh mạnh nhất; không có con số tổng */
+function lotusSvg(L) {
+  const keys = Object.keys(PARAMI);
+  const petals = keys.map((k, i) => { const a = (i * 36 - 90) * Math.PI / 180, o = (0.14 + 0.86 * L.norm[k]).toFixed(2), x = (50 + 26 * Math.cos(a)).toFixed(1), y = (50 + 26 * Math.sin(a)).toFixed(1);
+    return `<ellipse cx="${x}" cy="${y}" rx="9" ry="19" transform="rotate(${i * 36} ${x} ${y})" fill="#e9b949" fill-opacity="${o}" stroke="#b8862b" stroke-opacity=".5"><title>${PARAMI[k]}: ${L.counts[k]} lần</title></ellipse>`; }).join('');
+  return `<svg class="lotus" viewBox="0 0 100 100" role="img" aria-label="Hoa sen 10 cánh Ba-la-mật">${petals}<circle cx="50" cy="50" r="9" fill="#f6dc8a"/></svg>`;
+}
+/** «Tích lũy tu học» (quyết định 1, #85): hoa sen, lịch tu 49 ngày, nhịp thiền, sổ nghe Pháp. Không xếp hạng, không điểm thưởng. */
+function tichLuy() {
+  const t = today(), L = lotus(S.tu, S.done, S.sacca), cal = calendar(S.tu, S.done, t), mins = weekSitMinutes(S.tu, t), hd = heardIds(S.tu), lib = library.items;
+  const nL = lib.filter((x) => x.loat === 'loi-phat-day').length, nD = lib.filter((x) => x.loat === 'duong-xua').length, weak = weakest(L), days = cal.filter((c) => c.any).length;
+  const top = Object.keys(PARAMI).filter((k) => L.norm[k] >= 0.6).map((k) => PARAMI[k]);
+  return `<h3>Tích lũy tu học</h3><div class="tlhoc">${lotusSvg(L)}<div><p>${L.total ? `Cánh sáng rõ: ${esc(top.join(', '))}.` : 'Hoa sen sẽ sáng dần theo từng việc bạn thực hành.'}</p>` +
+    (weak ? `<p class="muted">Cánh còn nhạt: ${esc(PARAMI[weak])}. Tuần này thử thêm một việc nhỏ của hạnh này.</p>` : '') + `</div></div>` +
+    `<div class="cal" aria-label="Lịch tu 49 ngày">${cal.map((c) => `<i class="${c.any ? 'on' : ''}${c.sit ? ' s' : ''}${c.listen ? ' l' : ''}" title="${c.date}${c.sit ? ' · thiền' : ''}${c.listen ? ' · nghe Pháp' : ''}${c.confirm ? ' · ghi nhận' : ''}"></i>`).join('')}</div>` +
+    `<p class="muted">49 ngày qua: ${days} ngày có thực hành · nhịp thiền 7 ngày: ${mins} phút · đã nghe trọn: Lời Phật dạy ${hd['loi-phat-day'].size}${nL ? '/' + nL : ''}, Đường Xưa ${hd['duong-xua'].size}${nD ? '/' + nD : ''}</p>`;
+}
 function render() {
   const d = S.day, wk = Math.ceil(d / 7), W = WEEKS[wk - 1], keep = panel.scrollTop;
   // thẻ Thuyết giảng: ẩn thanh phát thời thiền (trừ khi thời thiền đang phát) cho đỡ rối (#79)
@@ -319,9 +345,13 @@ function render() {
       `<p class="muted">Bạn đồng tu trong bản này là mô phỏng. Tùy hỷ ở đây là cử chỉ; điểm Thiện chỉ ghi khi bạn thật sự giúp người ngoài đời.</p><div class="row"><button class="ghost" data-act="home">← Vân Đảo</button></div>`;
   } else if (U.view === 'board') {
     h = `<h2>Bia Tích Lũy</h2><p class="pali">Ngày ${d}/49 · Tuần ${wk}: ${esc(W.title)}</p>${bars()}`;
+    const tdy = S.tu[today()] || {}, ev = passiveLines(tdy);
+    if (library.state === 'idle') loadSermons().then(render);
     PILLARS.forEach((p) => {
       const [title, text] = W[p.key], dn = S.done[d] && S.done[d][p.key];
       h += `<div class="task${dn ? ' done' : ''}" data-p="${p.key}"><div class="k" style="color:${p.color}">${p.name} · ${p.sub}</div><h4>${esc(title)}</h4><p>${esc(text)}</p>` +
+        // quyết định 3 (#85): tự ghi nhận không tự hoàn thành trục Tuệ, chỉ là bằng chứng để tự quán chiếu
+        (p.key === 'tue' && !dn && ev.length ? `<p class="muted ev">Đã tự ghi nhận hôm nay: ${esc(ev.join(' · '))}. Hãy tự quán chiếu rồi xác nhận.</p>` : '') +
         (dn ? `<p class="muted" style="margin-top:6px">Đã ghi nhận hôm nay · +${dn.E.toFixed(2)}</p>` :
           `<details><summary>Quán chiếu tác ý rồi xác nhận</summary>
             <div class="sl"><span>Trước khi làm</span><input type="range" data-c="pre" min="0.5" max="1.2" step="0.05" value="1"><b>1.00</b></div>
@@ -332,6 +362,7 @@ function render() {
             <textarea data-c="note" placeholder="Một hai dòng quán chiếu (không bắt buộc)"></textarea>
             <div class="row"><button class="btn" data-act="confirm">Xác nhận đã thực hành</button><span class="muted">Năng lượng thiện: <b data-e>10.00</b></span></div></details>`) + '</div>';
     });
+    h += `<h3>Tự ghi nhận hôm nay</h3>` + (ev.length ? `<ul class="auto">${ev.map((x) => `<li>✓ ${esc(x)}</li>`).join('')}</ul>` : '<p class="muted">Ngồi một thời thiền hay nghe trọn một bài Pháp, Vân Đạo sẽ tự ghi nhận ở đây.</p>') + tichLuy();
     h += `<p class="note">Phần thưởng của tuần: ${esc(W.reward)}</p>` +
       (allDone(d) ? `<p><strong>${d < 49 ? 'Đã trọn ba việc hôm nay. Ngày mai sẽ mở ngày ' + (d + 1) + '.' : 'Đã viên mãn 49 ngày: Cổng Vân Môn mở, bước lên Tầng 1.'}</strong></p>` : '') +
       `<div class="row"><button class="btn alt" data-act="sacca">Sám hối chân thật</button><span class="muted">Hạt Chân thật: ${S.sacca}</span></div>

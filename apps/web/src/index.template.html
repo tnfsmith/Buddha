@@ -205,6 +205,14 @@ body.pmin #panel h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   body.pmin.sermon #panel .sctl{margin-top:0;flex-wrap:nowrap;gap:6px}
   body.pmin.sermon #panel .sctl .btn{padding:5px 10px;font-size:13.5px;white-space:nowrap}
 }
+/* «Tích lũy tu học» và tự ghi nhận (#88): hoa sen 10 cánh, lịch tu 49 ngày, dấu đã nghe */
+.tlhoc{display:flex;gap:12px;align-items:center;margin:4px 0 8px}.tlhoc p{margin:2px 0}
+.lotus{width:96px;height:96px;flex:none}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:230px;margin:6px 0}
+.cal i{display:block;aspect-ratio:1;border-radius:4px;background:rgba(120,110,90,.10);border:1px solid rgba(120,110,90,.16)}
+.cal i.on{background:rgba(233,185,73,.38)}.cal i.s{box-shadow:inset 0 -3px 0 rgba(120,150,110,.75)}.cal i.l{border-color:rgba(184,134,43,.75)}
+ul.auto{margin:4px 0 6px;padding-left:4px;list-style:none}ul.auto li{margin:2px 0}
+.heard{color:#a07a20;font-style:normal}.ev{margin-top:4px}
 /* thẻ Thuyết giảng: ẩn thanh phát thời thiền; thanh phát thu nhỏ thành nút ở góc dưới (#79) */
 #barmin{flex:none;width:30px;height:30px;padding:0;border:1px solid var(--line);border-radius:8px;font-size:15px;line-height:1}
 body:not(.hall) #barmin{display:none}
