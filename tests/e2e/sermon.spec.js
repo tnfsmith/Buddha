@@ -223,17 +223,19 @@ test('giọng đọc lỗi (thiếu tệp, cues lệch số ý): vẫn giảng b
   a = await live(p3); expect(a.sub).toContain('Ý một có tiếng.'); expect(a.sub).toContain('ý 1/2'); expect(a.sub).not.toContain('Giọng đọc do AI tạo');
 });
 
-// #79/#80: lời mở đầu và lời kết có giọng đọc (mục nghi thức, meta.vai). Không nằm trong danh sách; phát trước và sau bài; loạt có bản riêng thì dùng bản riêng.
-const RITE_MO = { ...OK, id: 'nghi-thuc-mo-dau', version: 1, title: 'Lời mở đầu', source_ref: 'Câu đảnh lễ Pāli; lời Việt biên soạn', meta: { loat: 'nghi-thuc', vai: 'mo-dau' },
-  body_inline: 'Namo tassa bhagavato arahato sammāsambuddhassa.\n> Thành kính đảnh lễ.\nLời chào thử.', body_r2_key: 'bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-bbbb2222/vi-sadaltager.mp3' };
+// #79/#80: lời mở đầu và hồi hướng có giọng đọc (mục nghi thức, meta.vai). Không nằm trong danh sách; loạt có bản riêng thì dùng bản riêng.
+// Chủ dự án chốt 15/11/2026: Namo và Sādhu chỉ bằng chữ + hội chúng đảnh lễ (không có trong MP3); tiếng chỉ có lời Việt.
+const RITE_MO = { ...OK, id: 'nghi-thuc-mo-dau', version: 1, title: 'Lời mở đầu', source_ref: 'Lời Việt biên soạn', meta: { loat: 'nghi-thuc', vai: 'mo-dau' },
+  body_inline: 'Lời chào thử.\nLời mời lắng nghe thử.', body_r2_key: 'bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-bbbb2222/vi-sadaltager.mp3' };
 const RITE_KET = { ...OK, id: 'nghi-thuc-ket-thuc', version: 1, title: 'Lời kết và hồi hướng', source_ref: 'Lời hồi hướng biên soạn', meta: JSON.stringify({ loat: 'nghi-thuc', vai: 'ket-thuc' }),
-  body_inline: 'Sādhu! Sādhu! Sādhu!\n> Lành thay!\nLời hồi hướng thử.', body_r2_key: 'bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-cccc3333/vi-sadaltager.mp3' };
+  body_inline: 'Lời hồi hướng thử.\n> Idaṃ me ñātīnaṃ hotu.', body_r2_key: 'bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-cccc3333/vi-puck.mp3' };
 const RITE_DX = { ...RITE_MO, id: 'duong-xua-mo-dau', title: 'Lời mở đầu Đường Xưa', meta: { loat: 'duong-xua', vai: 'mo-dau' }, body_inline: 'Lời mở đầu riêng của loạt.\nMời bạn cùng đi.', body_r2_key: 'bai-giang/duong-xua/duong-xua-mo-dau/v1-dddd4444/vi-sadaltager.mp3' };
-const RC = (id) => ({ v: 1, id, version: 1, provider: 'google', voice: 'vi-VN-Chirp3-HD-Sadaltager', dur: 14, cues: [{ i: 0, t: 0, e: 6.5 }, { i: 1, t: 7, e: 13.5 }] });
-const riteCues = (u) => (u.includes('nghi-thuc-mo-dau') ? RC('nghi-thuc-mo-dau') : u.includes('nghi-thuc-ket-thuc') ? RC('nghi-thuc-ket-thuc') : u.includes('duong-xua-mo-dau') ? RC('duong-xua-mo-dau') : CUES);
+const RC = (id, n) => ({ v: 1, id, version: 1, provider: 'google', voice: 'vi-VN-Chirp3-HD-Sadaltager', dur: 14, cues: n === 1 ? [{ i: 0, t: 0, e: 13 }] : [{ i: 0, t: 0, e: 6.5 }, { i: 1, t: 7, e: 13.5 }] });
+const riteCues = (u) => (u.includes('nghi-thuc-mo-dau') ? RC('nghi-thuc-mo-dau', 2) : u.includes('nghi-thuc-ket-thuc') ? RC('nghi-thuc-ket-thuc', 1) : u.includes('duong-xua-mo-dau') ? RC('duong-xua-mo-dau', 2) : CUES);
 const next = (page) => panel(page).locator('[data-act="sermon-next"]').click();
+const ph = (page) => page.evaluate(() => window.__app.sermon.phase);
 
-test('lời mở đầu và lời kết có giọng đọc: không vào danh sách, phát trước và sau bài, chữ theo cues, hội chúng lạy khi Sādhu', async ({ page }) => {
+test('lời mở đầu và hồi hướng có giọng đọc: đảnh lễ Namo bằng chữ trước lời mở đầu; Sādhu và ba lần lạy trước hồi hướng; không vào danh sách', async ({ page }) => {
   test.setTimeout(300_000);
   // RITE_KET thiếu meta (API trước 0008): vẫn nhận ra theo mã nghi-thuc-ket-thuc
   await mock(page, [VOICED, OK, RITE_MO, { ...RITE_KET, meta: undefined }, RITE_DX]); const hits = await media(page, { cues: riteCues });
@@ -242,42 +244,45 @@ test('lời mở đầu và lời kết có giọng đọc: không vào danh sá
   for (const t of ['Lời mở đầu', 'Lời kết và hồi hướng']) await expect(panel(page)).not.toContainText(t);
   expect(await page.evaluate(() => Object.keys(window.__app.library.rite).sort())).toEqual(['duong-xua:mo-dau', 'nghi-thuc:ket-thuc', 'nghi-thuc:mo-dau']);
 
-  // bài loạt «Lời Phật dạy» (không có giọng đọc): lời mở đầu chung
+  // bài loạt «Lời Phật dạy» (không có giọng đọc): đảnh lễ Namo bằng chữ dù lời mở đầu đã tải xong, rồi mới phát lời mở đầu chung
   await panel(page).locator('[data-act="sermon-go"]').click();
   await slow.poll(async () => (await live(page)).on).toBe(true);
+  await slow.poll(() => page.evaluate(() => window.__app.sermon.oa && window.__app.sermon.oa.state)).toBe('ready');
+  await page.evaluate(() => { for (let i = 0; i < 40; i++) window.__app.sermon.tick(0.05); });   // giây thứ 2 của đảnh lễ
+  let a = await live(page); expect(a.sub).toContain('Namo tassa');
+  expect(await page.evaluate(() => { const s = window.__app.sermon; return [s.phase, s.cam, s.st.bow > 0.2]; })).toEqual(['homage', 'wide', true]);
   await until(page, 'mo-dau');
-  let a = await live(page); expect(a.sub).toContain('Lời mở đầu'); expect(a.sub).toContain('Namo tassa'); expect(a.sub).toContain('Thành kính đảnh lễ.');
-  expect(await page.evaluate(() => window.__app.sermon.cam)).toBe('wide');
+  a = await live(page); expect(a.sub).toContain('Lời mở đầu'); expect(a.sub).toContain('Lời chào thử.'); expect(a.sub).not.toContain('Namo');
+  expect(await page.evaluate(() => window.__app.sermon.cam)).toBe('close');
   await panel(page).locator('[data-act="sermon-pause"]').click();
   expect(await page.evaluate(() => window.__app.sermon.oa.el.paused)).toBe(true);
-  await next(page); a = await live(page); expect(a.sub).toContain('Lời chào thử.');
-  await page.evaluate(() => window.__app.sermon.tick(0.05)); expect(await page.evaluate(() => window.__app.sermon.cam)).toBe('close');
+  await next(page); a = await live(page); expect(a.sub).toContain('Lời mời lắng nghe thử.');
   await panel(page).locator('[data-act="sermon-pause"]').click();
   await next(page);   // hết lời mở đầu: vào bài
   await until(page, 'line'); a = await live(page); expect(a.sub).toContain('Ý thử thứ nhất.');
   await panel(page).locator('[data-act="sermon-stop"]').click();
   await slow.poll(async () => (await live(page)).on).toBe(false);
 
-  // bài loạt «Đường Xưa» có bản mở đầu riêng; hết bài thì lời kết chung, Sādhu thì hội chúng lạy, hết lời kết thì viên mãn
+  // bài loạt «Đường Xưa»: bản mở đầu riêng; hết bài thì Sādhu bằng chữ, hội chúng lạy (toàn cảnh), rồi hồi hướng có tiếng (cận cảnh, công đức)
   const before = await page.evaluate(() => window.__app.state().sermons || 0);
   await panel(page).locator('[data-opt="loat"] button').nth(1).click();
   await panel(page).locator('[data-sut="co-tieng"]').click();
   await panel(page).locator('[data-act="sermon-go"]').click();
   await until(page, 'mo-dau');
-  a = await live(page); expect(a.sub).toContain('Lời mở đầu riêng của loạt.'); expect(a.sub).not.toContain('Namo tassa');
+  a = await live(page); expect(a.sub).toContain('Lời mở đầu riêng của loạt.');
   expect(hits).toEqual(expect.arrayContaining(['/media/' + RITE_DX.body_r2_key, '/media/' + RITE_KET.body_r2_key]));
   await next(page); await next(page);
   await until(page, 'audio');
   await panel(page).locator('[data-act="sermon-pause"]').click();
   await next(page); await next(page);   // ý 2 rồi hết bài
   await panel(page).locator('[data-act="sermon-pause"]').click();
+  await until(page, 'sadhu');
+  a = await live(page); expect(a.sub).toContain('Sādhu! Sādhu! Sādhu!');
+  expect(await page.evaluate(() => { const s = window.__app.sermon; for (let i = 0; i < 30; i++) s.tick(0.05); return [s.phase, s.cam, s.st.bow > 0.5]; })).toEqual(['sadhu', 'wide', true]);
   await until(page, 'ket-thuc');
-  a = await live(page); expect(a.sub).toContain('Sādhu! Sādhu! Sādhu!'); expect(a.sub).toContain('Lành thay!');
-  // giữa câu Sādhu (dừng tiếng ở giây 1): hội chúng đang lạy, máy quay toàn cảnh
-  expect(await page.evaluate(() => { const s = window.__app.sermon; s.ca.el.pause(); s.ca.el.currentTime = 1; s.tick(0.05); return [s.cam, s.st.bow > 0.5, s.st.merit]; })).toEqual(['wide', true, 0]);
-  await next(page); a = await live(page); expect(a.sub).toContain('Lời hồi hướng thử.');
-  await page.evaluate(() => window.__app.sermon.tick(0.05)); expect(await page.evaluate(() => window.__app.sermon.st.merit)).toBe(1);
-  await next(page);   // hết lời kết: viên mãn
+  a = await live(page); expect(a.sub).toContain('Lời hồi hướng thử.'); expect(a.sub).toContain('Idaṃ me ñātīnaṃ hotu.');
+  expect(await page.evaluate(() => { const s = window.__app.sermon; s.tick(0.05); return [s.cam, s.st.merit]; })).toEqual(['close', 1]);
+  await next(page);   // hết hồi hướng: viên mãn
   await slow.poll(async () => (await live(page)).on).toBe(false);
   expect(await page.evaluate(() => window.__app.state().sermons)).toBe(before + 1);
 });
@@ -314,6 +319,7 @@ test('nghe lần lượt: phát hết các bài của loạt từ bài đang ch�
   for (const t of ['Chọn một bài. Khi giảng', 'Đọc thành tiếng bằng giọng máy']) await expect(panel(page)).not.toContainText(t);   // #79: bỏ cho gọn
   const before = await page.evaluate(() => window.__app.state().sermons || 0);
   await panel(page).locator('[data-act="sermon-all"]').click();
+  expect(await ph(page)).toBe('homage');   // bài đầu: đảnh lễ bằng chữ rồi lời mở đầu
   await until(page, 'mo-dau');
   await expect(panel(page).locator('.sq')).toHaveText('Nghe lần lượt · bài 1/2');
   await next(page); await next(page);   // hết lời mở đầu
@@ -326,9 +332,10 @@ test('nghe lần lượt: phát hết các bài của loạt từ bài đang ch�
   expect(await page.evaluate(() => [window.__app.sermon.phase, window.__app.sermon.oa])).toEqual(['gap', null]);
   await expect(panel(page).locator('.sq')).toHaveText('Nghe lần lượt · bài 2/2');
   await until(page, 'line'); a = await live(page); expect(a.sub).toContain('Ý bài hai thứ nhất.');
-  await next(page); await next(page);   // hết bài cuối: lời kết
-  await until(page, 'ket-thuc'); a = await live(page); expect(a.sub).toContain('Sādhu! Sādhu! Sādhu!');
-  await next(page); await next(page);
+  await next(page); await next(page);   // hết bài cuối: Sādhu bằng chữ rồi hồi hướng có tiếng
+  expect(await ph(page)).toBe('sadhu'); a = await live(page); expect(a.sub).toContain('Sādhu! Sādhu! Sādhu!');
+  await until(page, 'ket-thuc'); a = await live(page); expect(a.sub).toContain('Lời hồi hướng thử.');
+  await next(page);
   await slow.poll(async () => (await live(page)).on).toBe(false);
   expect(await page.evaluate(() => [window.__app.state().sermons, window.__app.U.queue])).toEqual([before + 2, null]);
   await slow(page.locator('#toast')).toHaveText('Đã nghe trọn cả loạt. Sādhu!');

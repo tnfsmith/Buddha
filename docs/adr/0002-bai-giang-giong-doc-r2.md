@@ -175,22 +175,24 @@ Ví dụ, mỗi loạt một thư mục:
 - **Service worker** (`build.mjs` sinh `sw.js`) bỏ qua `/media/`. Hiện SW gọi `cache.put` với mọi phản hồi `ok`, mà phản hồi 206 không lưu cache được.
 - Kiểm khói Playwright giả lập `/media` và API. Không gọi OpenAI hay R2 thật.
 
-### 6a. Lời mở đầu và lời kết có giọng đọc (#79 client, #80 nội dung)
+### 6a. Lời mở đầu và hồi hướng có giọng đọc (#79 client, #80 nội dung)
+
+> Chủ dự án chốt ngày 15/11/2026 (#80, #81): Pāli, Namo và Sādhu **không** phát bằng giọng đọc. Phần đảnh lễ là chữ và hành động của client. Tiếng chỉ có lời Việt: lời mở đầu, và hồi hướng đúng câu DEDICATE của v0.14.0.
 
 - **Nội dung:** hai mục trong `content/bai-giang/`, `kind: bai_giang` (D1 chỉ cho phép các `kind` có sẵn), `meta: { loat: nghi-thuc, vai: mo-dau | ket-thuc }`.
   - Một loạt có thể có bản riêng: `meta.loat` là tên loạt (ví dụ `duong-xua`) cùng `vai`. Client ưu tiên bản của loạt, không có thì dùng bản `nghi-thuc`.
-  - Mục có `meta.vai` không hiện trong danh sách bài giảng; cần `meta` từ migration 0008.
-  - Mỗi dòng là một cue. Dòng `>` ngay sau một dòng là chữ phụ (bản dịch, câu Pāli) hiện dưới dòng đó, không đọc. Câu Pāli cần đọc dùng `[[hiển thị|cách đọc]]`.
-  - Câu lạy ba lần phải chứa «Sādhu»; câu đảnh lễ bắt đầu bằng «Namo».
-- **Âm thanh:** `bai-giang/nghi-thuc/<id>/v<version>-<hash8>/vi-<voice>.mp3` kèm `.cues.json`, cùng giọng và định dạng mục 3. `/media` phục vụ như bài giảng (chỉ khi `da_duyet`).
-- **Client:**
-  - Tải giọng đọc của bài, lời mở đầu và lời kết cùng lúc trong cú chạm «Thỉnh giảng».
-  - Lời mở đầu phát ngay khi sẵn sàng (trong 6,5 giây đảnh lễ bằng chữ), hết thì vào bài. Hết bài thì phát lời kết (chờ tải thêm tối đa 4 giây), hết lời kết là viên mãn.
-  - Chữ chạy theo cues. Câu Namo: hội chúng đảnh lễ, máy quay toàn cảnh. Câu Sādhu: lạy ba lần, toàn cảnh. Sau Sādhu: công đức lan tỏa, cận cảnh. Câu khác: Tôn tượng nói, cận cảnh.
-  - Tạm dừng, ‹ › đi theo câu của lời mở đầu và lời kết; › ở câu cuối thì qua chặng sau.
-  - **Dự phòng:**
-    - Không có mục hoặc tệp, chạy `file://`, hoặc lời mở đầu lỗi trước khi kịp phát: đảnh lễ bằng chữ 6,5 giây như cũ.
-    - Lời kết lỗi: Sādhu và hồi hướng bằng chữ như cũ, phần nào đã nghe qua thì bỏ.
+  - Mục có `meta.vai` không hiện trong danh sách bài giảng. Khi API chưa trả `meta`, client nhận mã `nghi-thuc-mo-dau` và `nghi-thuc-ket-thuc`.
+  - Mỗi dòng là một cue. Dòng `>` ngay sau một dòng là chữ phụ (câu Pāli, bản dịch) hiện dưới dòng đó, không đọc.
+  - Giọng riêng của mục nghi thức ghi ở `meta.audio` (bản hồi hướng đã duyệt: `vi-VN-Chirp3-HD-Puck`, tốc độ 1,00). Giọng chung của các loạt bài không đổi.
+- **Âm thanh:** `bai-giang/nghi-thuc/<id>/v<version>-<hash8>/vi-<voice>.mp3` kèm `.cues.json`, định dạng như mục 3. `/media` phục vụ như bài giảng (chỉ khi `da_duyet`).
+- **Client, trình tự một buổi:**
+  1. Đảnh lễ Namo bằng chữ 6,5 giây, hội chúng đảnh lễ, máy quay toàn cảnh.
+  2. Lời mở đầu có tiếng (chờ tải thêm tối đa 4 giây), Tôn tượng nói, cận cảnh.
+  3. Bài giảng.
+  4. «Sādhu! Sādhu! Sādhu!» bằng chữ 9 giây, hội chúng hướng về Đức Phật lạy ba lần, máy quay toàn cảnh.
+  5. Hồi hướng có tiếng (chờ tải thêm tối đa 4 giây), chữ và câu Pāli theo cue, công đức lan tỏa, cận cảnh. Hết là viên mãn.
+- Ba giọng đọc (mở đầu, bài, hồi hướng) tải cùng lúc trong cú chạm «Thỉnh giảng» để mở khóa iOS. Tạm dừng, ‹ và › đi theo câu; › ở bước chữ thì sang bước sau.
+- **Dự phòng:** không có mục hay tệp, lỗi, hoặc chạy `file://` thì bỏ lời mở đầu và hồi hướng bằng chữ như v0.15.0.
 
 ### 7. Giọng đọc (Codex)
 

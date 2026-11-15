@@ -107,13 +107,13 @@ class Track {
 }
 const mouth = (t) => Math.pow(Math.abs(Math.sin(t * 10.6)) * (0.55 + 0.45 * Math.sin(t * 2.3 + 1)), 0.7);
 
-const SADHU = /s[āa]dhu/i, NAMO = /^namo\b/i;
-
 export class Sermon {
   constructor() { this.on = false; this.online = null; this.onend = null; this.tts = false; this.voice = null; this.au = null; this.oa = null; this.ca = null; this.paused = false; this.st = { on: false, speak: 0, bow: 0, anjali: false, waves: [], merit: 0 }; }
   static viVoice() { try { return (speechSynthesis.getVoices() || []).find((v) => /^vi/i.test(v.lang)) || null; } catch (e) { return null; } }
   /** Gọi trong cú chạm của người nghe (để mở khóa phát tiếng trên iOS). Bài có giọng đọc thì không dùng giọng máy của thiết bị.
-   * Lời mở đầu / lời kết có giọng đọc (riteFor) được tải cùng lúc; thiếu hay lỗi thì dùng phần chữ đảnh lễ, Sādhu, hồi hướng như cũ.
+   * Trình tự (chủ dự án chốt 15/11/2026, #80): đảnh lễ Namo bằng chữ + hội chúng đảnh lễ → lời mở đầu có tiếng (chỉ lời Việt) → bài →
+   * Sādhu bằng chữ + hội chúng lạy ba lần → hồi hướng có tiếng (một câu Việt). Pāli, Namo, Sādhu không phát bằng giọng đọc.
+   * Lời mở đầu / hồi hướng (riteFor) tải cùng lúc trong cú chạm; thiếu hay lỗi thì như cũ (bỏ lời mở đầu; hồi hướng bằng chữ).
    * o (nghe lần lượt, #79): open = false bỏ phần mở đầu (vào bài sau 2 giây), close = false bỏ phần kết (gật đầu 3 giây rồi sang bài tiếp, tên ở o.next). */
   start(sutta, tts, o = {}) {
     this.stop(true); this.s = sutta; this.on = true; this.paused = false;
@@ -123,22 +123,25 @@ export class Sermon {
     this.op = open ? riteFor(sutta.loat, 'mo-dau') : null; this.cl = this.noClose ? null : riteFor(sutta.loat, 'ket-thuc');
     this.oa = this.op && this.op.audio && net ? new Track(this.op, 'mo') : null;
     this.ca = this.cl && this.cl.audio && net ? new Track(this.cl, 'ket') : null;
-    this.tts = !this.au && !!tts && !!(this.voice = Sermon.viVoice()); this.t = 0; this.i = -1; this.ri = -1; this.waves = []; this.spoken = false; this.rcam = 'wide';
+    this.tts = !this.au && !!tts && !!(this.voice = Sermon.viVoice()); this.t = 0; this.i = -1; this.ri = -1; this.waves = []; this.spoken = false;
     if (open) { this.phase = 'homage'; this.left = 6.5; this._show({ src: [sutta.pali, sutta.ref].filter(Boolean).join(' · '), ln: HOMAGE, pl: 'Thành kính đảnh lễ đức Thế Tôn, bậc Ứng Cúng, Chánh Đẳng Giác.' }); }
     else { this.phase = 'gap'; this.left = 2.2; this._show({ src: `Nghe lần lượt · ${sutta.ref}`, ln: sutta.name, pl: '' }); }
   }
   stop(silent) { if (!this.on && !silent) return; this.on = false; this.paused = false; this._drop(); this._dropRites(); try { speechSynthesis.cancel(); } catch (e) { /* không có TTS */ } this.st = { on: false, speak: 0, bow: 0, anjali: false, waves: [], merit: 0 }; if (!silent) { this._show(null); if (this.onend) this.onend(false); } }
-  /** Giọng đọc đang phát theo chặng: lời mở đầu, bài, lời kết */
+  /** Giọng đọc đang phát theo chặng: lời mở đầu, bài, hồi hướng */
   _cur() { return this.phase === 'audio' ? this.au : this.phase === 'mo-dau' ? this.oa : this.phase === 'ket-thuc' ? this.ca : null; }
   pause() { if (!this.on || this.paused) return; this.paused = true; const T = this._cur(); if (T) T.el.pause(); try { speechSynthesis.pause(); } catch (e) { /* không có TTS */ } }
   resume() { if (!this.paused) return; this.paused = false; const T = this._cur(); if (T) { const p = T.el.play(); if (p && p.catch) p.catch(() => T.fail('play')); } try { speechSynthesis.resume(); } catch (e) { /* không có TTS */ } }
-  /** Góc máy quay muốn có: 'close' (cận Tôn tượng khi nói) hoặc 'wide' (toàn cảnh hội chúng khi đảnh lễ) */
-  get cam() { const p = this.phase; if (p === 'mo-dau' || p === 'ket-thuc') return this.rcam; return p === 'line' || p === 'audio' || p === 'gap' || p === 'dedicate' ? 'close' : 'wide'; }
-  /** d = 1: sang ý sau; d = -1: về ý trước. Trong lời mở đầu / lời kết: sang câu sau, hết câu thì qua chặng sau. */
+  /** Góc máy quay muốn có: 'close' (cận Tôn tượng khi nói, hồi hướng) hoặc 'wide' (hội chúng đảnh lễ Đức Phật: Namo, Sādhu, chờ tải) */
+  get cam() { const p = this.phase; return p === 'line' || p === 'audio' || p === 'gap' || p === 'dedicate' || p === 'mo-dau' || p === 'ket-thuc' ? 'close' : 'wide'; }
+  /** d = 1: sang ý sau; d = -1: về ý trước. Trong lời mở đầu / hồi hướng: sang câu sau, hết câu thì qua chặng sau. */
   step(d) {
     if (!this.on) return; const n = this.s.lines.length;
     if (this.phase === 'tiep') { if (d > 0) this._end(); return; }
-    if (this.phase === 'homage' || this.phase === 'wait') { if (d > 0) { this._dropRite('oa'); if (this.au && this.au.state === 'loading') { this.phase = 'wait'; this.left = 4; } else this._next(); } return; }
+    if (this.phase === 'homage') { if (d > 0) this._afterHomage(); return; }
+    if (this.phase === 'wait1' || this.phase === 'wait') { if (d > 0) { this._dropRite('oa'); if (this.au && this.au.state === 'loading') { this.phase = 'wait'; this.left = 4; } else this._next(); } return; }
+    if (this.phase === 'sadhu') { if (d > 0) this._afterSadhu(); return; }
+    if (this.phase === 'wait2') { if (d > 0) this._afterSadhu(true); return; }
     if (this.phase === 'mo-dau' || this.phase === 'ket-thuc') {
       const T = this._cur(), j = this.ri + d; if (!T || !T.cues) return;
       if (j >= T.cues.length) { this._riteEnd(true); return; }
@@ -155,24 +158,27 @@ export class Sermon {
   _dropRites() { this._dropRite('oa'); this._dropRite('ca'); }
   _show(o) { if (this.online) this.online(o); }
   _line(i) { const s = this.s; this.i = i; this._show({ src: `${s.name} · ${s.ref} · ý ${i + 1}/${s.lines.length}`, ln: s.lines[i], pl: (s.notes && s.notes[i]) || (i === 0 && s.key) || '' }); }
-  _rline(i) { const R = this.phase === 'mo-dau' ? this.op : this.cl, ln = R.lines[i] || ''; this.ri = i; this._wn = -1; this.rcam = SADHU.test(ln) || NAMO.test(ln) ? 'wide' : 'close';
-    this._show({ src: R.name, ln, pl: (R.notes && R.notes[i]) || '' });
-    // lời kết: từ câu sau Sādhu (hồi hướng) công đức lan tỏa
-    if (this.phase === 'ket-thuc' && !this.rm && i > R.lines.findIndex((x) => SADHU.test(x))) { this.rm = true; this.waves.push(0); } }
-  _riteGo(ph) { const T = ph === 'mo-dau' ? this.oa : this.ca; this.phase = ph; this.ri = -1; this.rm = false; T.play(); this._rline(0); }
-  /** Hết lời mở đầu (hoặc lỗi): vào bài. Hết lời kết: viên mãn. Lời kết lỗi giữa chừng: đọc nốt bằng chữ. */
+  _rline(i) { const R = this.phase === 'mo-dau' ? this.op : this.cl; this.ri = i; this._show({ src: R.name, ln: R.lines[i] || '', pl: (R.notes && R.notes[i]) || '' }); }
+  _riteGo(ph) { const T = ph === 'mo-dau' ? this.oa : this.ca; this.phase = ph; this.ri = -1; T.play(); this._rline(0); if (ph === 'ket-thuc') this.waves.push(0); }
+  /** Hết 6,5 giây đảnh lễ bằng chữ: lời mở đầu có tiếng (chờ tải thêm tối đa 4 giây), không có hay lỗi thì vào bài */
+  _afterHomage() {
+    const T = this.oa;
+    if (T && T.state === 'ready') return this._riteGo('mo-dau');
+    if (T && T.state === 'loading' && this.phase !== 'wait1') { this.phase = 'wait1'; this.left = 4; return; }
+    this._dropRite('oa'); this._next();
+  }
+  /** Hết Sādhu và ba lần lạy: hồi hướng có tiếng (chờ tải thêm tối đa 4 giây), không có hay lỗi thì hồi hướng bằng chữ */
+  _afterSadhu(now) {
+    const T = this.ca;
+    if (T && T.state === 'ready') return this._riteGo('ket-thuc');
+    if (T && T.state === 'loading' && this.phase !== 'wait2' && !now) { this.phase = 'wait2'; this.left = 4; return; }
+    this._dropRite('ca'); this._dedicate();
+  }
+  _dedicate() { this._wn = -1; this.phase = 'dedicate'; this._show({ src: 'Hồi hướng', ln: DEDICATE, pl: 'Idaṃ me ñātīnaṃ hotu, sukhitā hontu ñātayo.' }); this._say(DEDICATE); this.waves.push(0); }
+  /** Hết lời mở đầu (hoặc lỗi): vào bài. Hết hồi hướng: viên mãn. Hồi hướng lỗi: hồi hướng bằng chữ. */
   _riteEnd(ok) {
-    if (this.phase === 'mo-dau') {
-      // lỗi khi chưa kịp phát (tệp hỏng, bị chặn): đảnh lễ bằng chữ đủ 6,5 giây như khi không có giọng đọc
-      const fresh = !ok && !(this.oa && this.oa.el.currentTime > 0.5); this._dropRite('oa'); this.i = -1;
-      if (fresh) { this.phase = 'homage'; this.left = 6.5; this._show({ src: [this.s.pali, this.s.ref].filter(Boolean).join(' · '), ln: HOMAGE, pl: 'Thành kính đảnh lễ đức Thế Tôn, bậc Ứng Cúng, Chánh Đẳng Giác.' }); }
-      else { this.phase = 'gap'; this.left = 0.6; }
-      return;
-    }
-    const R = this.cl, past = this.ri > R.lines.findIndex((x) => SADHU.test(x)); this._dropRite('ca');
-    if (ok) return this._end();
-    if (past) { this.phase = 'dedicate'; this._show({ src: 'Hồi hướng', ln: DEDICATE, pl: 'Idaṃ me ñātīnaṃ hotu, sukhitā hontu ñātayo.' }); this._say(DEDICATE); }
-    else { this.phase = 'sadhu'; this.left = 9; this.spoken = false; this._show({ src: `${this.s.name} · kết thúc`, ln: 'Sādhu! Sādhu! Sādhu!', pl: 'Lành thay! Hội chúng đảnh lễ ba lần.' }); }
+    if (this.phase === 'mo-dau') { this._dropRite('oa'); this.i = -1; this.phase = 'gap'; this.left = 0.6; return; }
+    this._dropRite('ca'); if (ok) this._end(); else this._dedicate();
   }
   _end() { this.on = false; this._drop(); this._dropRites(); this.st = { on: false, speak: 0, bow: 0, anjali: false, waves: this.waves, merit: 0 }; this._show(null); if (this.onend) this.onend(true); }
   _say(text) {
@@ -190,25 +196,19 @@ export class Sermon {
     this.i++;
     if (this.i < s.lines.length) { this.phase = 'line'; this._line(this.i); this._say(s.lines[this.i]); return; }
     if (this.phase === 'sadhu' || this.phase === 'dedicate' || this.phase === 'ket-thuc' || this.phase === 'wait2' || this.phase === 'tiep') return;
-    // nghe lần lượt, chưa phải bài cuối: gật đầu chào rồi sang bài tiếp (lời kết để dành cho bài cuối)
+    // nghe lần lượt, chưa phải bài cuối: gật đầu chào rồi sang bài tiếp (Sādhu và hồi hướng để dành cho bài cuối)
     if (this.noClose) { this.phase = 'tiep'; this.left = 3.2; this.waves.push(0); this._show({ src: 'Nghe lần lượt', ln: this.nextName ? `Bài tiếp theo: ${this.nextName}` : 'Bài tiếp theo', pl: '' }); return; }
-    // hết bài: lời kết có giọng đọc thì phát (chờ tải thêm tối đa 4 giây); không có hay lỗi thì Sādhu và hồi hướng bằng chữ
-    if (this.ca && this.ca.state === 'ready') return this._riteGo('ket-thuc');
-    if (this.ca && this.ca.state === 'loading') { this.phase = 'wait2'; this.left = 4; return; }
-    this._dropRite('ca'); this.phase = 'sadhu'; this.left = 9; this.spoken = false; this._show({ src: `${s.name} · kết thúc`, ln: 'Sādhu! Sādhu! Sādhu!', pl: 'Lành thay! Hội chúng đảnh lễ ba lần.' });
+    // hết bài: Sādhu bằng chữ, hội chúng hướng về Đức Phật lạy ba lần (máy quay toàn cảnh), rồi mới hồi hướng
+    this.phase = 'sadhu'; this.left = 9; this.spoken = false; this._show({ src: `${s.name} · kết thúc`, ln: 'Sādhu! Sādhu! Sādhu!', pl: 'Lành thay! Hội chúng đảnh lễ ba lần.' });
   }
-  /** Lời mở đầu / lời kết đang phát: chữ theo cues; câu Namo hội chúng đảnh lễ, câu Sādhu lạy ba lần, sau Sādhu công đức lan tỏa */
+  /** Lời mở đầu / hồi hướng đang phát: chữ theo cues, Tôn tượng nói trong khoảng của từng câu; hồi hướng thì công đức lan tỏa */
   _riteTick(dt, st) {
-    const op = this.phase === 'mo-dau', T = op ? this.oa : this.ca, R = op ? this.op : this.cl;
+    const T = this.phase === 'mo-dau' ? this.oa : this.ca;
     if (!T || T.state === 'fail') { st.speak = 0; st.bow = 0; return this._riteEnd(false); }
     if (T.el.ended) { st.speak = 0; st.bow = 0; return this._riteEnd(true); }
-    const tt = T.el.currentTime, i = T.at(tt), q = T.cues[i], ln = R.lines[i] || '';
+    const tt = T.el.currentTime, i = T.at(tt), q = T.cues[i];
     if (i !== this.ri) this._rline(i);
-    const u = Math.max(0, Math.min(1, (tt - q.t) / Math.max(0.2, q.e - q.t)));
-    if (SADHU.test(ln)) { const c = (u * 3) % 1, k = Math.min(2, Math.floor(u * 3)); st.speak = 0; st.bow = Math.pow(Math.sin(Math.PI * c), 2); if (k !== this._wn && c > 0.45) { this._wn = k; this.waves.push(0); } }
-    else if (NAMO.test(ln)) { st.speak = 0; st.bow = Math.pow(Math.sin(Math.PI * u), 2) * 0.9; }
-    else { st.bow = 0; st.speak = !T.el.paused && tt >= q.t && tt < q.e - 0.15 ? mouth(this.t) : 0; }
-    st.merit = this.rm ? 1 : 0;
+    st.bow = 0; st.speak = !T.el.paused && tt >= q.t && tt < q.e - 0.15 ? mouth(this.t) : 0; st.merit = this.phase === 'ket-thuc' ? 1 : 0;
     // kẹt quá 20 giây: bỏ phần giọng đọc này
     if (tt === T.lt) { T.stall = (T.stall || 0) + dt; if (T.stall > 20) T.fail('stall'); } else { T.lt = tt; T.stall = 0; }
   }
@@ -218,16 +218,11 @@ export class Sermon {
     this.t += dt; this.left -= dt; st.on = true; st.anjali = true; st.merit = 0;
     this.waves = this.waves.map((a) => a + dt).filter((a) => a < 14); st.waves = this.waves;
     const ease = (x) => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
-    if (this.phase === 'homage') {
-      // lời mở đầu có giọng đọc: phát ngay khi tải xong (tối đa trong 6,5 giây đảnh lễ bằng chữ); lỗi hay chưa tải xong thì vào bài như cũ
-      if (this.oa && this.oa.state === 'ready') { this._riteGo('mo-dau'); this._riteTick(0, st); return this.st; }
-      if (this.oa && (this.oa.state === 'fail' || this.left <= 0)) this._dropRite('oa');
-      const k = 6.5 - this.left; st.bow = ease((k - 1.2) / 1.3) * (1 - ease((k - 4.0) / 1.4)); st.speak = 0; if (this.left <= 0) this._next();
-    }
+    if (this.phase === 'homage') { const k = 6.5 - this.left; st.bow = ease((k - 1.2) / 1.3) * (1 - ease((k - 4.0) / 1.4)); st.speak = 0; if (this.left <= 0) this._afterHomage(); }
+    else if (this.phase === 'wait1') { st.speak = 0; st.bow = 0; if (!this.oa || this.oa.state !== 'loading' || this.left <= 0) this._afterHomage(); }
     else if (this.phase === 'mo-dau' || this.phase === 'ket-thuc') this._riteTick(dt, st);
     else if (this.phase === 'wait') { st.speak = 0; st.bow = 0; if (!this.au || this.au.state !== 'loading' || this.left <= 0) this._next(); }
-    else if (this.phase === 'wait2') { st.speak = 0; st.bow = 0; const c = this.ca;
-      if (c && c.state === 'ready') this._riteGo('ket-thuc'); else if (!c || c.state === 'fail' || this.left <= 0) { this._dropRite('ca'); this.phase = 'gap'; this.left = 0; this._next(); } }
+    else if (this.phase === 'wait2') { st.speak = 0; st.bow = 0; if (!this.ca || this.ca.state !== 'loading' || this.left <= 0) this._afterSadhu(true); }
     else if (this.phase === 'audio') {
       const au = this.au; st.bow = 0;
       if (!au || au.state === 'fail') { this._drop(); this.i = Math.max(-1, this.i - 1); this.phase = 'gap'; this.left = 0.3; st.speak = 0; }   // mất tiếng (kể cả ngay khi vừa phát): đọc lại ý đang dở bằng chữ
@@ -242,7 +237,7 @@ export class Sermon {
     else if (this.phase === 'nod') { const k = 2.4 - this.left; st.speak = 0; st.bow = 0.32 * Math.sin(Math.PI * Math.min(1, k / 2.2)); if (this.left <= 0) this._next(); }
     else if (this.phase === 'gap') { st.speak = 0; st.bow = 0; if (this.left <= 0) this._next(); }
     else if (this.phase === 'sadhu') { const k = 9 - this.left, c = (k % 3) / 3; st.speak = 0; st.bow = Math.pow(Math.sin(Math.PI * c), 2); const n = Math.floor(k / 3); if (n !== this._wn && c > 0.45) { this._wn = n; this.waves.push(0); }
-      if (this.left <= 0) { this._wn = -1; this.phase = 'dedicate'; this._show({ src: 'Hồi hướng', ln: DEDICATE, pl: 'Idaṃ me ñātīnaṃ hotu, sukhitā hontu ñātayo.' }); this._say(DEDICATE); this.waves.push(0); } }
+      if (this.left <= 0) this._afterSadhu(); }
     else if (this.phase === 'dedicate') { st.speak = this.left > 0.7 ? Math.abs(Math.sin(this.t * 10.6)) * 0.8 : 0; st.bow = 0; st.merit = 1; if (this.left <= 0) this._end(); }
     return this.st;
   }
