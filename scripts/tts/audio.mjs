@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { cuePoints } from './core.mjs';
+import { addAiMetadata } from './id3.mjs';
 
 function ffmpeg(args, input) {
   const result = spawnSync(process.env.FFMPEG_PATH || 'ffmpeg', ['-hide_banner', '-nostdin', ...args], { input, maxBuffer: 64 * 1024 * 1024, timeout: 180000, windowsHide: true });
@@ -24,11 +25,11 @@ export function measureAudio(output) {
   return { lufs: Number(level.input_i), peak_dbtp: Number(level.input_tp) };
 }
 
-export function joinSpeech(wavs, output) {
+export function joinSpeech(wavs, output, { gap = 0.9, lastGap = 1.5, aiId3 = false } = {}) {
   if (!wavs.length) throw new Error('Không có đoạn âm thanh');
   const pcm = wavs.map(pcm24), durations = pcm.map(x => x.length / 48000), parts = [];
   pcm.forEach((part, i) => {
-    if (i) parts.push(Buffer.alloc(Math.round(48000 * (i === pcm.length - 1 ? 1.5 : 0.9))));
+    if (i) parts.push(Buffer.alloc(Math.round(48000 * (i === pcm.length - 1 ? lastGap : gap))));
     parts.push(part);
   });
   const joined = Buffer.concat(parts), input = ['-f', 's16le', '-ar', '24000', '-ac', '1', '-i', 'pipe:0'];
@@ -44,7 +45,8 @@ export function joinSpeech(wavs, output) {
     if (actual.peak_dbtp > -1.5) targetTP -= actual.peak_dbtp + 1.65;
   }
   if (Math.abs(actual.lufs + 16) > 0.5 || actual.peak_dbtp > -1.5) throw new Error(`MP3 chưa đạt loudness: ${actual.lufs} LUFS, ${actual.peak_dbtp} dBTP`);
-  const dur = seconds(readFileSync(output)), cues = cuePoints(durations);
+  if (aiId3) writeFileSync(output, addAiMetadata(readFileSync(output)));
+  const dur = seconds(readFileSync(output)), cues = cuePoints(durations, { gap, lastGap });
   if (cues.at(-1).e > dur + 0.08) throw new Error('Âm thanh sau mã hóa bị mất đuôi');
   return { dur, cues, loudness: { target_lufs: -16, target_peak_dbtp: -1.5, ...actual }, format: { sample_rate: 24000, channels: 1, bit_rate: 96000 } };
 }

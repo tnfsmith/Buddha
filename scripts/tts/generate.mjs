@@ -12,6 +12,7 @@ import { synthesize, recognize, maleVoices } from './google.mjs';
 import { seconds, joinSpeech } from './audio.mjs';
 import { uploadAudio } from './r2.mjs';
 import { validateAudioLock, validateCues } from './lock.mjs';
+import { audioProfile, asrText, AI_DISCLOSURE } from './profile.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const names = ['Đức Phật', 'Tất Đạt Đa', 'Đề Bà Đạt Đa', 'Ca Tỳ La Vệ', 'Kiều Trần Như', 'La Hầu La'];
@@ -40,7 +41,8 @@ try {
   let failed = false;
   await Promise.all(Array.from({ length: Math.min(3, queue.length) }, async () => {
     try { while (queue.length && !failed) {
-      const article = queue.shift(), lines = spokenLines(article.body, dictionary), hash = fingerprint(lines, config), key = audioKey(article, hash, config.voice);
+      const article = queue.shift(), lines = spokenLines(article.body, dictionary), profile = audioProfile(article, config);
+      const hash = fingerprint(lines, profile), key = audioKey(article, hash, profile.voice);
       if (!article.title || !article.source_ref || !lines.length) throw new Error('Bài thiếu tên/nguồn/nội dung');
       const dir = join(root, '.wrangler/tts-generated', article.id, hash.slice(0, 8));
       mkdirSync(dir, { recursive: true });
@@ -57,10 +59,11 @@ try {
           let wav, score;
           if (cached && cached.hash === hash && existsSync(base + '.wav')) { wav = readFileSync(base + '.wav'); score = cached; }
           else {
-            wav = await synthesize(lines[i], config.voice, config.speed);
+            wav = !cached && existsSync(base + '.wav') ? readFileSync(base + '.wav')
+              : await synthesize(lines[i], profile.voice, profile.speed, { markup: profile.markup });
             writeFileSync(base + '.wav', wav);
             const transcript = await recognize(wav);
-            score = { hash, transcript, attempt, i, ...gradeClip(lines[i], transcript, seconds(wav), names) };
+            score = { hash, transcript, attempt, i, ...gradeClip(asrText(lines[i]), transcript, seconds(wav), names) };
             saveJson(base + '.json', score);
           }
           if (!chosen || clipRank(score) < clipRank(chosen.score)) chosen = { wav, score };
@@ -70,12 +73,13 @@ try {
         if (!chosen.score.pass) flags.push({ i, wer: chosen.score.wer, tail_ok: chosen.score.tailOk, names_ok: chosen.score.namesOk, seconds_per_word: chosen.score.secondsPerWord });
         console.log(`tts: ${article.id} ý ${i + 1}/${lines.length}, WER ${(100 * chosen.score.wer).toFixed(2)}%${chosen.score.pass ? '' : ' [cần nghe kiểm]'} `);
       }
-      const audio = joinSpeech(wavs, mp3);
+      const audio = joinSpeech(wavs, mp3, profile);
       saveJson(cueFile, { v: 1, id: article.id, version: article.version, lang: 'vi', voice: config.voice, provider: config.provider, model: config.model,
-        hash: hash.slice(0, 8), dur: audio.dur, cues: audio.cues });
+        hash: hash.slice(0, 8), dur: audio.dur, speed: profile.speed, cues: audio.cues });
       // Lưu kết quả trước upload để lần chạy lại không mã hóa/sinh lại khóa bất biến.
       saveJson(join(dir, 'result.json'), { id: article.id, version: article.version, key, hash: hash.slice(0, 8), fingerprint: hash, dur: audio.dur,
         voice: config.voice, model: config.model, provider: config.provider, generated_at: new Date().toISOString(),
+        speed: profile.speed, format: audio.format, ...(profile.aiId3 ? { ai_disclosure: AI_DISCLOSURE } : {}),
         wer: scores.reduce((sum, x) => sum + x.wer, 0) / scores.length,
         sha256: createHash('sha256').update(readFileSync(mp3)).digest('hex'), loudness: audio.loudness,
         selected_attempts: scores.map(x => x.attempt), flags });

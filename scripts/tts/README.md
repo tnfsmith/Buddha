@@ -38,3 +38,12 @@ Nếu cả bốn lượt còn cờ, chọn lượt tốt nhất theo WER/tên/đ
 `tts-lock.test.js` tự kiểm sổ hiện có trong repo khi chạy `npm test`: bài có khóa phải có dòng và băm khớp lời đọc, cùng giọng; sửa chữ phải sinh khóa mới. Cues được kiểm số ý/khoảng nghỉ/đuôi trước upload. CI không gọi dịch vụ thật. PR vẫn cần link nghe/cờ QA và kiểm staging sau merge.
 
 `node scripts/tts/audit.mjs --content-root <worktree-hermes>/content/bai-giang --series loi-phat-day --batch A` tải lại MP3+cues của cả hai bucket, so SHA-256, Content-Type, voice/hash/số ý/thời gian với sổ. Chỉ đọc; kết quả và link nghe bảy ngày nằm trong `.wrangler/tts-audit/latest.json` (bị Git bỏ qua).
+# Nghi thức và ID3 AI (#80)
+
+`audioProfile(article, giong)` giữ nguyên băm của Lời Phật dạy v0.15.0. Đường Xưa thêm profile ID3; nghi thức (`meta.loat: nghi-thuc`, `vai: mo-dau|ket-thuc`) dùng gap/lastGap 1,2 giây, tốc độ `meta.audio.speed` 0,80 hoặc 0,85. Băm có cả profile và tốc độ, nên các bản nghe thử không ghi đè nhau. Mặc định chưa chọn là 0,85, vẫn phải giữ `cho_duyet`.
+
+Cách đọc hỗ trợ `[pause]`, `[pause short]`, `[pause long]` bên trong `[[hiển thị|cách đọc]]`. Google nhận trường `markup`; công cụ nạp chỉ giữ vế hiển thị, ASR không đối chiếu các thẻ điều khiển. Độ dài pause của Google không cố định; khoảng lặng **giữa các cue** do công cụ ghép là 1,2 giây. Dòng `>` chỉ hiện phụ đề, không đọc.
+
+ID3v2.4 UTF-8 ghi cả `COMM` và `TXXX:AI_GENERATED` với nội dung «Giọng đọc tạo bằng AI — Google Chirp 3 HD». `addAiMetadata` chỉ thay vùng tag đầu tệp, giữ nguyên payload MPEG/LAME/gapless. Khi gắn vào MP3 đã có, phải đổi profile/hash/key, so payload trước/sau, kiểm ffprobe và đọc lại cả hai bucket; không ghi đè khóa cũ. Sổ ghi `speed`, `ai_disclosure` và định dạng thực. Khóa cũ giữ ≥30 ngày và kiểm D1 trước khi dọn.
+
+Nguồn: [Google Chirp controls](https://docs.cloud.google.com/text-to-speech/docs/chirp3-hd#voice_controls), [ID3v2.4 structure](https://id3.org/id3v2.4.0-structure), [ID3 frames](https://id3.org/id3v2.4.0-frames). Không dùng SSML hay pitch; không thay nhạc/chuông thiền Web Audio.

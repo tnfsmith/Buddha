@@ -50,9 +50,9 @@ export async function maleVoices() {
   return (data.voices || []).filter(v => v.ssmlGender === 'MALE' && /^vi-VN-Chirp3-HD-/.test(v.name));
 }
 
-export async function synthesize(text, voice, speed = 0.9) {
+export async function synthesize(text, voice, speed = 0.9, { markup = false } = {}) {
   if (!/^vi-VN-Chirp3-HD-[A-Za-z]+$/.test(voice) || !text.trim()) throw new Error('Thiếu giọng Chirp3-HD vi-VN hoặc lời đọc');
-  const data = await googleRequest('text:synthesize', { input: { text }, voice: { languageCode: 'vi-VN', name: voice, ssmlGender: 'MALE' },
+  const data = await googleRequest('text:synthesize', { input: markup ? { markup: text } : { text }, voice: { languageCode: 'vi-VN', name: voice, ssmlGender: 'MALE' },
     audioConfig: { audioEncoding: 'LINEAR16', sampleRateHertz: 24000, speakingRate: speed } });
   const wav = Buffer.from(data.audioContent || '', 'base64');
   if (wav.toString('ascii', 0, 4) !== 'RIFF' || wav.toString('ascii', 8, 12) !== 'WAVE') throw new Error('Google không trả WAV hợp lệ');

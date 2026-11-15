@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
+import { readingMarkup, BASE_FORMAT } from './profile.mjs';
 
-const readingMarkup = /\[\[([^|[\]\n]+)\|([^|[\]\n]+)\]\]/g;
 export function spokenLines(body, dictionary = {}) {
   const pairs = Object.entries(dictionary).sort((a, b) => b[0].length - a[0].length);
   return body.replace(/\r\n/g, '\n').split('\n').map(x => x.trim()).filter(x => x && !x.startsWith('>')).map(line => {
@@ -17,7 +17,7 @@ export function spokenLines(body, dictionary = {}) {
 
 export function fingerprint(lines, config) {
   return createHash('sha256').update(JSON.stringify({ lines, provider: config.provider, voice: config.voice, model: config.model,
-    instructions: config.instructions || '', speed: config.speed, format: 'mono24k-96k-lufs16-tp1.5-gap0.9-last1.5-verified-v2' })).digest('hex');
+    instructions: config.instructions || '', speed: config.speed, format: config.formatLabel || BASE_FORMAT })).digest('hex');
 }
 
 export function audioKey(article, hash, voice) {
@@ -26,11 +26,12 @@ export function audioKey(article, hash, voice) {
   return `bai-giang/${series}/${article.id}/v${article.version}-${hash.slice(0, 8)}/vi-${slug}.mp3`;
 }
 
-export function cuePoints(durations) {
+export function cuePoints(durations, { gap = 0.9, lastGap = 1.5 } = {}) {
+  if (![gap, lastGap].every(x => Number.isFinite(x) && x >= 0 && x <= 10)) throw new Error('Khoảng lặng không hợp lệ');
   let at = 0;
   return durations.map((duration, i) => {
     if (!Number.isFinite(duration) || duration <= 0) throw new Error('Độ dài đoạn âm thanh không hợp lệ');
-    if (i) at += i === durations.length - 1 ? 1.5 : 0.9;
+    if (i) at += i === durations.length - 1 ? lastGap : gap;
     const cue = { i, t: Number(at.toFixed(4)), e: Number((at + duration).toFixed(4)) };
     at += duration; return cue;
   });

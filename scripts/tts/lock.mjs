@@ -1,4 +1,5 @@
 import { spokenLines, fingerprint, audioKey } from './core.mjs';
+import { audioProfile, AI_DISCLOSURE } from './profile.mjs';
 
 export function validateAudioLock(articles, lock, config, dictionary = {}) {
   if (lock?.v !== 1 || !Array.isArray(lock.items)) throw new Error('Sổ âm thanh không hợp lệ');
@@ -15,9 +16,10 @@ export function validateAudioLock(articles, lock, config, dictionary = {}) {
   }
   for (const article of articles.filter(x => x.body_r2_key)) {
     const row = lock.items.find(x => x.id === article.id && x.version === article.version);
-    const hash = fingerprint(spokenLines(article.body, dictionary), config);
+    const profile = audioProfile(article, config), hash = fingerprint(spokenLines(article.body, dictionary), profile);
     if (!row || row.key !== article.body_r2_key || row.key !== audioKey(article, hash, config.voice) || row.hash !== hash.slice(0, 8)
       || (row.fingerprint && row.fingerprint !== hash)) throw new Error(`Chữ/khóa/sổ âm thanh không khớp: ${article.id}`);
+    if (profile.aiId3 && (row.ai_disclosure !== AI_DISCLOSURE || row.speed !== profile.speed)) throw new Error(`Sổ thiếu ID3/tốc độ: ${article.id}`);
   }
   return articles.filter(x => x.body_r2_key).length;
 }
@@ -28,7 +30,8 @@ export function validateCues(article, cues, dictionary = {}) {
     || !Array.isArray(cues.cues) || cues.cues.length !== count) throw new Error('Cues không khớp bài/số ý');
   let end = 0;
   cues.cues.forEach((cue, i) => {
-    const gap = i ? (i === count - 1 ? 1.5 : 0.9) : 0;
+    const ritual = article.meta?.loat === 'nghi-thuc';
+    const gap = i ? (ritual ? 1.2 : i === count - 1 ? 1.5 : 0.9) : 0;
     if (cue.i !== i || !Number.isFinite(cue.t) || !Number.isFinite(cue.e) || cue.e <= cue.t
       || Math.abs(cue.t - end - gap) > 0.002 || cue.e > cues.dur + 0.08) throw new Error('Mốc cues không hợp lệ');
     end = cue.e;

@@ -24,6 +24,15 @@ it('ADC lỗi không in giá trị cấu hình giả dạng đường dẫn', as
   await expect(googleHeaders()).rejects.toThrow('phải là đường dẫn');
   await expect(googleHeaders()).rejects.not.toThrow('secret-not-a-file');
 });
+it('pause Chirp dùng markup, giữ LINEAR16 24k và tốc độ được chọn', async () => {
+  vi.stubEnv('GOOGLE_APPLICATION_CREDENTIALS', ''); vi.stubEnv('GOOGLE_TTS_API_KEY', 'test-not-real');
+  const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ audioContent: Buffer.from('RIFF0000WAVEtest').toString('base64') })));
+  vi.stubGlobal('fetch', fetch);
+  await synthesize('Sa đu! [pause long] Sa đu!', 'vi-VN-Chirp3-HD-Sadaltager', 0.8, { markup: true });
+  const p = JSON.parse(fetch.mock.calls[0][1].body);
+  expect(p.input).toEqual({ markup: 'Sa đu! [pause long] Sa đu!' });
+  expect(p.audioConfig).toEqual({ audioEncoding: 'LINEAR16', sampleRateHertz: 24000, speakingRate: 0.8 });
+});
 it('STT chỉ gửi WAV bài giảng, nhận transcript; lỗi không in thông báo có thể chứa khóa', async () => {
   vi.stubEnv('GOOGLE_APPLICATION_CREDENTIALS', ''); vi.stubEnv('GOOGLE_TTS_API_KEY', 'test-not-real');
   const fetch = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({ results: [{ alternatives: [{ transcript: 'Lời thử.' }] }] })))
