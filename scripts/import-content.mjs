@@ -10,8 +10,8 @@ try {
   const { values } = parseArgs({ options: { env: { type: 'string' }, remote: { type: 'boolean' }, local: { type: 'boolean' }, check: { type: 'boolean' } } });
   const { remote, local, env: target, check } = values;
   if ((remote && local) || (check && (remote || local)) || (target && !['staging', 'production'].includes(target)) || ((remote || local) && !target)) throw new Error('Dùng --check hoặc --env staging|production --local|--remote');
-  const rows = readPublished(join(root, 'content/bai-giang'));
-  console.log(`content: ${rows.length} bài đã chọn phát hành; reviewed_* tùy chọn; ghi meta JSON sau migration 0008.`);
+  const rows = readPublished(join(root, 'content'));
+  console.log(`content: ${rows.length} mục đã chọn phát hành (${rows.filter(x => x.kind === 'bai_giang').length} bài giảng, ${rows.filter(x => x.kind === 'nhiem_vu').length} nhiệm vụ); reviewed_* tùy chọn; ghi meta JSON sau migration 0008.`);
   if ((remote || local) && rows.length) {
     const scratch = join(root, '.wrangler');
     await mkdir(scratch, { recursive: true });

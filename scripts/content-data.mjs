@@ -3,6 +3,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseDocument } from 'yaml';
 import { readingMarkup } from './tts/profile.mjs';
+import { isParami, isPunna } from '../packages/shared/src/parami.js';
 
 export function parseContent(text, file = 'content') {
   const match = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
@@ -25,14 +26,48 @@ const textField = (value, key) => {
   return value.trim().normalize('NFC');
 };
 
-export function publishedRow(article) {
-  if (article.status !== 'da_duyet') return null;
+function header(article) {
   const id = textField(article.id, 'id');
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) throw new Error('id không hợp lệ');
   if (!Number.isSafeInteger(article.version) || article.version < 1) throw new Error('version không hợp lệ');
-  if (article.kind !== 'bai_giang') throw new Error('Thư mục này chỉ nạp bai_giang');
+  if (!['bai_giang', 'nhiem_vu'].includes(article.kind)) throw new Error('Chỉ nạp kind bai_giang hoặc nhiem_vu');
   const tier = article.tier ?? 0, lang = article.lang ?? 'vi';
   if (!Number.isInteger(tier) || tier < 0 || tier > 4 || typeof lang !== 'string' || !/^[a-z]{2}(?:-[A-Z]{2})?$/.test(lang)) throw new Error('tier/lang không hợp lệ');
+  textField(article.title, 'title'); textField(article.source_ref, 'source_ref');
+  return { id, tier, lang };
+}
+
+/** #87: kiểm cả nháp nhiệm vụ; không chọn phát hành thay chủ dự án. */
+export function validateMission(article) {
+  header(article);
+  if (article.kind !== 'nhiem_vu') throw new Error('Nhiệm vụ phải có kind nhiem_vu');
+  const body = textField(article.body, 'body');
+  if (body.includes('\n') || body.includes('\r') || [...body].length > 90 || /[.!?]\s+\S|\[\[|\]\]|^>/.test(body)) throw new Error('Nhiệm vụ cần một câu hành động ≤90 ký tự');
+  if (article.body_r2_key) throw new Error('Nhiệm vụ không có âm thanh body_r2_key');
+  const m = article.meta;
+  if (!m || typeof m !== 'object' || Array.isArray(m)) throw new Error('Nhiệm vụ thiếu meta');
+  const fields = ['nhom', 'gioi', 'parami', 'punna', 'tuan', 'minutes', 'money', 'at_home', 'outdoors', 'needs_others', 'scope', 'safety_note', 'gioi_trai'];
+  if (Object.keys(m).some(k => !fields.includes(k))) throw new Error('meta nhiệm vụ có trường chưa khai báo');
+  if (!['gioi', 'hanh', 'nguyen', 'trai'].includes(m.nhom)) throw new Error('meta.nhom không hợp lệ');
+  if (!Array.isArray(m.parami) || !m.parami.length || !m.parami.every(isParami) || new Set(m.parami).size !== m.parami.length || !isPunna(m.punna)) throw new Error('Mã parami/punna không hợp lệ');
+  if (m.nhom === 'gioi' ? !Number.isInteger(m.gioi) || m.gioi < 1 || m.gioi > 5 : m.gioi != null) throw new Error('meta.gioi chỉ là số 1–5 của nhóm gioi');
+  if (m.nhom === 'nguyen' ? !Number.isInteger(m.tuan) || m.tuan < 1 || m.tuan > 7 : m.tuan != null) throw new Error('meta.tuan chỉ là số 1–7 của nhóm nguyen');
+  if (m.nhom === 'nguyen' && !/^Khi .+ thì tôi .+/.test(body)) throw new Error('Nguyện tuần cần mẫu Khi … thì tôi …');
+  if (!Number.isInteger(m.minutes) || m.minutes < 1 || m.minutes > 1440) throw new Error('meta.minutes cần số phút nguyên trong ngày');
+  if (m.money !== false && m.money !== 'optional') throw new Error('meta.money chỉ nhận false hoặc optional');
+  if (['at_home', 'outdoors', 'needs_others'].some(k => typeof m[k] !== 'boolean')) throw new Error('Cờ hoàn cảnh phải là boolean');
+  if (!['doi_thuc', 'dong_tu'].includes(m.scope)) throw new Error('meta.scope không hợp lệ');
+  if (m.gioi === 5 || m.nhom === 'trai') textField(m.safety_note, 'meta.safety_note');
+  if (m.nhom === 'trai') {
+    if (!Array.isArray(m.gioi_trai) || m.gioi_trai.length !== 8 || m.gioi_trai.some(x => typeof x !== 'string' || !x.trim() || [...x.normalize('NFC')].length > 90) || new Set(m.gioi_trai).size !== 8) throw new Error('Thẻ Bát quan trai cần tám giới riêng biệt');
+  } else if (m.gioi_trai != null) throw new Error('gioi_trai chỉ dùng cho thẻ trai');
+  return article;
+}
+
+export function publishedRow(article) {
+  if (article.status !== 'da_duyet') return null;
+  const { id, tier, lang } = header(article);
+  if (article.kind === 'nhiem_vu') validateMission(article);
   const body = displayBody(article.body);
   if (!body.split('\n').some(x => !x.startsWith('>'))) throw new Error('Bài không có ý nào');
   const key = article.body_r2_key || null;
@@ -50,9 +85,17 @@ export function publishedRow(article) {
 
 export function readPublished(dir) {
   const seen = new Set(), rows = [];
-  for (const file of readdirSync(dir).filter(x => x.endsWith('.md') && x.toLowerCase() !== 'readme.md').sort()) {
+  const files = (folder) => readdirSync(folder, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name)).flatMap(entry => {
+    const file = join(folder, entry.name);
+    return entry.isDirectory() ? files(file) : entry.isFile() && entry.name.endsWith('.md') && entry.name.toLowerCase() !== 'readme.md' ? [file] : [];
+  });
+  for (const file of files(dir)) {
     let row;
-    try { row = publishedRow(parseContent(readFileSync(join(dir, file), 'utf8'), file)); }
+    try {
+      const article = parseContent(readFileSync(file, 'utf8'), file);
+      if (article.kind === 'nhiem_vu') validateMission(article);
+      row = publishedRow(article);
+    }
     catch (error) { throw new Error(`${file}: ${error.message}`, { cause: error }); }
     if (!row) continue;
     const key = `${row.id}:${row.version}`;

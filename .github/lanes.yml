@@ -25,6 +25,13 @@ deps:                                   # renovate/ và dependabot/: chỉ cập
   - package-lock.json
   - .github/workflows/**
 shared:
+  # #87: một PR Hermes cho danh mục và bộ nạp dùng chung; cần shared-ok.
+  # Chỉ các tệp cụ thể này, không mở cả scripts/** hoặc workers/api/**.
+  - .github/lanes.yml
+  - scripts/content-data.mjs
+  - scripts/import-content.mjs
+  - scripts/test/content-data.test.js
+  - workers/api/test/content-import.test.js
   - packages/shared/**
   - apps/web/src/{main,boot,state,data}.js
   - apps/web/src/ui/**
