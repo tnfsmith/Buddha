@@ -8,6 +8,8 @@ import { parseDocument } from 'yaml';
 import { parseContent } from '../content-data.mjs';
 import { validateAudioLock, validateCues } from './lock.mjs';
 import { listenUrl } from './r2.mjs';
+import { audioProfile } from './profile.mjs';
+import { addAiMetadata } from './id3.mjs';
 
 try {
   const { values } = parseArgs({ options: { 'content-root': { type: 'string' }, series: { type: 'string' }, batch: { type: 'string' } } });
@@ -27,7 +29,8 @@ try {
       const audio = await fetch(url, { signal: AbortSignal.timeout(60000) }), cueResponse = await fetch(cueUrl, { signal: AbortSignal.timeout(30000) });
       if (audio.status !== 200 || !audio.headers.get('content-type')?.startsWith('audio/mpeg') || cueResponse.status !== 200
         || !cueResponse.headers.get('content-type')?.startsWith('application/json')) throw new Error(`R2 thiếu/sai Content-Type: ${article.id} ${target}`);
-      const sha = createHash('sha256').update(Buffer.from(await audio.arrayBuffer())).digest('hex');
+      const bytes = Buffer.from(await audio.arrayBuffer()), sha = createHash('sha256').update(bytes).digest('hex');
+      if (audioProfile(article, config).aiId3 && !addAiMetadata(bytes).equals(bytes)) throw new Error(`R2 thiếu ID3 AI: ${article.id} ${target}`);
       const cueText = await cueResponse.text(), cues = JSON.parse(cueText), actualCueHash = createHash('sha256').update(cueText).digest('hex');
       if (sha !== row.sha256 || (cueHash && cueHash !== actualCueHash) || cues.voice !== row.voice || cues.model !== row.model || cues.provider !== row.provider
         || cues.hash !== row.hash || Math.abs(cues.dur - row.dur) > 0.001) throw new Error(`R2 không khớp sổ/hai bucket: ${article.id}`);

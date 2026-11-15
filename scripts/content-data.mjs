@@ -2,6 +2,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseDocument } from 'yaml';
+import { readingMarkup } from './tts/profile.mjs';
 
 export function parseContent(text, file = 'content') {
   const match = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
@@ -14,7 +15,7 @@ export function parseContent(text, file = 'content') {
 }
 
 export function displayBody(body) {
-  const text = body.replace(/\[\[([^|[\]\n]+)\|([^|[\]\n]+)\]\]/g, '$1');
+  const text = body.replace(readingMarkup, '$1');
   if (/\[\[|\]\]/.test(text)) throw new Error('Cú pháp [[hiển thị|cách đọc]] không hợp lệ');
   return text.split('\n').map(x => x.trim()).filter(Boolean).join('\n').normalize('NFC');
 }

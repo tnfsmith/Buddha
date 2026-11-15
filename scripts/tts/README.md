@@ -31,8 +31,21 @@ Mỗi ý TTS→STT tối đa bốn lần; chưa đạt giữ cờ trong sổ đ�
 
 Quyết định 15/11: dùng LINEAR16/WAV Google gốc để mã hóa libmp3lame 96k, không nén lại MP3 cũ, không dùng đầu ra MP3 Google, không thêm `compression_level`. Nhãn băm có `96k` để giữ khóa mới riêng. Từng tệp phát hành phải được ffprobe xác nhận `mp3, 24000 Hz, mono, 96000 b/s`; đọc lại hai bucket đối chiếu SHA-256. `_audio.retired.json` ghi khóa cũ và thời điểm sớm nhất được dọn sau 30 ngày; chỉ dọn khi không còn tham chiếu D1. Mẫu thử giọng cũ không phải bằng chứng định dạng 96k của bài phát hành.
 
+Nếu cả bốn lượt còn cờ, chọn lượt tốt nhất theo WER/tên/đuôi và sai lệch nhịp, vẫn giữ cờ; không mặc định lấy lượt cuối có thể kém hơn. Sổ mới ghi `selected_attempts` để truy lại WAV/điểm đã dùng. Muốn đổi tệp đã tải phải tăng version nội dung và ghi khóa mới, giữ khóa cũ; không bật ghi đè và không tăng số lần gọi để tìm màu xanh.
+
 Đo LUFS/true peak **sau** mã hóa MP3 và lấy mẫu 24 kHz; nếu lệch thì chỉnh mức nội bộ rồi mã hóa lại từ PCM, tối đa bốn lượt. Chặn đầu ra lệch quá 0,5 LUFS hoặc đỉnh lớn hơn −1,5 dBTP; số đo cuối ghi trong sổ. Revision định dạng `verified-v2` đổi băm để không ghi đè bản thử trước đó.
 
 `tts-lock.test.js` tự kiểm sổ hiện có trong repo khi chạy `npm test`: bài có khóa phải có dòng và băm khớp lời đọc, cùng giọng; sửa chữ phải sinh khóa mới. Cues được kiểm số ý/khoảng nghỉ/đuôi trước upload. CI không gọi dịch vụ thật. PR vẫn cần link nghe/cờ QA và kiểm staging sau merge.
 
 `node scripts/tts/audit.mjs --content-root <worktree-hermes>/content/bai-giang --series loi-phat-day --batch A` tải lại MP3+cues của cả hai bucket, so SHA-256, Content-Type, voice/hash/số ý/thời gian với sổ. Chỉ đọc; kết quả và link nghe bảy ngày nằm trong `.wrangler/tts-audit/latest.json` (bị Git bỏ qua).
+# Nghi thức và ID3 AI (#80)
+
+Quyết định tiếp theo 15/11: hồi hướng rút còn nguyên câu ở tag v0.14.0; không TTS Pāli, phần đảnh lễ/máy quay do client #79/#82 giữ. Ba giọng Orus/Fenrir/Alnilam 0,85 đã bị chủ dự án từ chối vì chậm; thử Puck 1,00/1,10/1,20, không pause dài. Chỉ nghi thức được khai báo `meta.audio.voice` và tốc độ riêng (0,80–1,20); không đổi `giong.json` hoặc giọng/khóa Lời Phật dạy, Đường Xưa. Băm/khóa/sổ ràng buộc giọng/tốc độ riêng, công cụ kiểm giọng nam qua danh mục Google trước sinh. Chưa chọn thì mẫu nằm dưới `_mau-giong`, không đưa vào sổ phát hành. Nhịp nhanh có thể bị cờ 0,30 giây/tiếng cũ; giữ cờ và ghi yêu cầu tăng tốc, không sửa transcript hoặc điểm WER.
+
+`audioProfile(article, giong)` giữ nguyên băm của Lời Phật dạy v0.15.0. Đường Xưa thêm profile ID3; nghi thức (`meta.loat: nghi-thuc`, `vai: mo-dau|ket-thuc`) dùng gap/lastGap 1,2 giây, tốc độ `meta.audio.speed` từ 0,80 đến 1,20. Băm có cả profile, giọng và tốc độ, nên các bản nghe thử không ghi đè nhau. Bản chưa chọn giữ `cho_duyet`; chủ dự án đã chọn hồi hướng P1/Puck1,00 ngày 15/11, dùng đúng bytes đã nghe.
+
+Cách đọc hỗ trợ `[pause]`, `[pause short]`, `[pause long]` bên trong `[[hiển thị|cách đọc]]`. Google nhận trường `markup`; công cụ nạp chỉ giữ vế hiển thị, ASR không đối chiếu các thẻ điều khiển. Độ dài pause của Google không cố định; khoảng lặng **giữa các cue** do công cụ ghép là 1,2 giây. Dòng `>` chỉ hiện phụ đề, không đọc.
+
+ID3v2.4 UTF-8 ghi cả `COMM` và `TXXX:AI_GENERATED` với nội dung «Giọng đọc tạo bằng AI — Google Chirp 3 HD». `addAiMetadata` chỉ thay vùng tag đầu tệp, giữ nguyên payload MPEG/LAME/gapless. Khi gắn vào MP3 đã có, phải đổi profile/hash/key, so payload trước/sau, kiểm ffprobe và đọc lại cả hai bucket; không ghi đè khóa cũ. Sổ ghi `speed`, `ai_disclosure` và định dạng thực. Khóa cũ giữ ≥30 ngày và kiểm D1 trước khi dọn.
+
+Nguồn: [Google Chirp controls](https://docs.cloud.google.com/text-to-speech/docs/chirp3-hd#voice_controls), [ID3v2.4 structure](https://id3.org/id3v2.4.0-structure), [ID3 frames](https://id3.org/id3v2.4.0-frames). Bản phát hành dùng markup, không pitch/SSML; đã thử SSML preview được Google chấp nhận nhưng còn sai/thừa lời nên loại. Không thay nhạc/chuông thiền Web Audio.
