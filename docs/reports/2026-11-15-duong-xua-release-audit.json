@@ -1,0 +1,3531 @@
+{
+  "checked_at": "2026-11-15T06:28:22.500Z",
+  "main_before_dx": "12747a4f72c75510a2156bef30ad13b373571019",
+  "count": 33,
+  "cues": 498,
+  "objects": 132,
+  "word_flags": 6,
+  "owner_publication_approval": {
+    "approved_at": "2026-11-15T07:14:50.355Z",
+    "scope": "All 33 Duong Xua stories B10/C11/D12",
+    "verdict": "Duyệt phát hành cả 33 bài",
+    "channel": "Owner confirmation in Codex chat",
+    "record": "https://github.com/tnfsmith/Buddha/issues/48#issuecomment-6890917861",
+    "meaning": "Publication selection; does not assert owner listened to every recording or ASR flags were cleared."
+  },
+  "records": [
+    {
+      "id": "bai-hoc-cua-dat",
+      "title": "Bài học của đất",
+      "batch": "C",
+      "part": 2,
+      "order": 230,
+      "chapters": [
+        49
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 49 · MN 62 về các yếu tố và tâm rộng; đối chiếu bài học soi lại hành vi trong MN 61 · https://suttacentral.net/mn62/en/sujato",
+      "key": "bai-giang/duong-xua/bai-hoc-cua-dat/v1-d0541685/vi-sadaltager.mp3",
+      "hash": "d0541685",
+      "sha256": "19827759ad25d92e13ff679378dc590d1a6c123a408e209f770c5d21b655641c",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 238.99395833333332,
+      "syllables": 742,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.15,
+        "peak_dbtp": -1.9
+      },
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2990072463768116
+        },
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2824326241134752
+        },
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2772074074074074
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2852074074074074
+        },
+        {
+          "i": 5,
+          "wer": 0.022727272727272728,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.26168939393939394
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2940486111111111
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2877028985507247
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "19827759ad25d92e13ff679378dc590d1a6c123a408e209f770c5d21b655641c",
+          "cues_sha256": "f60e47fa869e54c8633eba1cf4a00469c3f67f0fae31e86e86097645051fe6d6",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "19827759ad25d92e13ff679378dc590d1a6c123a408e209f770c5d21b655641c",
+          "cues_sha256": "f60e47fa869e54c8633eba1cf4a00469c3f67f0fae31e86e86097645051fe6d6",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "bat-com-cuoi-cung",
+      "title": "Bữa cơm cuối cùng",
+      "batch": "D",
+      "part": 3,
+      "order": 350,
+      "chapters": [
+        79
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 79 · DN 16, bữa ăn của Thuần Đà và lời nhắn giúp ông khỏi hối tiếc; không kết luận món ăn hay nguyên nhân bệnh · https://suttacentral.net/dn16/en/sujato",
+      "key": "bai-giang/duong-xua/bat-com-cuoi-cung/v1-bb3207ab/vi-sadaltager.mp3",
+      "hash": "bb3207ab",
+      "sha256": "2895ea388ad94a8a2411178cf1ea82066712de66d0714fc8a6bd7acfaed8e3a4",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 209.47395833333334,
+      "syllables": 657,
+      "cues": 14,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.1,
+        "peak_dbtp": -1.99
+      },
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2890486111111111
+        },
+        {
+          "i": 3,
+          "wer": 0.02127659574468085,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2832836879432624
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2842246376811594
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28396598639455783
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2926866666666667
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29034126984126984
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "2895ea388ad94a8a2411178cf1ea82066712de66d0714fc8a6bd7acfaed8e3a4",
+          "cues_sha256": "23565b5987b041da1c7cee185bec34b49a44d7792685cad24e4666f9ea5a2215",
+          "ideas": 14
+        },
+        "PROD": {
+          "audio_sha256": "2895ea388ad94a8a2411178cf1ea82066712de66d0714fc8a6bd7acfaed8e3a4",
+          "cues_sha256": "23565b5987b041da1c7cee185bec34b49a44d7792685cad24e4666f9ea5a2215",
+          "ideas": 14
+        }
+      }
+    },
+    {
+      "id": "bon-trai-nui",
+      "title": "Bốn trái núi",
+      "batch": "D",
+      "part": 3,
+      "order": 290,
+      "chapters": [
+        66
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 66 · SN 3.25, ví dụ núi và sự già chết · https://suttacentral.net/sn3.25/en/sujato",
+      "key": "bai-giang/duong-xua/bon-trai-nui/v1-c4724015/vi-sadaltager.mp3",
+      "hash": "c4724015",
+      "sha256": "67a59212b8eb9ceebf438a9562694d9b475311f4ce5c92cefcd6c01350355867",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 194.59395833333335,
+      "syllables": 620,
+      "cues": 14,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.09,
+        "peak_dbtp": -1.82
+      },
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29031159420289854
+        },
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29010077519379845
+        },
+        {
+          "i": 5,
+          "wer": 0.044444444444444446,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29054074074074077
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2934964539007092
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.26738194444444446
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28532575757575757
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2989126984126984
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.25854074074074074
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2954715447154471
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "67a59212b8eb9ceebf438a9562694d9b475311f4ce5c92cefcd6c01350355867",
+          "cues_sha256": "1c735066341e9f9730e2ddbde0ab67f12f9d09cda4bb891e1c9c49bdac0c6195",
+          "ideas": 14
+        },
+        "PROD": {
+          "audio_sha256": "67a59212b8eb9ceebf438a9562694d9b475311f4ce5c92cefcd6c01350355867",
+          "cues_sha256": "1c735066341e9f9730e2ddbde0ab67f12f9d09cda4bb891e1c9c49bdac0c6195",
+          "ideas": 14
+        }
+      }
+    },
+    {
+      "id": "bong-mat-ho-hang",
+      "title": "Bóng mát của họ hàng",
+      "batch": "D",
+      "part": 2,
+      "order": 235,
+      "chapters": [
+        52
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 52, cảnh hòa giải tranh nước giữa hai dòng họ Thích Ca và Câu Ly · https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chuong-52-phuoc-dien-y/",
+      "key": "bai-giang/duong-xua/bong-mat-ho-hang/v1-4a528d72/vi-sadaltager.mp3",
+      "hash": "4a528d72",
+      "sha256": "863725bec271864dfff272a34a33d7df8e750a07fc0533a06705e0cb2bec43d0",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 200.04195833333333,
+      "syllables": 643,
+      "cues": 14,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.19,
+        "peak_dbtp": -2.08
+      },
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0.06382978723404255,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.30030496453900707
+        },
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27321527777777777
+        },
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29805303030303026
+        },
+        {
+          "i": 3,
+          "wer": 0.022222222222222223,
+          "tail_ok": false,
+          "names_ok": true,
+          "seconds_per_word": 0.3012074074074074
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28498581560283687
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.25434751773049646
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2976518518518519
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2877028985507247
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2875390070921986
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2934964539007092
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2976518518518519
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29805303030303026
+        }
+      ],
+      "word_flags": [
+        {
+          "i": 0,
+          "wer": 0.06382978723404255,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.30030496453900707,
+          "reference": "Trong câu chuyện ở chương năm mươi hai, một dòng nước trở thành điều hai bên cùng muốn giữ lấy. Người của dòng họ Thích Ca và dòng họ Câu Ly đều lo cho ruộng đồng của mình, rồi sự lo lắng dần hóa thành đối đầu.",
+          "at_seconds": 0,
+          "end_seconds": 14.1143
+        },
+        {
+          "i": 3,
+          "wer": 0.022222222222222223,
+          "tail_ok": false,
+          "names_ok": true,
+          "seconds_per_word": 0.3012074074074074,
+          "reference": "Khi câu hỏi ấy được đặt ra, hai bên có cơ hội nhìn người trước mặt bằng một cách khác. Đằng sau một phía đang giận dữ vẫn là những gia đình, những người cùng có nỗi lo về ruộng và miếng ăn hằng ngày.",
+          "at_seconds": 43.043,
+          "end_seconds": 56.5973
+        }
+      ],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "863725bec271864dfff272a34a33d7df8e750a07fc0533a06705e0cb2bec43d0",
+          "cues_sha256": "dcacaa27341da077a0d752e606a3c78257e4aef3f97ef01c57d49db4685b5a88",
+          "ideas": 14
+        },
+        "PROD": {
+          "audio_sha256": "863725bec271864dfff272a34a33d7df8e750a07fc0533a06705e0cb2bec43d0",
+          "cues_sha256": "dcacaa27341da077a0d752e606a3c78257e4aef3f97ef01c57d49db4685b5a88",
+          "ideas": 14
+        }
+      }
+    },
+    {
+      "id": "cau-be-chan-trau",
+      "title": "Cậu bé chăn trâu và bó cỏ",
+      "batch": "B",
+      "part": 1,
+      "order": 10,
+      "chapters": [
+        1,
+        2,
+        3
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 1–3 · truyện khung Svastika của sách; truyền thống dâng cỏ kusa trong Phật truyện · https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/",
+      "key": "bai-giang/duong-xua/cau-be-chan-trau/v1-67a8a577/vi-sadaltager.mp3",
+      "hash": "67a8a577",
+      "sha256": "d0667c4861b8aa72d783f3bf49a9f1a60619800270b0129d57ef01e3a6b7b9eb",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 203.83395833333333,
+      "syllables": 618,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.17,
+        "peak_dbtp": -1.95
+      },
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0.027777777777777776,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29650925925925925
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27353508771929824
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29421367521367525
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29937398373983737
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2769349593495935
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "d0667c4861b8aa72d783f3bf49a9f1a60619800270b0129d57ef01e3a6b7b9eb",
+          "cues_sha256": "e536a7efa578a34218e534110107256d5da4a2bb5a4996cb0f55c59009fee8ba",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "d0667c4861b8aa72d783f3bf49a9f1a60619800270b0129d57ef01e3a6b7b9eb",
+          "cues_sha256": "e536a7efa578a34218e534110107256d5da4a2bb5a4996cb0f55c59009fee8ba",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "cau-thiem-di",
+      "title": "Lấy cỏ che bùn",
+      "batch": "C",
+      "part": 2,
+      "order": 220,
+      "chapters": [
+        46,
+        47,
+        48
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 46–48 · MN 128; Pháp Cú 5–6; Luật tạng Đại phẩm X, tranh chấp tại Câu Thiểm Di · https://suttacentral.net/mn128/en/sujato",
+      "key": "bai-giang/duong-xua/cau-thiem-di/v1-9b28e70a/vi-sadaltager.mp3",
+      "hash": "9b28e70a",
+      "sha256": "812cff4c65559ca85ac5155d911f0fe81d5ea25ddce1c44816cdee3cf79d4eeb",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 233.06595833333333,
+      "syllables": 727,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.11,
+        "peak_dbtp": -1.99
+      },
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2962348484848485
+        },
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2949851851851852
+        },
+        {
+          "i": 3,
+          "wer": 0.022727272727272728,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28987121212121214
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2971439393939394
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2916893939393939
+        },
+        {
+          "i": 7,
+          "wer": 0.02127659574468085,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.25434751773049646
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2932074074074074
+        },
+        {
+          "i": 12,
+          "wer": 0.022727272727272728,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2916893939393939
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29488194444444443
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "812cff4c65559ca85ac5155d911f0fe81d5ea25ddce1c44816cdee3cf79d4eeb",
+          "cues_sha256": "6434f2ce09006f345d6f6dfd7d2391d1e8720ef8bc24bfe8ccb4bd8a95ad71d7",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "812cff4c65559ca85ac5155d911f0fe81d5ea25ddce1c44816cdee3cf79d4eeb",
+          "cues_sha256": "6434f2ce09006f345d6f6dfd7d2391d1e8720ef8bc24bfe8ccb4bd8a95ad71d7",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "chim-cut-va-chim-ung",
+      "title": "Chim cút và chim ưng",
+      "batch": "D",
+      "part": 3,
+      "order": 300,
+      "chapters": [
+        69
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 69 · SN 47.6, ngụ ngôn chim cút và bốn niệm xứ · https://suttacentral.net/sn47.6/en/sujato",
+      "key": "bai-giang/duong-xua/chim-cut-va-chim-ung/v1-22c094ec/vi-sadaltager.mp3",
+      "hash": "22c094ec",
+      "sha256": "4aa30d9642d7cee0b5bd914446a29a6891e5416323e3c9c7f7f62f34c0bdf051",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 203.06595833333333,
+      "syllables": 625,
+      "cues": 14,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.12,
+        "peak_dbtp": -2
+      },
+      "flags": [
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27365185185185187
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29292028985507246
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2700962962962963
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.26161594202898547
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29805303030303026
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "4aa30d9642d7cee0b5bd914446a29a6891e5416323e3c9c7f7f62f34c0bdf051",
+          "cues_sha256": "dea4bfe265af94e49141949d44954acb91b31446f3432ad2db453d33f66fd238",
+          "ideas": 14
+        },
+        "PROD": {
+          "audio_sha256": "4aa30d9642d7cee0b5bd914446a29a6891e5416323e3c9c7f7f62f34c0bdf051",
+          "cues_sha256": "dea4bfe265af94e49141949d44954acb91b31446f3432ad2db453d33f66fd238",
+          "ideas": 14
+        }
+      }
+    },
+    {
+      "id": "con-duong-o-giua",
+      "title": "Con đường ở giữa",
+      "batch": "B",
+      "part": 1,
+      "order": 50,
+      "chapters": [
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 13–17 · MN 26; MN 36 (tìm thầy, khổ hạnh, nhớ sự an tĩnh và dùng lại thức ăn) · https://suttacentral.net/mn36/en/sujato",
+      "key": "bai-giang/duong-xua/con-duong-o-giua/v1-7c328539/vi-sadaltager.mp3",
+      "hash": "7c328539",
+      "sha256": "818798856c3adfbc3bfdb935b7e4c7bd7a7e18758d8fbda823caf5a3db795998",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 214.46595833333333,
+      "syllables": 666,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.11,
+        "peak_dbtp": -1.88
+      },
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29805303030303026
+        },
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29937398373983737
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2788583333333333
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.26785833333333336
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2970079365079365
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29350757575757574
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28376422764227643
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.293520325203252
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29644715447154474
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29485833333333333
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "818798856c3adfbc3bfdb935b7e4c7bd7a7e18758d8fbda823caf5a3db795998",
+          "cues_sha256": "bbb0904cfc132eec7c6b04767b8313ecf5499c49f9a8173bbf5abc494b3639c7",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "818798856c3adfbc3bfdb935b7e4c7bd7a7e18758d8fbda823caf5a3db795998",
+          "cues_sha256": "bbb0904cfc132eec7c6b04767b8313ecf5499c49f9a8173bbf5abc494b3639c7",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "con-thien-nga",
+      "title": "Con thiên nga bị thương",
+      "batch": "B",
+      "part": 1,
+      "order": 20,
+      "chapters": [
+        4
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 4 · Phật truyện truyền thống; Pháp Cú 129–130 (mọi loài sợ đau, quý sự sống) · https://suttacentral.net/dhp129-145/en/sujato",
+      "key": "bai-giang/duong-xua/con-thien-nga/v1-588b2533/vi-sadaltager.mp3",
+      "hash": "588b2533",
+      "sha256": "d3488e245e6003f2f9c33b74c388ec0478322a4d166fc9cc454fd2ad52ca8bf5",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 207.50595833333333,
+      "syllables": 632,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.12,
+        "peak_dbtp": -1.83
+      },
+      "flags": [
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2931880341880342
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29644715447154474
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.286531746031746
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "d3488e245e6003f2f9c33b74c388ec0478322a4d166fc9cc454fd2ad52ca8bf5",
+          "cues_sha256": "cc4ef980f6fcab682c6cce0e7524b764ef620ba4f3a644f1162a4b5c9c9d9b7e",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "d3488e245e6003f2f9c33b74c388ec0478322a4d166fc9cc454fd2ad52ca8bf5",
+          "cues_sha256": "cc4ef980f6fcab682c6cce0e7524b764ef620ba4f3a644f1162a4b5c9c9d9b7e",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "day-dan",
+      "title": "Dây đàn",
+      "batch": "D",
+      "part": 3,
+      "order": 310,
+      "chapters": [
+        71
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 71 · AN 6.55, Sona và sự quân bình trong tinh tấn · https://suttacentral.net/an6.55/en/sujato",
+      "key": "bai-giang/duong-xua/day-dan/v1-ccd3c418/vi-sadaltager.mp3",
+      "hash": "ccd3c418",
+      "sha256": "180a4c71562101df77ceb789fb8dc34e0f65ebb567b04de15781b358c737685d",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 196.80195833333335,
+      "syllables": 627,
+      "cues": 14,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.11,
+        "peak_dbtp": -2.01
+      },
+      "flags": [
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28987121212121214
+        },
+        {
+          "i": 6,
+          "wer": 0.021739130434782608,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2833550724637681
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2718740740740741
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29604964539007095
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27259848484848487
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28158156028368797
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2885724637681159
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28254074074074076
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "180a4c71562101df77ceb789fb8dc34e0f65ebb567b04de15781b358c737685d",
+          "cues_sha256": "9fa60423ea550ba50ed70b6c5d4afa575ae79fdb4089bc78fa73866959373b2d",
+          "ideas": 14
+        },
+        "PROD": {
+          "audio_sha256": "180a4c71562101df77ceb789fb8dc34e0f65ebb567b04de15781b358c737685d",
+          "cues_sha256": "9fa60423ea550ba50ed70b6c5d4afa575ae79fdb4089bc78fa73866959373b2d",
+          "ideas": 14
+        }
+      }
+    },
+    {
+      "id": "dem-trang-ra-di",
+      "title": "Đêm trăng ra đi",
+      "batch": "B",
+      "part": 1,
+      "order": 40,
+      "chapters": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 9–12 · MN 26; AN 3.38 (già, bệnh, chết và sự tìm cầu) · https://suttacentral.net/mn26/en/sujato",
+      "key": "bai-giang/duong-xua/dem-trang-ra-di/v1-52acab01/vi-sadaltager.mp3",
+      "hash": "52acab01",
+      "sha256": "1b9960b7cf9051cf363bba54eee39e289e9a9a3b89ff357691cabb1c9aefc49c",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 211.65795833333334,
+      "syllables": 660,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.11,
+        "peak_dbtp": -1.86
+      },
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29937398373983737
+        },
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29644715447154474
+        },
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2954715447154471
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2846269841269841
+        },
+        {
+          "i": 5,
+          "wer": 0.025,
+          "tail_ok": true,
+          "names_ok": false,
+          "seconds_per_word": 0.32085833333333336
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29644715447154474
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28265891472868215
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29937398373983737
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2956821705426357
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28376422764227643
+        }
+      ],
+      "word_flags": [
+        {
+          "i": 5,
+          "wer": 0.025,
+          "tail_ok": true,
+          "names_ok": false,
+          "seconds_per_word": 0.32085833333333336,
+          "reference": "Trong cảnh kể của sách, Xa, Nặc đưa ngựa Kiền, Trắc đến bên người. Bước chân ngựa đi qua đêm yên, mang theo một quyết định khó khăn, cùng tất cả sự lưu luyến của người sắp rời chỗ cũ.",
+          "at_seconds": 66.0717,
+          "end_seconds": 78.906
+        }
+      ],
+      "clarified": true,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "1b9960b7cf9051cf363bba54eee39e289e9a9a3b89ff357691cabb1c9aefc49c",
+          "cues_sha256": "a41849b8b9aedc713e09f65de3cc42b1aadd1ffa67a219f998cc76389c33d5cc",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "1b9960b7cf9051cf363bba54eee39e289e9a9a3b89ff357691cabb1c9aefc49c",
+          "cues_sha256": "a41849b8b9aedc713e09f65de3cc42b1aadd1ffa67a219f998cc76389c33d5cc",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "duong-xua-may-trang",
+      "title": "Đường xưa mây trắng",
+      "batch": "D",
+      "part": 3,
+      "order": 370,
+      "chapters": [
+        81
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 81 · Svastika là nhân vật trong truyện khung của tác phẩm; lời suy ngẫm biên soạn mới, không phải lời kinh · https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chuong-81-duong-xua-may-trang/",
+      "key": "bai-giang/duong-xua/duong-xua-may-trang/v1-8dd156d6/vi-sadaltager.mp3",
+      "hash": "8dd156d6",
+      "sha256": "ff597172a2d933da27161d3fda059ab39d6b82ad2908916c4770447aecb89081",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 204.26595833333334,
+      "syllables": 666,
+      "cues": 14,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.2,
+        "peak_dbtp": -2.03
+      },
+      "flags": [
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2726866666666667
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2862866666666667
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29519858156028367
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2840486111111111
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2763185185185185
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27439869281045753
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2850942028985507
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2715486111111111
+        },
+        {
+          "i": 12,
+          "wer": 0.019230769230769232,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27219871794871797
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29010077519379845
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "ff597172a2d933da27161d3fda059ab39d6b82ad2908916c4770447aecb89081",
+          "cues_sha256": "3496343a96da5859301442878e126c725bd9c6354a56a9953e8b896474ca3cf7",
+          "ideas": 14
+        },
+        "PROD": {
+          "audio_sha256": "ff597172a2d933da27161d3fda059ab39d6b82ad2908916c4770447aecb89081",
+          "cues_sha256": "3496343a96da5859301442878e126c725bd9c6354a56a9953e8b896474ca3cf7",
+          "ideas": 14
+        }
+      }
+    },
+    {
+      "id": "goc-cay-hong-tao",
+      "title": "Dưới gốc cây hồng táo",
+      "batch": "B",
+      "part": 1,
+      "order": 30,
+      "chapters": [
+        6
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 6 · MN 36 (ký ức ngồi dưới cây jambu); cảnh đồng ruộng được kể theo Phật truyện · https://suttacentral.net/mn36/en/sujato",
+      "key": "bai-giang/duong-xua/goc-cay-hong-tao/v1-5e6294d9/vi-sadaltager.mp3",
+      "hash": "5e6294d9",
+      "sha256": "fd0f26c0f73c150c41771eb051b4d0ef9edea00fc0bf96a2808d0a5f5760bedf",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 215.35395833333334,
+      "syllables": 650,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.11,
+        "peak_dbtp": -1.9
+      },
+      "flags": [
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29285833333333333
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29986507936507933
+        },
+        {
+          "i": 9,
+          "wer": 0.024390243902439025,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.293520325203252
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2989126984126984
+        },
+        {
+          "i": 15,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2819059829059829
+        }
+      ],
+      "word_flags": [],
+      "clarified": true,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "fd0f26c0f73c150c41771eb051b4d0ef9edea00fc0bf96a2808d0a5f5760bedf",
+          "cues_sha256": "06cfdf2269966d0979b322dc74f9d4fb5d97d10f6ca26d641d16d6714ec7c7b7",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "fd0f26c0f73c150c41771eb051b4d0ef9edea00fc0bf96a2808d0a5f5760bedf",
+          "cues_sha256": "06cfdf2269966d0979b322dc74f9d4fb5d97d10f6ca26d641d16d6714ec7c7b7",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "hay-tinh-tan",
+      "title": "Hãy tinh tấn",
+      "batch": "D",
+      "part": 3,
+      "order": 360,
+      "chapters": [
+        80
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 80 · DN 16, Tu Bạt Đà La và lời nhắc cuối về sự chuyên cần · https://suttacentral.net/dn16/en/sujato",
+      "key": "bai-giang/duong-xua/hay-tinh-tan/v1-d945d491/vi-sadaltager.mp3",
+      "hash": "d945d491",
+      "sha256": "175f310883e24fa42578aaeca5c5db76e83501e6ad329175908ee2048d1b5e65",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 206.30595833333334,
+      "syllables": 653,
+      "cues": 14,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.14,
+        "peak_dbtp": -1.98
+      },
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0.043478260869565216,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29378985507246375
+        },
+        {
+          "i": 1,
+          "wer": 0.021739130434782608,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2998768115942029
+        },
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2885724637681159
+        },
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.291312925170068
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27477304964539007
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2998768115942029
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2815486111111111
+        },
+        {
+          "i": 13,
+          "wer": 0.022222222222222223,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29054074074074077
+        }
+      ],
+      "word_flags": [],
+      "clarified": true,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "175f310883e24fa42578aaeca5c5db76e83501e6ad329175908ee2048d1b5e65",
+          "cues_sha256": "af31bb51f48b3d64e61ef2f581dbfa8424794388579147fa809b34fe8d2f0f5c",
+          "ideas": 14
+        },
+        "PROD": {
+          "audio_sha256": "175f310883e24fa42578aaeca5c5db76e83501e6ad329175908ee2048d1b5e65",
+          "cues_sha256": "af31bb51f48b3d64e61ef2f581dbfa8424794388579147fa809b34fe8d2f0f5c",
+          "ideas": 14
+        }
+      }
+    },
+    {
+      "id": "lam-lanh-lanh-du",
+      "title": "Làm lành, lánh dữ",
+      "batch": "C",
+      "part": 2,
+      "order": 120,
+      "chapters": [
+        30
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 30 · Pháp Cú 183–185, lời nhắc về không gây hại, làm lành và thanh lọc tâm · https://suttacentral.net/dhp179-196/en/sujato",
+      "key": "bai-giang/duong-xua/lam-lanh-lanh-du/v1-10ad7740/vi-sadaltager.mp3",
+      "hash": "10ad7740",
+      "sha256": "eb93fc1623b35bc8d94df0482b953a884d39066bb3e815593703bfb36cd30611",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 214.58595833333334,
+      "syllables": 665,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.13,
+        "peak_dbtp": -2.04
+      },
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2838583333333333
+        },
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29986507936507933
+        },
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29034126984126984
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2911367521367521
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2876666666666666
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2970079365079365
+        },
+        {
+          "i": 9,
+          "wer": 0.023255813953488372,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28544961240310074
+        },
+        {
+          "i": 11,
+          "wer": 0.023809523809523808,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2912936507936508
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29059349593495937
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "eb93fc1623b35bc8d94df0482b953a884d39066bb3e815593703bfb36cd30611",
+          "cues_sha256": "ecb7f576f8052752e963f46d3bf6a80bae920aa74737542912b29619746748c0",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "eb93fc1623b35bc8d94df0482b953a884d39066bb3e815593703bfb36cd30611",
+          "cues_sha256": "ecb7f576f8052752e963f46d3bf6a80bae920aa74737542912b29619746748c0",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "loc-uyen",
+      "title": "Lần đầu ở Lộc Uyển",
+      "batch": "B",
+      "part": 1,
+      "order": 80,
+      "chapters": [
+        20,
+        21,
+        22
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 20–22 · SN 56.11; SN 22.59; Luật tạng Đại phẩm I.6 · https://suttacentral.net/sn56.11/en/sujato",
+      "key": "bai-giang/duong-xua/loc-uyen/v1-09811acc/vi-sadaltager.mp3",
+      "hash": "09811acc",
+      "sha256": "506c1de9e24a7f808502fdb55cad2c1730f196359142069967ede8cd6f530812",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 220.89795833333332,
+      "syllables": 685,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.11,
+        "peak_dbtp": -1.89
+      },
+      "flags": [
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2947519379844961
+        },
+        {
+          "i": 8,
+          "wer": 0.023255813953488372,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2956821705426357
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29587407407407407
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.26387407407407404
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2825984848484848
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27986821705426357
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2798617886178862
+        },
+        {
+          "i": 15,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2979603174603175
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "506c1de9e24a7f808502fdb55cad2c1730f196359142069967ede8cd6f530812",
+          "cues_sha256": "f54b8f74675655e25dbae9cfc12b89eaa396d1c413d93f4ae9028d2d08c7df4d",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "506c1de9e24a7f808502fdb55cad2c1730f196359142069967ede8cd6f530812",
+          "cues_sha256": "f54b8f74675655e25dbae9cfc12b89eaa396d1c413d93f4ae9028d2d08c7df4d",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "lua-dang-chay",
+      "title": "Lửa đang cháy",
+      "batch": "B",
+      "part": 1,
+      "order": 100,
+      "chapters": [
+        27
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 27 · SN 35.28, Ādittapariyāya Sutta (Bài giảng về lửa) · https://suttacentral.net/sn35.28/en/sujato",
+      "key": "bai-giang/duong-xua/lua-dang-chay/v1-fce32464/vi-sadaltager.mp3",
+      "hash": "fce32464",
+      "sha256": "56d9e5ba6e905521b917bcfbb00cce76d0c8d2559665946565d349a85925b3c5",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 218.25795833333333,
+      "syllables": 682,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.11,
+        "peak_dbtp": -2.03
+      },
+      "flags": [
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2836746031746032
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28168939393939396
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29441666666666666
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2703412698412698
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2880530303030303
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29805303030303026
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.26312403100775195
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28376422764227643
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "56d9e5ba6e905521b917bcfbb00cce76d0c8d2559665946565d349a85925b3c5",
+          "cues_sha256": "23ff12eb78d1aaf02fda618c2e7402f1d7befdc741db9122b0d1fb09bd0254e9",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "56d9e5ba6e905521b917bcfbb00cce76d0c8d2559665946565d349a85925b3c5",
+          "cues_sha256": "23ff12eb78d1aaf02fda618c2e7402f1d7befdc741db9122b0d1fb09bd0254e9",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "mo-cua",
+      "title": "Mở cửa",
+      "batch": "C",
+      "part": 2,
+      "order": 200,
+      "chapters": [
+        45
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 45 · AN 8.51, truyền thống kể về Ma Ha Ba Xà Ba Đề và việc thành lập tăng đoàn nữ · https://suttacentral.net/an8.51/en/sujato",
+      "key": "bai-giang/duong-xua/mo-cua/v1-6901ba7c/vi-sadaltager.mp3",
+      "hash": "6901ba7c",
+      "sha256": "e5cfc0f05626f0c52a9f92439426b7a05a677f69f6e22131f6280b47271c9928",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 233.78595833333333,
+      "syllables": 734,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.12,
+        "peak_dbtp": -1.86
+      },
+      "flags": [
+        {
+          "i": 6,
+          "wer": 0.023809523809523808,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2846269841269841
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2878866666666667
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2806732026143791
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27498639455782314
+        },
+        {
+          "i": 10,
+          "wer": 0.0425531914893617,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29945390070921984
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29292028985507246
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2869851851851852
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2962348484848485
+        },
+        {
+          "i": 15,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28683333333333333
+        }
+      ],
+      "word_flags": [],
+      "clarified": true,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "e5cfc0f05626f0c52a9f92439426b7a05a677f69f6e22131f6280b47271c9928",
+          "cues_sha256": "1431cd04f6c4945fb9944683f8d5296b83dc0ebc47b4b73c402e3a14c39461f0",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "e5cfc0f05626f0c52a9f92439426b7a05a677f69f6e22131f6280b47271c9928",
+          "cues_sha256": "1431cd04f6c4945fb9944683f8d5296b83dc0ebc47b4b73c402e3a14c39461f0",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "nam-la-simsapa",
+      "title": "Nắm lá trong tay",
+      "batch": "C",
+      "part": 2,
+      "order": 210,
+      "chapters": [
+        46
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 46 · SN 56.31, nắm lá và những điều được dạy vì giúp chấm dứt khổ · https://suttacentral.net/sn56.31/en/sujato",
+      "key": "bai-giang/duong-xua/nam-la-simsapa/v1-e3f55260/vi-sadaltager.mp3",
+      "hash": "e3f55260",
+      "sha256": "1c52d07be4d8ea91223a65c72a973c57bd755deefd68ab5b9f427e47291e9261",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 176.35395833333334,
+      "syllables": 546,
+      "cues": 12,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.1,
+        "peak_dbtp": -1.73
+      },
+      "flags": [
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2963985507246377
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28254074074074076
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2940486111111111
+        },
+        {
+          "i": 8,
+          "wer": 0.021739130434782608,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29378985507246375
+        },
+        {
+          "i": 11,
+          "wer": 0.022727272727272728,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.290780303030303
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "1c52d07be4d8ea91223a65c72a973c57bd755deefd68ab5b9f427e47291e9261",
+          "cues_sha256": "a0d4f789b215490c9c16c4a62e82047f56a29ced6e6ac31966df55fe69bf38d3",
+          "ideas": 12
+        },
+        "PROD": {
+          "audio_sha256": "1c52d07be4d8ea91223a65c72a973c57bd755deefd68ab5b9f427e47291e9261",
+          "cues_sha256": "a0d4f789b215490c9c16c4a62e82047f56a29ced6e6ac31966df55fe69bf38d3",
+          "ideas": 12
+        }
+      }
+    },
+    {
+      "id": "nhan-duyen",
+      "title": "Gặp gỡ trên đường Vương Xá",
+      "batch": "B",
+      "part": 1,
+      "order": 110,
+      "chapters": [
+        29
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 29 · Luật tạng Đại phẩm I.23 (Xá Lợi Phất gặp A Thuyết Thị) · https://suttacentral.net/pli-tv-kd1",
+      "key": "bai-giang/duong-xua/nhan-duyen/v1-0f87d877/vi-sadaltager.mp3",
+      "hash": "0f87d877",
+      "sha256": "76a9bf493137273c31be983dfc8a5c63b7f76ecb3c9d2ed143e47c926f909bd5",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 222.26595833333334,
+      "syllables": 706,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.13,
+        "peak_dbtp": -1.81
+      },
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2966124031007752
+        },
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2798617886178862
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2947519379844961
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28172868217054264
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28342962962962964
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.26209629629629627
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2916893939393939
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2850942028985507
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2949851851851852
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2735075757575757
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "76a9bf493137273c31be983dfc8a5c63b7f76ecb3c9d2ed143e47c926f909bd5",
+          "cues_sha256": "80c2ced890edc05060342c360b15add634a841bba27e30a3f853e4de91864868",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "76a9bf493137273c31be983dfc8a5c63b7f76ecb3c9d2ed143e47c926f909bd5",
+          "cues_sha256": "80c2ced890edc05060342c360b15add634a841bba27e30a3f853e4de91864868",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "noi-dau-ba-visakha",
+      "title": "Nỗi đau của bà Tỳ Xá Khư",
+      "batch": "D",
+      "part": 3,
+      "order": 270,
+      "chapters": [
+        60
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 60 · Ud 8.8, người thân yêu và nỗi sầu · https://suttacentral.net/ud8.8/en/sujato",
+      "key": "bai-giang/duong-xua/noi-dau-ba-visakha/v1-975efa8c/vi-sadaltager.mp3",
+      "hash": "975efa8c",
+      "sha256": "81750fc99fea7d4387092abb68c4bf7026f523607ade933077d7bcfa1a4b78da",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 197.59395833333335,
+      "syllables": 617,
+      "cues": 14,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.09,
+        "peak_dbtp": -1.98
+      },
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0.022222222222222223,
+          "tail_ok": true,
+          "names_ok": false,
+          "seconds_per_word": 0.32076296296296297
+        },
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28843650793650794
+        },
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2962348484848485
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2835891472868217
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29054074074074077
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2963985507246377
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2615486111111111
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2842246376811594
+        }
+      ],
+      "word_flags": [
+        {
+          "i": 0,
+          "wer": 0.022222222222222223,
+          "tail_ok": true,
+          "names_ok": false,
+          "seconds_per_word": 0.32076296296296297,
+          "reference": "Bà Tỳ, Xá, Khư đã quen chăm lo cho nhiều người, nhưng hôm ấy bà đến gặp Đức Phật trong nỗi đau mất một người cháu thương yêu. Tóc và áo còn ướt, bà mang theo sự trống vắng vừa mở ra trong gia đình.",
+          "at_seconds": 0,
+          "end_seconds": 14.4343
+        }
+      ],
+      "clarified": true,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "81750fc99fea7d4387092abb68c4bf7026f523607ade933077d7bcfa1a4b78da",
+          "cues_sha256": "343669f2a009146936dad33862c537e6fe947acf63c18beb43b3cf11c44c1219",
+          "ideas": 14
+        },
+        "PROD": {
+          "audio_sha256": "81750fc99fea7d4387092abb68c4bf7026f523607ade933077d7bcfa1a4b78da",
+          "cues_sha256": "343669f2a009146936dad33862c537e6fe947acf63c18beb43b3cf11c44c1219",
+          "ideas": 14
+        }
+      }
+    },
+    {
+      "id": "nuoc-mat-ai-cung-man",
+      "title": "Nước mắt ai cũng mặn",
+      "batch": "C",
+      "part": 2,
+      "order": 190,
+      "chapters": [
+        43
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 43 · Thag 12.2, lời kể của Sunita về thân phận bị khinh rẻ và việc được đón nhận · https://suttacentral.net/thag12.2/en/sujato",
+      "key": "bai-giang/duong-xua/nuoc-mat-ai-cung-man/v1-c5a9c3e7/vi-sadaltager.mp3",
+      "hash": "c5a9c3e7",
+      "sha256": "6659737b8e86b3cc21ea7f9173f83be9243f88d92c1d3cc7c79dc2a3c7f971a1",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 233.83395833333333,
+      "syllables": 726,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.12,
+        "peak_dbtp": -1.87
+      },
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0.021739130434782608,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28944202898550725
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29942962962962966
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2953257575757576
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2850942028985507
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29292028985507246
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28944202898550725
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "6659737b8e86b3cc21ea7f9173f83be9243f88d92c1d3cc7c79dc2a3c7f971a1",
+          "cues_sha256": "17fd165b8c3f614e47777bb234b14e356516c8bfe1e8399b707f37142a77851e",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "6659737b8e86b3cc21ea7f9173f83be9243f88d92c1d3cc7c79dc2a3c7f971a1",
+          "cues_sha256": "17fd165b8c3f614e47777bb234b14e356516c8bfe1e8399b707f37142a77851e",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "oi-hanh-phuc",
+      "title": "Ôi, hạnh phúc!",
+      "batch": "C",
+      "part": 2,
+      "order": 150,
+      "chapters": [
+        38
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 38 · Ud 2.10, Bạt Đề nhớ đời sống phải canh phòng và niềm an ổn khi tu tập · https://suttacentral.net/ud2.10/en/sujato",
+      "key": "bai-giang/duong-xua/oi-hanh-phuc/v1-456c8dfb/vi-sadaltager.mp3",
+      "hash": "456c8dfb",
+      "sha256": "3ca4e75bda3c533f25e88ffb9655a0239855734347b71517bf85f3d5b55050de",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 222.07395833333334,
+      "syllables": 696,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.11,
+        "peak_dbtp": -1.99
+      },
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2880530303030303
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29605555555555557
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27056589147286825
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2789851851851852
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2832152777777778
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.277077519379845
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.290780303030303
+        },
+        {
+          "i": 15,
+          "wer": 0.022222222222222223,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29676296296296295
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "3ca4e75bda3c533f25e88ffb9655a0239855734347b71517bf85f3d5b55050de",
+          "cues_sha256": "6be491aa0e391fcf981e6d9bc091ebed1fceb555d7e1acb8c721f95d07d955a3",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "3ca4e75bda3c533f25e88ffb9655a0239855734347b71517bf85f3d5b55050de",
+          "cues_sha256": "6be491aa0e391fcf981e6d9bc091ebed1fceb555d7e1acb8c721f95d07d955a3",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "phu-dat-bang-vang",
+      "title": "Phủ đất bằng vàng",
+      "batch": "C",
+      "part": 2,
+      "order": 160,
+      "chapters": [
+        40
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 40 · Luật tạng Tiểu phẩm VI.4; AN 4.62 về niềm vui của người sống đời gia đình · https://suttacentral.net/an4.62/en/sujato",
+      "key": "bai-giang/duong-xua/phu-dat-bang-vang/v1-93931166/vi-sadaltager.mp3",
+      "hash": "93931166",
+      "sha256": "03f8106293dce143cb219c6d8e704dafa987883f735ed8260c1e467870251979",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 227.71395833333332,
+      "syllables": 706,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.08,
+        "peak_dbtp": -1.93
+      },
+      "flags": [
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29847286821705427
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28683333333333333
+        },
+        {
+          "i": 5,
+          "wer": 0.023255813953488372,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2835891472868217
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27987121212121213
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29224603174603175
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29434751773049644
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29805303030303026
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29034126984126984
+        },
+        {
+          "i": 15,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.292645390070922
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "03f8106293dce143cb219c6d8e704dafa987883f735ed8260c1e467870251979",
+          "cues_sha256": "88421ea7dfef0f38cb2b6f78b57ff1587b012620d43b2edc23624204476e68b8",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "03f8106293dce143cb219c6d8e704dafa987883f735ed8260c1e467870251979",
+          "cues_sha256": "88421ea7dfef0f38cb2b6f78b57ff1587b012620d43b2edc23624204476e68b8",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "qua-quyt-chanh-niem",
+      "title": "Quả quýt chánh niệm",
+      "batch": "B",
+      "part": 1,
+      "order": 70,
+      "chapters": [
+        19
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 19 · cảnh quả quýt do tác giả sách kể, không phải một bài kinh độc lập · https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chuong-19-trai-quyt-cua-chanh-niem/",
+      "key": "bai-giang/duong-xua/qua-quyt-chanh-niem/v1-566307ce/vi-sadaltager.mp3",
+      "hash": "566307ce",
+      "sha256": "fdc30caebe0651c05265f95964af2579f1349451b7a8975c5174cdc0aec894bb",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 216.55395833333333,
+      "syllables": 673,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.13,
+        "peak_dbtp": -1.94
+      },
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28254074074074076
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29059349593495937
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28787407407407406
+        },
+        {
+          "i": 12,
+          "wer": 0.021739130434782608,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29378985507246375
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28985833333333333
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "fdc30caebe0651c05265f95964af2579f1349451b7a8975c5174cdc0aec894bb",
+          "cues_sha256": "c4e9155dbfc4bbad00e7772077982e4fa5d9cde3e98db0b16dbf7707b645f96b",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "fdc30caebe0651c05265f95964af2579f1349451b7a8975c5174cdc0aec894bb",
+          "cues_sha256": "c4e9155dbfc4bbad00e7772077982e4fa5d9cde3e98db0b16dbf7707b645f96b",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "sao-mai-da-moc",
+      "title": "Sao mai đã mọc",
+      "batch": "B",
+      "part": 1,
+      "order": 60,
+      "chapters": [
+        18
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 18 · MN 26; MN 36 (thành đạo và sự thấy biết); sao mai là hình ảnh trong Phật truyện · https://suttacentral.net/mn26/en/sujato",
+      "key": "bai-giang/duong-xua/sao-mai-da-moc/v1-f14a3392/vi-sadaltager.mp3",
+      "hash": "f14a3392",
+      "sha256": "0ca56ed9e005a476555667d57165a9f0e7b08212c6e8eff69d6aba5b8fb2552b",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 225.45795833333332,
+      "syllables": 689,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.17,
+        "peak_dbtp": -1.76
+      },
+      "flags": [
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2966124031007752
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2835075757575758
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29847286821705427
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27987407407407405
+        },
+        {
+          "i": 15,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2975426356589147
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "0ca56ed9e005a476555667d57165a9f0e7b08212c6e8eff69d6aba5b8fb2552b",
+          "cues_sha256": "060eaa70c08aaf59b6c794838462d0123ba7fb737dfe9f3274f260d4fa4d5773",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "0ca56ed9e005a476555667d57165a9f0e7b08212c6e8eff69d6aba5b8fb2552b",
+          "cues_sha256": "060eaa70c08aaf59b6c794838462d0123ba7fb737dfe9f3274f260d4fa4d5773",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "song-trong-hien-tai",
+      "title": "Sống trọn hôm nay",
+      "batch": "C",
+      "part": 2,
+      "order": 240,
+      "chapters": [
+        53
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 53 · MN 131, không bị quá khứ, tương lai hay sự chấp giữ hiện tại cuốn đi · https://suttacentral.net/mn131/en/sujato",
+      "key": "bai-giang/duong-xua/song-trong-hien-tai/v1-a723b1fc/vi-sadaltager.mp3",
+      "hash": "a723b1fc",
+      "sha256": "dbedd8b4e2dba908ac14c6839943976570a441241e15d380e209eff29f776fed",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 213.96195833333334,
+      "syllables": 667,
+      "cues": 14,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.13,
+        "peak_dbtp": -1.96
+      },
+      "flags": [
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29054074074074077
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27221985815602834
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2983525641025641
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2940065359477124
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "dbedd8b4e2dba908ac14c6839943976570a441241e15d380e209eff29f776fed",
+          "cues_sha256": "b61e862c0afe227513f10b361d30b1edd24cd8c796e45a8d3d69f2e0df1e2b61",
+          "ideas": 14
+        },
+        "PROD": {
+          "audio_sha256": "dbedd8b4e2dba908ac14c6839943976570a441241e15d380e209eff29f776fed",
+          "cues_sha256": "b61e862c0afe227513f10b361d30b1edd24cd8c796e45a8d3d69f2e0df1e2b61",
+          "ideas": 14
+        }
+      }
+    },
+    {
+      "id": "sum-hop",
+      "title": "Ngày trở về",
+      "batch": "C",
+      "part": 2,
+      "order": 140,
+      "chapters": [
+        34
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 34 · Phật truyện về cuộc trở về Ca Tỳ La Vệ; đối chiếu Luật tạng Đại phẩm I.54 về gia đình Đức Phật · https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chuong-34-mua-xuan-doan-tu/",
+      "key": "bai-giang/duong-xua/sum-hop/v1-0a38bdc3/vi-sadaltager.mp3",
+      "hash": "0a38bdc3",
+      "sha256": "6d1d151c6d0ee2e921b30f219c1607b96f9c8ac0b28bdbe602e50f6605b8fac3",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 220.17795833333332,
+      "syllables": 689,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.12,
+        "peak_dbtp": -1.88
+      },
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2966124031007752
+        },
+        {
+          "i": 6,
+          "wer": 0.043478260869565216,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27900724637681157
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2998712121212121
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2949851851851852
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2835891472868217
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2869851851851852
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29839837398373986
+        },
+        {
+          "i": 14,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28168939393939396
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "6d1d151c6d0ee2e921b30f219c1607b96f9c8ac0b28bdbe602e50f6605b8fac3",
+          "cues_sha256": "bf762d8b054bcd0755bca58dc61e9989c215480452ab73c8c3d9f75102a49e33",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "6d1d151c6d0ee2e921b30f219c1607b96f9c8ac0b28bdbe602e50f6605b8fac3",
+          "cues_sha256": "bf762d8b054bcd0755bca58dc61e9989c215480452ab73c8c3d9f75102a49e33",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "ta-da-dung-lai",
+      "title": "Ta đã dừng lại",
+      "batch": "D",
+      "part": 2,
+      "order": 250,
+      "chapters": [
+        53
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 53 · MN 86, Ương Quật Ma La dừng việc sát hại và thay đổi đời sống · https://suttacentral.net/mn86/en/sujato",
+      "key": "bai-giang/duong-xua/ta-da-dung-lai/v1-8f946fbf/vi-sadaltager.mp3",
+      "hash": "8f946fbf",
+      "sha256": "09ada260c3cbb46eebbd436342d00f89ff41d6641f97bb20bbaece503d57af16",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 203.76195833333333,
+      "syllables": 632,
+      "cues": 14,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.1,
+        "peak_dbtp": -1.85
+      },
+      "flags": [
+        {
+          "i": 3,
+          "wer": 0.022222222222222223,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29587407407407407
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29805303030303026
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27335658914728683
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27987121212121213
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28248550724637683
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2979603174603175
+        },
+        {
+          "i": 13,
+          "wer": 0.021739130434782608,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2850942028985507
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "09ada260c3cbb46eebbd436342d00f89ff41d6641f97bb20bbaece503d57af16",
+          "cues_sha256": "648d6a144217e71bb483967a5fdf25660ae8abfbb31dc43aee590f4490f83b3e",
+          "ideas": 14
+        },
+        "PROD": {
+          "audio_sha256": "09ada260c3cbb46eebbd436342d00f89ff41d6641f97bb20bbaece503d57af16",
+          "cues_sha256": "648d6a144217e71bb483967a5fdf25660ae8abfbb31dc43aee590f4490f83b3e",
+          "ideas": 14
+        }
+      }
+    },
+    {
+      "id": "tam-long-nhu-dat",
+      "title": "Tấm lòng như đất",
+      "batch": "D",
+      "part": 3,
+      "order": 280,
+      "chapters": [
+        62
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 62 · AN 9.11, lời trình bày của Xá Lợi Phất khi bị cáo buộc · https://suttacentral.net/an9.11/en/sujato",
+      "key": "bai-giang/duong-xua/tam-long-nhu-dat/v1-ca808c83/vi-sadaltager.mp3",
+      "hash": "ca808c83",
+      "sha256": "6d9fd94a87fe149c26a4714102b0c004b4fe56917cceb929e6bf985987225b07",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 195.84195833333334,
+      "syllables": 621,
+      "cues": 14,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.09,
+        "peak_dbtp": -2.05
+      },
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2975426356589147
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2949851851851852
+        },
+        {
+          "i": 7,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28168939393939396
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2832836879432624
+        },
+        {
+          "i": 9,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2855793650793651
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27732624113475174
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2807304964539007
+        },
+        {
+          "i": 13,
+          "wer": 0.022222222222222223,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29587407407407407
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "6d9fd94a87fe149c26a4714102b0c004b4fe56917cceb929e6bf985987225b07",
+          "cues_sha256": "08584e40a35de9f09142ca698f1c9c679c4a95d1d414b48d3237c602dcfb63ba",
+          "ideas": 14
+        },
+        "PROD": {
+          "audio_sha256": "6d9fd94a87fe149c26a4714102b0c004b4fe56917cceb929e6bf985987225b07",
+          "cues_sha256": "08584e40a35de9f09142ca698f1c9c679c4a95d1d414b48d3237c602dcfb63ba",
+          "ideas": 14
+        }
+      }
+    },
+    {
+      "id": "thuong-la-hieu",
+      "title": "Thương là hiểu",
+      "batch": "C",
+      "part": 2,
+      "order": 180,
+      "chapters": [
+        42
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 42: đối thoại với vua Ba Tư Nặc do tác giả sách kể · đối chiếu Sn 1.8 và SN 3.8 về lòng thương không hại · https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chuong-42-khong-hieu-biet-thi-khong-the-thuong-yeu-1/",
+      "key": "bai-giang/duong-xua/thuong-la-hieu/v1-f8d164be/vi-sadaltager.mp3",
+      "hash": "f8d164be",
+      "sha256": "875e4e18a326af4c500e8e0263d30aa24a576132b700477ddd21b5c3604641f5",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 228.45795833333332,
+      "syllables": 720,
+      "cues": 16,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.1,
+        "peak_dbtp": -1.98
+      },
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29942962962962966
+        },
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2737898550724638
+        },
+        {
+          "i": 5,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2835075757575758
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29519858156028367
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.27893798449612406
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28924113475177304
+        },
+        {
+          "i": 12,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28248550724637683
+        },
+        {
+          "i": 15,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29350757575757574
+        }
+      ],
+      "word_flags": [],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "875e4e18a326af4c500e8e0263d30aa24a576132b700477ddd21b5c3604641f5",
+          "cues_sha256": "b726a7efc6c657c79af1e03ee9d15248f0d781dd9b387885c6473db6bca0f269",
+          "ideas": 16
+        },
+        "PROD": {
+          "audio_sha256": "875e4e18a326af4c500e8e0263d30aa24a576132b700477ddd21b5c3604641f5",
+          "cues_sha256": "b726a7efc6c657c79af1e03ee9d15248f0d781dd9b387885c6473db6bca0f269",
+          "ideas": 16
+        }
+      }
+    },
+    {
+      "id": "tro-ve-hoi-tho",
+      "title": "Trở về hơi thở",
+      "batch": "D",
+      "part": 3,
+      "order": 260,
+      "chapters": [
+        56
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 56 · MN 118, niệm hơi thở · https://suttacentral.net/mn118/en/sujato",
+      "key": "bai-giang/duong-xua/tro-ve-hoi-tho/v1-40587cd9/vi-sadaltager.mp3",
+      "hash": "40587cd9",
+      "sha256": "8a289fe8ae6bb337ac4be89a35a1040036522c48e236c6204ccef438e25979f4",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 190.80195833333335,
+      "syllables": 595,
+      "cues": 14,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.15,
+        "peak_dbtp": -1.97
+      },
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0.023809523809523808,
+          "tail_ok": false,
+          "names_ok": true,
+          "seconds_per_word": 0.30176984126984124
+        },
+        {
+          "i": 3,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.293520325203252
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29319841269841274
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2868583333333333
+        },
+        {
+          "i": 10,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2816159420289855
+        },
+        {
+          "i": 11,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29196124031007753
+        },
+        {
+          "i": 12,
+          "wer": 0.02127659574468085,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2875390070921986
+        }
+      ],
+      "word_flags": [
+        {
+          "i": 0,
+          "wer": 0.023809523809523808,
+          "tail_ok": false,
+          "names_ok": true,
+          "seconds_per_word": 0.30176984126984124,
+          "reference": "Sau mùa mưa, các vị khất sĩ cùng trở về bên Đức Phật. Có những người mới học còn đang tìm một chỗ đứng vững cho tâm, giữa bao nhiêu điều được nghe và những đổi thay trong nếp sống hằng ngày.",
+          "at_seconds": 0,
+          "end_seconds": 12.6743
+        }
+      ],
+      "clarified": false,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "8a289fe8ae6bb337ac4be89a35a1040036522c48e236c6204ccef438e25979f4",
+          "cues_sha256": "860929c8476e64a2b6a9f74cfde51179d123a636a68d18a5f0a4b454940fc901",
+          "ideas": 14
+        },
+        "PROD": {
+          "audio_sha256": "8a289fe8ae6bb337ac4be89a35a1040036522c48e236c6204ccef438e25979f4",
+          "cues_sha256": "860929c8476e64a2b6a9f74cfde51179d123a636a68d18a5f0a4b454940fc901",
+          "ideas": 14
+        }
+      }
+    },
+    {
+      "id": "voi-say",
+      "title": "Con voi say",
+      "batch": "D",
+      "part": 3,
+      "order": 340,
+      "chapters": [
+        74
+      ],
+      "source_ref": "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 74 · truyện Nalagiri trong Luật tạng, Tiểu phẩm VII.3; chi tiết kể theo sách, không phải hướng dẫn tiếp cận thú dữ · https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/chuong-74-tieng-ru-cua-con-voi-chua/",
+      "key": "bai-giang/duong-xua/voi-say/v1-942ea7bd/vi-sadaltager.mp3",
+      "hash": "942ea7bd",
+      "sha256": "88150735c8c2158844ac42e5ccd1b6b4f9f24da051a3863092e35a3471aa5bfe",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "speed": 0.85,
+      "dur": 207.74595833333333,
+      "syllables": 646,
+      "cues": 14,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "24000",
+        "channels": 1,
+        "channel_layout": "mono",
+        "bit_rate": "96000"
+      },
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.15,
+        "peak_dbtp": -1.69
+      },
+      "flags": [
+        {
+          "i": 1,
+          "wer": 0.045454545454545456,
+          "tail_ok": true,
+          "names_ok": false,
+          "seconds_per_word": 0.31350757575757576
+        },
+        {
+          "i": 2,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29350757575757574
+        },
+        {
+          "i": 4,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.28548666666666667
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2763985507246377
+        },
+        {
+          "i": 8,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2662624113475177
+        },
+        {
+          "i": 13,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29031159420289854
+        }
+      ],
+      "word_flags": [
+        {
+          "i": 1,
+          "wer": 0.045454545454545456,
+          "tail_ok": true,
+          "names_ok": false,
+          "seconds_per_word": 0.31350757575757576,
+          "reference": "Trong bản kể của Đường Xưa Mây Trắng, con voi ấy tên là Na La, Ghi Ri. Âm mưu làm hại Đức Phật đã đặt cả người lẫn con vật vào một tình thế bị thúc đẩy bởi sợ hãi và sự kích động.",
+          "at_seconds": 15.6943,
+          "end_seconds": 29.4887
+        }
+      ],
+      "clarified": true,
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "88150735c8c2158844ac42e5ccd1b6b4f9f24da051a3863092e35a3471aa5bfe",
+          "cues_sha256": "b59523d1fd79102eb11b4cfcd18b8ab037cbb8aeb758830106b95c642f61019b",
+          "ideas": 14
+        },
+        "PROD": {
+          "audio_sha256": "88150735c8c2158844ac42e5ccd1b6b4f9f24da051a3863092e35a3471aa5bfe",
+          "cues_sha256": "b59523d1fd79102eb11b4cfcd18b8ab037cbb8aeb758830106b95c642f61019b",
+          "ideas": 14
+        }
+      }
+    }
+  ],
+  "main_ritual_logic": {
+    "main": "12747a4f72c75510a2156bef30ad13b373571019",
+    "client_pr": 82,
+    "opening_homage_preserved": true,
+    "opening_cues": 4,
+    "closing_cues": 1,
+    "three_bow_peaks": 3,
+    "camera_during_bows": "wide",
+    "closing_audio_only_after_three_bows": true,
+    "puck_actual_plays": 1,
+    "verification": "Logic test with actual importer/cues and stubbed Audio only; no browser/physical-phone claim"
+  },
+  "live_check": {
+    "staging_api_count": 9,
+    "production_api_count": 7,
+    "api_range_cues": "passed for all 9 staging items",
+    "app_audio": "played with currentTime>0.5 and text cue1",
+    "official_live_suite": "1 passed / 1 failed: obsolete required AI label after owner requested its removal",
+    "claude_followup_issue": 83
+  },
+  "checks": {
+    "format33": true,
+    "source_format33": true,
+    "legacy9_unchanged": true
+  },
+  "merge_order": [
+    76,
+    77,
+    78
+  ],
+  "publication_counts": {
+    "before": 9,
+    "after_B": 19,
+    "after_C": 30,
+    "after_D": 42,
+    "normal_sermons_after_D": 40,
+    "rituals": 2
+  },
+  "tag": "not ready",
+  "publication_status": "Owner approved all 33; pending sequential PR merges and live staging acceptance",
+  "import_rehearsal": {
+    "checked_at": "2026-11-15T07:07:23.086Z",
+    "note": "In-memory rehearsal only. No tracked status changed or remote D1 written. Requires owner approval before real publication.",
+    "results": [
+      {
+        "batch": "B",
+        "tracked_published": 9,
+        "simulated_after_owner_approval": 19,
+        "normal_articles": 17,
+        "rituals": 2,
+        "parts": {
+          "1": 10,
+          "2": 0,
+          "3": 0
+        },
+        "repeat_import_idempotent": true,
+        "reading_aliases_removed": true
+      },
+      {
+        "batch": "C",
+        "tracked_published": 9,
+        "simulated_after_owner_approval": 30,
+        "normal_articles": 28,
+        "rituals": 2,
+        "parts": {
+          "1": 10,
+          "2": 11,
+          "3": 0
+        },
+        "repeat_import_idempotent": true,
+        "reading_aliases_removed": true
+      },
+      {
+        "batch": "D",
+        "tracked_published": 9,
+        "simulated_after_owner_approval": 42,
+        "normal_articles": 40,
+        "rituals": 2,
+        "parts": {
+          "1": 10,
+          "2": 13,
+          "3": 10
+        },
+        "repeat_import_idempotent": true,
+        "reading_aliases_removed": true
+      }
+    ]
+  },
+  "client_rehearsal": {
+    "checked_at": "2026-11-15T07:09:06.887Z",
+    "mode": "Simulated publication only; actual current client parser and draft source rows, no live D1 or tracked status writes.",
+    "api_items": 42,
+    "normal_items": 40,
+    "duong_xua_items": 33,
+    "parts": [
+      10,
+      13,
+      10
+    ],
+    "hidden_rituals": 2,
+    "closing": "nghi-thuc-ket-thuc",
+    "puck_p1_unchanged": true,
+    "all_articles_have_audio_source_lines": true,
+    "order_unique_sorted": true
+  },
+  "browser_rehearsal": {
+    "checked_at": "2026-11-15T07:11:25.744Z",
+    "mode": "Current staging app, simulated 42-row API response; actual R2 MP3/cues for three samples. No remote content writes; does not replace official live test or phone acceptance.",
+    "results": [
+      {
+        "id": "dem-trang-ra-di",
+        "phase": "audio",
+        "time": 0.519834,
+        "provider": "google",
+        "cues": 16,
+        "ideas": 16
+      },
+      {
+        "id": "mo-cua",
+        "phase": "audio",
+        "time": 0.515633,
+        "provider": "google",
+        "cues": 16,
+        "ideas": 16
+      },
+      {
+        "id": "voi-say",
+        "phase": "audio",
+        "time": 0.519738,
+        "provider": "google",
+        "cues": 14,
+        "ideas": 14
+      }
+    ],
+    "errors": []
+  }
+}
