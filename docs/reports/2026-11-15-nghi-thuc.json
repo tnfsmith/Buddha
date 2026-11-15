@@ -1700,5 +1700,7 @@
     "changed_cue": 3,
     "other_six_wavs_reused": true,
     "subjective_tone_approval": "pending"
-  }
+  },
+  "superseded_by": "2026-11-15-hoi-huong-chon-giong.json",
+  "current_status": "Historical evidence: long/Pali TTS version rejected by owner; not current candidates"
 }

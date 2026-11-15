@@ -115,79 +115,66 @@
     {
       "id": "nghi-thuc-ket-thuc",
       "version": 1,
-      "key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-274fd594/vi-sadaltager.mp3",
-      "hash": "274fd594",
-      "fingerprint": "274fd594873f7cf4bc6c17a068f252d0484448cedc92ac82bd5849f7d1edc2c0",
-      "dur": 51.62595833333334,
-      "voice": "vi-VN-Chirp3-HD-Sadaltager",
-      "model": "Chirp3-HD",
+      "key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-b9184a78/vi-puck.mp3",
+      "hash": "b9184a78",
+      "fingerprint": "b9184a78b5a24440a97197570677efe6ae0a0f2bb5e57f5d506c4ba209863cab",
+      "dur": 7.0099583333333335,
+      "voice": "vi-VN-Chirp3-HD-Puck",
+      "speed": 1,
       "provider": "google",
-      "speed": 0.85,
+      "model": "Chirp3-HD",
+      "generated_at": "2026-11-15T03:58:08.648Z",
+      "sha256": "71ef80d69fd7e368ce13d9a4cd92c143ec052cab5f8142f9e2771198acb230c6",
+      "wer": 0,
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.17,
+        "peak_dbtp": -2.14
+      },
       "format": {
         "sample_rate": 24000,
         "channels": 1,
         "bit_rate": 96000
       },
       "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
-      "generated_at": "2026-11-15T03:04:18.093Z",
-      "wer": 0.08575008950948801,
-      "sha256": "15c2b8cf926f37e1c560169650c777437e3c1a34c5ce922ff1246c8f59f01014",
-      "loudness": {
-        "target_lufs": -16,
-        "target_peak_dbtp": -1.5,
-        "lufs": -16.14,
-        "peak_dbtp": -2.04
-      },
       "selected_attempts": [
-        2,
-        2,
-        1,
-        1,
-        1,
-        3,
-        4
+        2
       ],
       "flags": [
         {
           "i": 0,
-          "wer": 0.5,
-          "tail_ok": false,
-          "names_ok": true,
-          "seconds_per_word": 0.852388888888889
-        },
-        {
-          "i": 5,
-          "wer": 0.05263157894736842,
-          "tail_ok": true,
-          "names_ok": true,
-          "seconds_per_word": 0.24812280701754386
-        },
-        {
-          "i": 6,
           "wer": 0,
           "tail_ok": true,
           "names_ok": true,
-          "seconds_per_word": 0.29888405797101447
+          "seconds_per_word": 0.2692307692307692,
+          "note": "Owner explicitly approved faster Puck P1; raw slow-cadence flag retained."
         }
       ],
-      "revision": {
-        "reason": "Owner requests complete existing dedication and firm, decisive uplifting phrasing",
-        "old_key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-290b9390/vi-sadaltager.mp3",
-        "changed_cue": 3,
-        "reused_other_cues": true,
-        "owner_approval": "pending"
+      "listening_approval": {
+        "by": "owner",
+        "at": "2026-11-15T03:58:08.648Z",
+        "source": "Direct owner messages: Duyệt P1 / Duyệt P1 — tốc độ 1,00",
+        "voice": "vi-VN-Chirp3-HD-Puck",
+        "speed": 1,
+        "reviewed_sample_key": "bai-giang/_mau-giong/20261115/hoi-huong-puck-1-b9184a78-take2/vi-puck-1.mp3",
+        "reviewed_sample_sha256": "71ef80d69fd7e368ce13d9a4cd92c143ec052cab5f8142f9e2771198acb230c6"
+      },
+      "provenance": {
+        "operation": "Copy exact owner-approved P1 MP3/cues bytes; no TTS/re-encoding",
+        "source_sample_key": "bai-giang/_mau-giong/20261115/hoi-huong-puck-1-b9184a78-take2/vi-puck-1.mp3"
       }
     },
     {
       "id": "nghi-thuc-mo-dau",
       "version": 1,
-      "key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-abbb0ffe/vi-sadaltager.mp3",
-      "hash": "abbb0ffe",
-      "fingerprint": "abbb0ffee6ac712e0f364e1d75a65b7c373844dfe682348803bd4e38f60a33f7",
-      "dur": 45.025958333333335,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-486ddfe9/vi-sadaltager.mp3",
+      "hash": "486ddfe9",
+      "fingerprint": "486ddfe97beaba1693781ca8dbac5e572d67c13805acd94fae4f9d7dd32fa2f5",
+      "dur": 22.945958333333333,
+      "provider": "google",
       "voice": "vi-VN-Chirp3-HD-Sadaltager",
       "model": "Chirp3-HD",
-      "provider": "google",
       "speed": 0.85,
       "format": {
         "sample_rate": 24000,
@@ -195,48 +182,28 @@
         "bit_rate": 96000
       },
       "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
-      "generated_at": "2026-11-15T02:28:53.338Z",
-      "wer": 0.38095238095238093,
-      "sha256": "a1b668878e8c1f6af2bac2265bee94c1d3ad744d60348523209609e6adcc7381",
+      "generated_at": "2026-11-15T03:40:01.675Z",
+      "wer": 0,
+      "sha256": "71191a1f30da8aee1444c3dbc674903dc31ea459f4fbbc0af5d47b97d8d8a769",
       "loudness": {
         "target_lufs": -16,
         "target_peak_dbtp": -1.5,
-        "lufs": -16.15,
-        "peak_dbtp": -2.08
+        "lufs": -16.16,
+        "peak_dbtp": -2.13
       },
       "selected_attempts": [
-        1,
-        1,
-        1,
         2,
         1,
         1,
         4
       ],
-      "flags": [
-        {
-          "i": 0,
-          "wer": 0.8888888888888888,
-          "tail_ok": false,
-          "names_ok": true,
-          "seconds_per_word": 0.34190740740740744
-        },
-        {
-          "i": 1,
-          "wer": 0.8888888888888888,
-          "tail_ok": false,
-          "names_ok": true,
-          "seconds_per_word": 0.34190740740740744
-        },
-        {
-          "i": 2,
-          "wer": 0.8888888888888888,
-          "tail_ok": false,
-          "names_ok": true,
-          "seconds_per_word": 0.34190740740740744
-        }
-      ],
-      "listening_approval": {
+      "flags": [],
+      "provenance": {
+        "operation": "Remove all three Pali/Namo audio cues per owner; four original Vietnamese WAVs unchanged",
+        "source_key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-abbb0ffe/vi-sadaltager.mp3",
+        "source_listening_approval": "Owner approved original Vietnamese opening at 0.85; removal of Pali explicitly requested 2026-11-15"
+      },
+      "source_listening_approval": {
         "by": "owner",
         "at": "2026-11-15T02:56:28.921Z",
         "speed": 0.85,

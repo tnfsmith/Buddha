@@ -1,0 +1,127 @@
+{
+  "v": 1,
+  "owner_verdict": "rejected",
+  "source_tag": "v0.14.0",
+  "text": "Nguyện công đức nghe Pháp này lan đến mọi loài: cho ai khổ được hết khổ, ai sợ được hết sợ, ai sầu được hết sầu.",
+  "items": [
+    {
+      "label": "A",
+      "voice": "vi-VN-Chirp3-HD-Orus",
+      "speed": 0.85,
+      "key": "bai-giang/_mau-giong/20261115/hoi-huong-orus-91aeb94d-take2/vi-orus.mp3",
+      "cues_key": "bai-giang/_mau-giong/20261115/hoi-huong-orus-91aeb94d-take2/vi-orus.cues.json",
+      "hash": "91aeb94d",
+      "fingerprint": "91aeb94d1d07a018af3f3ef08a653014e285e2686ce5b22f754155b676a70928",
+      "dur": 10.441958333333334,
+      "format": {
+        "codec": "mp3",
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "sha256": "76615f48cc3eb934c1f755ae072b4fb0feb2c0c12637af8bc3e869d023800f42",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.2,
+        "peak_dbtp": -2.14
+      },
+      "score": {
+        "attempt": 2,
+        "reference": "Nguyện công đức nghe Pháp này lan đến mọi loài. Cho ai khổ được hết khổ. Ai sợ được hết sợ. Ai sầu được hết sầu.",
+        "transcript": "Nguyện công đức Nghe pháp này Lan đến mọi loài cho ai khổ được hết khổ ai sợ được hết sợ ai sầu được hết sầu",
+        "duration": 10.434333333333333,
+        "wer": 0,
+        "tailOk": true,
+        "namesOk": true,
+        "secondsPerWord": 0.4013205128205128,
+        "pass": true
+      },
+      "status": "not_selected",
+      "selected": false,
+      "pcm_sha256": "6634f6a97a099c36126d4f74ae12c8d933c52174e7fdda098d5329df73716cd7"
+    },
+    {
+      "label": "B",
+      "voice": "vi-VN-Chirp3-HD-Fenrir",
+      "speed": 0.85,
+      "key": "bai-giang/_mau-giong/20261115/hoi-huong-fenrir-63c14bcf/vi-fenrir.mp3",
+      "cues_key": "bai-giang/_mau-giong/20261115/hoi-huong-fenrir-63c14bcf/vi-fenrir.cues.json",
+      "hash": "63c14bcf",
+      "fingerprint": "63c14bcf036d84444b923a520730544af80b40b15496c7870f45d8c006e49307",
+      "dur": 8.161958333333333,
+      "format": {
+        "codec": "mp3",
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "sha256": "5a4f9f7deb92f756d388d0ca92612c2131dc73f31580a6150b375454b3497922",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.08,
+        "peak_dbtp": -2.13
+      },
+      "score": {
+        "attempt": 1,
+        "reference": "Nguyện công đức nghe Pháp này lan đến mọi loài. Cho ai khổ được hết khổ. Ai sợ được hết sợ. Ai sầu được hết sầu.",
+        "transcript": "Nguyện công đức Nghe pháp này Lan đến mọi loài cho ai khổ được hết khổ ai sợ được hết sợ ai sầu được hết sầu",
+        "duration": 8.154333333333334,
+        "wer": 0,
+        "tailOk": true,
+        "namesOk": true,
+        "secondsPerWord": 0.31362820512820516,
+        "pass": true
+      },
+      "status": "not_selected",
+      "selected": false,
+      "pcm_sha256": "eb836e5a625dfde635e7cd9237698635ad293f7abd10cc819cc87c6c4570cac6"
+    },
+    {
+      "label": "C",
+      "voice": "vi-VN-Chirp3-HD-Alnilam",
+      "speed": 0.85,
+      "key": "bai-giang/_mau-giong/20261115/hoi-huong-alnilam-a586acc8/vi-alnilam.mp3",
+      "cues_key": "bai-giang/_mau-giong/20261115/hoi-huong-alnilam-a586acc8/vi-alnilam.cues.json",
+      "hash": "a586acc8",
+      "fingerprint": "a586acc8756e16e6555a3c057e3245de1078746be45f7f0fd4c7fd06533adf15",
+      "dur": 8.161958333333333,
+      "format": {
+        "codec": "mp3",
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "sha256": "605e5c5ac49cfff2c06a0fec3b5a07ecd569cec01b71e8072dafbbbbcdbe7d99",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.16,
+        "peak_dbtp": -2.02
+      },
+      "score": {
+        "attempt": 1,
+        "reference": "Nguyện công đức nghe Pháp này lan đến mọi loài. Cho ai khổ được hết khổ. Ai sợ được hết sợ. Ai sầu được hết sầu.",
+        "transcript": "Nguyện công đức Nghe pháp này Lan đến mọi loài cho ai khổ được hết khổ ai sợ được hết sợ ai sầu được hết sầu",
+        "duration": 8.154333333333334,
+        "wer": 0,
+        "tailOk": true,
+        "namesOk": true,
+        "secondsPerWord": 0.31362820512820516,
+        "pass": true
+      },
+      "status": "not_selected",
+      "selected": false,
+      "pcm_sha256": "6544b0db0b3d93d1cc67691e7c2e74a06663532100414d5248d14c1a73ea8d0a"
+    }
+  ],
+  "rejection": {
+    "at": "2026-11-15T03:56:04.860Z",
+    "by": "owner",
+    "reason": "Still slow and insufficient energy; explicitly requests Puck"
+  }
+}

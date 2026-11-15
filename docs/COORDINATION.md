@@ -4,6 +4,8 @@ Ngày cập nhật: 15/11/2026. Người tổng hợp duy nhất: **Codex**. Quy
 
 **Quyết định nội dung mới của chủ dự án (#55):** bỏ điều kiện Hội đồng bắt buộc. Nội dung tham khảo có nguồn, phát hành theo quy trình biên tập/PR; Hội đồng/chuyên gia chỉ tư vấn tùy chọn. ADR 0003 thay các yêu cầu cũ còn xuất hiện trong bằng chứng lịch sử dưới đây. Quyết định đã ghi không có nghĩa mã UI đang chạy đã thay đổi.
 
+**#80 hiện hành (15/11):** bản dài/Pāli và ba giọng 0,85 đã bị từ chối. Chủ dự án đã duyệt P1/Puck1,00 (7,01s), giữ đúng một câu v0.14.0. Không TTS Pāli; Claude giữ máy quay/đảnh lễ ba lần. Xem mục 13.3.
+
 Đọc tệp này khi bắt đầu phiên; sau đó kiểm Issue/PR và `origin/main` hiện tại. Tệp là bản bàn giao có thời điểm, không thay bảng việc GitHub. Claude gửi cập nhật trong Issue/PR; Codex tổng hợp để tránh hai agent cùng sửa tệp này.
 
 ## 1. Mốc đã xác minh
@@ -156,3 +158,22 @@ Mỗi bàn giao ghi: Issue/PR, SHA/base, tệp đã đổi, hợp đồng ảnh 
 ### 13.1. Bổ sung hồi hướng sau duyệt nghe — 15/11
 
 Chủ dự án yêu cầu đọc trọn câu “Nguyện công đức nghe Pháp này lan đến mọi loài: cho ai khổ được hết khổ, ai sợ được hết sợ, ai sầu được hết sầu.” Đã thêm vào cue 3 của bản kết, chia nhịp câu ngắn để dứt khoát. Bản mở đầu vẫn da_duyet; **bản kết mới trở lại cho_duyet** chờ nghe xác nhận, 0,85 vẫn là tốc độ đã chọn. Cả hai mẫu 0,80/0,85 đã sinh/upload/audit lại; câu hồi hướng WER 0% ở cả hai, sáu cue còn lại giữ WAV cũ. Không áp dụng duyệt bản kết cũ cho nội dung mới. Hai khóa kết cũ giữ ≥30 ngày, chưa xóa. PR81 tiếp tục Draft; không sửa apps/web. Mục 13.1 này thay trạng thái “hai bài đã duyệt” phía trên cho riêng bản kết sửa mới.
+
+### 13.2. Bản ngắn v0.14.0, ba giọng mới, không TTS Pāli — quyết định mới nhất 15/11
+
+- Thay toàn bộ gợi ý bản kết 50–60s: chỉ một câu DEDICATE đúng tag v0.14.0; không lời cảm ơn/tiễn. Bản kết vẫn cho_duyet, chưa gắn body_r2_key khi chưa chọn voice. Mẫu A Orus 10,44s, B Fenrir 8,16s, C Alnilam 8,16s; cùng 0,85, WER0%, 96k/mono/24k/ID3, cả hai bucket khớp. Link 7 ngày ở PR81/#33. Chờ chủ dự án nghe ít nhất ba giọng trước final verdict, không tự chọn thay.
+- Không có tiếng Pāli trong TTS. Mở đầu còn bốn cue Việt (0,85:22,95s), giữ WAV Việt/giọng đã nghe; bản kết một cue hồi hướng. Câu Pāli > chỉ hiển thị. Claude cập nhật #82/#79 và ADR: máy quay hướng chúng sanh đảnh lễ Đức Phật ba lần, hoàn tất đoạn đảnh lễ rồi mới phát hồi hướng; không chờ cue Sādhu từ audio. Codex không sửa apps/web/ADR.
+- Công cụ hỗ trợ meta.audio.voice riêng cho nghi thức trong #73, đã 166 unit/API đạt; giong.json và bảy bài/33 Đường Xưa giữ nguyên. Ba mẫu nằm `_mau-giong`, không nạp D1; sổ chính chỉ giữ mở đầu và bảy bài cũ. Sau verdict mới đặt khóa/giọng cho bản kết, dùng đúng bytes đã nghe. Mọi khóa cũ giữ≥30 ngày, chưa xóa. Báo cáo hiện hành: docs/reports/2026-11-15-hoi-huong-chon-giong.{md,json}; báo cáo nghi thức cũ là lịch sử.
+- PR81 tiếp tục Draft, một PR Hermes duy nhất; 33 Đường Xưa vẫn cho_duyet. #71 là lượt merge được báo trước; sau đó đối chiếu #69 → #73 → #82 đã cập nhật hợp đồng mới → #81 sau chọn/duyệt → #76–#78 sau chủ dự án duyệt → Claude staging → chủ dự án tag. Không dùng CI/duyệt của bản dài cũ để khẳng định bản mới đã xong.
+
+### 13.3. Puck nhanh gọn — yêu cầu mới nhất sau từ chối ba giọng
+
+Chủ dự án từ chối Orus/Fenrir/Alnilam 0,85 vì chậm, rề rà và thiếu năng lượng; yêu cầu Puck/nhấn âm mạnh, truyền cảm hơn. Đã thử P1 Puck1,00=7,01s và P2 Puck1,10=6,34s, WER0%/đúng đuôi; không pause dài, giữ một câu hồi hướng v0.14.0. 1,20/nhấn chữ/SSML còn cờ sai hoặc thiếu từ nên không đưa vào lựa chọn đã kiểm đủ lời. Chờ chủ dự án nghe P1/P2 trước final verdict, không tự lấy điểm ASR làm duyệt năng lượng.
+
+Giữ raw pace flags theo ngưỡng cũ, không đổi transcript/điểm. Main lock chỉ có 7 bài cũ + mở đầu Việt; bản kết cho_duyet chưa có khóa/giọng/tốc độ phát hành. Cấu hình giọng chung và 33 bài Đường Xưa không đổi. Công cụ #73 cho phép tốc độ nghi thức riêng 0,80–1,20; không áp cho loạt khác. Hồ sơ hiện hành: docs/reports/2026-11-15-hoi-huong-puck.{md,json}, content/bai-giang/_hoi-huong.puck-options.json; mẫu trước là lịch sử bị từ chối. PR81 Draft, client #82 phải cập nhật đảnh lễ/máy quay trước merge. Không sửa apps/web/ADR, không merge/tag.
+
+### 13.4. Final verdict: duyệt P1 — Puck tốc độ 1,00
+
+Chủ dự án xác nhận hai lần trong chat: Duyệt P1, Puck1,00. Bản kết đã da_duyet, meta.audio.voice=vi-VN-Chirp3-HD-Puck, speed=1; một cue Việt/7,01s, không Pāli TTS hoặc lời cảm ơn. Dùng đúng MP3/cues đã nghe, SHA-256 không đổi; copy sang khóa nghi thức chính thức, hai bucket khớp, không sinh/mã hóa lại. Giữ raw pace flag và phê duyệt nghe; WER0%/đuôi đúng. Main lock nay 9 mục (7 cũ + mở đầu Việt4cue/Sadaltager0,85 + kết Puck1,00); 33 Đường Xưa vẫn nháp, giọng chung không đổi.
+
+PR81 chưa merge/deploy; #82 phải cập nhật máy quay hướng chúng sanh đảnh lễ ba lần trước hồi hướng, không tìm cue Sādhu trong MP3. Theo dõi CI đúng head mới; #71 vẫn là lượt merge đã báo trước. Không tự merge/tag.

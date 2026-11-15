@@ -241,6 +241,66 @@
         "vandao-media"
       ],
       "reason": "Owner requested full dedication; replaced one cue from original WAV, old sample retained >=30 days. No object deleted."
+    },
+    {
+      "id": "nghi-thuc-mo-dau",
+      "version": 1,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-abbb0ffe/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-abbb0ffe/vi-sadaltager.cues.json",
+      "sha256": "a1b668878e8c1f6af2bac2265bee94c1d3ad744d60348523209609e6adcc7381",
+      "bit_rate": 96000,
+      "retired_at": "2026-11-15T03:43:43.864Z",
+      "delete_after": "2026-12-15T03:43:43.864Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Owner requests no Pali TTS and short v0.14.0 dedication; replaced review assets, keep old keys >=30 days. No object deleted."
+    },
+    {
+      "id": "nghi-thuc-mo-dau",
+      "version": 1,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-897627db/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-897627db/vi-sadaltager.cues.json",
+      "sha256": "577f0d8319e53424fd70207dd465c71ee47c6fd2bbbfed18a8e9d771e74350de",
+      "bit_rate": 96000,
+      "retired_at": "2026-11-15T03:43:43.864Z",
+      "delete_after": "2026-12-15T03:43:43.864Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Owner requests no Pali TTS and short v0.14.0 dedication; replaced review assets, keep old keys >=30 days. No object deleted."
+    },
+    {
+      "id": "nghi-thuc-ket-thuc",
+      "version": 1,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-44680d7f/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-44680d7f/vi-sadaltager.cues.json",
+      "sha256": "6843e257b068957d49cf30bfba86c56d14ea483cbc4d487ce16313bfb13d073c",
+      "bit_rate": 96000,
+      "retired_at": "2026-11-15T03:43:43.864Z",
+      "delete_after": "2026-12-15T03:43:43.864Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Owner requests no Pali TTS and short v0.14.0 dedication; replaced review assets, keep old keys >=30 days. No object deleted."
+    },
+    {
+      "id": "nghi-thuc-ket-thuc",
+      "version": 1,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-274fd594/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-274fd594/vi-sadaltager.cues.json",
+      "sha256": "15c2b8cf926f37e1c560169650c777437e3c1a34c5ce922ff1246c8f59f01014",
+      "bit_rate": 96000,
+      "retired_at": "2026-11-15T03:43:43.864Z",
+      "delete_after": "2026-12-15T03:43:43.864Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Owner requests no Pali TTS and short v0.14.0 dedication; replaced review assets, keep old keys >=30 days. No object deleted."
     }
   ]
 }
