@@ -1,0 +1,100 @@
+{
+  "v": 1,
+  "owner_verdict": {
+    "state": "approved",
+    "label": "P1",
+    "by": "owner",
+    "at": "2026-11-15T03:58:08.648Z",
+    "source": "Direct owner messages: Duyệt P1 / Duyệt P1 — tốc độ 1,00",
+    "voice": "vi-VN-Chirp3-HD-Puck",
+    "speed": 1,
+    "reviewed_sample_key": "bai-giang/_mau-giong/20261115/hoi-huong-puck-1-b9184a78-take2/vi-puck-1.mp3",
+    "reviewed_sample_sha256": "71ef80d69fd7e368ce13d9a4cd92c143ec052cab5f8142f9e2771198acb230c6"
+  },
+  "source_tag": "v0.14.0",
+  "text": "Nguyện công đức nghe Pháp này lan đến mọi loài: cho ai khổ được hết khổ, ai sợ được hết sợ, ai sầu được hết sầu.",
+  "items": [
+    {
+      "label": "P1",
+      "voice": "vi-VN-Chirp3-HD-Puck",
+      "speed": 1,
+      "spoken": "Nguyện công đức nghe Pháp này lan đến mọi loài! Cho ai khổ được hết khổ! Ai sợ được hết sợ! Ai sầu được hết sầu!",
+      "key": "bai-giang/_mau-giong/20261115/hoi-huong-puck-1-b9184a78-take2/vi-puck-1.mp3",
+      "cues_key": "bai-giang/_mau-giong/20261115/hoi-huong-puck-1-b9184a78-take2/vi-puck-1.cues.json",
+      "hash": "b9184a78",
+      "fingerprint": "b9184a78b5a24440a97197570677efe6ae0a0f2bb5e57f5d506c4ba209863cab",
+      "dur": 7.0099583333333335,
+      "format": {
+        "codec": "mp3",
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "sha256": "71ef80d69fd7e368ce13d9a4cd92c143ec052cab5f8142f9e2771198acb230c6",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.17,
+        "peak_dbtp": -2.14
+      },
+      "score": {
+        "attempt": 2,
+        "reference": "Nguyện công đức nghe Pháp này lan đến mọi loài! Cho ai khổ được hết khổ! Ai sợ được hết sợ! Ai sầu được hết sầu!",
+        "transcript": "Nguyện công đức Nghe pháp này Lan đến mọi loài cho ai khổ được hết khổ ai sợ được hết sợ ai sầu được hết sầu",
+        "duration": 7,
+        "wer": 0,
+        "tailOk": true,
+        "namesOk": true,
+        "secondsPerWord": 0.2692307692307692,
+        "pass": false
+      },
+      "status": "da_duyet",
+      "selected": true,
+      "flags": [
+        "legacy slow-cadence threshold; owner explicitly requested faster speech, raw pace score retained"
+      ]
+    },
+    {
+      "label": "P2",
+      "voice": "vi-VN-Chirp3-HD-Puck",
+      "speed": 1.1,
+      "spoken": "Nguyện công đức nghe Pháp này lan đến mọi loài! Cho ai khổ được hết khổ! Ai sợ được hết sợ! Ai sầu được hết sầu!",
+      "key": "bai-giang/_mau-giong/20261115/hoi-huong-puck-11-44d724cb-take3/vi-puck-11.mp3",
+      "cues_key": "bai-giang/_mau-giong/20261115/hoi-huong-puck-11-44d724cb-take3/vi-puck-11.cues.json",
+      "hash": "44d724cb",
+      "fingerprint": "44d724cbb159bc88bb3217d097a770761fefb0791d97e9126b028f4cca5a4ce6",
+      "dur": 6.337958333333333,
+      "format": {
+        "codec": "mp3",
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "sha256": "57fd76408309f9bb931078f61b82b249ca21c9fd8503ecfc2815df2a22e3dffd",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.19,
+        "peak_dbtp": -2.15
+      },
+      "score": {
+        "attempt": 3,
+        "reference": "Nguyện công đức nghe Pháp này lan đến mọi loài! Cho ai khổ được hết khổ! Ai sợ được hết sợ! Ai sầu được hết sầu!",
+        "transcript": "Nguyện công đức Nghe pháp này Lan đến mọi loài cho ai khổ được hết khổ ai sợ được hết sợ ai sầu được hết sầu",
+        "duration": 6.3293333333333335,
+        "wer": 0,
+        "tailOk": true,
+        "namesOk": true,
+        "secondsPerWord": 0.24343589743589744,
+        "pass": false
+      },
+      "status": "cho_duyet",
+      "selected": false,
+      "flags": [
+        "legacy slow-cadence threshold; owner explicitly requested faster speech, raw pace score retained"
+      ]
+    }
+  ]
+}

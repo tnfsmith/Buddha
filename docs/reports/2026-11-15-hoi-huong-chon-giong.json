@@ -1,0 +1,657 @@
+{
+  "checked_at": "2026-11-15T03:43:43.864Z",
+  "owner_verdict": "rejected",
+  "source_tag": "v0.14.0",
+  "source_file": "apps/web/src/sermon.js",
+  "canonical": "Nguyện công đức nghe Pháp này lan đến mọi loài: cho ai khổ được hết khổ, ai sợ được hết sợ, ai sầu được hết sầu.",
+  "spoken": "Nguyện công đức nghe Pháp này lan đến mọi loài. [pause short] Cho ai khổ được hết khổ. [pause short] Ai sợ được hết sợ. [pause short] Ai sầu được hết sầu.",
+  "client_contract": {
+    "pali_tts": false,
+    "closing_cues": 1,
+    "opening_cues": 4,
+    "bows": "Client shows audience prostrating three times before closing audio; camera toward audience",
+    "client_owner": "Claude #79/#82"
+  },
+  "options": [
+    {
+      "label": "A",
+      "voice": "vi-VN-Chirp3-HD-Orus",
+      "speed": 0.85,
+      "key": "bai-giang/_mau-giong/20261115/hoi-huong-orus-91aeb94d-take2/vi-orus.mp3",
+      "cues_key": "bai-giang/_mau-giong/20261115/hoi-huong-orus-91aeb94d-take2/vi-orus.cues.json",
+      "hash": "91aeb94d",
+      "fingerprint": "91aeb94d1d07a018af3f3ef08a653014e285e2686ce5b22f754155b676a70928",
+      "dur": 10.441958333333334,
+      "format": {
+        "codec": "mp3",
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "sha256": "76615f48cc3eb934c1f755ae072b4fb0feb2c0c12637af8bc3e869d023800f42",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.2,
+        "peak_dbtp": -2.14
+      },
+      "score": {
+        "attempt": 2,
+        "reference": "Nguyện công đức nghe Pháp này lan đến mọi loài. Cho ai khổ được hết khổ. Ai sợ được hết sợ. Ai sầu được hết sầu.",
+        "transcript": "Nguyện công đức Nghe pháp này Lan đến mọi loài cho ai khổ được hết khổ ai sợ được hết sợ ai sầu được hết sầu",
+        "duration": 10.434333333333333,
+        "wer": 0,
+        "tailOk": true,
+        "namesOk": true,
+        "secondsPerWord": 0.4013205128205128,
+        "pass": true
+      },
+      "status": "cho_duyet",
+      "selected": false,
+      "pcm_sha256": "6634f6a97a099c36126d4f74ae12c8d933c52174e7fdda098d5329df73716cd7",
+      "ffprobe": {
+        "stream": {
+          "index": 0,
+          "codec_name": "mp3",
+          "codec_long_name": "MP3 (MPEG audio layer 3)",
+          "codec_type": "audio",
+          "codec_tag_string": "[0][0][0][0]",
+          "codec_tag": "0x0000",
+          "mime_codec_string": "mp4a.40.34",
+          "sample_fmt": "fltp",
+          "sample_rate": "24000",
+          "channels": 1,
+          "channel_layout": "mono",
+          "bits_per_sample": 0,
+          "initial_padding": 0,
+          "r_frame_rate": "0/0",
+          "avg_frame_rate": "0/0",
+          "time_base": "1/14112000",
+          "start_pts": 649740,
+          "start_time": "0.046042",
+          "duration_ts": 147249312,
+          "duration": "10.434333",
+          "bit_rate": "96000",
+          "disposition": {
+            "default": 0,
+            "dub": 0,
+            "original": 0,
+            "comment": 0,
+            "lyrics": 0,
+            "karaoke": 0,
+            "forced": 0,
+            "hearing_impaired": 0,
+            "visual_impaired": 0,
+            "clean_effects": 0,
+            "attached_pic": 0,
+            "timed_thumbnails": 0,
+            "non_diegetic": 0,
+            "captions": 0,
+            "descriptions": 0,
+            "metadata": 0,
+            "dependent": 0,
+            "still_image": 0,
+            "multilayer": 0
+          }
+        },
+        "tags": {
+          "comment": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+          "AI_GENERATED": "Giọng đọc tạo bằng AI — Google Chirp 3 HD"
+        }
+      },
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "76615f48cc3eb934c1f755ae072b4fb0feb2c0c12637af8bc3e869d023800f42",
+          "cues_sha256": "0b4188038f4ca8485f246e791110b975f7c2d9f5a2a6f5d67add19e277d9e507",
+          "ai_id3": true
+        },
+        "PROD": {
+          "audio_sha256": "76615f48cc3eb934c1f755ae072b4fb0feb2c0c12637af8bc3e869d023800f42",
+          "cues_sha256": "0b4188038f4ca8485f246e791110b975f7c2d9f5a2a6f5d67add19e277d9e507",
+          "ai_id3": true
+        }
+      },
+      "raw_trials": [
+        {
+          "attempt": 1,
+          "reference": "Nguyện công đức nghe Pháp này lan đến mọi loài. Cho ai khổ được hết khổ. Ai sợ được hết sợ. Ai sầu được hết sầu.",
+          "transcript": "Nguyễn Công Đức Nghe pháp này Lan đến mọi loài cho ai khổ được hết khổ ai sợ được hết sợ ai sầu được hết sầu",
+          "duration": 9.714333333333334,
+          "wer": 0.038461538461538464,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.37362820512820516,
+          "pass": true
+        },
+        {
+          "attempt": 2,
+          "reference": "Nguyện công đức nghe Pháp này lan đến mọi loài. Cho ai khổ được hết khổ. Ai sợ được hết sợ. Ai sầu được hết sầu.",
+          "transcript": "Nguyện công đức Nghe pháp này Lan đến mọi loài cho ai khổ được hết khổ ai sợ được hết sợ ai sầu được hết sầu",
+          "duration": 10.434333333333333,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.4013205128205128,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "label": "B",
+      "voice": "vi-VN-Chirp3-HD-Fenrir",
+      "speed": 0.85,
+      "key": "bai-giang/_mau-giong/20261115/hoi-huong-fenrir-63c14bcf/vi-fenrir.mp3",
+      "cues_key": "bai-giang/_mau-giong/20261115/hoi-huong-fenrir-63c14bcf/vi-fenrir.cues.json",
+      "hash": "63c14bcf",
+      "fingerprint": "63c14bcf036d84444b923a520730544af80b40b15496c7870f45d8c006e49307",
+      "dur": 8.161958333333333,
+      "format": {
+        "codec": "mp3",
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "sha256": "5a4f9f7deb92f756d388d0ca92612c2131dc73f31580a6150b375454b3497922",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.08,
+        "peak_dbtp": -2.13
+      },
+      "score": {
+        "attempt": 1,
+        "reference": "Nguyện công đức nghe Pháp này lan đến mọi loài. Cho ai khổ được hết khổ. Ai sợ được hết sợ. Ai sầu được hết sầu.",
+        "transcript": "Nguyện công đức Nghe pháp này Lan đến mọi loài cho ai khổ được hết khổ ai sợ được hết sợ ai sầu được hết sầu",
+        "duration": 8.154333333333334,
+        "wer": 0,
+        "tailOk": true,
+        "namesOk": true,
+        "secondsPerWord": 0.31362820512820516,
+        "pass": true
+      },
+      "status": "cho_duyet",
+      "selected": false,
+      "pcm_sha256": "eb836e5a625dfde635e7cd9237698635ad293f7abd10cc819cc87c6c4570cac6",
+      "ffprobe": {
+        "stream": {
+          "index": 0,
+          "codec_name": "mp3",
+          "codec_long_name": "MP3 (MPEG audio layer 3)",
+          "codec_type": "audio",
+          "codec_tag_string": "[0][0][0][0]",
+          "codec_tag": "0x0000",
+          "mime_codec_string": "mp4a.40.34",
+          "sample_fmt": "fltp",
+          "sample_rate": "24000",
+          "channels": 1,
+          "channel_layout": "mono",
+          "bits_per_sample": 0,
+          "initial_padding": 0,
+          "r_frame_rate": "0/0",
+          "avg_frame_rate": "0/0",
+          "time_base": "1/14112000",
+          "start_pts": 649740,
+          "start_time": "0.046042",
+          "duration_ts": 115073952,
+          "duration": "8.154333",
+          "bit_rate": "96000",
+          "disposition": {
+            "default": 0,
+            "dub": 0,
+            "original": 0,
+            "comment": 0,
+            "lyrics": 0,
+            "karaoke": 0,
+            "forced": 0,
+            "hearing_impaired": 0,
+            "visual_impaired": 0,
+            "clean_effects": 0,
+            "attached_pic": 0,
+            "timed_thumbnails": 0,
+            "non_diegetic": 0,
+            "captions": 0,
+            "descriptions": 0,
+            "metadata": 0,
+            "dependent": 0,
+            "still_image": 0,
+            "multilayer": 0
+          }
+        },
+        "tags": {
+          "comment": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+          "AI_GENERATED": "Giọng đọc tạo bằng AI — Google Chirp 3 HD"
+        }
+      },
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "5a4f9f7deb92f756d388d0ca92612c2131dc73f31580a6150b375454b3497922",
+          "cues_sha256": "48fb9aa224a042381596a827cf8b0e3665bd5855299402c35ba79862107f44a3",
+          "ai_id3": true
+        },
+        "PROD": {
+          "audio_sha256": "5a4f9f7deb92f756d388d0ca92612c2131dc73f31580a6150b375454b3497922",
+          "cues_sha256": "48fb9aa224a042381596a827cf8b0e3665bd5855299402c35ba79862107f44a3",
+          "ai_id3": true
+        }
+      },
+      "raw_trials": [
+        {
+          "attempt": 1,
+          "reference": "Nguyện công đức nghe Pháp này lan đến mọi loài. Cho ai khổ được hết khổ. Ai sợ được hết sợ. Ai sầu được hết sầu.",
+          "transcript": "Nguyện công đức Nghe pháp này Lan đến mọi loài cho ai khổ được hết khổ ai sợ được hết sợ ai sầu được hết sầu",
+          "duration": 8.154333333333334,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.31362820512820516,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "label": "C",
+      "voice": "vi-VN-Chirp3-HD-Alnilam",
+      "speed": 0.85,
+      "key": "bai-giang/_mau-giong/20261115/hoi-huong-alnilam-a586acc8/vi-alnilam.mp3",
+      "cues_key": "bai-giang/_mau-giong/20261115/hoi-huong-alnilam-a586acc8/vi-alnilam.cues.json",
+      "hash": "a586acc8",
+      "fingerprint": "a586acc8756e16e6555a3c057e3245de1078746be45f7f0fd4c7fd06533adf15",
+      "dur": 8.161958333333333,
+      "format": {
+        "codec": "mp3",
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "sha256": "605e5c5ac49cfff2c06a0fec3b5a07ecd569cec01b71e8072dafbbbbcdbe7d99",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.16,
+        "peak_dbtp": -2.02
+      },
+      "score": {
+        "attempt": 1,
+        "reference": "Nguyện công đức nghe Pháp này lan đến mọi loài. Cho ai khổ được hết khổ. Ai sợ được hết sợ. Ai sầu được hết sầu.",
+        "transcript": "Nguyện công đức Nghe pháp này Lan đến mọi loài cho ai khổ được hết khổ ai sợ được hết sợ ai sầu được hết sầu",
+        "duration": 8.154333333333334,
+        "wer": 0,
+        "tailOk": true,
+        "namesOk": true,
+        "secondsPerWord": 0.31362820512820516,
+        "pass": true
+      },
+      "status": "cho_duyet",
+      "selected": false,
+      "pcm_sha256": "6544b0db0b3d93d1cc67691e7c2e74a06663532100414d5248d14c1a73ea8d0a",
+      "ffprobe": {
+        "stream": {
+          "index": 0,
+          "codec_name": "mp3",
+          "codec_long_name": "MP3 (MPEG audio layer 3)",
+          "codec_type": "audio",
+          "codec_tag_string": "[0][0][0][0]",
+          "codec_tag": "0x0000",
+          "mime_codec_string": "mp4a.40.34",
+          "sample_fmt": "fltp",
+          "sample_rate": "24000",
+          "channels": 1,
+          "channel_layout": "mono",
+          "bits_per_sample": 0,
+          "initial_padding": 0,
+          "r_frame_rate": "0/0",
+          "avg_frame_rate": "0/0",
+          "time_base": "1/14112000",
+          "start_pts": 649740,
+          "start_time": "0.046042",
+          "duration_ts": 115073952,
+          "duration": "8.154333",
+          "bit_rate": "96000",
+          "disposition": {
+            "default": 0,
+            "dub": 0,
+            "original": 0,
+            "comment": 0,
+            "lyrics": 0,
+            "karaoke": 0,
+            "forced": 0,
+            "hearing_impaired": 0,
+            "visual_impaired": 0,
+            "clean_effects": 0,
+            "attached_pic": 0,
+            "timed_thumbnails": 0,
+            "non_diegetic": 0,
+            "captions": 0,
+            "descriptions": 0,
+            "metadata": 0,
+            "dependent": 0,
+            "still_image": 0,
+            "multilayer": 0
+          }
+        },
+        "tags": {
+          "comment": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+          "AI_GENERATED": "Giọng đọc tạo bằng AI — Google Chirp 3 HD"
+        }
+      },
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "605e5c5ac49cfff2c06a0fec3b5a07ecd569cec01b71e8072dafbbbbcdbe7d99",
+          "cues_sha256": "5517ce0b2fdb81e069a57e980a9c81cb034a7311680225013800f81b96e39884",
+          "ai_id3": true
+        },
+        "PROD": {
+          "audio_sha256": "605e5c5ac49cfff2c06a0fec3b5a07ecd569cec01b71e8072dafbbbbcdbe7d99",
+          "cues_sha256": "5517ce0b2fdb81e069a57e980a9c81cb034a7311680225013800f81b96e39884",
+          "ai_id3": true
+        }
+      },
+      "raw_trials": [
+        {
+          "attempt": 1,
+          "reference": "Nguyện công đức nghe Pháp này lan đến mọi loài. Cho ai khổ được hết khổ. Ai sợ được hết sợ. Ai sầu được hết sầu.",
+          "transcript": "Nguyện công đức Nghe pháp này Lan đến mọi loài cho ai khổ được hết khổ ai sợ được hết sợ ai sầu được hết sầu",
+          "duration": 8.154333333333334,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.31362820512820516,
+          "pass": true
+        }
+      ]
+    }
+  ],
+  "opening": [
+    {
+      "id": "nghi-thuc-mo-dau",
+      "version": 1,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-150b0c56/vi-sadaltager.mp3",
+      "hash": "150b0c56",
+      "fingerprint": "150b0c56d5815aff75137890bb07fffe888a7264237f670b6226d2b68f9bca81",
+      "dur": 24.289958333333335,
+      "provider": "google",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "speed": 0.8,
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "generated_at": "2026-11-15T03:39:39.428Z",
+      "wer": 0,
+      "sha256": "e8d7eff38f731f44750ee245d7358045ddc95ea57526046e54e2fae3b1f64dd3",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.08,
+        "peak_dbtp": -2
+      },
+      "selected_attempts": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "flags": [],
+      "provenance": {
+        "operation": "Remove all three Pali/Namo audio cues per owner; four original Vietnamese WAVs unchanged",
+        "source_key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-897627db/vi-sadaltager.mp3",
+        "source_listening_approval": "Owner approved original Vietnamese opening at 0.85; removal of Pali explicitly requested 2026-11-15"
+      },
+      "cues": [
+        {
+          "i": 0,
+          "t": 0,
+          "e": 5.6053
+        },
+        {
+          "i": 1,
+          "t": 6.8053,
+          "e": 12.7707
+        },
+        {
+          "i": 2,
+          "t": 13.9707,
+          "e": 17.686
+        },
+        {
+          "i": 3,
+          "t": 18.886,
+          "e": 24.2813
+        }
+      ],
+      "scores": [
+        {
+          "hash": "150b0c56d5815aff75137890bb07fffe888a7264237f670b6226d2b68f9bca81",
+          "i": 0,
+          "attempt": 1,
+          "reference": "Chào bạn, dù hôm nay là một ngày nhẹ lòng hay còn nhiều điều chưa thể nói.",
+          "transcript": "Chào bạn dù hôm nay là một ngày nhẹ lòng hay còn nhiều điều chưa thể nói",
+          "duration": 5.605333333333333,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.32972549019607844,
+          "pass": true,
+          "source_i": 3,
+          "source_hash": "897627db2443c5017bb653809d999c1c6971026086692b908ceb205a7f263f92",
+          "reused_source_wav": true
+        },
+        {
+          "hash": "150b0c56d5815aff75137890bb07fffe888a7264237f670b6226d2b68f9bca81",
+          "i": 1,
+          "attempt": 1,
+          "reference": "Ở đây, chúng ta cùng đặt xuống những bận rộn, để lòng được nghỉ một chút.",
+          "transcript": "ở đây chúng ta cùng đặt xuống những bận rộn để lòng được nghỉ một chút",
+          "duration": 5.965333333333334,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.37283333333333335,
+          "pass": true,
+          "source_i": 4,
+          "source_hash": "897627db2443c5017bb653809d999c1c6971026086692b908ceb205a7f263f92",
+          "reused_source_wav": true
+        },
+        {
+          "hash": "150b0c56d5815aff75137890bb07fffe888a7264237f670b6226d2b68f9bca81",
+          "i": 2,
+          "attempt": 1,
+          "reference": "Mời bạn thở vào thật tự nhiên, rồi nhẹ nhàng thở ra.",
+          "transcript": "mời bạn thở vào thật Tự nhiên rồi nhẹ nhàng thở ra",
+          "duration": 3.715333333333333,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.3096111111111111,
+          "pass": true,
+          "source_i": 5,
+          "source_hash": "897627db2443c5017bb653809d999c1c6971026086692b908ceb205a7f263f92",
+          "reused_source_wav": true
+        },
+        {
+          "hash": "150b0c56d5815aff75137890bb07fffe888a7264237f670b6226d2b68f9bca81",
+          "i": 3,
+          "attempt": 1,
+          "reference": "Chúng ta cùng lắng nghe bằng tấm lòng rộng mở, để hiểu mình và thương nhau hơn.",
+          "transcript": "chúng ta cùng lắng nghe bằng tấm lòng rộng mở để hiểu mình và thương nhau hơn",
+          "duration": 5.395333333333333,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.3173725490196078,
+          "pass": true,
+          "source_i": 6,
+          "source_hash": "897627db2443c5017bb653809d999c1c6971026086692b908ceb205a7f263f92",
+          "reused_source_wav": true
+        }
+      ],
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "e8d7eff38f731f44750ee245d7358045ddc95ea57526046e54e2fae3b1f64dd3",
+          "cues_sha256": "7354adbddaf2602c960f4e778db65f039af65b16ccf0f4efe338c42ec66cd77f"
+        },
+        "PROD": {
+          "audio_sha256": "e8d7eff38f731f44750ee245d7358045ddc95ea57526046e54e2fae3b1f64dd3",
+          "cues_sha256": "7354adbddaf2602c960f4e778db65f039af65b16ccf0f4efe338c42ec66cd77f"
+        }
+      }
+    },
+    {
+      "id": "nghi-thuc-mo-dau",
+      "version": 1,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-486ddfe9/vi-sadaltager.mp3",
+      "hash": "486ddfe9",
+      "fingerprint": "486ddfe97beaba1693781ca8dbac5e572d67c13805acd94fae4f9d7dd32fa2f5",
+      "dur": 22.945958333333333,
+      "provider": "google",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "speed": 0.85,
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "generated_at": "2026-11-15T03:40:01.675Z",
+      "wer": 0,
+      "sha256": "71191a1f30da8aee1444c3dbc674903dc31ea459f4fbbc0af5d47b97d8d8a769",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.16,
+        "peak_dbtp": -2.13
+      },
+      "selected_attempts": [
+        2,
+        1,
+        1,
+        4
+      ],
+      "flags": [],
+      "provenance": {
+        "operation": "Remove all three Pali/Namo audio cues per owner; four original Vietnamese WAVs unchanged",
+        "source_key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-abbb0ffe/vi-sadaltager.mp3",
+        "source_listening_approval": "Owner approved original Vietnamese opening at 0.85; removal of Pali explicitly requested 2026-11-15"
+      },
+      "source_listening_approval": {
+        "by": "owner",
+        "at": "2026-11-15T02:56:28.921Z",
+        "speed": 0.85,
+        "source": "Direct owner reply in chat 2026-11-15: 0,85 cho mở đầu và kết thúc, Namo, Sahu đã nghe đúng.",
+        "namo_variant": "B",
+        "pali_listening": "Namo and Sādhu accepted by owner"
+      },
+      "cues": [
+        {
+          "i": 0,
+          "t": 0,
+          "e": 5.1943
+        },
+        {
+          "i": 1,
+          "t": 6.3943,
+          "e": 11.4287
+        },
+        {
+          "i": 2,
+          "t": 12.6287,
+          "e": 16.423
+        },
+        {
+          "i": 3,
+          "t": 17.623,
+          "e": 22.9373
+        }
+      ],
+      "scores": [
+        {
+          "hash": "486ddfe97beaba1693781ca8dbac5e572d67c13805acd94fae4f9d7dd32fa2f5",
+          "i": 0,
+          "attempt": 2,
+          "reference": "Chào bạn, dù hôm nay là một ngày nhẹ lòng hay còn nhiều điều chưa thể nói.",
+          "transcript": "Chào bạn dù hôm nay là một ngày nhẹ lòng hay còn nhiều điều chưa thể nói",
+          "duration": 5.194333333333334,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.30554901960784314,
+          "pass": true,
+          "source_i": 3,
+          "source_hash": "abbb0ffee6ac712e0f364e1d75a65b7c373844dfe682348803bd4e38f60a33f7",
+          "reused_source_wav": true
+        },
+        {
+          "hash": "486ddfe97beaba1693781ca8dbac5e572d67c13805acd94fae4f9d7dd32fa2f5",
+          "i": 1,
+          "attempt": 1,
+          "reference": "Ở đây, chúng ta cùng đặt xuống những bận rộn, để lòng được nghỉ một chút.",
+          "transcript": "ở đây chúng ta cùng đặt xuống những bận rộn để lòng được nghỉ một chút",
+          "duration": 5.0343333333333335,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.31464583333333335,
+          "pass": true,
+          "source_i": 4,
+          "source_hash": "abbb0ffee6ac712e0f364e1d75a65b7c373844dfe682348803bd4e38f60a33f7",
+          "reused_source_wav": true
+        },
+        {
+          "hash": "486ddfe97beaba1693781ca8dbac5e572d67c13805acd94fae4f9d7dd32fa2f5",
+          "i": 2,
+          "attempt": 1,
+          "reference": "Mời bạn thở vào thật tự nhiên, rồi nhẹ nhàng thở ra.",
+          "transcript": "mời bạn thở vào thật Tự nhiên rồi nhẹ nhàng thở ra",
+          "duration": 3.7943333333333333,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.31619444444444444,
+          "pass": true,
+          "source_i": 5,
+          "source_hash": "abbb0ffee6ac712e0f364e1d75a65b7c373844dfe682348803bd4e38f60a33f7",
+          "reused_source_wav": true
+        },
+        {
+          "hash": "486ddfe97beaba1693781ca8dbac5e572d67c13805acd94fae4f9d7dd32fa2f5",
+          "i": 3,
+          "attempt": 4,
+          "reference": "Chúng ta cùng lắng nghe bằng tấm lòng rộng mở, để hiểu mình và thương nhau hơn.",
+          "transcript": "chúng ta cùng lắng nghe bằng tấm lòng rộng mở để hiểu mình và thương nhau hơn",
+          "duration": 5.314333333333333,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.31260784313725487,
+          "pass": true,
+          "source_i": 6,
+          "source_hash": "abbb0ffee6ac712e0f364e1d75a65b7c373844dfe682348803bd4e38f60a33f7",
+          "reused_source_wav": true
+        }
+      ],
+      "targets": {
+        "STAGING": {
+          "audio_sha256": "71191a1f30da8aee1444c3dbc674903dc31ea459f4fbbc0af5d47b97d8d8a769",
+          "cues_sha256": "accd59479ab09fcfd04eddd4dd0c1cd8d435ba0c9cd28ee1d81f8f04d2579cec"
+        },
+        "PROD": {
+          "audio_sha256": "71191a1f30da8aee1444c3dbc674903dc31ea459f4fbbc0af5d47b97d8d8a769",
+          "cues_sha256": "accd59479ab09fcfd04eddd4dd0c1cd8d435ba0c9cd28ee1d81f8f04d2579cec"
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "ASR/format measurements do not certify the subjective energy of a voice; owner must listen to all three before final verdict.",
+    "Orus take 1 Nguyện/Nguyễn ASR mismatch retained; take 2 selected with WER 0%.",
+    "Global giong.json and seven Lời Phật dạy/33 Đường Xưa voices and assets unchanged."
+  ],
+  "superseded_by": "2026-11-15-hoi-huong-puck.json"
+}

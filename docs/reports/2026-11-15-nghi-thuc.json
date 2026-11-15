@@ -1,0 +1,1706 @@
+{
+  "checked_at": "2026-11-15T02:37:17.289Z",
+  "status": "opening approved; revised closing pending",
+  "owner_approval": {
+    "state": "partial",
+    "opening": "approved at 0.85",
+    "closing": "revised dedication awaiting listening approval",
+    "speed": 0.85,
+    "previous": {
+      "state": "approved",
+      "by": "owner",
+      "at": "2026-11-15T02:56:28.921Z",
+      "speed": 0.85,
+      "source": "Direct owner reply in chat 2026-11-15: 0,85 cho mở đầu và kết thúc, Namo, Sahu đã nghe đúng.",
+      "namo_variant": "B",
+      "pali_listening": "Namo and Sādhu accepted by owner"
+    }
+  },
+  "method": "Google LINEAR16 24k -> MP3 libmp3lame 96k; inter-cue gap 1.2s; AI ID3v2.4; per-cue Google ASR. Original VI words; Pali liturgy with source_ref.",
+  "limitations": [
+    "Raw VI ASR scores do not certify Pali; all flags and transcripts retained. Owner has listened and approved the selected 0.85 recordings.",
+    "The same one benchmark B take is reused three times at each rate; not three independent synthesis calls.",
+    "0.80 is unselected. Three Vietnamese cue/rate pairs retain raw WER/pace flags; no score or threshold changes after owner approval."
+  ],
+  "results": [
+    {
+      "id": "nghi-thuc-mo-dau",
+      "speed": 0.8,
+      "version": 1,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-897627db/vi-sadaltager.mp3",
+      "hash": "897627db",
+      "fingerprint": "897627db2443c5017bb653809d999c1c6971026086692b908ceb205a7f263f92",
+      "dur": 48.12195833333333,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "generated_at": "2026-11-15T02:28:32.038Z",
+      "wer": 0.33333333333333337,
+      "sha256": "577f0d8319e53424fd70207dd465c71ee47c6fd2bbbfed18a8e9d771e74350de",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.14,
+        "peak_dbtp": -1.92
+      },
+      "selected_attempts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0.7777777777777778,
+          "tail_ok": false,
+          "names_ok": true,
+          "seconds_per_word": 0.3747407407407407
+        },
+        {
+          "i": 1,
+          "wer": 0.7777777777777778,
+          "tail_ok": false,
+          "names_ok": true,
+          "seconds_per_word": 0.3747407407407407
+        },
+        {
+          "i": 2,
+          "wer": 0.7777777777777778,
+          "tail_ok": false,
+          "names_ok": true,
+          "seconds_per_word": 0.3747407407407407
+        }
+      ],
+      "ffprobe": {
+        "stream": {
+          "index": 0,
+          "codec_name": "mp3",
+          "codec_long_name": "MP3 (MPEG audio layer 3)",
+          "codec_type": "audio",
+          "codec_tag_string": "[0][0][0][0]",
+          "codec_tag": "0x0000",
+          "mime_codec_string": "mp4a.40.34",
+          "sample_fmt": "fltp",
+          "sample_rate": "24000",
+          "channels": 1,
+          "channel_layout": "mono",
+          "bits_per_sample": 0,
+          "initial_padding": 0,
+          "r_frame_rate": "0/0",
+          "avg_frame_rate": "0/0",
+          "time_base": "1/14112000",
+          "start_pts": 649740,
+          "start_time": "0.046042",
+          "duration_ts": 679031808,
+          "duration": "48.117333",
+          "bit_rate": "96000",
+          "disposition": {
+            "default": 0,
+            "dub": 0,
+            "original": 0,
+            "comment": 0,
+            "lyrics": 0,
+            "karaoke": 0,
+            "forced": 0,
+            "hearing_impaired": 0,
+            "visual_impaired": 0,
+            "clean_effects": 0,
+            "attached_pic": 0,
+            "timed_thumbnails": 0,
+            "non_diegetic": 0,
+            "captions": 0,
+            "descriptions": 0,
+            "metadata": 0,
+            "dependent": 0,
+            "still_image": 0,
+            "multilayer": 0
+          }
+        },
+        "tags": {
+          "comment": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+          "AI_GENERATED": "Giọng đọc tạo bằng AI — Google Chirp 3 HD"
+        }
+      },
+      "cues": [
+        {
+          "i": 0,
+          "t": 0,
+          "e": 6.7453
+        },
+        {
+          "i": 1,
+          "t": 7.9453,
+          "e": 14.6907
+        },
+        {
+          "i": 2,
+          "t": 15.8907,
+          "e": 22.636
+        },
+        {
+          "i": 3,
+          "t": 23.836,
+          "e": 29.4413
+        },
+        {
+          "i": 4,
+          "t": 30.6413,
+          "e": 36.6067
+        },
+        {
+          "i": 5,
+          "t": 37.8067,
+          "e": 41.522
+        },
+        {
+          "i": 6,
+          "t": 42.722,
+          "e": 48.1173
+        }
+      ],
+      "scores": [
+        {
+          "variant": "B",
+          "text": "Na-mô tát-xa, [pause short] ba-ga-va-tô, [pause short] a-ra-ha-tô, [pause short] sam-ma-sam-bút-đát-xa.",
+          "speed": 0.8,
+          "duration": 6.745333333333333,
+          "reference": "Na-mô tát-xa, ba-ga-va-tô, a-ra-ha-tô, sam-ma-sam-bút-đát-xa.",
+          "transcript": "nam mô ta sa ba gà và tô arahato sao mà xàm bút đá",
+          "wer": 0.7777777777777778,
+          "tailOk": false,
+          "namesOk": true,
+          "secondsPerWord": 0.3747407407407407,
+          "pass": false,
+          "i": 0,
+          "attempt": 1,
+          "reused_from": ".wrangler/ritual-bench/namo-B-0.8.wav",
+          "note": "One real benchmark take reused for all three invocations; not three independent TTS attempts."
+        },
+        {
+          "variant": "B",
+          "text": "Na-mô tát-xa, [pause short] ba-ga-va-tô, [pause short] a-ra-ha-tô, [pause short] sam-ma-sam-bút-đát-xa.",
+          "speed": 0.8,
+          "duration": 6.745333333333333,
+          "reference": "Na-mô tát-xa, ba-ga-va-tô, a-ra-ha-tô, sam-ma-sam-bút-đát-xa.",
+          "transcript": "nam mô ta sa ba gà và tô arahato sao mà xàm bút đá",
+          "wer": 0.7777777777777778,
+          "tailOk": false,
+          "namesOk": true,
+          "secondsPerWord": 0.3747407407407407,
+          "pass": false,
+          "i": 1,
+          "attempt": 1,
+          "reused_from": ".wrangler/ritual-bench/namo-B-0.8.wav",
+          "note": "One real benchmark take reused for all three invocations; not three independent TTS attempts."
+        },
+        {
+          "variant": "B",
+          "text": "Na-mô tát-xa, [pause short] ba-ga-va-tô, [pause short] a-ra-ha-tô, [pause short] sam-ma-sam-bút-đát-xa.",
+          "speed": 0.8,
+          "duration": 6.745333333333333,
+          "reference": "Na-mô tát-xa, ba-ga-va-tô, a-ra-ha-tô, sam-ma-sam-bút-đát-xa.",
+          "transcript": "nam mô ta sa ba gà và tô arahato sao mà xàm bút đá",
+          "wer": 0.7777777777777778,
+          "tailOk": false,
+          "namesOk": true,
+          "secondsPerWord": 0.3747407407407407,
+          "pass": false,
+          "i": 2,
+          "attempt": 1,
+          "reused_from": ".wrangler/ritual-bench/namo-B-0.8.wav",
+          "note": "One real benchmark take reused for all three invocations; not three independent TTS attempts."
+        },
+        {
+          "hash": "897627db2443c5017bb653809d999c1c6971026086692b908ceb205a7f263f92",
+          "i": 3,
+          "attempt": 1,
+          "reference": "Chào bạn, dù hôm nay là một ngày nhẹ lòng hay còn nhiều điều chưa thể nói.",
+          "transcript": "Chào bạn dù hôm nay là một ngày nhẹ lòng hay còn nhiều điều chưa thể nói",
+          "duration": 5.605333333333333,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.32972549019607844,
+          "pass": true
+        },
+        {
+          "hash": "897627db2443c5017bb653809d999c1c6971026086692b908ceb205a7f263f92",
+          "i": 4,
+          "attempt": 1,
+          "reference": "Ở đây, chúng ta cùng đặt xuống những bận rộn, để lòng được nghỉ một chút.",
+          "transcript": "ở đây chúng ta cùng đặt xuống những bận rộn để lòng được nghỉ một chút",
+          "duration": 5.965333333333334,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.37283333333333335,
+          "pass": true
+        },
+        {
+          "hash": "897627db2443c5017bb653809d999c1c6971026086692b908ceb205a7f263f92",
+          "i": 5,
+          "attempt": 1,
+          "reference": "Mời bạn thở vào thật tự nhiên, rồi nhẹ nhàng thở ra.",
+          "transcript": "mời bạn thở vào thật Tự nhiên rồi nhẹ nhàng thở ra",
+          "duration": 3.715333333333333,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.3096111111111111,
+          "pass": true
+        },
+        {
+          "hash": "897627db2443c5017bb653809d999c1c6971026086692b908ceb205a7f263f92",
+          "i": 6,
+          "attempt": 1,
+          "reference": "Chúng ta cùng lắng nghe bằng tấm lòng rộng mở, để hiểu mình và thương nhau hơn.",
+          "transcript": "chúng ta cùng lắng nghe bằng tấm lòng rộng mở để hiểu mình và thương nhau hơn",
+          "duration": 5.395333333333333,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.3173725490196078,
+          "pass": true
+        }
+      ],
+      "buckets": {
+        "STAGING": {
+          "audio_sha256": "577f0d8319e53424fd70207dd465c71ee47c6fd2bbbfed18a8e9d771e74350de",
+          "cues_sha256": "c32e5e211b94c5124705f9a2a17c862f2f6d810b4505220610cface76a18abf5",
+          "ai_id3": true
+        },
+        "PROD": {
+          "audio_sha256": "577f0d8319e53424fd70207dd465c71ee47c6fd2bbbfed18a8e9d771e74350de",
+          "cues_sha256": "c32e5e211b94c5124705f9a2a17c862f2f6d810b4505220610cface76a18abf5",
+          "ai_id3": true
+        }
+      }
+    },
+    {
+      "id": "nghi-thuc-mo-dau",
+      "speed": 0.85,
+      "version": 1,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-abbb0ffe/vi-sadaltager.mp3",
+      "hash": "abbb0ffe",
+      "fingerprint": "abbb0ffee6ac712e0f364e1d75a65b7c373844dfe682348803bd4e38f60a33f7",
+      "dur": 45.025958333333335,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "generated_at": "2026-11-15T02:28:53.338Z",
+      "wer": 0.38095238095238093,
+      "sha256": "a1b668878e8c1f6af2bac2265bee94c1d3ad744d60348523209609e6adcc7381",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.15,
+        "peak_dbtp": -2.08
+      },
+      "selected_attempts": [
+        1,
+        1,
+        1,
+        2,
+        1,
+        1,
+        4
+      ],
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0.8888888888888888,
+          "tail_ok": false,
+          "names_ok": true,
+          "seconds_per_word": 0.34190740740740744
+        },
+        {
+          "i": 1,
+          "wer": 0.8888888888888888,
+          "tail_ok": false,
+          "names_ok": true,
+          "seconds_per_word": 0.34190740740740744
+        },
+        {
+          "i": 2,
+          "wer": 0.8888888888888888,
+          "tail_ok": false,
+          "names_ok": true,
+          "seconds_per_word": 0.34190740740740744
+        }
+      ],
+      "ffprobe": {
+        "stream": {
+          "index": 0,
+          "codec_name": "mp3",
+          "codec_long_name": "MP3 (MPEG audio layer 3)",
+          "codec_type": "audio",
+          "codec_tag_string": "[0][0][0][0]",
+          "codec_tag": "0x0000",
+          "mime_codec_string": "mp4a.40.34",
+          "sample_fmt": "fltp",
+          "sample_rate": "24000",
+          "channels": 1,
+          "channel_layout": "mono",
+          "bits_per_sample": 0,
+          "initial_padding": 0,
+          "r_frame_rate": "0/0",
+          "avg_frame_rate": "0/0",
+          "time_base": "1/14112000",
+          "start_pts": 649740,
+          "start_time": "0.046042",
+          "duration_ts": 635067636,
+          "duration": "45.001958",
+          "bit_rate": "96000",
+          "disposition": {
+            "default": 0,
+            "dub": 0,
+            "original": 0,
+            "comment": 0,
+            "lyrics": 0,
+            "karaoke": 0,
+            "forced": 0,
+            "hearing_impaired": 0,
+            "visual_impaired": 0,
+            "clean_effects": 0,
+            "attached_pic": 0,
+            "timed_thumbnails": 0,
+            "non_diegetic": 0,
+            "captions": 0,
+            "descriptions": 0,
+            "metadata": 0,
+            "dependent": 0,
+            "still_image": 0,
+            "multilayer": 0
+          }
+        },
+        "tags": {
+          "comment": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+          "AI_GENERATED": "Giọng đọc tạo bằng AI — Google Chirp 3 HD"
+        }
+      },
+      "cues": [
+        {
+          "i": 0,
+          "t": 0,
+          "e": 6.1543
+        },
+        {
+          "i": 1,
+          "t": 7.3543,
+          "e": 13.5087
+        },
+        {
+          "i": 2,
+          "t": 14.7087,
+          "e": 20.863
+        },
+        {
+          "i": 3,
+          "t": 22.063,
+          "e": 27.2573
+        },
+        {
+          "i": 4,
+          "t": 28.4573,
+          "e": 33.4917
+        },
+        {
+          "i": 5,
+          "t": 34.6917,
+          "e": 38.486
+        },
+        {
+          "i": 6,
+          "t": 39.686,
+          "e": 45.0003
+        }
+      ],
+      "scores": [
+        {
+          "variant": "B",
+          "text": "Na-mô tát-xa, [pause short] ba-ga-va-tô, [pause short] a-ra-ha-tô, [pause short] sam-ma-sam-bút-đát-xa.",
+          "speed": 0.85,
+          "duration": 6.154333333333334,
+          "reference": "Na-mô tát-xa, ba-ga-va-tô, a-ra-ha-tô, sam-ma-sam-bút-đát-xa.",
+          "transcript": "nam mô tátxa baga và tô arahato Sama samuel",
+          "wer": 0.8888888888888888,
+          "tailOk": false,
+          "namesOk": true,
+          "secondsPerWord": 0.34190740740740744,
+          "pass": false,
+          "i": 0,
+          "attempt": 1,
+          "reused_from": ".wrangler/ritual-bench/namo-B-0.85.wav",
+          "note": "One real benchmark take reused for all three invocations; not three independent TTS attempts."
+        },
+        {
+          "variant": "B",
+          "text": "Na-mô tát-xa, [pause short] ba-ga-va-tô, [pause short] a-ra-ha-tô, [pause short] sam-ma-sam-bút-đát-xa.",
+          "speed": 0.85,
+          "duration": 6.154333333333334,
+          "reference": "Na-mô tát-xa, ba-ga-va-tô, a-ra-ha-tô, sam-ma-sam-bút-đát-xa.",
+          "transcript": "nam mô tátxa baga và tô arahato Sama samuel",
+          "wer": 0.8888888888888888,
+          "tailOk": false,
+          "namesOk": true,
+          "secondsPerWord": 0.34190740740740744,
+          "pass": false,
+          "i": 1,
+          "attempt": 1,
+          "reused_from": ".wrangler/ritual-bench/namo-B-0.85.wav",
+          "note": "One real benchmark take reused for all three invocations; not three independent TTS attempts."
+        },
+        {
+          "variant": "B",
+          "text": "Na-mô tát-xa, [pause short] ba-ga-va-tô, [pause short] a-ra-ha-tô, [pause short] sam-ma-sam-bút-đát-xa.",
+          "speed": 0.85,
+          "duration": 6.154333333333334,
+          "reference": "Na-mô tát-xa, ba-ga-va-tô, a-ra-ha-tô, sam-ma-sam-bút-đát-xa.",
+          "transcript": "nam mô tátxa baga và tô arahato Sama samuel",
+          "wer": 0.8888888888888888,
+          "tailOk": false,
+          "namesOk": true,
+          "secondsPerWord": 0.34190740740740744,
+          "pass": false,
+          "i": 2,
+          "attempt": 1,
+          "reused_from": ".wrangler/ritual-bench/namo-B-0.85.wav",
+          "note": "One real benchmark take reused for all three invocations; not three independent TTS attempts."
+        },
+        {
+          "hash": "abbb0ffee6ac712e0f364e1d75a65b7c373844dfe682348803bd4e38f60a33f7",
+          "i": 3,
+          "attempt": 2,
+          "reference": "Chào bạn, dù hôm nay là một ngày nhẹ lòng hay còn nhiều điều chưa thể nói.",
+          "transcript": "Chào bạn dù hôm nay là một ngày nhẹ lòng hay còn nhiều điều chưa thể nói",
+          "duration": 5.194333333333334,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.30554901960784314,
+          "pass": true
+        },
+        {
+          "hash": "abbb0ffee6ac712e0f364e1d75a65b7c373844dfe682348803bd4e38f60a33f7",
+          "i": 4,
+          "attempt": 1,
+          "reference": "Ở đây, chúng ta cùng đặt xuống những bận rộn, để lòng được nghỉ một chút.",
+          "transcript": "ở đây chúng ta cùng đặt xuống những bận rộn để lòng được nghỉ một chút",
+          "duration": 5.0343333333333335,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.31464583333333335,
+          "pass": true
+        },
+        {
+          "hash": "abbb0ffee6ac712e0f364e1d75a65b7c373844dfe682348803bd4e38f60a33f7",
+          "i": 5,
+          "attempt": 1,
+          "reference": "Mời bạn thở vào thật tự nhiên, rồi nhẹ nhàng thở ra.",
+          "transcript": "mời bạn thở vào thật Tự nhiên rồi nhẹ nhàng thở ra",
+          "duration": 3.7943333333333333,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.31619444444444444,
+          "pass": true
+        },
+        {
+          "hash": "abbb0ffee6ac712e0f364e1d75a65b7c373844dfe682348803bd4e38f60a33f7",
+          "i": 6,
+          "attempt": 4,
+          "reference": "Chúng ta cùng lắng nghe bằng tấm lòng rộng mở, để hiểu mình và thương nhau hơn.",
+          "transcript": "chúng ta cùng lắng nghe bằng tấm lòng rộng mở để hiểu mình và thương nhau hơn",
+          "duration": 5.314333333333333,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.31260784313725487,
+          "pass": true
+        }
+      ],
+      "buckets": {
+        "STAGING": {
+          "audio_sha256": "a1b668878e8c1f6af2bac2265bee94c1d3ad744d60348523209609e6adcc7381",
+          "cues_sha256": "edf2ec4d5d9264130ba23c1290b08a94f0c075edd28d6cdaf5e1f40d28a096ad",
+          "ai_id3": true
+        },
+        "PROD": {
+          "audio_sha256": "a1b668878e8c1f6af2bac2265bee94c1d3ad744d60348523209609e6adcc7381",
+          "cues_sha256": "edf2ec4d5d9264130ba23c1290b08a94f0c075edd28d6cdaf5e1f40d28a096ad",
+          "ai_id3": true
+        }
+      },
+      "listening_approval": {
+        "by": "owner",
+        "at": "2026-11-15T02:56:28.921Z",
+        "speed": 0.85,
+        "source": "Direct owner reply in chat 2026-11-15: 0,85 cho mở đầu và kết thúc, Namo, Sahu đã nghe đúng.",
+        "namo_variant": "B",
+        "pali_listening": "Namo and Sādhu accepted by owner"
+      }
+    },
+    {
+      "id": "nghi-thuc-ket-thuc",
+      "version": 1,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-44680d7f/vi-sadaltager.mp3",
+      "hash": "44680d7f",
+      "fingerprint": "44680d7fb9dde39cfd67e3717084398d99fd51121427abf18a81dd86382848fe",
+      "dur": 52.729958333333336,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "speed": 0.8,
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "generated_at": "2026-11-15T03:04:28.881Z",
+      "wer": 0.07894736842105263,
+      "sha256": "6843e257b068957d49cf30bfba86c56d14ea483cbc4d487ce16313bfb13d073c",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.13,
+        "peak_dbtp": -2.01
+      },
+      "selected_attempts": [
+        2,
+        2,
+        1,
+        1,
+        2,
+        1,
+        3
+      ],
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0.5,
+          "tail_ok": false,
+          "names_ok": true,
+          "seconds_per_word": 0.6842222222222222
+        },
+        {
+          "i": 5,
+          "wer": 0.05263157894736842,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2823859649122807
+        }
+      ],
+      "revision": {
+        "reason": "Owner requests complete existing dedication and firm, decisive uplifting phrasing",
+        "old_key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-8c2a7290/vi-sadaltager.mp3",
+        "changed_cue": 3,
+        "reused_other_cues": true,
+        "owner_approval": "pending"
+      },
+      "ffprobe": {
+        "stream": {
+          "index": 0,
+          "codec_name": "mp3",
+          "codec_long_name": "MP3 (MPEG audio layer 3)",
+          "codec_type": "audio",
+          "codec_tag_string": "[0][0][0][0]",
+          "codec_tag": "0x0000",
+          "mime_codec_string": "mp4a.40.34",
+          "sample_fmt": "fltp",
+          "sample_rate": "24000",
+          "channels": 1,
+          "channel_layout": "mono",
+          "bits_per_sample": 0,
+          "initial_padding": 0,
+          "r_frame_rate": "0/0",
+          "avg_frame_rate": "0/0",
+          "time_base": "1/14112000",
+          "start_pts": 649740,
+          "start_time": "0.046042",
+          "duration_ts": 743805888,
+          "duration": "52.707333",
+          "bit_rate": "96000",
+          "disposition": {
+            "default": 0,
+            "dub": 0,
+            "original": 0,
+            "comment": 0,
+            "lyrics": 0,
+            "karaoke": 0,
+            "forced": 0,
+            "hearing_impaired": 0,
+            "visual_impaired": 0,
+            "clean_effects": 0,
+            "attached_pic": 0,
+            "timed_thumbnails": 0,
+            "non_diegetic": 0,
+            "captions": 0,
+            "descriptions": 0,
+            "metadata": 0,
+            "dependent": 0,
+            "still_image": 0,
+            "multilayer": 0
+          }
+        },
+        "tags": {
+          "comment": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+          "AI_GENERATED": "Giọng đọc tạo bằng AI — Google Chirp 3 HD"
+        }
+      },
+      "scores": [
+        {
+          "hash": "44680d7fb9dde39cfd67e3717084398d99fd51121427abf18a81dd86382848fe",
+          "i": 0,
+          "attempt": 2,
+          "reference": "Sa đu! Sa đu! Sa đu!",
+          "transcript": "sờ đu xe đu xe đu",
+          "duration": 4.105333333333333,
+          "wer": 0.5,
+          "tailOk": false,
+          "namesOk": true,
+          "secondsPerWord": 0.6842222222222222,
+          "pass": false,
+          "source_hash": "8c2a7290566d1ddf6cdee3cc81cfed8c13295cb17658a30a960b7caa62755743",
+          "reused_from": ".wrangler\\tts-generated\\nghi-thuc-ket-thuc\\8c2a7290\\0-2.wav"
+        },
+        {
+          "hash": "44680d7fb9dde39cfd67e3717084398d99fd51121427abf18a81dd86382848fe",
+          "i": 1,
+          "attempt": 2,
+          "reference": "Cảm ơn bạn đã dành một khoảng yên lặng để cùng lắng nghe và chăm sóc lòng mình.",
+          "transcript": "Cảm ơn bạn đã dành một khoảng yên lặng để cùng lắng nghe và chăm sóc lòng mình",
+          "duration": 6.145333333333333,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.3414074074074074,
+          "pass": true,
+          "source_hash": "8c2a7290566d1ddf6cdee3cc81cfed8c13295cb17658a30a960b7caa62755743",
+          "reused_from": ".wrangler\\tts-generated\\nghi-thuc-ket-thuc\\8c2a7290\\1-2.wav"
+        },
+        {
+          "hash": "44680d7fb9dde39cfd67e3717084398d99fd51121427abf18a81dd86382848fe",
+          "i": 2,
+          "attempt": 1,
+          "reference": "Mong lời vừa nghe được tiếp nối trong một hơi thở tỉnh thức, một lời nói hiền, một việc làm tử tế.",
+          "transcript": "Mong Lời vừa nghe được tiếp nối trong một hơi thở tỉnh thức một lời nói Hiền một việc làm tử tế",
+          "duration": 6.8053333333333335,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.30933333333333335,
+          "pass": true,
+          "source_hash": "8c2a7290566d1ddf6cdee3cc81cfed8c13295cb17658a30a960b7caa62755743",
+          "reused_from": ".wrangler\\tts-generated\\nghi-thuc-ket-thuc\\8c2a7290\\2-1.wav"
+        },
+        {
+          "hash": "44680d7fb9dde39cfd67e3717084398d99fd51121427abf18a81dd86382848fe",
+          "i": 3,
+          "attempt": 1,
+          "reference": "Nguyện công đức nghe Pháp này lan đến mọi loài. Cho ai khổ được hết khổ. Ai sợ được hết sợ. Ai sầu được hết sầu.",
+          "transcript": "Nguyện công đức Nghe pháp này Lan đến mọi loài cho ai khổ được hết khổ ai sợ được hết sợ ai sầu được hết sầu",
+          "duration": 8.665333333333333,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.33328205128205124,
+          "pass": true
+        },
+        {
+          "hash": "44680d7fb9dde39cfd67e3717084398d99fd51121427abf18a81dd86382848fe",
+          "i": 4,
+          "attempt": 2,
+          "reference": "Nguyện cha mẹ, thầy bạn, người thân và cả những người chưa quen đều được nâng đỡ giữa những nhọc nhằn.",
+          "transcript": "nguyện cha mẹ thầy bạn người thân và cả những người chưa quen đều được nâng đỡ giữa những nhọc nhằn",
+          "duration": 7.105333333333333,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.33834920634920634,
+          "pass": true,
+          "source_hash": "8c2a7290566d1ddf6cdee3cc81cfed8c13295cb17658a30a960b7caa62755743",
+          "reused_from": ".wrangler\\tts-generated\\nghi-thuc-ket-thuc\\8c2a7290\\4-2.wav"
+        },
+        {
+          "hash": "44680d7fb9dde39cfd67e3717084398d99fd51121427abf18a81dd86382848fe",
+          "i": 5,
+          "attempt": 1,
+          "reference": "Nếu còn điều chưa trọn, chúng ta vẫn có thể bắt đầu lại bằng một sự tử tế nhỏ.",
+          "transcript": "Nếu còn điều chưa chọn chúng ta vẫn có thể bắt đầu lại bằng một sự tử tế nhỏ",
+          "duration": 5.365333333333333,
+          "wer": 0.05263157894736842,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.2823859649122807,
+          "pass": false,
+          "source_hash": "8c2a7290566d1ddf6cdee3cc81cfed8c13295cb17658a30a960b7caa62755743",
+          "reused_from": ".wrangler\\tts-generated\\nghi-thuc-ket-thuc\\8c2a7290\\5-1.wav"
+        },
+        {
+          "hash": "44680d7fb9dde39cfd67e3717084398d99fd51121427abf18a81dd86382848fe",
+          "i": 6,
+          "attempt": 3,
+          "reference": "Mời bạn mang chút bình an này trở về đời thường, và giữ một chỗ dịu dàng cho người sẽ gặp hôm nay.",
+          "transcript": "mời bạn mang chút bình an này trở về đời thường và giữ một chỗ dịu dàng cho người sẽ gặp hôm nay",
+          "duration": 7.315333333333333,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.31805797101449274,
+          "pass": true,
+          "source_hash": "8c2a7290566d1ddf6cdee3cc81cfed8c13295cb17658a30a960b7caa62755743",
+          "reused_from": ".wrangler\\tts-generated\\nghi-thuc-ket-thuc\\8c2a7290\\6-3.wav"
+        }
+      ],
+      "cues": [
+        {
+          "i": 0,
+          "t": 0,
+          "e": 4.1053
+        },
+        {
+          "i": 1,
+          "t": 5.3053,
+          "e": 11.4507
+        },
+        {
+          "i": 2,
+          "t": 12.6507,
+          "e": 19.456
+        },
+        {
+          "i": 3,
+          "t": 20.656,
+          "e": 29.3213
+        },
+        {
+          "i": 4,
+          "t": 30.5213,
+          "e": 37.6267
+        },
+        {
+          "i": 5,
+          "t": 38.8267,
+          "e": 44.192
+        },
+        {
+          "i": 6,
+          "t": 45.392,
+          "e": 52.7073
+        }
+      ],
+      "buckets": {
+        "STAGING": {
+          "audio_sha256": "6843e257b068957d49cf30bfba86c56d14ea483cbc4d487ce16313bfb13d073c",
+          "cues_sha256": "178477dec8876e5ed9b89e14bcac1daf4558b44647f48f3e3cc784daf1b51716",
+          "ai_id3": true
+        },
+        "PROD": {
+          "audio_sha256": "6843e257b068957d49cf30bfba86c56d14ea483cbc4d487ce16313bfb13d073c",
+          "cues_sha256": "178477dec8876e5ed9b89e14bcac1daf4558b44647f48f3e3cc784daf1b51716",
+          "ai_id3": true
+        }
+      }
+    },
+    {
+      "id": "nghi-thuc-ket-thuc",
+      "version": 1,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-274fd594/vi-sadaltager.mp3",
+      "hash": "274fd594",
+      "fingerprint": "274fd594873f7cf4bc6c17a068f252d0484448cedc92ac82bd5849f7d1edc2c0",
+      "dur": 51.62595833333334,
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "provider": "google",
+      "speed": 0.85,
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "generated_at": "2026-11-15T03:04:18.093Z",
+      "wer": 0.08575008950948801,
+      "sha256": "15c2b8cf926f37e1c560169650c777437e3c1a34c5ce922ff1246c8f59f01014",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.14,
+        "peak_dbtp": -2.04
+      },
+      "selected_attempts": [
+        2,
+        2,
+        1,
+        1,
+        1,
+        3,
+        4
+      ],
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0.5,
+          "tail_ok": false,
+          "names_ok": true,
+          "seconds_per_word": 0.852388888888889
+        },
+        {
+          "i": 5,
+          "wer": 0.05263157894736842,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.24812280701754386
+        },
+        {
+          "i": 6,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.29888405797101447
+        }
+      ],
+      "revision": {
+        "reason": "Owner requests complete existing dedication and firm, decisive uplifting phrasing",
+        "old_key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-290b9390/vi-sadaltager.mp3",
+        "changed_cue": 3,
+        "reused_other_cues": true,
+        "owner_approval": "pending"
+      },
+      "ffprobe": {
+        "stream": {
+          "index": 0,
+          "codec_name": "mp3",
+          "codec_long_name": "MP3 (MPEG audio layer 3)",
+          "codec_type": "audio",
+          "codec_tag_string": "[0][0][0][0]",
+          "codec_tag": "0x0000",
+          "mime_codec_string": "mp4a.40.34",
+          "sample_fmt": "fltp",
+          "sample_rate": "24000",
+          "channels": 1,
+          "channel_layout": "mono",
+          "bits_per_sample": 0,
+          "initial_padding": 0,
+          "r_frame_rate": "0/0",
+          "avg_frame_rate": "0/0",
+          "time_base": "1/14112000",
+          "start_pts": 649740,
+          "start_time": "0.046042",
+          "duration_ts": 728206836,
+          "duration": "51.601958",
+          "bit_rate": "96000",
+          "disposition": {
+            "default": 0,
+            "dub": 0,
+            "original": 0,
+            "comment": 0,
+            "lyrics": 0,
+            "karaoke": 0,
+            "forced": 0,
+            "hearing_impaired": 0,
+            "visual_impaired": 0,
+            "clean_effects": 0,
+            "attached_pic": 0,
+            "timed_thumbnails": 0,
+            "non_diegetic": 0,
+            "captions": 0,
+            "descriptions": 0,
+            "metadata": 0,
+            "dependent": 0,
+            "still_image": 0,
+            "multilayer": 0
+          }
+        },
+        "tags": {
+          "comment": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+          "AI_GENERATED": "Giọng đọc tạo bằng AI — Google Chirp 3 HD"
+        }
+      },
+      "scores": [
+        {
+          "hash": "274fd594873f7cf4bc6c17a068f252d0484448cedc92ac82bd5849f7d1edc2c0",
+          "i": 0,
+          "attempt": 2,
+          "reference": "Sa đu! Sa đu! Sa đu!",
+          "transcript": "xe đu xe đu xe đu",
+          "duration": 5.114333333333334,
+          "wer": 0.5,
+          "tailOk": false,
+          "namesOk": true,
+          "secondsPerWord": 0.852388888888889,
+          "pass": false,
+          "source_hash": "290b9390bf645b74854bb67fe07f486025cafd22f3308187e67f72c52e082390",
+          "reused_from": ".wrangler\\tts-generated\\nghi-thuc-ket-thuc\\290b9390\\0-2.wav"
+        },
+        {
+          "hash": "274fd594873f7cf4bc6c17a068f252d0484448cedc92ac82bd5849f7d1edc2c0",
+          "i": 1,
+          "attempt": 2,
+          "reference": "Cảm ơn bạn đã dành một khoảng yên lặng để cùng lắng nghe và chăm sóc lòng mình.",
+          "transcript": "Cảm ơn bạn đã dành một khoảng yên lặng để cùng lắng nghe và chăm sóc lòng mình",
+          "duration": 5.794333333333333,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.3219074074074074,
+          "pass": true,
+          "source_hash": "290b9390bf645b74854bb67fe07f486025cafd22f3308187e67f72c52e082390",
+          "reused_from": ".wrangler\\tts-generated\\nghi-thuc-ket-thuc\\290b9390\\1-2.wav"
+        },
+        {
+          "hash": "274fd594873f7cf4bc6c17a068f252d0484448cedc92ac82bd5849f7d1edc2c0",
+          "i": 2,
+          "attempt": 1,
+          "reference": "Mong lời vừa nghe được tiếp nối trong một hơi thở tỉnh thức, một lời nói hiền, một việc làm tử tế.",
+          "transcript": "Mong Lời vừa nghe được tiếp nối trong một hơi thở tỉnh thức một lời nói Hiền một việc làm tử tế",
+          "duration": 7.154333333333334,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.3251969696969697,
+          "pass": true,
+          "source_hash": "290b9390bf645b74854bb67fe07f486025cafd22f3308187e67f72c52e082390",
+          "reused_from": ".wrangler\\tts-generated\\nghi-thuc-ket-thuc\\290b9390\\2-1.wav"
+        },
+        {
+          "hash": "274fd594873f7cf4bc6c17a068f252d0484448cedc92ac82bd5849f7d1edc2c0",
+          "i": 3,
+          "attempt": 1,
+          "reference": "Nguyện công đức nghe Pháp này lan đến mọi loài. Cho ai khổ được hết khổ. Ai sợ được hết sợ. Ai sầu được hết sầu.",
+          "transcript": "Nguyện công đức Nghe pháp này Lan đến mọi loài cho ai khổ được hết khổ ai sợ được hết sợ ai sầu được hết sầu",
+          "duration": 8.154333333333334,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.31362820512820516,
+          "pass": true
+        },
+        {
+          "hash": "274fd594873f7cf4bc6c17a068f252d0484448cedc92ac82bd5849f7d1edc2c0",
+          "i": 4,
+          "attempt": 1,
+          "reference": "Nguyện cha mẹ, thầy bạn, người thân và cả những người chưa quen đều được nâng đỡ giữa những nhọc nhằn.",
+          "transcript": "Ngụy cha mẹ thầy bạn người thân và cả những người chưa quen đều được nâng đỡ giữa những nhọc nhằn",
+          "duration": 6.594333333333333,
+          "wer": 0.047619047619047616,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.314015873015873,
+          "pass": true,
+          "source_hash": "290b9390bf645b74854bb67fe07f486025cafd22f3308187e67f72c52e082390",
+          "reused_from": ".wrangler\\tts-generated\\nghi-thuc-ket-thuc\\290b9390\\4-1.wav"
+        },
+        {
+          "hash": "274fd594873f7cf4bc6c17a068f252d0484448cedc92ac82bd5849f7d1edc2c0",
+          "i": 5,
+          "attempt": 3,
+          "reference": "Nếu còn điều chưa trọn, chúng ta vẫn có thể bắt đầu lại bằng một sự tử tế nhỏ.",
+          "transcript": "Nếu còn điều chưa chọn chúng ta vẫn có thể bắt đầu lại bằng một sự tử tế nhỏ",
+          "duration": 4.714333333333333,
+          "wer": 0.05263157894736842,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.24812280701754386,
+          "pass": false,
+          "source_hash": "290b9390bf645b74854bb67fe07f486025cafd22f3308187e67f72c52e082390",
+          "reused_from": ".wrangler\\tts-generated\\nghi-thuc-ket-thuc\\290b9390\\5-3.wav"
+        },
+        {
+          "hash": "274fd594873f7cf4bc6c17a068f252d0484448cedc92ac82bd5849f7d1edc2c0",
+          "i": 6,
+          "attempt": 4,
+          "reference": "Mời bạn mang chút bình an này trở về đời thường, và giữ một chỗ dịu dàng cho người sẽ gặp hôm nay.",
+          "transcript": "mời bạn mang chút bình an này trở về đời thường và giữ một chỗ dịu dàng cho người sẽ gặp hôm nay",
+          "duration": 6.874333333333333,
+          "wer": 0,
+          "tailOk": true,
+          "namesOk": true,
+          "secondsPerWord": 0.29888405797101447,
+          "pass": false,
+          "source_hash": "290b9390bf645b74854bb67fe07f486025cafd22f3308187e67f72c52e082390",
+          "reused_from": ".wrangler\\tts-generated\\nghi-thuc-ket-thuc\\290b9390\\6-4.wav"
+        }
+      ],
+      "cues": [
+        {
+          "i": 0,
+          "t": 0,
+          "e": 5.1143
+        },
+        {
+          "i": 1,
+          "t": 6.3143,
+          "e": 12.1087
+        },
+        {
+          "i": 2,
+          "t": 13.3087,
+          "e": 20.463
+        },
+        {
+          "i": 3,
+          "t": 21.663,
+          "e": 29.8173
+        },
+        {
+          "i": 4,
+          "t": 31.0173,
+          "e": 37.6117
+        },
+        {
+          "i": 5,
+          "t": 38.8117,
+          "e": 43.526
+        },
+        {
+          "i": 6,
+          "t": 44.726,
+          "e": 51.6003
+        }
+      ],
+      "buckets": {
+        "STAGING": {
+          "audio_sha256": "15c2b8cf926f37e1c560169650c777437e3c1a34c5ce922ff1246c8f59f01014",
+          "cues_sha256": "7b76588e494967b0360e860eb62c1b5a8401f138bfc56fb9c0af8850d37b1de2",
+          "ai_id3": true
+        },
+        "PROD": {
+          "audio_sha256": "15c2b8cf926f37e1c560169650c777437e3c1a34c5ce922ff1246c8f59f01014",
+          "cues_sha256": "7b76588e494967b0360e860eb62c1b5a8401f138bfc56fb9c0af8850d37b1de2",
+          "ai_id3": true
+        }
+      }
+    }
+  ],
+  "namo_trials": [
+    {
+      "variant": "A",
+      "text": "Na mô tát xa, [pause short] ba ga va tô, [pause short] a ra ha tô, [pause short] xam ma xam bút đa xa.",
+      "speed": 0.85,
+      "duration": 5.9943333333333335,
+      "reference": "Na mô tát xa, ba ga va tô, a ra ha tô, xam ma xam bút đa xa.",
+      "transcript": "nam mô taxa baga vato arahato sama samus DHA",
+      "wer": 0.9444444444444444,
+      "tailOk": false,
+      "namesOk": true,
+      "secondsPerWord": 0.33301851851851855,
+      "pass": false
+    },
+    {
+      "variant": "A",
+      "text": "Na mô tát xa, [pause short] ba ga va tô, [pause short] a ra ha tô, [pause short] xam ma xam bút đa xa.",
+      "speed": 0.8,
+      "duration": 6.445333333333333,
+      "reference": "Na mô tát xa, ba ga va tô, a ra ha tô, xam ma xam bút đa xa.",
+      "transcript": "nam mô taxa baga vato arahato Sama samuel",
+      "wer": 0.9444444444444444,
+      "tailOk": false,
+      "namesOk": true,
+      "secondsPerWord": 0.35807407407407404,
+      "pass": false
+    },
+    {
+      "variant": "B",
+      "text": "Na-mô tát-xa, [pause short] ba-ga-va-tô, [pause short] a-ra-ha-tô, [pause short] sam-ma-sam-bút-đát-xa.",
+      "speed": 0.8,
+      "duration": 6.745333333333333,
+      "reference": "Na-mô tát-xa, ba-ga-va-tô, a-ra-ha-tô, sam-ma-sam-bút-đát-xa.",
+      "transcript": "nam mô ta sa ba gà và tô arahato sao mà xàm bút đá",
+      "wer": 0.7777777777777778,
+      "tailOk": false,
+      "namesOk": true,
+      "secondsPerWord": 0.3747407407407407,
+      "pass": false
+    },
+    {
+      "variant": "B",
+      "text": "Na-mô tát-xa, [pause short] ba-ga-va-tô, [pause short] a-ra-ha-tô, [pause short] sam-ma-sam-bút-đát-xa.",
+      "speed": 0.85,
+      "duration": 6.154333333333334,
+      "reference": "Na-mô tát-xa, ba-ga-va-tô, a-ra-ha-tô, sam-ma-sam-bút-đát-xa.",
+      "transcript": "nam mô tátxa baga và tô arahato Sama samuel",
+      "wer": 0.8888888888888888,
+      "tailOk": false,
+      "namesOk": true,
+      "secondsPerWord": 0.34190740740740744,
+      "pass": false
+    },
+    {
+      "variant": "C",
+      "text": "Na mô tát sa, [pause short] ba ga va tô, [pause short] a ra ha tô, [pause short] xăm ma xăm bút đa sa.",
+      "speed": 0.8,
+      "duration": 6.0553333333333335,
+      "reference": "Na mô tát sa, ba ga va tô, a ra ha tô, xăm ma xăm bút đa sa.",
+      "transcript": "nam mô taxa baga vato arahato Sama samuel",
+      "wer": 0.9444444444444444,
+      "tailOk": false,
+      "namesOk": true,
+      "secondsPerWord": 0.33640740740740743,
+      "pass": false
+    },
+    {
+      "variant": "C",
+      "text": "Na mô tát sa, [pause short] ba ga va tô, [pause short] a ra ha tô, [pause short] xăm ma xăm bút đa sa.",
+      "speed": 0.85,
+      "duration": 6.874333333333333,
+      "reference": "Na mô tát sa, ba ga va tô, a ra ha tô, xăm ma xăm bút đa sa.",
+      "transcript": "",
+      "wer": 1,
+      "tailOk": false,
+      "namesOk": true,
+      "secondsPerWord": 0.3819074074074074,
+      "pass": false
+    }
+  ],
+  "selected_rate": 0.85,
+  "namo_selected": "B",
+  "revision_history": [
+    {
+      "at": "2026-11-15T03:06:21.047Z",
+      "reason": "Owner requested full dedication and firm, decisive phrasing after approval of old closing.",
+      "old_closing_results": [
+        {
+          "id": "nghi-thuc-ket-thuc",
+          "speed": 0.8,
+          "version": 1,
+          "key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-8c2a7290/vi-sadaltager.mp3",
+          "hash": "8c2a7290",
+          "fingerprint": "8c2a7290566d1ddf6cdee3cc81cfed8c13295cb17658a30a960b7caa62755743",
+          "dur": 52.65795833333333,
+          "voice": "vi-VN-Chirp3-HD-Sadaltager",
+          "model": "Chirp3-HD",
+          "provider": "google",
+          "format": {
+            "sample_rate": 24000,
+            "channels": 1,
+            "bit_rate": 96000
+          },
+          "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+          "generated_at": "2026-11-15T02:29:50.703Z",
+          "wer": 0.08444187391555813,
+          "sha256": "5b708aa917c643d3d07db30b4af4e8bb78180b6660f65ef60e2e84dce1802017",
+          "loudness": {
+            "target_lufs": -16,
+            "target_peak_dbtp": -1.5,
+            "lufs": -16.13,
+            "peak_dbtp": -1.99
+          },
+          "selected_attempts": [
+            2,
+            2,
+            1,
+            1,
+            2,
+            1,
+            3
+          ],
+          "flags": [
+            {
+              "i": 0,
+              "wer": 0.5,
+              "tail_ok": false,
+              "names_ok": true,
+              "seconds_per_word": 0.6842222222222222
+            },
+            {
+              "i": 5,
+              "wer": 0.05263157894736842,
+              "tail_ok": true,
+              "names_ok": true,
+              "seconds_per_word": 0.2823859649122807
+            }
+          ],
+          "ffprobe": {
+            "stream": {
+              "index": 0,
+              "codec_name": "mp3",
+              "codec_long_name": "MP3 (MPEG audio layer 3)",
+              "codec_type": "audio",
+              "codec_tag_string": "[0][0][0][0]",
+              "codec_tag": "0x0000",
+              "mime_codec_string": "mp4a.40.34",
+              "sample_fmt": "fltp",
+              "sample_rate": "24000",
+              "channels": 1,
+              "channel_layout": "mono",
+              "bits_per_sample": 0,
+              "initial_padding": 0,
+              "r_frame_rate": "0/0",
+              "avg_frame_rate": "0/0",
+              "time_base": "1/14112000",
+              "start_pts": 649740,
+              "start_time": "0.046042",
+              "duration_ts": 742959168,
+              "duration": "52.647333",
+              "bit_rate": "96000",
+              "disposition": {
+                "default": 0,
+                "dub": 0,
+                "original": 0,
+                "comment": 0,
+                "lyrics": 0,
+                "karaoke": 0,
+                "forced": 0,
+                "hearing_impaired": 0,
+                "visual_impaired": 0,
+                "clean_effects": 0,
+                "attached_pic": 0,
+                "timed_thumbnails": 0,
+                "non_diegetic": 0,
+                "captions": 0,
+                "descriptions": 0,
+                "metadata": 0,
+                "dependent": 0,
+                "still_image": 0,
+                "multilayer": 0
+              }
+            },
+            "tags": {
+              "comment": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+              "AI_GENERATED": "Giọng đọc tạo bằng AI — Google Chirp 3 HD"
+            }
+          },
+          "cues": [
+            {
+              "i": 0,
+              "t": 0,
+              "e": 4.1053
+            },
+            {
+              "i": 1,
+              "t": 5.3053,
+              "e": 11.4507
+            },
+            {
+              "i": 2,
+              "t": 12.6507,
+              "e": 19.456
+            },
+            {
+              "i": 3,
+              "t": 20.656,
+              "e": 29.2613
+            },
+            {
+              "i": 4,
+              "t": 30.4613,
+              "e": 37.5667
+            },
+            {
+              "i": 5,
+              "t": 38.7667,
+              "e": 44.132
+            },
+            {
+              "i": 6,
+              "t": 45.332,
+              "e": 52.6473
+            }
+          ],
+          "scores": [
+            {
+              "hash": "8c2a7290566d1ddf6cdee3cc81cfed8c13295cb17658a30a960b7caa62755743",
+              "i": 0,
+              "attempt": 2,
+              "reference": "Sa đu! Sa đu! Sa đu!",
+              "transcript": "sờ đu xe đu xe đu",
+              "duration": 4.105333333333333,
+              "wer": 0.5,
+              "tailOk": false,
+              "namesOk": true,
+              "secondsPerWord": 0.6842222222222222,
+              "pass": false
+            },
+            {
+              "hash": "8c2a7290566d1ddf6cdee3cc81cfed8c13295cb17658a30a960b7caa62755743",
+              "i": 1,
+              "attempt": 2,
+              "reference": "Cảm ơn bạn đã dành một khoảng yên lặng để cùng lắng nghe và chăm sóc lòng mình.",
+              "transcript": "Cảm ơn bạn đã dành một khoảng yên lặng để cùng lắng nghe và chăm sóc lòng mình",
+              "duration": 6.145333333333333,
+              "wer": 0,
+              "tailOk": true,
+              "namesOk": true,
+              "secondsPerWord": 0.3414074074074074,
+              "pass": true
+            },
+            {
+              "hash": "8c2a7290566d1ddf6cdee3cc81cfed8c13295cb17658a30a960b7caa62755743",
+              "i": 2,
+              "attempt": 1,
+              "reference": "Mong lời vừa nghe được tiếp nối trong một hơi thở tỉnh thức, một lời nói hiền, một việc làm tử tế.",
+              "transcript": "Mong Lời vừa nghe được tiếp nối trong một hơi thở tỉnh thức một lời nói Hiền một việc làm tử tế",
+              "duration": 6.8053333333333335,
+              "wer": 0,
+              "tailOk": true,
+              "namesOk": true,
+              "secondsPerWord": 0.30933333333333335,
+              "pass": true
+            },
+            {
+              "hash": "8c2a7290566d1ddf6cdee3cc81cfed8c13295cb17658a30a960b7caa62755743",
+              "i": 3,
+              "attempt": 1,
+              "reference": "Chúng ta xin gửi lòng lành này đến mọi loài: nguyện ai khổ được hết khổ, ai sợ được hết sợ, ai sầu được hết sầu.",
+              "transcript": "chúng ta xin gửi Long lành này đến mọi loài nguyện ai khổ được hết khổ ai sợ được hết sợ ai sầu được hết sầu",
+              "duration": 8.605333333333334,
+              "wer": 0.038461538461538464,
+              "tailOk": true,
+              "namesOk": true,
+              "secondsPerWord": 0.330974358974359,
+              "pass": true
+            },
+            {
+              "hash": "8c2a7290566d1ddf6cdee3cc81cfed8c13295cb17658a30a960b7caa62755743",
+              "i": 4,
+              "attempt": 2,
+              "reference": "Nguyện cha mẹ, thầy bạn, người thân và cả những người chưa quen đều được nâng đỡ giữa những nhọc nhằn.",
+              "transcript": "nguyện cha mẹ thầy bạn người thân và cả những người chưa quen đều được nâng đỡ giữa những nhọc nhằn",
+              "duration": 7.105333333333333,
+              "wer": 0,
+              "tailOk": true,
+              "namesOk": true,
+              "secondsPerWord": 0.33834920634920634,
+              "pass": true
+            },
+            {
+              "hash": "8c2a7290566d1ddf6cdee3cc81cfed8c13295cb17658a30a960b7caa62755743",
+              "i": 5,
+              "attempt": 1,
+              "reference": "Nếu còn điều chưa trọn, chúng ta vẫn có thể bắt đầu lại bằng một sự tử tế nhỏ.",
+              "transcript": "Nếu còn điều chưa chọn chúng ta vẫn có thể bắt đầu lại bằng một sự tử tế nhỏ",
+              "duration": 5.365333333333333,
+              "wer": 0.05263157894736842,
+              "tailOk": true,
+              "namesOk": true,
+              "secondsPerWord": 0.2823859649122807,
+              "pass": false
+            },
+            {
+              "hash": "8c2a7290566d1ddf6cdee3cc81cfed8c13295cb17658a30a960b7caa62755743",
+              "i": 6,
+              "attempt": 3,
+              "reference": "Mời bạn mang chút bình an này trở về đời thường, và giữ một chỗ dịu dàng cho người sẽ gặp hôm nay.",
+              "transcript": "mời bạn mang chút bình an này trở về đời thường và giữ một chỗ dịu dàng cho người sẽ gặp hôm nay",
+              "duration": 7.315333333333333,
+              "wer": 0,
+              "tailOk": true,
+              "namesOk": true,
+              "secondsPerWord": 0.31805797101449274,
+              "pass": true
+            }
+          ],
+          "buckets": {
+            "STAGING": {
+              "audio_sha256": "5b708aa917c643d3d07db30b4af4e8bb78180b6660f65ef60e2e84dce1802017",
+              "cues_sha256": "63563a52aacf3e372202fe5c3d3ab66d7bc5cfbe10253eeb320ffd453b6e0a2e",
+              "ai_id3": true
+            },
+            "PROD": {
+              "audio_sha256": "5b708aa917c643d3d07db30b4af4e8bb78180b6660f65ef60e2e84dce1802017",
+              "cues_sha256": "63563a52aacf3e372202fe5c3d3ab66d7bc5cfbe10253eeb320ffd453b6e0a2e",
+              "ai_id3": true
+            }
+          }
+        },
+        {
+          "id": "nghi-thuc-ket-thuc",
+          "speed": 0.85,
+          "version": 1,
+          "key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-290b9390/vi-sadaltager.mp3",
+          "hash": "290b9390",
+          "fingerprint": "290b9390bf645b74854bb67fe07f486025cafd22f3308187e67f72c52e082390",
+          "dur": 51.69795833333333,
+          "voice": "vi-VN-Chirp3-HD-Sadaltager",
+          "model": "Chirp3-HD",
+          "provider": "google",
+          "format": {
+            "sample_rate": 24000,
+            "channels": 1,
+            "bit_rate": 96000
+          },
+          "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+          "generated_at": "2026-11-15T02:30:08.690Z",
+          "wer": 0.08575008950948801,
+          "sha256": "162eccf77cd509a19dcd550bd1c3ad44843421f7e0fc7b3397050d42ebfb134c",
+          "loudness": {
+            "target_lufs": -16,
+            "target_peak_dbtp": -1.5,
+            "lufs": -16.11,
+            "peak_dbtp": -1.83
+          },
+          "selected_attempts": [
+            2,
+            2,
+            1,
+            1,
+            1,
+            3,
+            4
+          ],
+          "flags": [
+            {
+              "i": 0,
+              "wer": 0.5,
+              "tail_ok": false,
+              "names_ok": true,
+              "seconds_per_word": 0.852388888888889
+            },
+            {
+              "i": 5,
+              "wer": 0.05263157894736842,
+              "tail_ok": true,
+              "names_ok": true,
+              "seconds_per_word": 0.24812280701754386
+            },
+            {
+              "i": 6,
+              "wer": 0,
+              "tail_ok": true,
+              "names_ok": true,
+              "seconds_per_word": 0.29888405797101447
+            }
+          ],
+          "ffprobe": {
+            "stream": {
+              "index": 0,
+              "codec_name": "mp3",
+              "codec_long_name": "MP3 (MPEG audio layer 3)",
+              "codec_type": "audio",
+              "codec_tag_string": "[0][0][0][0]",
+              "codec_tag": "0x0000",
+              "mime_codec_string": "mp4a.40.34",
+              "sample_fmt": "fltp",
+              "sample_rate": "24000",
+              "channels": 1,
+              "channel_layout": "mono",
+              "bits_per_sample": 0,
+              "initial_padding": 0,
+              "r_frame_rate": "0/0",
+              "avg_frame_rate": "0/0",
+              "time_base": "1/14112000",
+              "start_pts": 649740,
+              "start_time": "0.046042",
+              "duration_ts": 729312864,
+              "duration": "51.680333",
+              "bit_rate": "96000",
+              "disposition": {
+                "default": 0,
+                "dub": 0,
+                "original": 0,
+                "comment": 0,
+                "lyrics": 0,
+                "karaoke": 0,
+                "forced": 0,
+                "hearing_impaired": 0,
+                "visual_impaired": 0,
+                "clean_effects": 0,
+                "attached_pic": 0,
+                "timed_thumbnails": 0,
+                "non_diegetic": 0,
+                "captions": 0,
+                "descriptions": 0,
+                "metadata": 0,
+                "dependent": 0,
+                "still_image": 0,
+                "multilayer": 0
+              }
+            },
+            "tags": {
+              "comment": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+              "AI_GENERATED": "Giọng đọc tạo bằng AI — Google Chirp 3 HD"
+            }
+          },
+          "cues": [
+            {
+              "i": 0,
+              "t": 0,
+              "e": 5.1143
+            },
+            {
+              "i": 1,
+              "t": 6.3143,
+              "e": 12.1087
+            },
+            {
+              "i": 2,
+              "t": 13.3087,
+              "e": 20.463
+            },
+            {
+              "i": 3,
+              "t": 21.663,
+              "e": 29.8973
+            },
+            {
+              "i": 4,
+              "t": 31.0973,
+              "e": 37.6917
+            },
+            {
+              "i": 5,
+              "t": 38.8917,
+              "e": 43.606
+            },
+            {
+              "i": 6,
+              "t": 44.806,
+              "e": 51.6803
+            }
+          ],
+          "scores": [
+            {
+              "hash": "290b9390bf645b74854bb67fe07f486025cafd22f3308187e67f72c52e082390",
+              "i": 0,
+              "attempt": 2,
+              "reference": "Sa đu! Sa đu! Sa đu!",
+              "transcript": "xe đu xe đu xe đu",
+              "duration": 5.114333333333334,
+              "wer": 0.5,
+              "tailOk": false,
+              "namesOk": true,
+              "secondsPerWord": 0.852388888888889,
+              "pass": false
+            },
+            {
+              "hash": "290b9390bf645b74854bb67fe07f486025cafd22f3308187e67f72c52e082390",
+              "i": 1,
+              "attempt": 2,
+              "reference": "Cảm ơn bạn đã dành một khoảng yên lặng để cùng lắng nghe và chăm sóc lòng mình.",
+              "transcript": "Cảm ơn bạn đã dành một khoảng yên lặng để cùng lắng nghe và chăm sóc lòng mình",
+              "duration": 5.794333333333333,
+              "wer": 0,
+              "tailOk": true,
+              "namesOk": true,
+              "secondsPerWord": 0.3219074074074074,
+              "pass": true
+            },
+            {
+              "hash": "290b9390bf645b74854bb67fe07f486025cafd22f3308187e67f72c52e082390",
+              "i": 2,
+              "attempt": 1,
+              "reference": "Mong lời vừa nghe được tiếp nối trong một hơi thở tỉnh thức, một lời nói hiền, một việc làm tử tế.",
+              "transcript": "Mong Lời vừa nghe được tiếp nối trong một hơi thở tỉnh thức một lời nói Hiền một việc làm tử tế",
+              "duration": 7.154333333333334,
+              "wer": 0,
+              "tailOk": true,
+              "namesOk": true,
+              "secondsPerWord": 0.3251969696969697,
+              "pass": true
+            },
+            {
+              "hash": "290b9390bf645b74854bb67fe07f486025cafd22f3308187e67f72c52e082390",
+              "i": 3,
+              "attempt": 1,
+              "reference": "Chúng ta xin gửi lòng lành này đến mọi loài: nguyện ai khổ được hết khổ, ai sợ được hết sợ, ai sầu được hết sầu.",
+              "transcript": "chúng ta xin gửi lòng lành này đến mọi loài nguyện ai khổ được hết khổ ai sợ được hết sợ ai sầu được hết sầu",
+              "duration": 8.234333333333334,
+              "wer": 0,
+              "tailOk": true,
+              "namesOk": true,
+              "secondsPerWord": 0.3167051282051282,
+              "pass": true
+            },
+            {
+              "hash": "290b9390bf645b74854bb67fe07f486025cafd22f3308187e67f72c52e082390",
+              "i": 4,
+              "attempt": 1,
+              "reference": "Nguyện cha mẹ, thầy bạn, người thân và cả những người chưa quen đều được nâng đỡ giữa những nhọc nhằn.",
+              "transcript": "Ngụy cha mẹ thầy bạn người thân và cả những người chưa quen đều được nâng đỡ giữa những nhọc nhằn",
+              "duration": 6.594333333333333,
+              "wer": 0.047619047619047616,
+              "tailOk": true,
+              "namesOk": true,
+              "secondsPerWord": 0.314015873015873,
+              "pass": true
+            },
+            {
+              "hash": "290b9390bf645b74854bb67fe07f486025cafd22f3308187e67f72c52e082390",
+              "i": 5,
+              "attempt": 3,
+              "reference": "Nếu còn điều chưa trọn, chúng ta vẫn có thể bắt đầu lại bằng một sự tử tế nhỏ.",
+              "transcript": "Nếu còn điều chưa chọn chúng ta vẫn có thể bắt đầu lại bằng một sự tử tế nhỏ",
+              "duration": 4.714333333333333,
+              "wer": 0.05263157894736842,
+              "tailOk": true,
+              "namesOk": true,
+              "secondsPerWord": 0.24812280701754386,
+              "pass": false
+            },
+            {
+              "hash": "290b9390bf645b74854bb67fe07f486025cafd22f3308187e67f72c52e082390",
+              "i": 6,
+              "attempt": 4,
+              "reference": "Mời bạn mang chút bình an này trở về đời thường, và giữ một chỗ dịu dàng cho người sẽ gặp hôm nay.",
+              "transcript": "mời bạn mang chút bình an này trở về đời thường và giữ một chỗ dịu dàng cho người sẽ gặp hôm nay",
+              "duration": 6.874333333333333,
+              "wer": 0,
+              "tailOk": true,
+              "namesOk": true,
+              "secondsPerWord": 0.29888405797101447,
+              "pass": false
+            }
+          ],
+          "buckets": {
+            "STAGING": {
+              "audio_sha256": "162eccf77cd509a19dcd550bd1c3ad44843421f7e0fc7b3397050d42ebfb134c",
+              "cues_sha256": "84e628e87d7d346ade0e817e71f452edd85b261d66e98e9b76b3cbc8d7d3ca93",
+              "ai_id3": true
+            },
+            "PROD": {
+              "audio_sha256": "162eccf77cd509a19dcd550bd1c3ad44843421f7e0fc7b3397050d42ebfb134c",
+              "cues_sha256": "84e628e87d7d346ade0e817e71f452edd85b261d66e98e9b76b3cbc8d7d3ca93",
+              "ai_id3": true
+            }
+          },
+          "listening_approval": {
+            "by": "owner",
+            "at": "2026-11-15T02:56:28.921Z",
+            "speed": 0.85,
+            "source": "Direct owner reply in chat 2026-11-15: 0,85 cho mở đầu và kết thúc, Namo, Sahu đã nghe đúng.",
+            "namo_variant": "B",
+            "pali_listening": "Namo and Sādhu accepted by owner"
+          }
+        }
+      ],
+      "previous_owner_approval": {
+        "state": "approved",
+        "by": "owner",
+        "at": "2026-11-15T02:56:28.921Z",
+        "speed": 0.85,
+        "source": "Direct owner reply in chat 2026-11-15: 0,85 cho mở đầu và kết thúc, Namo, Sahu đã nghe đúng.",
+        "namo_variant": "B",
+        "pali_listening": "Namo and Sādhu accepted by owner"
+      }
+    }
+  ],
+  "revised_dedication": {
+    "display": "Nguyện công đức nghe Pháp này lan đến mọi loài: cho ai khổ được hết khổ, ai sợ được hết sợ, ai sầu được hết sầu.",
+    "spoken": "Nguyện công đức nghe Pháp này lan đến mọi loài. [pause short] Cho ai khổ được hết khổ. [pause short] Ai sợ được hết sợ. [pause short] Ai sầu được hết sầu.",
+    "asr_wer_both_rates": 0,
+    "changed_cue": 3,
+    "other_six_wavs_reused": true,
+    "subjective_tone_approval": "pending"
+  },
+  "superseded_by": "2026-11-15-hoi-huong-chon-giong.json",
+  "current_status": "Historical evidence: long/Pali TTS version rejected by owner; not current candidates"
+}

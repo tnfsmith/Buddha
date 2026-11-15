@@ -113,6 +113,106 @@
       }
     },
     {
+      "id": "nghi-thuc-ket-thuc",
+      "version": 1,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-b9184a78/vi-puck.mp3",
+      "hash": "b9184a78",
+      "fingerprint": "b9184a78b5a24440a97197570677efe6ae0a0f2bb5e57f5d506c4ba209863cab",
+      "dur": 7.0099583333333335,
+      "voice": "vi-VN-Chirp3-HD-Puck",
+      "speed": 1,
+      "provider": "google",
+      "model": "Chirp3-HD",
+      "generated_at": "2026-11-15T03:58:08.648Z",
+      "sha256": "71ef80d69fd7e368ce13d9a4cd92c143ec052cab5f8142f9e2771198acb230c6",
+      "wer": 0,
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.17,
+        "peak_dbtp": -2.14
+      },
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "selected_attempts": [
+        2
+      ],
+      "flags": [
+        {
+          "i": 0,
+          "wer": 0,
+          "tail_ok": true,
+          "names_ok": true,
+          "seconds_per_word": 0.2692307692307692,
+          "note": "Owner explicitly approved faster Puck P1; raw slow-cadence flag retained."
+        }
+      ],
+      "listening_approval": {
+        "by": "owner",
+        "at": "2026-11-15T03:58:08.648Z",
+        "source": "Direct owner messages: Duyệt P1 / Duyệt P1 — tốc độ 1,00",
+        "voice": "vi-VN-Chirp3-HD-Puck",
+        "speed": 1,
+        "reviewed_sample_key": "bai-giang/_mau-giong/20261115/hoi-huong-puck-1-b9184a78-take2/vi-puck-1.mp3",
+        "reviewed_sample_sha256": "71ef80d69fd7e368ce13d9a4cd92c143ec052cab5f8142f9e2771198acb230c6"
+      },
+      "provenance": {
+        "operation": "Copy exact owner-approved P1 MP3/cues bytes; no TTS/re-encoding",
+        "source_sample_key": "bai-giang/_mau-giong/20261115/hoi-huong-puck-1-b9184a78-take2/vi-puck-1.mp3"
+      }
+    },
+    {
+      "id": "nghi-thuc-mo-dau",
+      "version": 1,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-486ddfe9/vi-sadaltager.mp3",
+      "hash": "486ddfe9",
+      "fingerprint": "486ddfe97beaba1693781ca8dbac5e572d67c13805acd94fae4f9d7dd32fa2f5",
+      "dur": 22.945958333333333,
+      "provider": "google",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "speed": 0.85,
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "generated_at": "2026-11-15T03:40:01.675Z",
+      "wer": 0,
+      "sha256": "71191a1f30da8aee1444c3dbc674903dc31ea459f4fbbc0af5d47b97d8d8a769",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.16,
+        "peak_dbtp": -2.13
+      },
+      "selected_attempts": [
+        2,
+        1,
+        1,
+        4
+      ],
+      "flags": [],
+      "provenance": {
+        "operation": "Remove all three Pali/Namo audio cues per owner; four original Vietnamese WAVs unchanged",
+        "source_key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-abbb0ffe/vi-sadaltager.mp3",
+        "source_listening_approval": "Owner approved original Vietnamese opening at 0.85; removal of Pali explicitly requested 2026-11-15"
+      },
+      "source_listening_approval": {
+        "by": "owner",
+        "at": "2026-11-15T02:56:28.921Z",
+        "speed": 0.85,
+        "source": "Direct owner reply in chat 2026-11-15: 0,85 cho mở đầu và kết thúc, Namo, Sahu đã nghe đúng.",
+        "namo_variant": "B",
+        "pali_listening": "Namo and Sādhu accepted by owner"
+      }
+    },
+    {
       "id": "niem-xu",
       "version": 2,
       "key": "bai-giang/loi-phat-day/niem-xu/v2-e9db9d4f/vi-sadaltager.mp3",

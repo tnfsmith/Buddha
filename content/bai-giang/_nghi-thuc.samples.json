@@ -1,0 +1,114 @@
+{
+  "v": 2,
+  "owner_approval": {
+    "state": "awaiting_closing_voice_verdict",
+    "opening": "Original Vietnamese words/voice previously approved; Pali removed as explicitly requested",
+    "closing": {
+      "state": "approved",
+      "label": "P1",
+      "by": "owner",
+      "at": "2026-11-15T03:58:08.648Z",
+      "source": "Direct owner messages: Duyệt P1 / Duyệt P1 — tốc độ 1,00",
+      "voice": "vi-VN-Chirp3-HD-Puck",
+      "speed": 1,
+      "reviewed_sample_key": "bai-giang/_mau-giong/20261115/hoi-huong-puck-1-b9184a78-take2/vi-puck-1.mp3",
+      "reviewed_sample_sha256": "71ef80d69fd7e368ce13d9a4cd92c143ec052cab5f8142f9e2771198acb230c6"
+    }
+  },
+  "default_speed": 0.85,
+  "voice_options_file": "_hoi-huong.puck-options.json",
+  "items": [
+    {
+      "id": "nghi-thuc-mo-dau",
+      "version": 1,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-150b0c56/vi-sadaltager.mp3",
+      "hash": "150b0c56",
+      "fingerprint": "150b0c56d5815aff75137890bb07fffe888a7264237f670b6226d2b68f9bca81",
+      "dur": 24.289958333333335,
+      "provider": "google",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "speed": 0.8,
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "generated_at": "2026-11-15T03:39:39.428Z",
+      "wer": 0,
+      "sha256": "e8d7eff38f731f44750ee245d7358045ddc95ea57526046e54e2fae3b1f64dd3",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.08,
+        "peak_dbtp": -2
+      },
+      "selected_attempts": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "flags": [],
+      "provenance": {
+        "operation": "Remove all three Pali/Namo audio cues per owner; four original Vietnamese WAVs unchanged",
+        "source_key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-897627db/vi-sadaltager.mp3",
+        "source_listening_approval": "Owner approved original Vietnamese opening at 0.85; removal of Pali explicitly requested 2026-11-15"
+      },
+      "status": "cho_duyet",
+      "selected": false,
+      "cues_key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-150b0c56/vi-sadaltager.cues.json"
+    },
+    {
+      "id": "nghi-thuc-mo-dau",
+      "version": 1,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-486ddfe9/vi-sadaltager.mp3",
+      "hash": "486ddfe9",
+      "fingerprint": "486ddfe97beaba1693781ca8dbac5e572d67c13805acd94fae4f9d7dd32fa2f5",
+      "dur": 22.945958333333333,
+      "provider": "google",
+      "voice": "vi-VN-Chirp3-HD-Sadaltager",
+      "model": "Chirp3-HD",
+      "speed": 0.85,
+      "format": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "bit_rate": 96000
+      },
+      "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
+      "generated_at": "2026-11-15T03:40:01.675Z",
+      "wer": 0,
+      "sha256": "71191a1f30da8aee1444c3dbc674903dc31ea459f4fbbc0af5d47b97d8d8a769",
+      "loudness": {
+        "target_lufs": -16,
+        "target_peak_dbtp": -1.5,
+        "lufs": -16.16,
+        "peak_dbtp": -2.13
+      },
+      "selected_attempts": [
+        2,
+        1,
+        1,
+        4
+      ],
+      "flags": [],
+      "provenance": {
+        "operation": "Remove all three Pali/Namo audio cues per owner; four original Vietnamese WAVs unchanged",
+        "source_key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-abbb0ffe/vi-sadaltager.mp3",
+        "source_listening_approval": "Owner approved original Vietnamese opening at 0.85; removal of Pali explicitly requested 2026-11-15"
+      },
+      "source_listening_approval": {
+        "by": "owner",
+        "at": "2026-11-15T02:56:28.921Z",
+        "speed": 0.85,
+        "source": "Direct owner reply in chat 2026-11-15: 0,85 cho mở đầu và kết thúc, Namo, Sahu đã nghe đúng.",
+        "namo_variant": "B",
+        "pali_listening": "Namo and Sādhu accepted by owner"
+      },
+      "status": "da_duyet",
+      "selected": true,
+      "cues_key": "bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-486ddfe9/vi-sadaltager.cues.json"
+    }
+  ]
+}
