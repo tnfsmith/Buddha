@@ -8,7 +8,9 @@ title: Sao mai đã mọc
 source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 18 · MN
   26; MN 36 (thành đạo và sự thấy biết); sao mai là hình ảnh trong Phật truyện ·
   https://suttacentral.net/mn26/en/sujato"
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt phát hành qua chat 15/11/2026"
+reviewed_at: 1794726890
 meta:
   loat: duong-xua
   phan: 1

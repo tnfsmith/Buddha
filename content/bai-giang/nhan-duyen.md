@@ -8,7 +8,9 @@ title: Gặp gỡ trên đường Vương Xá
 source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 29 · Luật
   tạng Đại phẩm I.23 (Xá Lợi Phất gặp A Thuyết Thị) ·
   https://suttacentral.net/pli-tv-kd1"
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt phát hành qua chat 15/11/2026"
+reviewed_at: 1794726890
 meta:
   loat: duong-xua
   phan: 1

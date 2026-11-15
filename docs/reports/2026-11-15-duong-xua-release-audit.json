@@ -5,7 +5,14 @@
   "cues": 498,
   "objects": 132,
   "word_flags": 6,
-  "owner_publication_approval": "pending per Issue48",
+  "owner_publication_approval": {
+    "approved_at": "2026-11-15T07:14:50.355Z",
+    "scope": "All 33 Duong Xua stories B10/C11/D12",
+    "verdict": "Duyệt phát hành cả 33 bài",
+    "channel": "Owner confirmation in Codex chat",
+    "record": "https://github.com/tnfsmith/Buddha/issues/48#issuecomment-6890917861",
+    "meaning": "Publication selection; does not assert owner listened to every recording or ASR flags were cleared."
+  },
   "records": [
     {
       "id": "bai-hoc-cua-dat",
@@ -3423,5 +3430,102 @@
     "normal_sermons_after_D": 40,
     "rituals": 2
   },
-  "tag": "not ready"
+  "tag": "not ready",
+  "publication_status": "Owner approved all 33; pending sequential PR merges and live staging acceptance",
+  "import_rehearsal": {
+    "checked_at": "2026-11-15T07:07:23.086Z",
+    "note": "In-memory rehearsal only. No tracked status changed or remote D1 written. Requires owner approval before real publication.",
+    "results": [
+      {
+        "batch": "B",
+        "tracked_published": 9,
+        "simulated_after_owner_approval": 19,
+        "normal_articles": 17,
+        "rituals": 2,
+        "parts": {
+          "1": 10,
+          "2": 0,
+          "3": 0
+        },
+        "repeat_import_idempotent": true,
+        "reading_aliases_removed": true
+      },
+      {
+        "batch": "C",
+        "tracked_published": 9,
+        "simulated_after_owner_approval": 30,
+        "normal_articles": 28,
+        "rituals": 2,
+        "parts": {
+          "1": 10,
+          "2": 11,
+          "3": 0
+        },
+        "repeat_import_idempotent": true,
+        "reading_aliases_removed": true
+      },
+      {
+        "batch": "D",
+        "tracked_published": 9,
+        "simulated_after_owner_approval": 42,
+        "normal_articles": 40,
+        "rituals": 2,
+        "parts": {
+          "1": 10,
+          "2": 13,
+          "3": 10
+        },
+        "repeat_import_idempotent": true,
+        "reading_aliases_removed": true
+      }
+    ]
+  },
+  "client_rehearsal": {
+    "checked_at": "2026-11-15T07:09:06.887Z",
+    "mode": "Simulated publication only; actual current client parser and draft source rows, no live D1 or tracked status writes.",
+    "api_items": 42,
+    "normal_items": 40,
+    "duong_xua_items": 33,
+    "parts": [
+      10,
+      13,
+      10
+    ],
+    "hidden_rituals": 2,
+    "closing": "nghi-thuc-ket-thuc",
+    "puck_p1_unchanged": true,
+    "all_articles_have_audio_source_lines": true,
+    "order_unique_sorted": true
+  },
+  "browser_rehearsal": {
+    "checked_at": "2026-11-15T07:11:25.744Z",
+    "mode": "Current staging app, simulated 42-row API response; actual R2 MP3/cues for three samples. No remote content writes; does not replace official live test or phone acceptance.",
+    "results": [
+      {
+        "id": "dem-trang-ra-di",
+        "phase": "audio",
+        "time": 0.519834,
+        "provider": "google",
+        "cues": 16,
+        "ideas": 16
+      },
+      {
+        "id": "mo-cua",
+        "phase": "audio",
+        "time": 0.515633,
+        "provider": "google",
+        "cues": 16,
+        "ideas": 16
+      },
+      {
+        "id": "voi-say",
+        "phase": "audio",
+        "time": 0.519738,
+        "provider": "google",
+        "cues": 14,
+        "ideas": 14
+      }
+    ],
+    "errors": []
+  }
 }

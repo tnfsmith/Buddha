@@ -1,4 +1,4 @@
-# Đường Xưa Mây Trắng — gói 33 bài chờ chọn phát hành
+# Đường Xưa Mây Trắng — 33 bài đã được chọn phát hành, chờ merge
 
 Đã đủ 33 bản chữ và tiếng: B có 10 bài (#76), C có 11 bài (#77), D có 12 bài (#78); tổng cộng 498 cue. Cả 33 bài đúng khuôn 10–16 ý, 450–750 tiếng, mỗi ý hiển thị không quá 260 ký tự, có nguồn/chương và thứ tự không trùng. ffprobe của 33/33 tệp đạt MP3, 24 kHz, mono, 96000 b/s; có ID3 ghi nguồn AI, chuẩn hóa −16 LUFS/−1,5 dBTP. Audit 132 object ở hai bucket khớp SHA, cue, giọng và hash. Giữ Sadaltager 0,85 cho cả loạt.
 
@@ -19,6 +19,6 @@ Không sửa transcript hoặc đổi ngưỡng để làm đẹp điểm. Các 
 
 ## Phát hành theo thứ tự
 
-Issue #48 yêu cầu chủ dự án duyệt trong PR trước đổi `da_duyet`. Hiện cả 33 bài vẫn `cho_duyet`. Sau duyệt: cập nhật ngay PR đang có. Chủ dự án merge #76 → chờ staging/kiểm đúng head → #77 → kiểm → #78 → kiểm. Mỗi lần chuyển base PR kế về main và rebase/CI lại. API tương ứng 19/30/42 mục; sau cùng là 40 bài giảng và 2 nghi thức. Đường Xưa chia phần sách 10/13/10 (khác đợt sản xuất 10/11/12); Bóng mát của họ hàng, chương 52, ở Phần Hai.
+Chủ dự án đã xác nhận “Duyệt phát hành cả 33 bài” trong chat ngày 15/11/2026; ghi nhận tại [Issue #48](https://github.com/tnfsmith/Buddha/issues/48#issuecomment-6890917861). Cập nhật `da_duyet` trong PR đang có, không đổi âm thanh hoặc xóa cờ ASR. Đây là duyệt chọn phát hành, không tự nhận chủ dự án đã nghe toàn bộ 33 bản. Chủ dự án merge #76 → chờ staging/kiểm đúng head → #77 → kiểm → #78 → kiểm. Mỗi lần chuyển base PR kế về main và rebase/CI lại. API tương ứng 19/30/42 mục; sau cùng là 40 bài giảng và 2 nghi thức. Đường Xưa chia phần sách 10/13/10 (khác đợt sản xuất 10/11/12); Bóng mát của họ hàng, chương 52, ở Phần Hai.
 
 Main `12747a4` đã merge #71/#69/#73/#82/#81, CI/staging đạt. Kiểm logic mới xác nhận phần chữ Namo trước âm thanh, ba lần lạy với máy quay toàn cảnh rồi Puck 1,00 phát đúng một lần. Kiểm live API/Range/cue của 9 mục đạt; ca phát thật vấp assertion nhãn AI cũ. Claude giữ Issue #83 và `tests/e2e/live-sermon.spec.js`; Codex không sửa tệp đó. Phải kiểm lại ca này sau bản vá. Chưa đủ điều kiện tag v0.16.0.

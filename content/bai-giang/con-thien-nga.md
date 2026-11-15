@@ -8,7 +8,9 @@ title: Con thiên nga bị thương
 source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 4 · Phật
   truyện truyền thống; Pháp Cú 129–130 (mọi loài sợ đau, quý sự sống) ·
   https://suttacentral.net/dhp129-145/en/sujato"
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt phát hành qua chat 15/11/2026"
+reviewed_at: 1794726890
 meta:
   loat: duong-xua
   phan: 1

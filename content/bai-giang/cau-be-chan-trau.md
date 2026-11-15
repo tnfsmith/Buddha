@@ -8,7 +8,9 @@ title: Cậu bé chăn trâu và bó cỏ
 source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 1–3 ·
   truyện khung Svastika của sách; truyền thống dâng cỏ kusa trong Phật truyện ·
   https://langmai.org/tang-kinh-cac/vien-sach/thien-tap/duong-xua-may-trang/"
-status: cho_duyet
+status: da_duyet
+reviewed_by: "Chủ dự án — duyệt phát hành qua chat 15/11/2026"
+reviewed_at: 1794726890
 meta:
   loat: duong-xua
   phan: 1

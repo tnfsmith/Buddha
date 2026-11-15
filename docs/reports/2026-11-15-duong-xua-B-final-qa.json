@@ -3,8 +3,15 @@
   "batch": "B",
   "count": 10,
   "cues": 160,
-  "status": "cho_duyet",
-  "owner_publication_approval": "pending per Issue48",
+  "status": "da_duyet",
+  "owner_publication_approval": {
+    "approved_at": "2026-11-15T07:14:50.355Z",
+    "scope": "All 33 Duong Xua stories B10/C11/D12",
+    "verdict": "Duyệt phát hành cả 33 bài",
+    "channel": "Owner confirmation in Codex chat",
+    "record": "https://github.com/tnfsmith/Buddha/issues/48#issuecomment-6890917861",
+    "meaning": "Publication selection; does not assert owner listened to every recording or ASR flags were cleared."
+  },
   "main_baseline": "12747a4f72c75510a2156bef30ad13b373571019",
   "format_validation": "Every MP3 ffprobe mp3/24000/mono/96000; source 10–16 cues, 450–750 syllables, <=260 display characters, source_ref and unique order",
   "records": [
@@ -1600,7 +1607,7 @@
   ],
   "notes": [
     "Original primary/secondary ASR scores retained, no threshold relaxation. Only improved attempts replace cues.",
-    "Published main baseline rows unchanged; staging currently 9 items. Merge approval is still needed, no self merge/tag.",
+    "Published main baseline rows unchanged; staging currently 9 items. Owner publication approval recorded; owner merge is still needed, no self merge/tag.",
     "96k/id3 reports are historical; this final-qa report references current source/keys."
   ]
 }
