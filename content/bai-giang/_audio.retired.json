@@ -211,6 +211,36 @@
         "vandao-media"
       ],
       "reason": "Nâng MP3 lên 96 kbps theo chủ dự án 15/11/2026"
+    },
+    {
+      "id": "nghi-thuc-ket-thuc",
+      "version": 1,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-8c2a7290/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-8c2a7290/vi-sadaltager.cues.json",
+      "sha256": "5b708aa917c643d3d07db30b4af4e8bb78180b6660f65ef60e2e84dce1802017",
+      "bit_rate": 96000,
+      "retired_at": "2026-11-15T03:06:21.047Z",
+      "delete_after": "2026-12-15T03:06:21.047Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Owner requested full dedication; replaced one cue from original WAV, old sample retained >=30 days. No object deleted."
+    },
+    {
+      "id": "nghi-thuc-ket-thuc",
+      "version": 1,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-290b9390/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-290b9390/vi-sadaltager.cues.json",
+      "sha256": "162eccf77cd509a19dcd550bd1c3ad44843421f7e0fc7b3397050d42ebfb134c",
+      "bit_rate": 96000,
+      "retired_at": "2026-11-15T03:06:21.047Z",
+      "delete_after": "2026-12-15T03:06:21.047Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Owner requested full dedication; replaced one cue from original WAV, old sample retained >=30 days. No object deleted."
     }
   ]
 }

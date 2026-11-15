@@ -115,10 +115,10 @@
     {
       "id": "nghi-thuc-ket-thuc",
       "version": 1,
-      "key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-290b9390/vi-sadaltager.mp3",
-      "hash": "290b9390",
-      "fingerprint": "290b9390bf645b74854bb67fe07f486025cafd22f3308187e67f72c52e082390",
-      "dur": 51.69795833333333,
+      "key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-274fd594/vi-sadaltager.mp3",
+      "hash": "274fd594",
+      "fingerprint": "274fd594873f7cf4bc6c17a068f252d0484448cedc92ac82bd5849f7d1edc2c0",
+      "dur": 51.62595833333334,
       "voice": "vi-VN-Chirp3-HD-Sadaltager",
       "model": "Chirp3-HD",
       "provider": "google",
@@ -129,14 +129,14 @@
         "bit_rate": 96000
       },
       "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
-      "generated_at": "2026-11-15T02:30:08.690Z",
+      "generated_at": "2026-11-15T03:04:18.093Z",
       "wer": 0.08575008950948801,
-      "sha256": "162eccf77cd509a19dcd550bd1c3ad44843421f7e0fc7b3397050d42ebfb134c",
+      "sha256": "15c2b8cf926f37e1c560169650c777437e3c1a34c5ce922ff1246c8f59f01014",
       "loudness": {
         "target_lufs": -16,
         "target_peak_dbtp": -1.5,
-        "lufs": -16.11,
-        "peak_dbtp": -1.83
+        "lufs": -16.14,
+        "peak_dbtp": -2.04
       },
       "selected_attempts": [
         2,
@@ -170,13 +170,12 @@
           "seconds_per_word": 0.29888405797101447
         }
       ],
-      "listening_approval": {
-        "by": "owner",
-        "at": "2026-11-15T02:56:28.921Z",
-        "speed": 0.85,
-        "source": "Direct owner reply in chat 2026-11-15: 0,85 cho mở đầu và kết thúc, Namo, Sahu đã nghe đúng.",
-        "namo_variant": "B",
-        "pali_listening": "Namo and Sādhu accepted by owner"
+      "revision": {
+        "reason": "Owner requests complete existing dedication and firm, decisive uplifting phrasing",
+        "old_key": "bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-290b9390/vi-sadaltager.mp3",
+        "changed_cue": 3,
+        "reused_other_cues": true,
+        "owner_approval": "pending"
       }
     },
     {
