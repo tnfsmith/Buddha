@@ -871,6 +871,51 @@
         "vandao-media"
       ],
       "reason": "ID3 AI metadata added for #80; MPEG/LAME audio unchanged. Keep old key at least 30 days; verify no D1 references before deleting."
+    },
+    {
+      "id": "hay-tinh-tan",
+      "version": 1,
+      "key": "bai-giang/duong-xua/hay-tinh-tan/v1-fb7b004c/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/duong-xua/hay-tinh-tan/v1-fb7b004c/vi-sadaltager.cues.json",
+      "sha256": "160360dcbb9aafd112f25de47112a98a893d29ad83a8ae8d6e952ead6cda7e27",
+      "bit_rate": 96000,
+      "retired_at": "2026-11-15T07:03:16.985Z",
+      "delete_after": "2026-12-15T07:03:16.985Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Clarify flagged names/words before publication; unchanged original WAVs reused; keep old master >=30 days, no objects deleted."
+    },
+    {
+      "id": "noi-dau-ba-visakha",
+      "version": 1,
+      "key": "bai-giang/duong-xua/noi-dau-ba-visakha/v1-d8d5165c/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/duong-xua/noi-dau-ba-visakha/v1-d8d5165c/vi-sadaltager.cues.json",
+      "sha256": "81a69d9ab3dbad6cb442ea5490b5ccb9892dc48ad11fada00154b90db103b32a",
+      "bit_rate": 96000,
+      "retired_at": "2026-11-15T07:03:16.985Z",
+      "delete_after": "2026-12-15T07:03:16.985Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Clarify flagged names/words before publication; unchanged original WAVs reused; keep old master >=30 days, no objects deleted."
+    },
+    {
+      "id": "voi-say",
+      "version": 1,
+      "key": "bai-giang/duong-xua/voi-say/v1-ced6bb72/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/duong-xua/voi-say/v1-ced6bb72/vi-sadaltager.cues.json",
+      "sha256": "918963bcd14c3fb5571be5f16f6e4fa5f19c7c51930b25f22321949c89779ae8",
+      "bit_rate": 96000,
+      "retired_at": "2026-11-15T07:03:16.985Z",
+      "delete_after": "2026-12-15T07:03:16.985Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Clarify flagged names/words before publication; unchanged original WAVs reused; keep old master >=30 days, no objects deleted."
     }
   ]
 }

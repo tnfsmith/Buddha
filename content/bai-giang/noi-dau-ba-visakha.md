@@ -14,9 +14,9 @@ meta:
   thu_tu: 270
   chuong: [ 60 ]
   dot: D
-body_r2_key: bai-giang/duong-xua/noi-dau-ba-visakha/v1-d8d5165c/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/noi-dau-ba-visakha/v1-975efa8c/vi-sadaltager.mp3
 ---
-Bà Tỳ Xá Khư đã quen chăm lo cho nhiều người, nhưng hôm ấy bà đến gặp Đức Phật trong nỗi đau mất một người cháu thương yêu. Tóc và áo còn ướt, bà mang theo sự trống vắng vừa mở ra trong gia đình.
+Bà [[Tỳ Xá Khư|Tỳ, Xá, Khư]] đã quen chăm lo cho nhiều người, nhưng hôm ấy bà đến gặp Đức Phật trong nỗi đau mất một người cháu thương yêu. Tóc và áo còn ướt, bà mang theo sự trống vắng vừa mở ra trong gia đình.
 Đức Phật hỏi điều gì đã xảy đến. Trước một người đang đau, câu chuyện bắt đầu bằng việc để nỗi đau ấy được nói ra, để người vừa mất đi có một chỗ trong lời kể của người còn ở lại.
 Rồi Ngài đặt câu hỏi về số người bà muốn được thương yêu như con cháu. Nếu cả một thành phố đều trở thành người thân, những cuộc chia lìa trong thành phố ấy cũng sẽ chạm tới bà mỗi ngày.
 Từ câu hỏi đó, bà được nhìn rõ mối liên hệ giữa điều mình tha thiết giữ lấy và nỗi sầu khi điều ấy thay đổi. Một tình thân không thể được bảo đảm sẽ ở nguyên bên mình theo ý muốn mãi mãi.

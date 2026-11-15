@@ -15,9 +15,9 @@ meta:
   thu_tu: 360
   chuong: [ 80 ]
   dot: D
-body_r2_key: bai-giang/duong-xua/hay-tinh-tan/v1-fb7b004c/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/hay-tinh-tan/v1-d945d491/vi-sadaltager.mp3
 ---
-Trong rừng cây sa la ở Câu Thi Na, các vị đệ tử quây quần bên Đức Phật trong những giờ cuối. Trước một cuộc chia lìa đang đến gần, mỗi người đều phải gặp phần bối rối và thương kính đang có trong lòng mình.
+Trong rừng cây sa la ở [[Câu Thi Na|Câu, Thi, Na]], các vị đệ tử quây quần bên Đức Phật trong những giờ cuối. Trước một cuộc chia lìa đang đến gần, mỗi người đều phải gặp phần bối rối và thương kính đang có trong lòng mình.
 Một người du sĩ tên Tu Bạt Đà La tìm đến, mong được hỏi điều còn băn khoăn. A Nan lo Đức Phật đã rất mệt, nhưng Ngài vẫn cho người ấy vào để một sự tìm hiểu chân thành có cơ hội được lắng nghe.
 Cuộc gặp cuối mở ra một bước đầu cho người vừa đến. Câu chuyện cho thấy sự hướng dẫn vẫn được trao bằng lòng quan tâm đến điều có ích cho người học, ngay trong một thời khắc mọi người đều biết là rất ngắn ngủi.
 Rồi lời nhắc về sự đổi thay và sự chuyên cần được gửi đến đại chúng. Những gì do nhiều điều kiện hợp lại đều có thể tan, nên người học cần giữ sự tỉnh thức và tiếp tục chăm con đường bằng việc thực tập của chính mình.
