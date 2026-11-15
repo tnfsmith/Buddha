@@ -5,13 +5,17 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Lời mở đầu
-source_ref: "Câu đảnh lễ Pāli truyền thống Namo tassa bhagavato arahato sammāsambuddhassa, A Chanting Guide, Morning Chanting · https://www.dhammatalks.org/books/ChantingGuide/Section0004.html · Lời Việt do Vân Đạo biên soạn, không phải nguyên văn lời Phật."
+source_ref: "Câu đảnh lễ Pāli truyền thống Namo tassa bhagavato arahato
+  sammāsambuddhassa, A Chanting Guide, Morning Chanting ·
+  https://www.dhammatalks.org/books/ChantingGuide/Section0004.html · Lời Việt do
+  Vân Đạo biên soạn, không phải nguyên văn lời Phật."
 status: cho_duyet
 meta:
   loat: nghi-thuc
   vai: mo-dau
   audio:
     speed: 0.85
+body_r2_key: bai-giang/nghi-thuc/nghi-thuc-mo-dau/v1-abbb0ffe/vi-sadaltager.mp3
 ---
 [[Namo tassa bhagavato arahato sammāsambuddhassa.|Na-mô tát-xa, [pause short] ba-ga-va-tô, [pause short] a-ra-ha-tô, [pause short] sam-ma-sam-bút-đát-xa.]]
 [[Namo tassa bhagavato arahato sammāsambuddhassa.|Na-mô tát-xa, [pause short] ba-ga-va-tô, [pause short] a-ra-ha-tô, [pause short] sam-ma-sam-bút-đát-xa.]]

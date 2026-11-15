@@ -5,13 +5,17 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Lời kết và hồi hướng
-source_ref: "Sādhu và câu hồi hướng Pāli Idaṃ me ñātīnaṃ hotu, sukhitā hontu ñātayo theo truyền thống tụng; đối chiếu Khuddakapāṭha 7 (bản kinh dùng vo) · https://suttacentral.net/kp7/pli/ms · Lời Việt do Vân Đạo biên soạn, không phải nguyên văn lời Phật."
+source_ref: "Sādhu và câu hồi hướng Pāli Idaṃ me ñātīnaṃ hotu, sukhitā hontu
+  ñātayo theo truyền thống tụng; đối chiếu Khuddakapāṭha 7 (bản kinh dùng vo) ·
+  https://suttacentral.net/kp7/pli/ms · Lời Việt do Vân Đạo biên soạn, không
+  phải nguyên văn lời Phật."
 status: cho_duyet
 meta:
   loat: nghi-thuc
   vai: ket-thuc
   audio:
     speed: 0.85
+body_r2_key: bai-giang/nghi-thuc/nghi-thuc-ket-thuc/v1-290b9390/vi-sadaltager.mp3
 ---
 [[Sādhu! Sādhu! Sādhu!|Sa đu! [pause long] Sa đu! [pause long] Sa đu!]]
 > Lành thay! Lành thay! Lành thay!
