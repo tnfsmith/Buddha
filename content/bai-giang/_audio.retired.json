@@ -1,0 +1,216 @@
+{
+  "v": 1,
+  "policy": "Không xóa trước delete_after; kiểm không còn tham chiếu D1 trước khi dọn. Chưa xóa tệp nào.",
+  "items": [
+    {
+      "id": "chuyen-phap-luan",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/chuyen-phap-luan/v2-3042aac1/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/loi-phat-day/chuyen-phap-luan/v2-3042aac1/vi-sadaltager.cues.json",
+      "sha256": "28ab285e5728889c55b9a9ea73907f30026d39ec024a1875b5f1aee07d1f50e7",
+      "bit_rate": 64000,
+      "retired_at": "2026-11-14T18:42:15.835Z",
+      "delete_after": "2026-12-14T18:42:15.836Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Nâng MP3 lên 96 kbps theo chủ dự án 15/11/2026"
+    },
+    {
+      "id": "chuyen-phap-luan",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/chuyen-phap-luan/v2-88797427/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/loi-phat-day/chuyen-phap-luan/v2-88797427/vi-sadaltager.cues.json",
+      "sha256": "cacc372dbd7d9b82b1c80279cfdb1fccd5d85d6e70a678dc7681ea9d953bff0c",
+      "bit_rate": 64000,
+      "retired_at": "2026-11-14T18:42:15.835Z",
+      "delete_after": "2026-12-14T18:42:15.836Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Nâng MP3 lên 96 kbps theo chủ dự án 15/11/2026"
+    },
+    {
+      "id": "diem-lanh",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/diem-lanh/v2-5de4eae6/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/loi-phat-day/diem-lanh/v2-5de4eae6/vi-sadaltager.cues.json",
+      "sha256": "66728086edc17c283294935b4c5887ef05962334ecfac61b86257b2369c16774",
+      "bit_rate": 64000,
+      "retired_at": "2026-11-14T18:42:15.835Z",
+      "delete_after": "2026-12-14T18:42:15.836Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Nâng MP3 lên 96 kbps theo chủ dự án 15/11/2026"
+    },
+    {
+      "id": "diem-lanh",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/diem-lanh/v2-a7c57eac/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/loi-phat-day/diem-lanh/v2-a7c57eac/vi-sadaltager.cues.json",
+      "sha256": "beadb6c2e3802a33a23cb1f589a39eafb686e694630b9c1dc66d8b0d96891b9d",
+      "bit_rate": 64000,
+      "retired_at": "2026-11-14T18:42:15.835Z",
+      "delete_after": "2026-12-14T18:42:15.836Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Nâng MP3 lên 96 kbps theo chủ dự án 15/11/2026"
+    },
+    {
+      "id": "kalama",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/kalama/v2-8079d34c/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/loi-phat-day/kalama/v2-8079d34c/vi-sadaltager.cues.json",
+      "sha256": "63f45a34cabc635379f54fed3f118b7078c8955e310fe0d672c895f1df021837",
+      "bit_rate": 64000,
+      "retired_at": "2026-11-14T18:42:15.835Z",
+      "delete_after": "2026-12-14T18:42:15.836Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Nâng MP3 lên 96 kbps theo chủ dự án 15/11/2026"
+    },
+    {
+      "id": "kalama",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/kalama/v2-ab666936/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/loi-phat-day/kalama/v2-ab666936/vi-sadaltager.cues.json",
+      "sha256": "e05b8305f047238a6b05dcec4961a58231c726d95e8b048b40980e3c71b101d3",
+      "bit_rate": 64000,
+      "retired_at": "2026-11-14T18:42:15.835Z",
+      "delete_after": "2026-12-14T18:42:15.836Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Nâng MP3 lên 96 kbps theo chủ dự án 15/11/2026"
+    },
+    {
+      "id": "niem-xu",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/niem-xu/v2-158be38e/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/loi-phat-day/niem-xu/v2-158be38e/vi-sadaltager.cues.json",
+      "sha256": "228fc1827f89db7bf39accfdb6c4a4d62b3ce08e16331fdc06230c75afe31e5d",
+      "bit_rate": 64000,
+      "retired_at": "2026-11-14T18:42:15.835Z",
+      "delete_after": "2026-12-14T18:42:15.836Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Nâng MP3 lên 96 kbps theo chủ dự án 15/11/2026"
+    },
+    {
+      "id": "niem-xu",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/niem-xu/v2-38aa7ae7/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/loi-phat-day/niem-xu/v2-38aa7ae7/vi-sadaltager.cues.json",
+      "sha256": "8957e360edde486c9d75696d6e1dcd9b63ca7df5c41bfcb568ce9f7ef314ad9a",
+      "bit_rate": 64000,
+      "retired_at": "2026-11-14T18:42:15.835Z",
+      "delete_after": "2026-12-14T18:42:15.836Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Nâng MP3 lên 96 kbps theo chủ dự án 15/11/2026"
+    },
+    {
+      "id": "phap-cu",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/phap-cu/v2-1131703e/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/loi-phat-day/phap-cu/v2-1131703e/vi-sadaltager.cues.json",
+      "sha256": "ba030bd78a4e9f19c65e3f1b958e704ed929358d1dbec6ac6b8d3ed710dc80da",
+      "bit_rate": 64000,
+      "retired_at": "2026-11-14T18:42:15.835Z",
+      "delete_after": "2026-12-14T18:42:15.836Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Nâng MP3 lên 96 kbps theo chủ dự án 15/11/2026"
+    },
+    {
+      "id": "phap-cu",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/phap-cu/v2-293f377f/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/loi-phat-day/phap-cu/v2-293f377f/vi-sadaltager.cues.json",
+      "sha256": "d96102d20c3a341fbb64834834352bbcc5fed55d56d71c6d9ff705f437d0263e",
+      "bit_rate": 64000,
+      "retired_at": "2026-11-14T18:42:15.835Z",
+      "delete_after": "2026-12-14T18:42:15.836Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Nâng MP3 lên 96 kbps theo chủ dự án 15/11/2026"
+    },
+    {
+      "id": "tu-bi",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/tu-bi/v2-5eebd4d7/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/loi-phat-day/tu-bi/v2-5eebd4d7/vi-sadaltager.cues.json",
+      "sha256": "48e191ac1640ca38e5e98ba044bbb964150c92e3ea9d5938a5ac5b570c9cf0ec",
+      "bit_rate": 64000,
+      "retired_at": "2026-11-14T18:42:15.835Z",
+      "delete_after": "2026-12-14T18:42:15.836Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Nâng MP3 lên 96 kbps theo chủ dự án 15/11/2026"
+    },
+    {
+      "id": "tu-bi",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/tu-bi/v2-a8bf31d2/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/loi-phat-day/tu-bi/v2-a8bf31d2/vi-sadaltager.cues.json",
+      "sha256": "29fcc64b06f56ed9122644040abdc72fbfb597fdd7d18944d7cd39005d0bff43",
+      "bit_rate": 64000,
+      "retired_at": "2026-11-14T18:42:15.835Z",
+      "delete_after": "2026-12-14T18:42:15.836Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Nâng MP3 lên 96 kbps theo chủ dự án 15/11/2026"
+    },
+    {
+      "id": "vo-nga-tuong",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/vo-nga-tuong/v2-12086c55/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/loi-phat-day/vo-nga-tuong/v2-12086c55/vi-sadaltager.cues.json",
+      "sha256": "f87b85a9c9d5014e8339ec6ccd96fa789d1e5bfbc7135c6f3de157115a7e80cc",
+      "bit_rate": 64000,
+      "retired_at": "2026-11-14T18:42:15.835Z",
+      "delete_after": "2026-12-14T18:42:15.836Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Nâng MP3 lên 96 kbps theo chủ dự án 15/11/2026"
+    },
+    {
+      "id": "vo-nga-tuong",
+      "version": 2,
+      "key": "bai-giang/loi-phat-day/vo-nga-tuong/v2-47e87e55/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/loi-phat-day/vo-nga-tuong/v2-47e87e55/vi-sadaltager.cues.json",
+      "sha256": "aba91b2daa9dc27df9f331343af3bcb2aa353918405baec89adc70e485e6de80",
+      "bit_rate": 64000,
+      "retired_at": "2026-11-14T18:42:15.835Z",
+      "delete_after": "2026-12-14T18:42:15.836Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Nâng MP3 lên 96 kbps theo chủ dự án 15/11/2026"
+    }
+  ]
+}

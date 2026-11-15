@@ -13,7 +13,7 @@ meta:
   loat: loi-phat-day
   thu_tu: 20
   dot: A
-body_r2_key: bai-giang/loi-phat-day/vo-nga-tuong/v2-12086c55/vi-sadaltager.mp3
+body_r2_key: bai-giang/loi-phat-day/vo-nga-tuong/v2-69da1811/vi-sadaltager.mp3
 ---
 Ít ngày sau bài giảng đầu tiên, cũng ở vườn Lộc Uyển, Đức Phật dạy năm vị đệ tử đầu tiên về cái mà ta vẫn gọi là "tôi". Bài ấy là Kinh Vô Ngã Tướng.
 > Rūpaṃ, bhikkhave, anattā.

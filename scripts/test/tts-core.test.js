@@ -8,6 +8,11 @@ it('bỏ Pāli, đọc cách đọc và áp từ điển có biên tiếng Việ
 it('băm ổn định, đổi lời đọc/giọng/mô hình/tốc độ thì đổi băm', () => {
   const config = { provider: 'google', voice: 'vi-VN-Chirp3-HD-Charon', model: 'Chirp3-HD', speed: 0.9 };
   const hash = fingerprint(['Lời thử.'], config);
+  // Băm 64k đã đo trước khi đổi định dạng; 96k phải tạo khóa khác để giữ tệp cũ.
+  const legacy64 = '5cae69bb366032774c7417d59e45b3e32d47df5e0732ffbfccf089214c3523bf';
+  expect(hash).not.toBe(legacy64);
+  const article = { id: 'bai-thu', version: 2 };
+  expect(audioKey(article, hash, config.voice)).not.toBe(audioKey(article, legacy64, config.voice));
   expect(fingerprint(['Lời thử.'], config)).toBe(hash);
   for (const [key, value] of [['voice', 'vi-VN-Chirp3-HD-Orus'], ['model', 'khác'], ['speed', 1], ['instructions', 'khác']]) expect(fingerprint(['Lời thử.'], { ...config, [key]: value })).not.toBe(hash);
   expect(fingerprint(['Lời đã sửa.'], config)).not.toBe(hash);

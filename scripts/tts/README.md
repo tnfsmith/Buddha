@@ -27,7 +27,9 @@ node scripts/tts/generate.mjs --series loi-phat-day --batch A --content-root <wo
 
 Đường Xưa dùng `--series duong-xua --batch B` (rồi C, D), thêm `--allow-drafts` để tạo tệp nghe bản nháp. Không đổi trạng thái. Công cụ chỉ ghi `body_r2_key` và `_audio.lock.json` trong worktree nhánh `hermes/`, sau khi MP3+cues được kiểm trên **cả hai** bucket. Bản nháp chỉ nghe qua URL ký, không qua `/media`.
 
-Mỗi ý TTS→STT tối đa bốn lần; chưa đạt giữ cờ trong sổ để người nghe kiểm. MP3 mono 24 kHz/64 kbps, loudnorm −16 LUFS/−1,5 dBTP; cues đo từ PCM thật, nghỉ 0,9 giây (1,5 trước ý cuối). Cache `.wrangler/tts-generated` giữ WAV/điểm/tệp cuối; cùng băm không gọi lại dịch vụ hoặc mã hóa lại. Mạng/upload lỗi thì chạy lại cùng lệnh; không ghi sổ nửa chừng cho bài chỉ có một bucket. Không xóa cache trước khi tải xong.
+Mỗi ý TTS→STT tối đa bốn lần; chưa đạt giữ cờ trong sổ để người nghe kiểm. MP3 mono 24 kHz/**96 kbps**, loudnorm −16 LUFS/−1,5 dBTP; cues đo từ PCM thật, nghỉ 0,9 giây (1,5 trước ý cuối). Cache `.wrangler/tts-generated` giữ WAV/điểm/tệp cuối; cùng băm không gọi lại dịch vụ hoặc mã hóa lại. Mạng/upload lỗi thì chạy lại cùng lệnh; không ghi sổ nửa chừng cho bài chỉ có một bucket. Không xóa cache trước khi tải xong.
+
+Quyết định 15/11: dùng LINEAR16/WAV Google gốc để mã hóa libmp3lame 96k, không nén lại MP3 cũ, không dùng đầu ra MP3 Google, không thêm `compression_level`. Nhãn băm có `96k` để giữ khóa mới riêng. Từng tệp phát hành phải được ffprobe xác nhận `mp3, 24000 Hz, mono, 96000 b/s`; đọc lại hai bucket đối chiếu SHA-256. `_audio.retired.json` ghi khóa cũ và thời điểm sớm nhất được dọn sau 30 ngày; chỉ dọn khi không còn tham chiếu D1. Mẫu thử giọng cũ không phải bằng chứng định dạng 96k của bài phát hành.
 
 Đo LUFS/true peak **sau** mã hóa MP3 và lấy mẫu 24 kHz; nếu lệch thì chỉnh mức nội bộ rồi mã hóa lại từ PCM, tối đa bốn lượt. Chặn đầu ra lệch quá 0,5 LUFS hoặc đỉnh lớn hơn −1,5 dBTP; số đo cuối ghi trong sổ. Revision định dạng `verified-v2` đổi băm để không ghi đè bản thử trước đó.
 
