@@ -15,7 +15,7 @@ meta:
   thu_tu: 210
   chuong: [ 46 ]
   dot: C
-body_r2_key: bai-giang/duong-xua/nam-la-simsapa/v1-ca3aad87/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/nam-la-simsapa/v1-e3f55260/vi-sadaltager.mp3
 ---
 Gần thành Câu Thiểm Di có một khoảng rừng nhiều cây, nơi Đức Phật thường ngồi nghỉ và trò chuyện với các vị khất sĩ. Giữa những tán lá rộng, một câu hỏi rất giản dị được bắt đầu từ bàn tay đang mở.
 Ngài cầm một ít lá rồi hỏi những người có mặt: lá trong tay và lá còn trên những cây quanh đây, bên nào nhiều hơn? Mọi người chỉ cần nhìn lên là đã có thể nhận ra khoảng cách giữa hai số lượng ấy.

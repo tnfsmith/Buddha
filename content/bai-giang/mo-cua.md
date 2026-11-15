@@ -15,7 +15,7 @@ meta:
   thu_tu: 200
   chuong: [ 45 ]
   dot: C
-body_r2_key: bai-giang/duong-xua/mo-cua/v1-2a823920/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/mo-cua/v1-683d6544/vi-sadaltager.mp3
 ---
 Bên ngoài nơi Đức Phật đang cư trú, những người phụ nữ dừng lại sau một hành trình dài. Bụi đường còn trên áo, chân đã sưng vì đi bộ, nhưng điều họ mong được trình bày vẫn rất rõ trong lòng.
 Người đi đầu là Ma Ha Ba Xà Ba Đề, người đã nuôi dưỡng Tất Đạt Đa từ thuở nhỏ. Bà cùng những người phụ nữ dòng họ Thích muốn được bước vào nếp sống tu học như những người đã đi trước.

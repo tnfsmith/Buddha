@@ -15,7 +15,7 @@ meta:
   thu_tu: 160
   chuong: [ 40 ]
   dot: C
-body_r2_key: bai-giang/duong-xua/phu-dat-bang-vang/v1-93c2d1c8/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/phu-dat-bang-vang/v1-93931166/vi-sadaltager.mp3
 ---
 Gần thành Xá Vệ có một khu vườn nhiều cây, đủ yên để người ta có thể ngồi nghỉ và học đạo. Cấp Cô Độc nhìn khu đất ấy với mong muốn có một nơi đón Đức Phật cùng những người đang theo học.
 Ông là một người sống đời gia đình, quen làm ăn và chăm lo những việc cụ thể. Sau khi gặp Đức Phật, điều ông muốn chuẩn bị là chỗ trú, lối đi và các điều kiện cho một cộng đồng có thể ở lại.

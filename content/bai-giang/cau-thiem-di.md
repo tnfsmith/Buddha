@@ -15,7 +15,7 @@ meta:
   thu_tu: 220
   chuong: [ 46, 47, 48 ]
   dot: C
-body_r2_key: bai-giang/duong-xua/cau-thiem-di/v1-72bde96a/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/cau-thiem-di/v1-9b28e70a/vi-sadaltager.mp3
 ---
 Trong cộng đồng tu học ở Câu Thiểm Di, một bất đồng nhỏ dần trở thành cuộc tranh cãi kéo dài. Những người từng sống và học bên nhau bắt đầu chia thành hai phía, mỗi bên giữ chặt cách hiểu của mình.
 Điều cần làm rõ ban đầu bị phủ thêm nhiều lời phê phán và sự bênh vực. Người nghe câu chuyện từ một phía lại tiếp lời phía ấy, khiến khoảng cách lớn lên và bầu không khí chung trở nên nặng nề hơn.

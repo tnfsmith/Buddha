@@ -15,7 +15,7 @@ meta:
   thu_tu: 240
   chuong: [ 53 ]
   dot: C
-body_r2_key: bai-giang/duong-xua/song-trong-hien-tai/v1-782df793/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/song-trong-hien-tai/v1-a723b1fc/vi-sadaltager.mp3
 ---
 Trong khu vườn Kỳ Viên gần thành Xá Vệ, Đức Phật nói với các vị khất sĩ về một đời sống biết có mặt. Bên ngoài là cảnh của một ngày đang trôi, còn trong mỗi người có thể vẫn vang lên nhiều chuyện đã xa.
 Người nghe ai cũng có một quá khứ để nhớ và một ngày mai để nghĩ tới. Chỉ một hình ảnh hay một câu nói vừa gặp cũng có thể đưa tâm đi rất xa khỏi nơi thân mình đang ngồi và điều mình đang làm.

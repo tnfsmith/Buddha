@@ -1175,25 +1175,25 @@
     {
       "id": "mo-cua",
       "version": 1,
-      "key": "bai-giang/duong-xua/mo-cua/v1-683d6544/vi-sadaltager.mp3",
-      "hash": "683d6544",
-      "fingerprint": "683d654481ad0b1baa493bf6dbc6a9f1d04e59f219d4985760e31b3945fa5c48",
-      "dur": 233.30595833333334,
+      "key": "bai-giang/duong-xua/mo-cua/v1-6901ba7c/vi-sadaltager.mp3",
+      "hash": "6901ba7c",
+      "fingerprint": "6901ba7c79048018685a787f706ab17217191ad9303f4e5512654d272d2114fa",
+      "dur": 233.78595833333333,
       "voice": "vi-VN-Chirp3-HD-Sadaltager",
       "model": "Chirp3-HD",
       "provider": "google",
-      "generated_at": "2026-11-15T02:35:07.884Z",
-      "wer": 0.019158387347711938,
-      "sha256": "657e30dac21898d41d5408fbb929799e9450400f35f279f5d117b7af0baf18c1",
+      "generated_at": "2026-11-15T06:14:24.106Z",
+      "wer": 0.00979792223143287,
+      "sha256": "e5cfc0f05626f0c52a9f92439426b7a05a677f69f6e22131f6280b47271c9928",
       "loudness": {
         "target_lufs": -16,
         "target_peak_dbtp": -1.5,
-        "lufs": -16.1,
-        "peak_dbtp": -1.8
+        "lufs": -16.12,
+        "peak_dbtp": -1.86
       },
       "selected_attempts": [
         3,
-        3,
+        1,
         3,
         4,
         3,
@@ -1211,13 +1211,6 @@
       ],
       "flags": [
         {
-          "i": 1,
-          "wer": 0.06976744186046512,
-          "tail_ok": true,
-          "names_ok": true,
-          "seconds_per_word": 0.27893798449612406
-        },
-        {
           "i": 6,
           "wer": 0.023809523809523808,
           "tail_ok": true,
@@ -1226,10 +1219,10 @@
         },
         {
           "i": 7,
-          "wer": 0.08,
+          "wer": 0,
           "tail_ok": true,
           "names_ok": true,
-          "seconds_per_word": 0.3094866666666667
+          "seconds_per_word": 0.2878866666666667
         },
         {
           "i": 8,
@@ -1289,11 +1282,13 @@
       "speed": 0.85,
       "ai_disclosure": "Giọng đọc tạo bằng AI — Google Chirp 3 HD",
       "provenance": {
-        "operation": "ID3 metadata only; MPEG/LAME payload unchanged",
-        "source_key": "bai-giang/duong-xua/mo-cua/v1-2a823920/vi-sadaltager.mp3",
-        "source_sha256": "489990951cc9195948b5b357738774b047b6d58c92febe1b78aaa4045925a5ec",
-        "source_generated_at": "2026-11-14T20:14:49.966Z",
-        "payload_sha256": "017ff4b4e7c2fac485a0ac3aa4df467b463bbbde24ff08c0582df904507fec7d"
+        "operation": "Clarify flagged words/names; only improved cues replaced, other original LINEAR16 WAVs reused",
+        "source_key": "bai-giang/duong-xua/mo-cua/v1-683d6544/vi-sadaltager.mp3",
+        "source_sha256": "657e30dac21898d41d5408fbb929799e9450400f35f279f5d117b7af0baf18c1",
+        "changed_cues": [
+          1,
+          7
+        ]
       }
     },
     {

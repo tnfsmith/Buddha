@@ -15,7 +15,7 @@ meta:
   thu_tu: 150
   chuong: [ 38 ]
   dot: C
-body_r2_key: bai-giang/duong-xua/oi-hanh-phuc/v1-36ca5789/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/oi-hanh-phuc/v1-456c8dfb/vi-sadaltager.mp3
 ---
 Trong một chỗ nghỉ yên giữa rừng, thầy Bạt Đề thốt lên lời vui mừng về hạnh phúc. Những người nghe thấy băn khoăn, vì trước kia thầy từng sống ở vị trí được nhiều người trọng vọng và có đầy đủ tiện nghi.
 Họ nghĩ có lẽ thầy đang nhớ đời sống cũ, tiếc những gì đã bỏ lại khi đi tu. Một câu nói ngắn, nếu chỉ nghe từ ngoài, có thể được hiểu theo câu chuyện mà người nghe đã tự hình dung.

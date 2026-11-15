@@ -15,7 +15,7 @@ meta:
   thu_tu: 230
   chuong: [ 49 ]
   dot: C
-body_r2_key: bai-giang/duong-xua/bai-hoc-cua-dat/v1-ec268a4a/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/bai-hoc-cua-dat/v1-d0541685/vi-sadaltager.mp3
 ---
 La Hầu La lớn lên trong nếp sống tu học, vẫn còn nhiều điều cần được chỉ dẫn bằng kinh nghiệm gần gũi. Có lần Đức Phật dạy thầy bắt đầu từ những yếu tố rất quen đang có mặt trong thân và trong thế giới quanh mình.
 Dưới chân là đất, bên cạnh là nước, còn hơi ấm và sự chuyển động vẫn đang có trong từng khoảnh khắc sống. Những điều bình thường ấy được dùng làm hình ảnh để người học nhận ra một cách chăm sóc tâm rộng rãi hơn.

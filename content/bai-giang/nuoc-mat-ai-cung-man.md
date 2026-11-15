@@ -15,7 +15,7 @@ meta:
   thu_tu: 190
   chuong: [ 43 ]
   dot: C
-body_r2_key: bai-giang/duong-xua/nuoc-mat-ai-cung-man/v1-9c444a7f/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/nuoc-mat-ai-cung-man/v1-c5a9c3e7/vi-sadaltager.mp3
 ---
 Trên một con đường trong thành, người làm công việc dọn sạch những thứ bị bỏ đi đang tìm cách nép mình sang bên. Anh tên Sunita, quen với việc bị người khác tránh xa và ít khi được đón bằng một lời nói tử tế.
 Trong cảnh kể của sách, công việc gánh chất thải khiến sự xa lánh càng nặng nề hơn. Anh làm điều thành phố cần mỗi ngày, nhưng chính người làm công việc ấy lại thường bị đối xử như thể không đáng được nhìn nhận.

@@ -17,7 +17,7 @@ meta:
   thu_tu: 140
   chuong: [ 34 ]
   dot: C
-body_r2_key: bai-giang/duong-xua/sum-hop/v1-1bed6ba4/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/sum-hop/v1-0a38bdc3/vi-sadaltager.mp3
 ---
 Mùa xuân trở lại với những lối đi trong thành Ca Tỳ La Vệ. Sau nhiều năm xa nhà, Đức Phật cùng các vị khất sĩ trở về, để cuộc gặp với gia đình diễn ra giữa những điều vừa quen vừa khác.
 Vua Tịnh Phạn đón người con mà mình từng đặt nhiều mong đợi. Trước mắt vua vẫn là gương mặt thân thuộc, nhưng nếp sống và con đường người con lựa chọn đã vượt khỏi những dự tính ngày trước.
