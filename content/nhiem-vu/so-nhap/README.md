@@ -6,7 +6,7 @@
 
 ## Hợp đồng cho Claude — đợt C
 
-Sau khi chủ dự án chọn `da_duyet` và merge/deploy, đọc `GET /api/v1/content?kind=nhiem_vu&tier=0`. API hiện có trả `meta` dưới dạng chuỗi JSON như bài giảng; client cần đọc JSON. Không có thay đổi API, migration hoặc client trong đợt B.
+Chủ dự án đã chọn `da_duyet`; sau khi merge/deploy, đọc `GET /api/v1/content?kind=nhiem_vu&tier=0`. API hiện có trả `meta` dưới dạng chuỗi JSON như bài giảng; client cần đọc JSON. Không có thay đổi API, migration hoặc client trong đợt B.
 
 | Trường `meta` | Ý nghĩa |
 |---|---|

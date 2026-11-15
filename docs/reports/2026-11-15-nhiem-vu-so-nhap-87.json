@@ -64,11 +64,11 @@
   },
   "old_42_sermon_rows_deep_equal_legacy": true,
   "local_checks": {
-    "vitest": "190 B alone; 207 passed on isolated A/B integration",
+    "vitest": "220 passed on rebased branch including Claude A/C and all 73 approved missions",
     "lint": "0 errors; 2 existing warnings island/world",
     "migrations": 8,
-    "build_size_kb": 1057,
-    "html_delta_vs_base": "0 vs main after A; +8 KB from Claude A relative to pre-A baseline",
+    "build_size_kb": 1069,
+    "html_delta_vs_base": "0 vs main after C; client changes owned by Claude #92",
     "targeted_content_and_api": "37 passed",
     "approved_sql_rehearsal": "8 migrations + 115 rows, repeated import idempotent, in-memory SQLite; no remote D1 writes"
   },
@@ -89,6 +89,12 @@
       "build_kb": 1057,
       "seven_vows_match_week_focus": true,
       "rebased_js_mjs_files_equal_tested_integration": true
+    },
+    "claude_C": {
+      "pr": 92,
+      "head": "d08e845c3ac11ff51d4c976100720bddf0027d86",
+      "merged_as": "0994096341243a4895b1d92cd8888a5374c7bb2b",
+      "apps_web_or_shared_edits_by_B": false
     }
   },
   "lane_scope": {
@@ -108,5 +114,6 @@
     "channel": "Owner in Codex chat",
     "statement": "Duyệt nội dung bảng 73 mục. Chuyển sang trạng thái da_duyet ngay",
     "record": "https://github.com/tnfsmith/Buddha/issues/87#issuecomment-6897073087"
-  }
+  },
+  "base_after_claude_C_merge": "0994096341243a4895b1d92cd8888a5374c7bb2b"
 }
