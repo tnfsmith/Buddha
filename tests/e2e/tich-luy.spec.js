@@ -2,7 +2,7 @@
 // API và /media giả lập; không gọi máy chủ thật.
 import { test, expect } from '@playwright/test';
 
-const BASE = 'http://127.0.0.1:4173/';
+const BASE = (process.env.E2E_BASE_URL || 'http://127.0.0.1:4173/').replace(/#.*$/, '').replace(/\/?$/, '/');
 const slow = expect.configure({ timeout: 60_000 });
 const KEY = 'bai-giang/duong-xua/co-tieng/v1-aaaa1111/vi-cedar.mp3';
 const BAI = { id: 'co-tieng', version: 1, kind: 'bai_giang', tier: 0, title: 'Bài có giọng đọc', source_ref: 'Nguồn thử', body_inline: 'Ý một có tiếng.\nÝ hai có tiếng.', body_r2_key: KEY, meta: { loat: 'duong-xua', phan: 1, thu_tu: 10 } };
