@@ -15,7 +15,7 @@ meta:
   thu_tu: 100
   chuong: [ 27 ]
   dot: B
-body_r2_key: bai-giang/duong-xua/lua-dang-chay/v1-16651fd1/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/lua-dang-chay/v1-fce32464/vi-sadaltager.mp3
 ---
 Trên núi Tượng Đầu gần vùng Già Da, Đức Phật ngồi cùng những người vừa bước vào một nếp tu học mới. Họ đã quen với hình ảnh lửa trong đời sống và trong những nghi lễ mình từng gìn giữ.
 Gió qua sườn núi, khoảng ngồi mở ra trước trời rộng. Ngài bắt đầu từ một hình ảnh mà người nghe có thể hiểu ngay: lửa đang cháy, và điều cần nhìn không chỉ là ngọn lửa thấy được bằng mắt.

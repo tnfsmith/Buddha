@@ -16,7 +16,7 @@ meta:
   thu_tu: 70
   chuong: [ 19 ]
   dot: B
-body_r2_key: bai-giang/duong-xua/qua-quyt-chanh-niem/v1-39ac1b59/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/qua-quyt-chanh-niem/v1-566307ce/vi-sadaltager.mp3
 ---
 Dưới bóng cây bên bờ sông, mấy đứa trẻ ngồi gần Đức Phật sau một buổi đi chơi. Một quả quýt nằm trong lòng bàn tay, màu vỏ sáng lên giữa những ngón tay còn vương chút bụi đường.
 Đây là cảnh được tác giả sách kể để gợi một cách sống có mặt. Không cần một vật lạ hay một buổi lễ trang trọng, câu chuyện bắt đầu bằng thức ăn quen thuộc mà trẻ nhỏ cũng có thể cầm và cảm nhận.

@@ -15,7 +15,7 @@ meta:
   thu_tu: 20
   chuong: [ 4 ]
   dot: B
-body_r2_key: bai-giang/duong-xua/con-thien-nga/v1-e8052dfa/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/con-thien-nga/v1-588b2533/vi-sadaltager.mp3
 ---
 Trong khu vườn gần thành Ca Tỳ La Vệ, một đàn thiên nga bay qua mặt hồ sáng. Thái tử Tất Đạt Đa còn nhỏ ngước nhìn những đôi cánh trắng đang cùng nhau vượt khoảng trời xanh.
 Phật truyện kể rằng một mũi tên bất ngờ làm một con chim rơi xuống. Tiếng cánh đập gấp phá tan buổi sáng yên, để lại trên cỏ một sinh vật đang đau và hoảng sợ.

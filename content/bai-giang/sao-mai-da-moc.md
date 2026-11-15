@@ -15,7 +15,7 @@ meta:
   thu_tu: 60
   chuong: [ 18 ]
   dot: B
-body_r2_key: bai-giang/duong-xua/sao-mai-da-moc/v1-f9ad9457/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/sao-mai-da-moc/v1-f14a3392/vi-sadaltager.mp3
 ---
 Đêm dần nhạt trên bờ sông, những chiếc lá trên cây chỉ còn hiện thành nét mảnh. Trong câu chuyện thành đạo, vị tu sĩ trẻ ngồi yên cho đến khi ánh sáng đầu ngày trở lại với khu rừng.
 Người đã đi qua nhiều chặng tìm kiếm, từ học với các vị thầy đến những năm tháng thử thách thân mình. Bây giờ, thân được chăm sóc vừa đủ và tâm có điều kiện ở lại với sự quan sát sâu sắc.

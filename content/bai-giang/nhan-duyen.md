@@ -15,7 +15,7 @@ meta:
   thu_tu: 110
   chuong: [ 29 ]
   dot: B
-body_r2_key: bai-giang/duong-xua/nhan-duyen/v1-d6256efc/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/nhan-duyen/v1-0f87d877/vi-sadaltager.mp3
 ---
 Buổi sáng trên đường thành Vương Xá, một vị khất sĩ đi qua những ngôi nhà với dáng vẻ yên tĩnh. Người tìm đạo Xá Lợi Phất nhìn thấy, và điều làm ông chú ý trước hết là cách người ấy bước đi.
 Vị khất sĩ tên A Thuyết Thị, đang sống theo sự hướng dẫn của Đức Phật. Trong nhịp đi và cử chỉ nhận thức ăn, ông giữ một sự giản dị khiến người quan sát muốn biết con đường nào đã nuôi dưỡng phong thái ấy.
