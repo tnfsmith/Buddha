@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-15T14:28:02.756Z",
+  "checked_at": "2026-11-15T14:39:20.774Z",
   "issue": 87,
   "design_pr": 86,
   "design_base": "a45dceb1c80c3225ea687ee7a8c01637d92a8c0c",
@@ -63,11 +63,11 @@
   },
   "old_42_sermon_rows_deep_equal_legacy": true,
   "local_checks": {
-    "vitest": "190 passed; scripts + D1/workerd API",
+    "vitest": "190 B alone; 207 passed on isolated A/B integration",
     "lint": "0 errors; 2 existing warnings island/world",
     "migrations": 8,
-    "build_size_kb": 1049,
-    "html_delta_vs_base": "0 (no client/shared edits)",
+    "build_size_kb": 1057,
+    "html_delta_vs_base": "0 vs main after A; +8 KB from Claude A relative to pre-A baseline",
     "targeted_content_and_api": "37 passed"
   },
   "coordination": {
@@ -78,7 +78,16 @@
     "merge_or_tag": false,
     "ci": "pending new PR head",
     "preview": "pending new PR head",
-    "integration_with_claude": "to be verified separately against current #89 head"
+    "integration_with_claude": {
+      "head": "7be7f6de2d621c45bb12cd23806cf36f463a0b9f",
+      "merged_as": "6cfb8dda00e9e294780dc8ae224cd98da45f7699",
+      "conflicts": 0,
+      "vitest_passed": 207,
+      "browser_tich_luy": "1/1 passed, 53.9s; mocked API/media, isolated localhost:4187",
+      "build_kb": 1057,
+      "seven_vows_match_week_focus": true,
+      "rebased_js_mjs_files_equal_tested_integration": true
+    }
   },
   "lane_scope": {
     "specific_shared_paths": [
@@ -90,5 +99,6 @@
     ],
     "with_shared_ok": 0,
     "without_shared_ok": 5
-  }
+  },
+  "base_after_claude_A_merge": "6cfb8dda00e9e294780dc8ae224cd98da45f7699"
 }
