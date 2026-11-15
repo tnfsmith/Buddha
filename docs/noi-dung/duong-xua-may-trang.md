@@ -7,7 +7,7 @@
 
 ## 1. Tinh thần
 
-Mỗi bài là **một câu chuyện có thật trong cuộc đời Đức Phật**, kể theo đúng trình tự của *Đường Xưa Mây Trắng* (Thích Nhất Hạnh, Lá Bối 1988; 81 chương), kèm **lời Ngài dạy trong chính chuyện đó**.
+Mỗi bài kể một cảnh theo trình tự của *Đường Xưa Mây Trắng* (Thích Nhất Hạnh, Lá Bối 1988; 81 chương), nối với điều có thể thực tập. Phân biệt nguồn kinh, Phật truyện truyền thống và truyện khung do tác giả xây dựng; không gọi mọi chi tiết văn học là sự kiện lịch sử đã được xác nhận. Lời suy ngẫm biên soạn mới không gán thành nguyên văn lời Phật.
 
 Người nghe không cần biết giáo lý. Nghe xong, họ phải thấy được ba điều:
 
@@ -52,14 +52,14 @@ App dành cho mọi người hướng thiện, không riêng người tu. Vì v�
 - Số theo bản 81 chương. Codex đối chiếu bản tiếng Việt và phụ lục nguồn kinh của sách trước khi viết.
 - ✓ = chuyện đã rõ theo tên chương; ? = cần xác nhận chương. Khi xác nhận, Codex sửa `thu_tu` cho đúng vị trí (bước 10 để chèn).
 
-**Cột Đợt:** B/C/D theo phần (mục 5). Ba bài 80, 180, 220 kể chuyện; bài kinh cùng tên giảng kỹ ở loạt «Lời Phật dạy».
+**Cột Đợt:** B/C/D là đợt sản xuất 10/11/12 bài, không đồng nhất với phần sách. Sau đối chiếu, hai bài đợt D ở chương 52/53 chuyển về Phần Hai; số bài theo phần là 10/13/10. Ba bài 80, 180, 220 kể chuyện; bài kinh cùng tên giảng kỹ ở loạt «Lời Phật dạy».
 
 ### Phần Một — Ánh sao mai (quyển 1, chương 1–29)
 
 | thu_tu | id | Tên bài | Chương | Chuyện | Lời dạy, hướng thương | Nguồn kinh | Đợt |
 |---|---|---|---|---|---|---|---|
 | 10 | `cau-be-chan-trau` | Cậu bé chăn trâu và bó cỏ | 1–3 ✓ | Svastika, cậu bé chăn trâu nghèo bị xem là hạ tiện, cắt cỏ dâng vị tu sĩ trẻ; vị ấy cảm ơn, hỏi tên, coi cậu như bạn | Không ai thấp hèn trước lòng thương; bước đi thong thả, có mặt cho người trước mặt | Truyện khung của sách; truyền thống người cắt cỏ dâng cỏ kusa (chú giải Jātaka) | B |
-| 20 | `con-thien-nga` | Con thiên nga bị thương | 4 ✓ | Thái tử nhỏ cứu thiên nga bị Đề Bà Đạt Đa bắn; hội đồng phán sự sống thuộc về người cứu | Mọi loài đều sợ đau, quý mạng sống; lấy mình mà so | Phật truyện (Lalitavistara); Dhp 129–130 | B · **bài mẫu, mục 7** |
+| 20 | `con-thien-nga` | Con thiên nga bị thương | 4 ✓ | Thái tử nhỏ cứu thiên nga bị Đề Bà Đạt Đa bắn; hội đồng phán sự sống thuộc về người cứu | Mọi loài đều sợ đau, quý mạng sống; lấy mình mà so | Phật truyện kể theo chương 4; đối chiếu Dhp 129–130, không khẳng định xuất xứ Lalitavistara khi chưa xác nhận | B · **bài mẫu, mục 7** |
 | 30 | `goc-cay-hong-tao` | Dưới gốc cây hồng táo | 6 ✓ | Lễ hạ điền: cậu bé thấy con sâu bị chim mổ, chim bị diều hâu bắt; ngồi lặng dưới bóng cây | Lòng thương mở ra khi thấy nỗi khổ của muôn loài; giây phút tĩnh lặng đầu tiên | MN 36 (ký ức ngồi dưới cây jambu) | B |
 | 40 | `dem-trang-ra-di` | Đêm trăng ra đi | 9–12 ✓ | Thấy người già, người bệnh, người chết, người tu; đêm trăng cưỡi ngựa Kiền Trắc cùng Xa Nặc rời cung | Ra đi không vì chán đời mà vì thương người, muốn tìm lối ra khỏi khổ cho mọi người | AN 3.38; MN 26 | B |
 | 50 | `con-duong-o-giua` | Con đường ở giữa | 13–17 ✓ | Sáu năm khổ hạnh đến kiệt sức; nhận bát sữa của cô bé Sujata; năm bạn tu bỏ đi | Hành hạ thân hay chiều theo ham muốn đều không đưa đến bình an; chăm thân và tâm vừa đủ | MN 36; MN 26 | B · gộp nháp `con-duong-o-giua` |
@@ -77,13 +77,15 @@ App dành cho mọi người hướng thiện, không riêng người tu. Vì v�
 | 140 | `sum-hop` | Ngày trở về | 34 ✓ | Về Ca Tỳ La Vệ: vua Tịnh Phạn, Da Du Đà La, bé La Hầu La; Ngài ôm bát đi khất thực trên con phố cũ | Thương gia đình bằng cách sống tỉnh thức, tử tế; đem bình an về cho người thân | Luật tạng, Đại phẩm I.54; chú giải Pháp Cú | C |
 | 150 | `oi-hanh-phuc` | Ôi, hạnh phúc! | 38 ✓ | Bạt Đề, vốn là vua, ngồi dưới gốc cây giữa đêm và reo lên "Ôi, hạnh phúc!" | Hạnh phúc đến từ lòng nhẹ và không sợ hãi, không từ quyền lực hay của cải | Ud 2.10 | C |
 | 160 | `phu-dat-bang-vang` | Phủ đất bằng vàng | 40 ✓ | Ông Cấp Cô Độc, người hay giúp kẻ không nơi nương tựa, trải tiền vàng mua vườn của thái tử Kỳ Đà để dựng chỗ ở cho Tăng | Lòng rộng rãi; bốn niềm vui của người sống đời gia đình: làm ra của lương thiện, dùng của ấy, không nợ, sống không điều đáng chê | Luật tạng, Tiểu phẩm VI.4; AN 4.62 | C · gộp nháp `bon-niem-vui` |
-| 180 | `thuong-la-hieu` | Thương là hiểu | 42 ? | Một nhóm tăng sĩ vào rừng tu, đêm đêm sợ hãi bỏ về; Đức Phật dạy họ trải lòng thương rồi trở lại rừng | Thương là hiểu; thương mọi loài như mẹ che chở đứa con một (bài kinh giảng kỹ ở «Lời Phật dạy» › Tâm Từ) | Sn 1.8 và chú giải | C · gộp nháp `thuong-nhu-me-hien` |
+| 180 | `thuong-la-hieu` | Thương là hiểu | 42 ✓ | Đức Phật đối thoại với vua Ba Tư Nặc về hiểu biết và thương yêu; không dùng chuyện tăng sĩ sợ hãi trong rừng để gán vào chương này | Nhìn nhu cầu và nỗi khổ để thương cho đúng; tâm từ giảng kỹ ở loạt «Lời Phật dạy» | Chương 42 của sách; đối chiếu Sn 1.8, SN 3.8, phân biệt lời diễn giải của tác phẩm | C · gộp nháp `thuong-nhu-me-hien` |
 | 190 | `nuoc-mat-ai-cung-man` | Nước mắt ai cũng mặn | 43 ✓ | Sunita, người gánh phân bị cả thành xa lánh, nép vào tường tránh đường; Đức Phật dừng lại, gọi anh, nhận anh làm đệ tử | Máu ai cũng đỏ, nước mắt ai cũng mặn; không ai sinh ra đã thấp hèn | Thag 12.2 | C |
 | 200 | `mo-cua` | Mở cửa | 45 ✓ | Bà Ma Ha Ba Xà Ba Đề cùng nhiều phụ nữ cắt tóc, đi chân trần đến xin tu; A Nan thưa giúp; Đức Phật mở cửa | Nữ giới cũng đi được trọn con đường; lòng thương không phân biệt | AN 8.51 | C |
 | 210 | `nam-la-simsapa` | Nắm lá trong tay | 46 ✓ | Trong rừng, Ngài nắm một nắm lá, hỏi lá trong tay nhiều hay lá trong rừng nhiều | Ngài chỉ dạy điều giúp người bớt khổ; sống được một điều còn hơn biết thật nhiều | SN 56.31 | C |
-| 220 | `cau-thiem-di` | Lấy cỏ che bùn | 48 ✓ | Câu Thiểm Di: hai nhóm tăng sĩ tranh cãi không dứt; Ngài một mình vào rừng Pārileyyaka, có voi chúa chăm sóc; hai bên tỉnh ra tìm Ngài làm hòa ("lấy cỏ che bùn") | Ngài không ép ai, lặng lẽ ra đi bằng lòng thương; hận thù chỉ lắng xuống bằng lòng không hận thù (câu kệ giảng kỹ ở «Lời Phật dạy» › Pháp Cú) | MN 128; Dhp 5–6; Luật tạng, Đại phẩm X | C · gộp nháp `han-thu` |
-| 230 | `bai-hoc-cua-dat` | Bài học của đất | 49 ✓ | Đức Phật dạy La Hầu La: tấm gương soi lại việc làm; tập như đất nhận mọi thứ mà không giận, như nước, lửa, gió | Lòng rộng như đất thì không gì làm mình tổn thương; từ, bi, hỷ, xả | MN 61; MN 62 | C · gộp nháp `tam-guong` |
+| 220 | `cau-thiem-di` | Lấy cỏ che bùn | 46–48 ✓ | Câu Thiểm Di: hai nhóm tăng sĩ tranh cãi không dứt; Ngài một mình vào rừng Pārileyyaka, có voi chúa chăm sóc; hai bên tỉnh ra tìm Ngài làm hòa ("lấy cỏ che bùn") | Ngài không ép ai, lặng lẽ ra đi bằng lòng thương; hận thù chỉ lắng xuống bằng lòng không hận thù (câu kệ giảng kỹ ở «Lời Phật dạy» › Pháp Cú) | MN 128; Dhp 5–6; Luật tạng, Đại phẩm X | C · gộp nháp `han-thu` |
+| 230 | `bai-hoc-cua-dat` | Bài học của đất | 49 ✓ | Đức Phật dạy La Hầu La: tấm gương soi lại việc làm; tập như đất nhận mọi thứ mà không giận, như nước, lửa, gió | Nuôi tâm rộng, nhận biết tổn thương và giữ giới hạn cần thiết; từ, bi, hỷ, xả | MN 61; MN 62 | C · gộp nháp `tam-guong` |
+| 235 | `bong-mat-ho-hang` | Bóng mát của họ hàng | 52 ✓ | Đức Phật hòa giải tranh nước giữa hai dòng họ Thích Ca và Câu Ly; chủ dự án chọn cảnh này thay truyện cây khô/Tỳ Lưu Ly chưa xác nhận trong sách | Giữ sự sống và nhu cầu chung giữa bất đồng; nghe nhu cầu thực tế để hòa giải | Chương 52, cảnh tranh nước sông Rohini | D · chuyển đúng vị trí sách, giữ đợt D |
 | 240 | `song-trong-hien-tai` | Sống trọn hôm nay | 53 ✓ | Một buổi chiều, Ngài dạy về người biết sống một ngày cho trọn | Quá khứ đã qua, tương lai chưa tới; sống sâu sắc phút này | MN 131 | C |
+| 250 | `ta-da-dung-lai` | Ta đã dừng lại | 53 ✓ | Ương Quật Ma La dừng việc sát hại và theo học; việc sửa mình không xóa nỗi đau hay trách nhiệm với người từng bị hại | Dừng gây hại, nhận trách nhiệm và thay đổi bằng hành động | MN 86 | D · chuyển đúng vị trí sách, gộp nháp `ta-da-dung-lai` |
 
 ### Phần Ba — Về với mây trắng (quyển 3, chương 56–81)
 
@@ -93,12 +95,10 @@ App dành cho mọi người hướng thiện, không riêng người tu. Vì v�
 | 270 | `noi-dau-ba-visakha` | Nỗi đau của bà Tỳ Xá Khư | 60 ✓ | Bà Tỳ Xá Khư mất đứa cháu, tóc ướt áo ướt đến gặp Ngài giữa trưa | Ngồi bên nỗi đau của người khác; thương là có mặt; ai thương nhiều thì đau nhiều | Ud 8.8 | D |
 | 280 | `tam-long-nhu-dat` | Tấm lòng như đất | 62 ✓ | Xá Lợi Phất bị vu là xúc phạm người khác; ông bình thản ví lòng mình như đất; người vu cáo xin lỗi | Nhẫn nhục, khiêm cung, tha thứ | AN 9.11 | D |
 | 290 | `bon-trai-nui` | Bốn trái núi | 66 ✓ | Vua Ba Tư Nặc kể chuyện việc nước; Ngài hỏi nếu bốn phía có núi đang lăn tới thì vua làm gì | Già, bệnh, chết đến với mọi người; hãy sống lành ngay bây giờ | SN 3.25 | D |
-| 300 | `chim-cut-va-chim-ung` | Chim cút và chim ưng | 70 ✓ | Truyện ngụ ngôn: chim cút ra khỏi bờ ruộng thì bị ưng bắt, ở lại trong luống cày thì an toàn | Giữ tâm ở chỗ an toàn của mình; đừng để lòng chạy theo mọi cám dỗ | SN 47.6 | D |
+| 300 | `chim-cut-va-chim-ung` | Chim cút và chim ưng | 69 ✓ | Truyện ngụ ngôn: chim cút ra khỏi bờ ruộng thì bị ưng bắt, ở lại trong luống cày thì có chỗ nương | Nhận biết thân, cảm thọ, tâm, các hiện tượng; bớt bị cuốn theo cám dỗ | SN 47.6 | D |
 | 310 | `day-dan` | Dây đàn | 71 ✓ | Sona tu quá sức đến rướm máu chân, muốn bỏ về; Ngài hỏi về dây đàn quá căng, quá chùng | Siêng năng mà không ép mình; thương chính mình cũng là tu | AN 6.55 | D |
-| 320 | `bong-mat-ho-hang` | Bóng mát của họ hàng | 72 ✓ | Vua Tỳ Lưu Ly kéo quân đánh dòng họ Thích; Đức Phật ngồi dưới cây khô bên đường, ba lần quân phải quay về | Lặng lẽ đứng giữa bạo lực bằng lòng thương; không dùng hận đáp hận | Chú giải Pháp Cú (truyện Tỳ Lưu Ly) | D |
-| 330 | `ta-da-dung-lai` | Ta đã dừng lại | ? | Ương Quật Ma La đuổi theo mà không kịp; "Ta đã dừng lại, anh hãy dừng lại" | Không ai là không thể đổi thay; người lầm lỗi vẫn bắt đầu lại được | MN 86 | D · gộp nháp `ta-da-dung-lai` |
-| 340 | `voi-say` | Con voi say | ? | Đề Bà Đạt Đa thả voi Nalagiri say rượu lên đường Ngài đi; Ngài đứng yên, trải lòng thương; voi quỳ xuống | Lòng thương mạnh hơn sợ hãi và ác ý; không oán người hại mình | Luật tạng, Tiểu phẩm VII.3 | D |
-| 350 | `bat-com-cuoi-cung` | Bữa cơm cuối cùng | 79 ✓ | Thuần Đà, người thợ rèn, dâng bữa cơm có nấm; Ngài lâm bệnh nhưng dặn A Nan an ủi để Thuần Đà không tự trách | Đến phút cuối vẫn lo cho nỗi lòng người khác | DN 16 | D |
+| 340 | `voi-say` | Con voi say | 74 ✓ | Voi Nalagiri bị làm say rồi thả ra; sách kể Ngài gặp nó bằng sự vững chãi và lòng thương | Chăm cho bớt kích động và bảo vệ sự sống; không biến Phật truyện thành chỉ dẫn tiếp cận thú dữ | Luật tạng, Tiểu phẩm VII.3; chi tiết kể theo chương 74 | D |
+| 350 | `bat-com-cuoi-cung` | Bữa cơm cuối cùng | 79 ✓ | Thuần Đà dâng bữa ăn; sau đó Ngài bị bệnh, vẫn dặn A Nan an ủi để ông không tự trách; không kết luận loại món ăn hay nguyên nhân bệnh | Đến phút cuối vẫn lo cho nỗi lòng người khác | DN 16 | D |
 | 360 | `hay-tinh-tan` | Hãy tinh tấn | 80 ✓ | Rừng sala ở Câu Thi Na; Ngài nhận người đệ tử cuối là Tu Bạt Đà La; lời dặn cuối | Tự thắp đuốc mà đi; mọi thứ hợp rồi tan, hãy chuyên cần | DN 16 | D · gộp nháp `tu-thap-duoc` |
 | 370 | `duong-xua-may-trang` | Đường xưa mây trắng | 81 ✓ | Svastika, nay đã lớn, nhìn lại con đường đã theo Ngài | Con đường thương yêu vẫn còn đó cho mỗi người bước tiếp | Truyện khung của sách | D |
 
@@ -119,14 +119,15 @@ Bảy bài v0.14.0 (Chuyển Pháp Luân, Vô Ngã Tướng, Tâm Từ, Điềm 
 |---|---|---|---|
 | 1 | Bảy bài «Lời Phật dạy» v2 da_duyet đã có trên main qua #58 | Claude/chủ dự án | xong 14/11 |
 | A | Công cụ nạp D1 (#46, gắn deploy), API body_r2_key và /media (#50) | Codex AG | 14/11 |
-| B | Tự chọn giọng, sinh 7 bài và cues; tải cả vandao-media-staging và vandao-media; PR hermes/49-tts-loi-phat-day | Codex H + AG | 15/11, bắt đầu ngay sau A |
-| Phát hành | Chủ dự án merge A+B → Claude kiểm tiếng thật trên staging → chủ dự án tag v0.15.0 | Chủ dự án + Claude | 15/11 |
+| B | Sadaltager 0,85; 7 bài MP3 96 kbps mono 24 kHz + cues; kiểm hai bucket, cập nhật khóa/sổ và bằng chứng ffprobe | Codex H + AG | 15/11; #68 đã merge bản 64k, gói nâng đồng bộ nằm ở #75 |
+| Phát hành | Merge #72 ADR 96k → Codex cập nhật/kiểm lại #75 → chủ dự án merge #75 → Claude kiểm tiếng 96k trên staging → chủ dự án tag v0.15.0 | Chủ dự án + Claude | 15/11; chỉ báo PR đủ điều kiện sau khi kiểm đúng SHA, không tự merge/tag |
 | Meta | Hoàn tất tuần tự hóa migration #35 rồi 0008 content_item.meta; API/công cụ nạp hỗ trợ meta | Codex AG | ngay sau v0.15.0 trong 15/11, trước bài Đường Xưa đầu tiên |
 | Đường Xưa B | 10 bài Phần Một, một PR văn bản cho_duyet + giọng đọc + đường dẫn nghe | Codex H | 15/11, làm liền sau meta |
-| Đường Xưa C | 11 bài Phần Hai, một PR văn bản + giọng đọc | Codex H | 15/11, nối tiếp B |
-| Đường Xưa D | 12 bài Phần Ba, một PR văn bản + giọng đọc | Codex H | 15/11, nối tiếp C |
+| Đường Xưa C | 11 bài đợt C thuộc Phần Hai, một PR văn bản + giọng đọc | Codex H | 15/11, nối tiếp B |
+| Đường Xưa D | 12 bài đợt D: hai bài Phần Hai, mười bài Phần Ba, một PR văn bản + giọng đọc | Codex H | 15/11, nối tiếp C |
+| Phát hành Đường Xưa | Đủ 33 bản chữ/giọng 96k; chủ dự án chọn bài công khai; 0008/meta đã triển khai, CI và Claude kiểm staging đạt → chủ dự án tag v0.16.0 | Chủ dự án + Claude | Báo riêng khi đủ điều kiện; có TTS trên R2 chưa đủ điều kiện release |
 
-Một giọng duy nhất cho cả hai loạt, thư mục R2 tách loi-phat-day/ và duong-xua/. Không lấy thiếu meta làm lý do xếp bài Đường Xưa vào sai menu. Mỗi đợt mở PR ngay khi xong; chủ dự án chọn phát hành rồi merge/tag bản kế tiếp. Google đã được chủ dự án cho dùng; không tự tạo tài khoản hoặc đổi sang nhà cung cấp khác. Hạn ngừng Speech API của OpenAI trong thiết kế cũ không phải hạn dịch vụ Google.
+Một giọng duy nhất cho cả hai loạt: vi-VN-Chirp3-HD-Sadaltager, tốc độ 0,85; thư mục R2 tách loi-phat-day/ và duong-xua/. Lấy LINEAR16 24 kHz từ Google, mã hóa MP3 96 kbps mono 24 kHz, chuẩn hóa −16 LUFS/−1,5 dBTP; không dùng MP3 32k của Google hay thêm compression_level. Giữ khóa 64k cũ ít nhất 30 ngày và chỉ xóa sau khi xác nhận không còn tham chiếu. Không lấy thiếu meta làm lý do xếp sai menu. Có thể chuẩn bị nháp/tiếng riêng trong khi chờ merge; Đường Xưa chỉ công khai sau 0008/meta và lựa chọn phát hành. Google đã được chủ dự án cho dùng; không tự đổi nhà cung cấp. Hạn Speech API OpenAI trong thiết kế cũ không áp dụng Google.
 
 ## 6. Tên riêng thường gặp
 
@@ -156,7 +157,7 @@ kind: bai_giang
 tier: 0
 lang: vi
 title: Con thiên nga bị thương
-source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 4 · Phật truyện (Lalitavistara) · Pháp Cú 129–130"
+source_ref: "Phỏng theo Đường Xưa Mây Trắng (Thích Nhất Hạnh), chương 4 · Phật truyện kể theo sách · đối chiếu Pháp Cú 129–130"
 status: cho_duyet
 meta: { loat: duong-xua, phan: 1, thu_tu: 20, chuong: [4], dot: B }
 ---

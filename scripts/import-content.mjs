@@ -11,7 +11,7 @@ try {
   const { remote, local, env: target, check } = values;
   if ((remote && local) || (check && (remote || local)) || (target && !['staging', 'production'].includes(target)) || ((remote || local) && !target)) throw new Error('Dùng --check hoặc --env staging|production --local|--remote');
   const rows = readPublished(join(root, 'content/bai-giang'));
-  console.log(`content: ${rows.length} bài đã chọn phát hành; reviewed_* tùy chọn; meta được đọc nhưng chưa ghi trước migration 0008.`);
+  console.log(`content: ${rows.length} bài đã chọn phát hành; reviewed_* tùy chọn; ghi meta JSON sau migration 0008.`);
   if ((remote || local) && rows.length) {
     const scratch = join(root, '.wrangler');
     await mkdir(scratch, { recursive: true });

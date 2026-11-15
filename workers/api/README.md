@@ -126,8 +126,10 @@ Chỉ bài `da_duyet` đủ id, version, tên, nguồn và ý được nạp; `r
 - CI production (chỉ khi chủ dự án gắn tag): `node scripts/import-content.mjs --env production --remote`.
 
 Mặc định chỉ kiểm, không gọi D1. Công cụ upsert theo `(id, version)`, không xóa bản khác;
-ghi `body_r2_key` khi có, không bịa thông tin duyệt. `meta` được đọc nhưng chưa ghi trước migration 0008;
-phải bổ sung ghi/trả `meta` trước bài Đường Xưa đầu tiên. Bí mật lấy từ biến môi trường của đúng job deploy.
+ghi `body_r2_key` khi có, không bịa thông tin duyệt. Sau migration 0008, `meta` YAML lồng được ghi thành JSON
+và API trả chuỗi JSON này (hoặc null nếu thiếu); client đọc loạt/phần/thứ tự/chương từ đó.
+Migration nullable tương thích mã cũ, phải chạy trước công cụ nạp/mã API mới và trước bài Đường Xưa đầu tiên.
+Bí mật lấy từ biến môi trường của đúng job deploy.
 
 ## Media bài giảng (#50)
 
@@ -135,5 +137,5 @@ phải bổ sung ghi/trả `meta` trước bài Đường Xưa đầu tiên. Bí
 với `body_r2_key` tương ứng. Cues đổi đuôi về MP3 để kiểm cùng bài; mẫu giọng riêng không công khai.
 Hỗ trợ Range đơn (206/416), ETag (304), HEAD, If-Range; không có tệp thì 404.
 `run_worker_first` áp dụng `/media/*` ở cả staging và production, không rơi xuống SPA.
-API nội dung trả thêm `body_r2_key`; metadata chờ migration 0008 ở PR riêng.
+API nội dung trả `body_r2_key` và `meta` (sau migration 0008).
 Âm thanh được sinh trước và tải lên hai bucket, nhưng chỉ phát sau khi D1 môi trường đó đã nạp bài.

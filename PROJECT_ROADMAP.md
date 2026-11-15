@@ -1450,10 +1450,10 @@ Ký hiệu: **[C]** Claude · **[AG]** Antigravity · **[H]** Hermes · **[O]** 
 | T3.3 | Migration mới kế tiếp; API practice/deeds/attest/reminders/push; `ReminderClock` DO + Web Push | AG (DO: C) | Nhắc đúng giờ ±1 phút ở múi +7; 410 xóa subscription |
 | T3.4 | Điều kiện Tầng 0 → 1, `tier_progress` | AG + C | Không câu chữ khẳng định chứng đắc |
 | T3.5 | Thiết kế hai loạt và hợp đồng nội dung/giọng đọc R2 (ADR 0002, #47/#52) | C | Đã merge 14/11; mốc mới theo lệnh cập nhật lần 2 ở #33/#49 |
-| T3.6 | 7 bài «Lời Phật dạy» v2 đã chọn phát hành (#58); Đường Xưa B=10, C=11, D=12 bài, mỗi đợt một PR văn bản + giọng đọc (#48) | H + O | Bảy bài có tiếng trước để tag v0.15.0 ngày 15/11; Đường Xưa B → C → D nối tiếp trong 15/11, không chờ mốc |
-| T3.7 | Codex tự chọn một giọng Google Chirp 3: HD vi-VN nam theo bảng điểm, ưu tiên gần miền Nam; sinh TTS/kiểm lỗi/R2 cho mọi loạt (#49) | H + AG | 7 bài hoàn tất 15/11, cùng một giọng cho cả kho; tải MP3+cues lên cả staging/prod; không chờ duyệt giọng |
+| T3.6 | 7 bài «Lời Phật dạy» v2 đã chọn phát hành (#58); Đường Xưa B=10, C=11, D=12 bài, mỗi đợt một PR văn bản + giọng đọc (#48) | H + O | Nâng đủ bảy bài lên 96 kbps qua #75 trước v0.15.0; B → C → D nối tiếp 15/11; đủ 33 bài/tiếng, chọn phát hành và kiểm staging trước chủ dự án tag v0.16.0 |
+| T3.7 | Sadaltager, Google Chirp 3: HD vi-VN nam, tốc độ 0,85, chọn từ bảng điểm thật; cùng giọng cho cả kho (#49) | H + AG | LINEAR16 24k → MP3 96 kbps mono 24k, −16 LUFS/−1,5 dBTP; ffprobe từng tệp, audit MP3+cues hai bucket; giữ khóa 64k cũ ≥30 ngày, không chờ duyệt giọng |
 | T3.8 | A: nạp D1 (#46), API body_r2_key và /media có Range (#50), gắn deploy; sau v0.15.0 tuần tự hóa migration (#35), 0008 meta/API/công cụ nạp | AG | A 14/11; 0008 ngay 15/11 và bắt buộc trước bài Đường Xưa đầu tiên; không lộ nháp/ngừng hoặc khóa của môi trường khác |
-| T3.9 | Client menu/giọng đọc/cues/SW (#51/#57) do Claude giữ; Codex bàn giao tiếng thật trên staging | C | #57 đã merge; Claude kiểm staging sau chủ dự án merge A+B, chủ dự án tag v0.15.0 ngày 15/11; nhãn nhà cung cấp phải khớp Google |
+| T3.9 | Client menu/giọng đọc/cues/SW (#51/#57) do Claude giữ; Codex bàn giao tiếng thật trên staging | C | #57 đã merge; #72 → cập nhật/kiểm #75 → chủ dự án merge → Claude kiểm staging đúng khóa 96k → chủ dự án tag v0.15.0; nhãn nhà cung cấp khớp Google; Đường Xưa kiểm riêng trước v0.16.0 |
 
 ### GĐ4 — Đại Thiền Đường thời gian thực (≈ 2–3 tuần)
 | ID | Việc | Làn | Nghiệm thu |

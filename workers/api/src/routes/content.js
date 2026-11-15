@@ -9,7 +9,7 @@ contentApp.get('/', async (c) => {
   const tier = c.req.query('tier');
   const kind = c.req.query('kind');
 
-  let sql = `SELECT id, version, kind, tier, lang, title, body_inline, body_r2_key, source_ref, reviewed_at
+  let sql = `SELECT id, version, kind, tier, lang, title, body_inline, body_r2_key, source_ref, reviewed_at, meta
              FROM content_item
              WHERE status = 'da_duyet'`;
   const params = [];
