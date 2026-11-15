@@ -15,7 +15,7 @@ meta:
   thu_tu: 30
   chuong: [ 6 ]
   dot: B
-body_r2_key: bai-giang/duong-xua/goc-cay-hong-tao/v1-ed5542f2/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/goc-cay-hong-tao/v1-5e6294d9/vi-sadaltager.mp3
 ---
 Một ngày lễ xuống đồng, mặt đất mở ra dưới những đường cày mới. Giữa tiếng người và tiếng trâu, thái tử Tất Đạt Đa còn nhỏ đứng nhìn nhịp lao động đang chuyển động trước mắt mình.
 Người lớn chú ý đến nghi lễ và mùa màng sắp tới. Còn cậu nhìn gần xuống luống đất, nơi những sinh vật bé nhỏ vừa bị đánh thức khỏi chỗ trú ẩn quen thuộc dưới lớp cỏ.
@@ -28,7 +28,7 @@ Kinh Trung Bộ ghi rằng về sau, trong thời gian tìm đường, Tất Đ�
 Niềm vui đó cũng không đòi thân thể bị hành hạ cho đến kiệt sức. Từ một kinh nghiệm giản dị, một hướng đi khác được nhận ra: thân được chăm sóc vừa đủ và tâm có thể học cách yên lặng.
 Câu chuyện nối lòng thương với khả năng dừng lại để thấy. Nếu chỉ vội bước qua điều làm mình khó chịu, ta dễ bỏ sót một nỗi đau nhỏ đang cần được nhìn nhận trước khi có thể giúp đỡ.
 Thấy khổ không có nghĩa là phải ôm lấy mọi khổ đau cùng lúc. Ta có thể nhận biết điều đang xảy ra, giữ hơi thở tự nhiên, rồi chọn một hành động cụ thể trong khả năng của mình lúc này.
-Khoảng dừng giúp lòng thương bớt lẫn với sự hoảng hốt. Khi thân và tâm có chỗ nghỉ, ta thường nhìn rõ hơn việc nào có ích, việc nào chỉ làm mình và người khác thêm căng thẳng.
+Dừng lại một chút giúp lòng thương không bị cuốn theo sự hoảng hốt. Khi thân và tâm được nghỉ, ta dễ nhận ra việc nào có ích, việc nào khiến mình và người khác thêm căng thẳng.
 Sự an tĩnh trong cảnh này không phải một phần thưởng để tự hào hơn người. Nó là một khả năng có thể được chăm chút bằng điều kiện bình thường: một tư thế dễ chịu, chút im lặng và sự chú ý hiền hòa.
 Hôm nay, trước khi vội xử lý một việc khó, ta có thể ngồi nghỉ vài hơi thở. Không ép thở sâu, không cố xua sạch suy nghĩ, chỉ nhận ra thân đang có mặt và đôi chân đang được nâng đỡ.
 Khi gặp một sinh vật nhỏ trên lối đi, ta thử chậm lại để tránh làm nó tổn thương. Một hành động vừa sức như vậy có thể đưa điều mình cảm nhận thành sự chăm sóc cụ thể cho đời sống.

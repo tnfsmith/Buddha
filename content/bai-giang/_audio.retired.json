@@ -481,6 +481,36 @@
         "vandao-media"
       ],
       "reason": "ID3 AI metadata added for #80; MPEG/LAME audio unchanged. Keep old key at least 30 days; verify no D1 references before deleting."
+    },
+    {
+      "id": "goc-cay-hong-tao",
+      "version": 1,
+      "key": "bai-giang/duong-xua/goc-cay-hong-tao/v1-ed5542f2/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/duong-xua/goc-cay-hong-tao/v1-ed5542f2/vi-sadaltager.cues.json",
+      "sha256": "a6a5a6a36286a0e4fc7130a97405ecd2a1cbc861e0ecce15297ee5be9d7c48b1",
+      "bit_rate": 96000,
+      "retired_at": "2026-11-15T06:29:38.832Z",
+      "delete_after": "2026-12-15T06:29:38.832Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Clarify flagged names/words before publication; unchanged original WAVs reused; keep old master >=30 days, no objects deleted."
+    },
+    {
+      "id": "dem-trang-ra-di",
+      "version": 1,
+      "key": "bai-giang/duong-xua/dem-trang-ra-di/v1-4c043b28/vi-sadaltager.mp3",
+      "cues_key": "bai-giang/duong-xua/dem-trang-ra-di/v1-4c043b28/vi-sadaltager.cues.json",
+      "sha256": "c4d095e206512d1360848c45dd14c49950229332b7c97a9ccf572ca1601e83cc",
+      "bit_rate": 96000,
+      "retired_at": "2026-11-15T06:29:38.832Z",
+      "delete_after": "2026-12-15T06:29:38.832Z",
+      "buckets": [
+        "vandao-media-staging",
+        "vandao-media"
+      ],
+      "reason": "Clarify flagged names/words before publication; unchanged original WAVs reused; keep old master >=30 days, no objects deleted."
     }
   ]
 }

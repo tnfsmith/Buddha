@@ -1450,10 +1450,10 @@ Ký hiệu: **[C]** Claude · **[AG]** Antigravity · **[H]** Hermes · **[O]** 
 | T3.3 | Migration mới kế tiếp; API practice/deeds/attest/reminders/push; `ReminderClock` DO + Web Push | AG (DO: C) | Nhắc đúng giờ ±1 phút ở múi +7; 410 xóa subscription |
 | T3.4 | Điều kiện Tầng 0 → 1, `tier_progress` | AG + C | Không câu chữ khẳng định chứng đắc |
 | T3.5 | Thiết kế hai loạt và hợp đồng nội dung/giọng đọc R2 (ADR 0002, #47/#52) | C | Đã merge 14/11; mốc mới theo lệnh cập nhật lần 2 ở #33/#49 |
-| T3.6 | 7 bài «Lời Phật dạy» v2 đã chọn phát hành (#58); Đường Xưa B=10, C=11, D=12 bài, mỗi đợt một PR văn bản + giọng đọc (#48) | H + O | Nâng đủ bảy bài lên 96 kbps qua #75 trước v0.15.0; B → C → D nối tiếp 15/11; đủ 33 bài/tiếng, chọn phát hành và kiểm staging trước chủ dự án tag v0.16.0 |
-| T3.7 | Sadaltager, Google Chirp 3: HD vi-VN nam, tốc độ 0,85, chọn từ bảng điểm thật; cùng giọng cho cả kho (#49) | H + AG | LINEAR16 24k → MP3 96 kbps mono 24k, −16 LUFS/−1,5 dBTP; ffprobe từng tệp, audit MP3+cues hai bucket; giữ khóa 64k cũ ≥30 ngày, không chờ duyệt giọng |
-| T3.8 | A: nạp D1 (#46), API body_r2_key và /media có Range (#50), gắn deploy; sau v0.15.0 tuần tự hóa migration (#35), 0008 meta/API/công cụ nạp | AG | A 14/11; 0008 ngay 15/11 và bắt buộc trước bài Đường Xưa đầu tiên; không lộ nháp/ngừng hoặc khóa của môi trường khác |
-| T3.9 | Client menu/giọng đọc/cues/SW (#51/#57) do Claude giữ; Codex bàn giao tiếng thật trên staging | C | #57 đã merge; #72 → cập nhật/kiểm #75 → chủ dự án merge → Claude kiểm staging đúng khóa 96k → chủ dự án tag v0.15.0; nhãn nhà cung cấp khớp Google; Đường Xưa kiểm riêng trước v0.16.0 |
+| T3.6 | 7 Lời Phật dạy v2/96k đã phát hành v0.15.0; Đường Xưa B10/#76, C11/#77, D12/#78 có cả chữ/tiếng (#48) | H + O | Đủ 33 bài/498 cue/ID3, audit 132 object hai bucket; đang chờ chủ dự án duyệt trong PR rồi merge B→C→D và kiểm staging trước v0.16.0 |
+| T3.7 | Google Chirp 3 HD Sadaltager 0,85 cho Lời Phật dạy/Đường Xưa; ngoại lệ nghi thức kết P1/Puck 1,00 đã được chủ dự án duyệt (#49/#80) | H + AG | LINEAR16→MP3 96k mono 24k, −16 LUFS/−1,5 dBTP, cues/ID3; khóa/giọng/tốc độ ràng buộc theo mục, giữ khóa cũ ≥30 ngày; không đổi giọng chung khi sửa nghi thức |
+| T3.8 | Nạp D1, API body_r2_key/meta, /media Range; guard preview/migration 0008 | AG | #69/#71/#73 đã merge 15/11; main có 8 migration và 9 mục đã chọn, không lộ nháp/khóa môi trường khác. Sau B/C/D duyệt+merge:42 mục, giữ 9 mục cũ |
+| T3.9 | Client menu/cues/mobile/nghe lần lượt; đảnh lễ chữ trước giọng Việt; theo dõi kiểm live #83 | C | #82 / #81 đã merge, P1 Puck 1,00/7,01s đúng bytes chủ dự án duyệt. Staging 9 mục; Đường Xưa kiểm riêng sau 76→77→78. Sửa assertion nhãn AI cũ, Claude nghiệm thu và chủ dự án kiểm điện thoại trước tag v0.16.0 |
 
 ### GĐ4 — Đại Thiền Đường thời gian thực (≈ 2–3 tuần)
 | ID | Việc | Làn | Nghiệm thu |

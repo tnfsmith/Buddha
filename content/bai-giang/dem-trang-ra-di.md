@@ -15,14 +15,14 @@ meta:
   thu_tu: 40
   chuong: [ 9, 10, 11, 12 ]
   dot: B
-body_r2_key: bai-giang/duong-xua/dem-trang-ra-di/v1-4c043b28/vi-sadaltager.mp3
+body_r2_key: bai-giang/duong-xua/dem-trang-ra-di/v1-52acab01/vi-sadaltager.mp3
 ---
 Đêm phủ yên lên những mái nhà trong thành Ca Tỳ La Vệ. Trong câu chuyện về buổi ra đi, ánh trăng soi một con đường còn vắng, nơi thái tử Tất Đạt Đa sắp bước qua cánh cổng quen thuộc.
 Phía sau cánh cổng ấy là gia đình, sự sung túc và những điều được xem là bảo đảm cho một đời hạnh phúc. Thế nhưng trong lòng người trẻ, câu hỏi về nỗi khổ vẫn chưa tìm được chỗ yên.
 Những lần gặp cảnh già yếu, bệnh tật và mất mát đã làm niềm tin vào sự an toàn lung lay. Tuổi trẻ không giữ được mãi, của cải không thể ngăn mọi bệnh, và người thương rồi cũng phải chia xa.
 Kinh kể rằng người tự hỏi vì sao chính mình cũng chịu sinh, già và chết mà vẫn chỉ tìm sự nương tựa nơi những điều cùng chịu đổi thay. Câu hỏi ấy trở thành một sự tìm cầu sâu sắc.
 Người không xem đau khổ là chuyện chỉ xảy ra với những ai sống bên ngoài thành. Thấy thân phận chung của con người, lòng trăn trở mở rộng đến những người chưa từng gặp và những cuộc đời mình chưa hiểu.
-Trong cảnh kể của sách, Xa Nặc đưa ngựa Kiền Trắc đến bên người. Bước chân ngựa đi qua đêm yên, mang theo một quyết định khó khăn, cùng tất cả sự lưu luyến của người sắp rời chỗ cũ.
+Trong cảnh kể của sách, [[Xa Nặc|Xa, Nặc]] đưa ngựa [[Kiền Trắc|Kiền, Trắc]] đến bên người. Bước chân ngựa đi qua đêm yên, mang theo một quyết định khó khăn, cùng tất cả sự lưu luyến của người sắp rời chỗ cũ.
 Cuộc ra đi ấy không xóa đi tình thương dành cho người thân. Nó đặt trước Tất Đạt Đa một trách nhiệm lớn: tìm con đường có thể giúp mình và người khác hiểu khổ đau bằng kinh nghiệm trực tiếp.
 Khi rời những dấu hiệu của đời sống vương giả, người chấp nhận bước vào một nếp sống chưa biết trước. Không có sự bảo đảm rằng điều mình mong sẽ đến nhanh, chỉ có lòng kiên trì muốn tìm cho đến nơi.
 Từ đây, việc học không còn chỉ nằm trong những điều đã được sắp đặt sẵn. Người sẽ phải gặp thầy, thử phương pháp, nhận ra giới hạn và đổi hướng khi thấy cách đi chưa đưa tới sự sáng rõ.
