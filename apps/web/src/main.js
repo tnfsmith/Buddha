@@ -24,13 +24,24 @@ function savePos() { if (!world || !world.av || world.av.where !== 'home' || wor
 setInterval(savePos, 1500); window.addEventListener('pagehide', savePos); document.addEventListener('visibilitychange', () => { if (document.hidden) savePos(); });
 // ── Thuyết giảng ──
 const sermon = new Sermon();
-sermon.online = (o) => { const el = $('#sub'); if (!el) return; el.innerHTML = o ? `<div class="src">${esc(o.src)}</div><div class="ln">${esc(o.ln)}</div>${o.pl ? `<div class="pl">${esc(o.pl)}</div>` : ''}${o.ai ? `<div class="ai">${esc(o.ai)}</div>` : ''}` : ''; };
-sermon.onend = (done) => { if (world) { world.wide = false; if (U.mode === 'hall') world.setMode('hall'); } document.body.classList.remove('sermon'); amb.setVolume(S.music.vol); if (done) { S.sermons = (S.sermons || 0) + 1; save(); toast('Bài giảng đã viên mãn. Sādhu!'); } render(); };
-// Chỉ phát bài có trong danh sách đã phát hành tải từ máy chủ (#39): mã bài lạ, kể cả qua #sermon=…, không phát gì
-function sermonStart(id) { const su = library.items.find((x) => x.id === id); if (!su) { toast('Bài giảng này chưa được phát hành.'); return render(); } U.sutta = su.id; U.loat = su.loat; if (player.playing) player.pause(); if (U.mode !== 'hall') setMode('hall'); U.hallTab = 'sermon';
+// #79: chữ khi giảng chỉ gồm nguồn, câu đang đọc và chữ phụ; không còn dòng nhãn giọng AI (ghi ở chú thích của bảng)
+sermon.online = (o) => { const el = $('#sub'); if (!el) return; el.innerHTML = o ? `<div class="src">${esc(o.src)}</div><div class="ln">${esc(o.ln)}</div>${o.pl ? `<div class="pl">${esc(o.pl)}</div>` : ''}` : ''; };
+sermon.onend = (done) => {
+  if (done) { S.sermons = (S.sermons || 0) + 1; save(); }
+  // nghe lần lượt: còn bài thì sang bài tiếp, giữ máy quay và Vân Nhạc nhỏ
+  const q = U.queue; if (done && q && q.k < q.ids.length - 1) { q.k++; return queuePlay(); }
+  U.queue = null; if (world) { world.wide = false; if (U.mode === 'hall') world.setMode('hall'); } document.body.classList.remove('sermon'); amb.setVolume(S.music.vol);
+  if (done) toast(q ? 'Đã nghe trọn cả loạt. Sādhu!' : 'Bài giảng đã viên mãn. Sādhu!'); render(); };
+// Chỉ phát bài có trong danh sách đã phát hành tải từ máy chủ (#39): mã bài lạ, kể cả qua #sermon=…, không phát gì.
+// Đọc thành tiếng bằng giọng máy của thiết bị là mặc định khi bài chưa có giọng đọc (#79: bỏ ô tùy chọn).
+function sermonStart(id, o) { const su = library.items.find((x) => x.id === id); if (!su) { U.queue = null; toast('Bài giảng này chưa được phát hành.'); return render(); } U.sutta = su.id; U.loat = su.loat; if (player.playing) player.pause(); if (U.mode !== 'hall') setMode('hall'); U.hallTab = 'sermon';
   document.body.classList.add('sermon'); amb.setVolume(S.music.vol * 0.4); if (amb.on && amb.voice && amb.ctx) { try { amb.voice.bowl(amb.ctx.currentTime + 0.1, 136.1, 0.3, 0); } catch (e) { /* bỏ qua */ } }
-  sermon.start(su, S.tts !== false); if (world) U.sCam = null; render(); }
-function sermonStop() { sermon.stop(); if (world) { world.wide = false; if (U.mode === 'hall') world.setMode('hall'); } }
+  sermon.start(su, true, o); if (world) U.sCam = null; render(); }
+function sermonStop() { U.queue = null; sermon.stop(); if (world) { world.wide = false; if (U.mode === 'hall') world.setMode('hall'); } }
+// Nghe lần lượt (#79): mọi bài của loạt đang chọn, từ bài đang chọn tới cuối; lời mở đầu trước bài đầu, lời kết sau bài cuối
+function sermonAll() { const ids = inLoat().map((x) => x.id); if (!ids.length) return; const k = Math.max(0, ids.indexOf(U.sutta)); U.queue = { ids, k, k0: k }; queuePlay(); }
+function queuePlay() { const q = U.queue, last = q.k === q.ids.length - 1, nx = !last && library.items.find((x) => x.id === q.ids[q.k + 1]);
+  sermonStart(q.ids[q.k], { open: q.k === q.k0, close: last, next: nx ? nx.name : '' }); }
 // Menu loạt bài (ADR 0002): mỗi loạt một thẻ; trong loạt chia theo phần nếu có
 const inLoat = () => library.items.filter((x) => x.loat === (U.loat || LOAT0));
 /** Sau khi tải danh sách: chọn thẻ loạt đầu tiên có bài (nếu thẻ đang chọn trống) và bài đầu của loạt */
@@ -106,6 +117,9 @@ track.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') player.se
 track.tabIndex = 0;
 const togglePlay = () => { if (player.playing) player.pause(); else player.play().catch((e) => toast('Chưa phát được âm thanh: ' + e.message)); };
 $('#play').addEventListener('click', togglePlay);
+// Thu nhỏ / mở rộng thanh phát thời thiền (#79): thu về một nút nhỏ ở góc dưới để đỡ chiếm chỗ trên điện thoại; nhớ lựa chọn
+const barBtn = $('#barmin'), barSync = () => { const m = !!S.barmin; document.body.classList.toggle('barmin', m); barBtn.textContent = m ? '▴' : '▾'; barBtn.title = m ? 'Mở rộng' : 'Thu nhỏ'; barBtn.setAttribute('aria-label', m ? 'Mở rộng thanh phát thời thiền' : 'Thu nhỏ thanh phát thời thiền'); };
+barBtn.addEventListener('click', () => { S.barmin = !S.barmin; save(); barSync(); }); barSync(); stateReady.then(barSync, () => {});
 $('#vol').addEventListener('input', (e) => player.setVolume(+e.target.value));
 $('#bin').addEventListener('change', (e) => player.setBinaural(e.target.checked));
 $('#bio').addEventListener('click', (e) => {
@@ -234,16 +248,19 @@ function nameBlock(raw) { const c = checkName(raw); return { c, html: `<div id="
 
 function render() {
   const d = S.day, wk = Math.ceil(d / 7), W = WEEKS[wk - 1], keep = panel.scrollTop;
+  // thẻ Thuyết giảng: ẩn thanh phát thời thiền (trừ khi thời thiền đang phát) cho đỡ rối (#79)
+  document.body.classList.toggle('stab', U.mode === 'hall' && U.hallTab === 'sermon' && !player.playing);
   let h = '';
   if (U.mode === 'hall' && U.hallTab === 'sermon') {
-    const hasVoice = !!Sermon.viVoice(), L = library, list = L.items;
+    const L = library, list = L.items, q = sermon.on && U.queue;
     if (L.state === 'idle') loadSermons().then(() => { sermonPick(); render(); });
-    h = `<h2>Đại Thiền Đường Vô Tận</h2>${seg('htab', [['sit', 'Thời thiền'], ['sermon', 'Thuyết giảng']], 'sermon')}` +
-      (list.length ? `<p>Chọn một bài. Khi giảng, Tôn tượng mở mắt nhìn xuống hội chúng và giơ ấn thuyết pháp; hội chúng chắp tay lắng nghe, đảnh lễ lúc mở đầu và ba lần khi kết thúc, rồi công đức lan tỏa ra khắp cõi.</p>
-      <div class="row">${sermon.on ? `<button class="btn" data-act="sermon-stop">Dừng giảng</button><button class="btn alt" data-act="sermon-pause">${sermon.paused ? 'Tiếp tục' : 'Tạm dừng'}</button><button class="btn alt" data-act="sermon-prev" aria-label="Ý trước" title="Ý trước">‹</button><button class="btn alt" data-act="sermon-next" aria-label="Ý sau" title="Ý sau">›</button>` : `<button class="btn" data-act="sermon-go">Thỉnh giảng</button>`}</div>
-      <label class="tog" style="display:block;margin:10px 0 4px"><input type="checkbox" data-tts ${S.tts !== false && hasVoice ? 'checked' : ''} ${hasVoice ? '' : 'disabled'}> Đọc thành tiếng bằng giọng máy tiếng Việt khi bài chưa có giọng đọc${hasVoice ? '' : ' (thiết bị này chưa có)'}</label>
-      <h3>Bài giảng</h3>` + sermonList(list) +
-      '<p class="note">Bài giảng tóm lược để tham khảo, viết bằng lời mới theo kinh điển; nguồn kinh ghi dưới tên bài.</p>'
+    // khi đang giảng, hàng nút điều khiển đứng ngay dưới tên: trên điện thoại bảng thu gọn vẫn thấy Dừng, Tạm dừng, ‹ › (#79)
+    const ctl = sermon.on ? `<div class="row sctl"><button class="btn" data-act="sermon-stop">Dừng giảng</button><button class="btn alt" data-act="sermon-pause">${sermon.paused ? 'Tiếp tục' : 'Tạm dừng'}</button><button class="btn alt" data-act="sermon-prev" aria-label="Câu trước" title="Câu trước">‹</button><button class="btn alt" data-act="sermon-next" aria-label="Câu sau" title="Câu sau">›</button></div>` : '';
+    // #79: bỏ đoạn mô tả và ô «Đọc thành tiếng…» cho gọn; thêm «Nghe lần lượt» cả loạt
+    h = `<h2>Đại Thiền Đường Vô Tận</h2>${ctl}${q ? `<p class="muted sq">Nghe lần lượt · bài ${q.k + 1}/${q.ids.length}</p>` : ''}${seg('htab', [['sit', 'Thời thiền'], ['sermon', 'Thuyết giảng']], 'sermon')}` +
+      (list.length ? (sermon.on ? '' : '<div class="row"><button class="btn" data-act="sermon-go">Thỉnh giảng</button><button class="btn alt" data-act="sermon-all" title="Nghe hết các bài của loạt đang chọn, từ bài đang chọn">Nghe lần lượt</button></div>') +
+      '<h3>Bài giảng</h3>' + sermonList(list) +
+      `<p class="note">Bài giảng tóm lược để tham khảo, viết bằng lời mới theo kinh điển; nguồn kinh ghi dưới tên bài.${list.some((x) => x.audio) ? ' Giọng đọc được tạo bằng AI.' : ''}</p>`
       : L.state === 'error' ? `<p class="sermon-empty">Chưa tải được danh sách bài giảng. Cần kết nối mạng; bản HTML đơn mở từ tệp trên máy không tải được bài giảng.</p><div class="row"><button class="btn alt" data-act="sermon-reload">Thử lại</button></div>`
       : L.state === 'ok' ? '<p class="sermon-empty">Chưa có bài chia sẻ. Nội dung đang được cập nhật.</p>'
       : '<p class="sermon-empty muted">Đang tải bài giảng…</p>') +
@@ -377,7 +394,8 @@ panel.addEventListener('click', (e) => {
   const sk = e.target.closest('[data-seek]'); if (sk) { player.seek(+sk.dataset.seek); if (!player.playing) togglePlay(); return; }
   const tr = e.target.closest('[data-tier]'); if (tr) return pickTier(+tr.dataset.tier);
   if (musicAct(e)) return;
-  const su = e.target.closest('[data-sut]'); if (su) { U.sutta = su.dataset.sut; if (sermon.on) sermonStart(U.sutta); else render(); return; }
+  const su = e.target.closest('[data-sut]'); if (su) { U.sutta = su.dataset.sut; if (!sermon.on) return render();
+    const q = U.queue, k = q ? q.ids.indexOf(U.sutta) : -1; if (k >= 0) { q.k = k; q.k0 = -1; return queuePlay(); } U.queue = null; sermonStart(U.sutta); return; }
   const ob = e.target.closest('[data-opt] button');
   if (ob && ob.parentElement.dataset.opt === 'bfreq') { S.birds.freq = +ob.dataset.v; save(); render(); return; }
   if (ob && ob.parentElement.dataset.opt === 'kface') { S.kface = +ob.dataset.v; save(); if (world) world.setFace(S.kface); render(); setTimeout(savePos, 1200); return; }
@@ -397,6 +415,7 @@ panel.addEventListener('click', (e) => {
   if (act === 'kuti-sit') { const sat = () => { world.setFace(S.kface || 0); savePos(); U.sit = { at: Date.now(), zone: 'kuti' }; toast('Đã an tọa tại Tịnh Thất.'); render(); };
     if (world) { if (world.av.state === 'sit' && world.av.id === 'kuti') sat(); else world.goZone('kuti', sat); } return; }
   if (act === 'chirp') { amb.chirp(0, 4, Math.random() * 9, Math.max(0.15, S.birds.vol)); return; }
+  if (act === 'sermon-all') { sermonAll(); return; }
   if (act === 'sermon-go') { const mine = inLoat(); sermonStart(mine.some((x) => x.id === U.sutta) ? U.sutta : mine[0] && mine[0].id); return; }
   if (act === 'sermon-reload') { loadSermons(true).then(() => { sermonPick(); render(); }); render(); return; }
   if (act === 'sermon-stop') { sermonStop(); render(); return; }
@@ -549,8 +568,11 @@ function frame(now) {
   let vis = visAt(t), waves = started ? EV.filter((e) => e.wave && t - e.t >= 0 && t - e.t < 14).map((e) => t - e.t) : [];
   const sm = sermon.tick(dt); if (sm.on || sm.waves.length) { waves = sm.waves; vis = { ...vis, night: 0, amber: 0, haloWhite: 0, beams: Math.max(vis.beams * 0.6, sm.merit), rainbow: Math.max(vis.rainbow * 0.5, sm.merit * 0.9), merit: Math.max(vis.merit, sm.merit) }; }
   // máy quay khi giảng: cận Tôn tượng lúc nói, toàn cảnh hội chúng lúc đảnh lễ
-  if (sm.on && world && U.mode === 'hall') { const want = sermon.phase === 'line' || sermon.phase === 'audio' || sermon.phase === 'gap' || sermon.phase === 'dedicate' ? 'close' : 'wide';
-    if (U.sCam !== want) { U.sCam = want; const V3 = World.V3; world.wide = true; if (want === 'close') world.flyTo(new V3(-30, 96, -300), new V3(0, 318, -760), 56, 2.6); else world.flyTo(new V3(0, 40, -150), new V3(0, 150, -560), 62, 2.6); } }
+  // khung dọc (điện thoại): lùi và hạ máy quay để thấy trọn Tôn tượng, tượng nằm nửa trên màn hình, chừa đáy cho chữ (#79)
+  if (sm.on && world && U.mode === 'hall') { const want = sermon.cam;
+    if (U.sCam !== want) { U.sCam = want; const V3 = World.V3, pt = world.portrait; world.wide = true;
+      if (want === 'close') { if (pt) world.flyTo(new V3(-20, 240, -175), new V3(0, 365, -760), 58, 2.6); else world.flyTo(new V3(-30, 96, -300), new V3(0, 318, -760), 56, 2.6); }
+      else if (pt) world.flyTo(new V3(0, 110, 40), new V3(0, 215, -620), 66, 2.6); else world.flyTo(new V3(0, 40, -150), new V3(0, 150, -560), 62, 2.6); } }
   if (world) world.update(dt, { vis, breath: breathEnv(started ? t : now / 1000), waves, isl: islandState(), sermon: sm });
   // bấm ▶ khi nhân vật đang ngồi: thời ngồi tính từ lúc đó
   if (player.playing && !U.sit && world && U.mode === 'island' && world.av.state === 'sit') U.sit = { at: Date.now(), zone: world.av.id };
