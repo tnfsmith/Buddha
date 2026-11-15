@@ -25,7 +25,7 @@ it('khóa Lời Phật dạy không đổi; ID3 và hai tốc độ nghi thức 
   expect(a).toMatchObject({ speed: 0.85, gap: 1.2, lastGap: 1.2, aiId3: true, markup: true });
   expect(fingerprint(lines, a)).not.toBe(fingerprint(lines, b));
   expect(() => audioProfile({ meta: { loat: 'nghi-thuc', vai: 'sai' } }, config)).toThrow();
-  expect(() => audioProfile({ ...ritual, meta: { ...ritual.meta, audio: { speed: 0.9 } } }, config)).toThrow();
+  expect(() => audioProfile({ ...ritual, meta: { ...ritual.meta, audio: { speed: 1.3 } } }, config)).toThrow();
 });
 it('cues nghi thức giữ đúng 1,2 giây, không nới quy tắc bài giảng cũ', () => {
   const cues = { v: 1, id: ritual.id, version: 1, dur: 5.2, cues: cuePoints([2, 2], { gap: 1.2, lastGap: 1.2 }) };
@@ -62,4 +62,9 @@ it('giọng riêng chỉ áp dụng nghi thức đã khai báo, giữ giọng L�
   expect(() => validateAudioLock([{ ...ritual, body_r2_key: key }], { v: 1, items: [row] }, config)).toThrow();
   for (const loat of ['loi-phat-day', 'duong-xua']) expect(audioProfile({ meta: { loat, audio: a.meta.audio } }, config).voice).toBe(config.voice);
   expect(() => audioProfile({ ...a, meta: { ...a.meta, audio: { voice: 'en-US-Chirp3-HD-Orus' } } }, config)).toThrow();
+  for (const speed of [1, 1.1, 1.2]) {
+    const fast = { ...a, meta: { ...a.meta, audio: { speed, voice: 'vi-VN-Chirp3-HD-Puck' } } };
+    expect(audioProfile(fast, config)).toMatchObject({ speed, voice: 'vi-VN-Chirp3-HD-Puck' });
+    expect(fingerprint(['Lời thử.'], audioProfile(fast, config))).not.toBe(fingerprint(['Lời thử.'], audioProfile(a, config)));
+  }
 });

@@ -7,7 +7,7 @@ export function audioProfile(article, config) {
   const ritual = article.meta?.loat === 'nghi-thuc';
   if (ritual && !['mo-dau', 'ket-thuc'].includes(article.meta?.vai)) throw new Error('Nghi thức thiếu vai hợp lệ');
   const speed = ritual ? (article.meta?.audio?.speed ?? config.speed) : config.speed;
-  if (ritual && ![0.8, 0.85].includes(speed)) throw new Error('Nghi thức chỉ có bản 0,80 hoặc 0,85');
+  if (ritual && (!Number.isFinite(speed) || speed < 0.8 || speed > 1.2)) throw new Error('Tốc độ nghi thức phải trong 0,80–1,20');
   const voice = ritual ? (article.meta?.audio?.voice ?? config.voice) : config.voice;
   if (ritual && !/^vi-VN-Chirp3-HD-[A-Za-z]+$/.test(voice)) throw new Error('Giọng nghi thức phải là Chirp3-HD vi-VN');
   const aiId3 = ritual || article.meta?.loat === 'duong-xua';
