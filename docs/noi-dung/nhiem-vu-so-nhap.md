@@ -1,6 +1,6 @@
 # Hành trình Sơ nhập — hệ thống nhiệm vụ hằng ngày (đề xuất v1)
 
-> Trạng thái: **đề xuất, chờ chủ dự án duyệt**. Người soạn: Claude (15/11/2026), theo yêu cầu chủ dự án sau v0.16.0.
+> Trạng thái: **chủ dự án đã duyệt ngày 15/11/2026** (#85), chọn đủ các đề xuất ở mục 10. Người soạn: Claude, theo yêu cầu chủ dự án sau v0.16.0.
 > Bổ sung cho `PROJECT_ROADMAP.md` §8 (Tầng 0), §9 (theo dõi và tích lũy), T3.1–T3.4. Không thay luật ở `AGENTS.md` mục 1.
 
 ## 0. Mục tiêu
@@ -155,7 +155,7 @@ App ghi nhận khi người dùng **thực sự** thực hành, tính theo thờ
 
 ## 8. Tích lũy tu học và "quả ngọt" trực quan
 
-Tên hiển thị đề xuất: **«Tích lũy tu học»** (chủ dự án chọn, xem mục 10). Không có cấp bậc, không con số tổng để so với người khác.
+Tên hiển thị: **«Tích lũy tu học»** (chủ dự án chọn 15/11/2026). Không có cấp bậc, không con số tổng để so với người khác.
 
 - **Ba trục Kusala** (đã có) → cảnh Vân Đảo đổi theo tuần (`WEEKS[].reward`, đã có).
 - **Hoa sen 10 cánh Ba-la-mật** (§9.1): mỗi cánh sáng theo số lần được rèn trong chu kỳ, chuẩn hóa theo cánh mạnh nhất, để thấy cân bằng chứ không phải điểm. Cánh yếu nhất gợi ý Hạnh tuần sau.
@@ -216,13 +216,13 @@ Không có chữ tự do. Ghi chú quán chiếu nằm ở store riêng và khô
 | E | Vân Đảo phản chiếu: đèn mây, nụ sen; đo ngân sách hiệu năng | Claude | A |
 | F | Nhiệm vụ đồng tu trong app (thăm đảo, ngồi chung, khích lệ) | Claude + Codex | GĐ4–GĐ5 |
 
-## 10. Chủ dự án cần quyết
+## 10. Quyết định của chủ dự án (15/11/2026, #85)
 
-1. **Tên hiển thị phần tích lũy:** «Tích lũy tu học» (đề xuất, tránh cảm giác cấp bậc kiểu "tu vi" trong truyện) hay giữ «Tu vi».
-2. **Gánh nặng mỗi ngày:** 3 việc chính + thẻ giới + 1 hạnh nhỏ (đề xuất), hay nhiều hơn.
-3. **Tự ghi nhận có tự hoàn thành trục Tuệ không:** đề xuất **không**. Chỉ đính kèm bằng chứng, người dùng vẫn tự ghi nhận theo công thức, để giữ khóa 1 nấc mỗi ngày và tính trung thực.
-4. **Ngưỡng nghe trọn:** 70 % thời lượng (đề xuất).
-5. **Cho bắt đầu đợt A ngay** và giao đợt B cho Codex song song.
+1. **Tên hiển thị:** «Tích lũy tu học», không dùng «Tu vi».
+2. **Gánh nặng mỗi ngày:** 3 việc chính + thẻ Giữ giới + 1 hạnh nhỏ. Phần tự ghi nhận không đòi gì thêm.
+3. **Tự ghi nhận không tự hoàn thành trục Tuệ.** App chỉ đính kèm bằng chứng; người dùng tự ghi nhận theo công thức Kusala, giữ khóa 1 nấc mỗi ngày.
+4. **Ngưỡng nghe trọn:** 70 % thời lượng (hồi hướng 80 %, thời thiền 12/15 phút).
+5. **Triển khai:** Claude làm đợt A ngay; Codex làm đợt B song song.
 
 ## Nguồn
 
