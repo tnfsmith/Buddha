@@ -51,3 +51,15 @@ it('sổ ràng buộc tốc độ và nguồn AI của nghi thức với khóa �
   expect(validateAudioLock([{ ...ritual, body_r2_key: key }], { v: 1, items: [row] }, config)).toBe(1);
   expect(() => validateAudioLock([{ ...ritual, body_r2_key: key }], { v: 1, items: [{ ...row, speed: 0.8 }] }, config)).toThrow();
 });
+
+it('giọng riêng chỉ áp dụng nghi thức đã khai báo, giữ giọng Lời Phật dạy/Đường Xưa', () => {
+  const a = { ...ritual, meta: { ...ritual.meta, audio: { speed: 0.85, voice: 'vi-VN-Chirp3-HD-Orus' } } };
+  const p = audioProfile(a, config), hash = fingerprint(spokenLines(a.body), p), key = audioKey(a, hash, p.voice);
+  const row = { id: a.id, version: 1, ...p, key, hash: hash.slice(0, 8), fingerprint: hash, dur: 5, wer: 0,
+    sha256: 'a'.repeat(64), generated_at: '2026-11-15T00:00:00Z', ai_disclosure: AI_DISCLOSURE };
+  expect(key.endsWith('/vi-orus.mp3')).toBe(true);
+  expect(validateAudioLock([{ ...a, body_r2_key: key }], { v: 1, items: [row] }, config)).toBe(1);
+  expect(() => validateAudioLock([{ ...ritual, body_r2_key: key }], { v: 1, items: [row] }, config)).toThrow();
+  for (const loat of ['loi-phat-day', 'duong-xua']) expect(audioProfile({ meta: { loat, audio: a.meta.audio } }, config).voice).toBe(config.voice);
+  expect(() => audioProfile({ ...a, meta: { ...a.meta, audio: { voice: 'en-US-Chirp3-HD-Orus' } } }, config)).toThrow();
+});

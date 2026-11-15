@@ -31,12 +31,13 @@ try {
     .filter(a => a.status === 'da_duyet' || (values['allow-drafts'] && a.status === 'cho_duyet'));
   if (!articles.length) throw new Error('Không có bài khớp loạt/đợt/trạng thái');
   const lockFile = join(contentDir, '_audio.lock.json'), lock = readJson(lockFile) || { v: 1, items: [] };
-  if (!Array.isArray(lock.items) || lock.items.some(x => x.voice !== config.voice || x.model !== config.model)) throw new Error('Sổ âm thanh đang có giọng/mô hình khác; không trộn giọng');
+  if (!Array.isArray(lock.items) || lock.items.some(x => x.model !== config.model || x.provider !== config.provider)) throw new Error('Sổ âm thanh đang có nhà cung cấp/mô hình khác');
   if (!values.upload) { console.log(JSON.stringify({ mode: 'check-only', voice: config.voice, articles: articles.map(a => ({ id: a.id, version: a.version, ideas: spokenLines(a.body, dictionary).length })) })); process.exit(0); }
   const gitRoot = execFileSync('git', ['-C', contentDir, 'rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
   const branch = execFileSync('git', ['-C', contentDir, 'branch', '--show-current'], { encoding: 'utf8' }).trim();
   if (!branch.startsWith('hermes/') || contentDir !== resolve(gitRoot, 'content/bai-giang')) throw new Error('Đầu ra phải là content/bai-giang trong worktree hermes/');
-  if (!(await maleVoices()).some(v => v.name === config.voice)) throw new Error('Giọng chính không còn trong danh sách Google');
+  const catalog = await maleVoices();
+  if (articles.some(a => !catalog.some(v => v.name === audioProfile(a, config).voice))) throw new Error('Giọng đã chọn không có trong danh sách giọng nam Google vi-VN');
   const queue = [...articles];
   let failed = false;
   await Promise.all(Array.from({ length: Math.min(3, queue.length) }, async () => {
@@ -74,11 +75,11 @@ try {
         console.log(`tts: ${article.id} ý ${i + 1}/${lines.length}, WER ${(100 * chosen.score.wer).toFixed(2)}%${chosen.score.pass ? '' : ' [cần nghe kiểm]'} `);
       }
       const audio = joinSpeech(wavs, mp3, profile);
-      saveJson(cueFile, { v: 1, id: article.id, version: article.version, lang: 'vi', voice: config.voice, provider: config.provider, model: config.model,
+      saveJson(cueFile, { v: 1, id: article.id, version: article.version, lang: 'vi', voice: profile.voice, provider: config.provider, model: config.model,
         hash: hash.slice(0, 8), dur: audio.dur, speed: profile.speed, cues: audio.cues });
       // Lưu kết quả trước upload để lần chạy lại không mã hóa/sinh lại khóa bất biến.
       saveJson(join(dir, 'result.json'), { id: article.id, version: article.version, key, hash: hash.slice(0, 8), fingerprint: hash, dur: audio.dur,
-        voice: config.voice, model: config.model, provider: config.provider, generated_at: new Date().toISOString(),
+        voice: profile.voice, model: config.model, provider: config.provider, generated_at: new Date().toISOString(),
         speed: profile.speed, format: audio.format, ...(profile.aiId3 ? { ai_disclosure: AI_DISCLOSURE } : {}),
         wer: scores.reduce((sum, x) => sum + x.wer, 0) / scores.length,
         sha256: createHash('sha256').update(readFileSync(mp3)).digest('hex'), loudness: audio.loudness,

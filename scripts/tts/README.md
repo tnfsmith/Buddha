@@ -40,6 +40,8 @@ Nếu cả bốn lượt còn cờ, chọn lượt tốt nhất theo WER/tên/đ
 `node scripts/tts/audit.mjs --content-root <worktree-hermes>/content/bai-giang --series loi-phat-day --batch A` tải lại MP3+cues của cả hai bucket, so SHA-256, Content-Type, voice/hash/số ý/thời gian với sổ. Chỉ đọc; kết quả và link nghe bảy ngày nằm trong `.wrangler/tts-audit/latest.json` (bị Git bỏ qua).
 # Nghi thức và ID3 AI (#80)
 
+Quyết định tiếp theo 15/11: hồi hướng rút còn nguyên câu ở tag v0.14.0; không TTS Pāli, phần đảnh lễ/máy quay do client #79/#82 giữ. Ít nhất ba giọng nam phải nghe chọn trước final verdict. Chỉ nghi thức được khai báo `meta.audio.voice` riêng; không đổi `giong.json` hoặc giọng/khóa Lời Phật dạy, Đường Xưa. Băm/khóa/sổ ràng buộc giọng riêng, công cụ kiểm giọng nam qua danh mục Google trước sinh. Chưa chọn thì mẫu nằm dưới `_mau-giong`, không đưa vào sổ phát hành.
+
 `audioProfile(article, giong)` giữ nguyên băm của Lời Phật dạy v0.15.0. Đường Xưa thêm profile ID3; nghi thức (`meta.loat: nghi-thuc`, `vai: mo-dau|ket-thuc`) dùng gap/lastGap 1,2 giây, tốc độ `meta.audio.speed` 0,80 hoặc 0,85. Băm có cả profile và tốc độ, nên các bản nghe thử không ghi đè nhau. Mặc định chưa chọn là 0,85, vẫn phải giữ `cho_duyet`.
 
 Cách đọc hỗ trợ `[pause]`, `[pause short]`, `[pause long]` bên trong `[[hiển thị|cách đọc]]`. Google nhận trường `markup`; công cụ nạp chỉ giữ vế hiển thị, ASR không đối chiếu các thẻ điều khiển. Độ dài pause của Google không cố định; khoảng lặng **giữa các cue** do công cụ ghép là 1,2 giây. Dòng `>` chỉ hiện phụ đề, không đọc.

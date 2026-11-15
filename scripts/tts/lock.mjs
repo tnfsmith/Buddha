@@ -8,7 +8,9 @@ export function validateAudioLock(articles, lock, config, dictionary = {}) {
     const identity = `${row.id}:${row.version}`;
     if (seen.has(identity)) throw new Error(`Trùng sổ âm thanh: ${identity}`);
     seen.add(identity);
-    if (row.voice !== config.voice || row.model !== config.model || row.provider !== config.provider) throw new Error('Sổ âm thanh trộn giọng/mô hình');
+    const article = articles.find(x => x.id === row.id && x.version === row.version);
+    const expected = article ? audioProfile(article, config) : config;
+    if (row.voice !== expected.voice || row.model !== expected.model || row.provider !== expected.provider) throw new Error('Sổ âm thanh trộn giọng/mô hình');
     if (!Number.isFinite(row.dur) || row.dur <= 0 || !Number.isFinite(row.wer) || row.wer < 0
       || !Number.isFinite(Date.parse(row.generated_at)) || !/^[a-f0-9]{64}$/.test(row.sha256 || '')) throw new Error(`Sổ âm thanh thiếu số đo: ${identity}`);
     if (row.loudness && (!Number.isFinite(row.loudness.lufs) || Math.abs(row.loudness.lufs + 16) > 0.5
@@ -17,7 +19,7 @@ export function validateAudioLock(articles, lock, config, dictionary = {}) {
   for (const article of articles.filter(x => x.body_r2_key)) {
     const row = lock.items.find(x => x.id === article.id && x.version === article.version);
     const profile = audioProfile(article, config), hash = fingerprint(spokenLines(article.body, dictionary), profile);
-    if (!row || row.key !== article.body_r2_key || row.key !== audioKey(article, hash, config.voice) || row.hash !== hash.slice(0, 8)
+    if (!row || row.key !== article.body_r2_key || row.key !== audioKey(article, hash, profile.voice) || row.hash !== hash.slice(0, 8)
       || (row.fingerprint && row.fingerprint !== hash)) throw new Error(`Chữ/khóa/sổ âm thanh không khớp: ${article.id}`);
     if (profile.aiId3 && (row.ai_disclosure !== AI_DISCLOSURE || row.speed !== profile.speed)) throw new Error(`Sổ thiếu ID3/tốc độ: ${article.id}`);
   }
