@@ -303,3 +303,51 @@ test('điện thoại: chữ khi giảng nằm sát đáy dưới Tôn tượng,
   await expect(page.locator('#sub')).not.toContainText(AI);
   await ctx.close();
 });
+
+// #79: nghe lần lượt cả loạt — lời mở đầu trước bài đầu, giữa các bài chỉ gật đầu báo bài tiếp, lời kết sau bài cuối
+test('nghe lần lượt: phát hết các bài của loạt từ bài đang chọn, mở đầu một lần, kết một lần', async ({ page }) => {
+  test.setTimeout(300_000);
+  const TWO = { ...OK, id: 'bai-hai', title: 'Bài thứ hai', body_inline: 'Ý bài hai thứ nhất.\nÝ bài hai thứ hai.' };
+  await mock(page, [OK, TWO, RITE_MO, RITE_KET]); await media(page, { cues: riteCues });
+  await open(page, 'sermon=khong-co');
+  await slow(panel(page).locator('[data-sut]')).toHaveCount(2);
+  for (const t of ['Chọn một bài. Khi giảng', 'Đọc thành tiếng bằng giọng máy']) await expect(panel(page)).not.toContainText(t);   // #79: bỏ cho gọn
+  const before = await page.evaluate(() => window.__app.state().sermons || 0);
+  await panel(page).locator('[data-act="sermon-all"]').click();
+  await until(page, 'mo-dau');
+  await expect(panel(page).locator('.sq')).toHaveText('Nghe lần lượt · bài 1/2');
+  await next(page); await next(page);   // hết lời mở đầu
+  await until(page, 'line'); let a = await live(page); expect(a.sub).toContain('Ý thử thứ nhất.');
+  await next(page); await next(page);   // hết bài 1: không Sādhu, báo bài tiếp
+  expect(await page.evaluate(() => window.__app.sermon.phase)).toBe('tiep');
+  a = await live(page); expect(a.sub).toContain('Bài tiếp theo: Bài thứ hai'); expect(a.sub).not.toContain('Sādhu');
+  await next(page);   // sang bài 2 ngay, không có lời mở đầu
+  await slow.poll(() => page.evaluate(() => window.__app.sermon.s.id)).toBe('bai-hai');
+  expect(await page.evaluate(() => [window.__app.sermon.phase, window.__app.sermon.oa])).toEqual(['gap', null]);
+  await expect(panel(page).locator('.sq')).toHaveText('Nghe lần lượt · bài 2/2');
+  await until(page, 'line'); a = await live(page); expect(a.sub).toContain('Ý bài hai thứ nhất.');
+  await next(page); await next(page);   // hết bài cuối: lời kết
+  await until(page, 'ket-thuc'); a = await live(page); expect(a.sub).toContain('Sādhu! Sādhu! Sādhu!');
+  await next(page); await next(page);
+  await slow.poll(async () => (await live(page)).on).toBe(false);
+  expect(await page.evaluate(() => [window.__app.state().sermons, window.__app.U.queue])).toEqual([before + 2, null]);
+  await slow(page.locator('#toast')).toHaveText('Đã nghe trọn cả loạt. Sādhu!');
+});
+
+test('thanh phát thời thiền: ẩn ở thẻ Thuyết giảng, hiện ở Thời thiền; thu nhỏ / mở rộng và nhớ lựa chọn (#79)', async ({ page }) => {
+  test.setTimeout(240_000);
+  await mock(page, [OK]);
+  await open(page, 'mode=hall');
+  const bar = page.locator('#bar');
+  await expect(bar).toBeVisible(); await expect(page.locator('#barmin')).toHaveText('▾');
+  const wide = (await bar.boundingBox()).width;
+  await page.locator('#barmin').click();
+  await expect(page.locator('#barmin')).toHaveText('▴'); await expect(page.locator('#track')).toBeHidden();
+  expect((await bar.boundingBox()).width).toBeLessThan(wide / 2);
+  expect(await page.evaluate(() => window.__app.state().barmin)).toBe(true);
+  await page.locator('#barmin').click(); await expect(page.locator('#track')).toBeVisible();
+  await panel(page).locator('[data-opt="htab"] button[data-v="sermon"]').click();
+  await expect(bar).toBeHidden();
+  await panel(page).locator('[data-opt="htab"] button[data-v="sit"]').click();
+  await expect(bar).toBeVisible();
+});

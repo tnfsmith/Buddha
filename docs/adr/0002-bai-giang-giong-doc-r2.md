@@ -163,6 +163,14 @@ Ví dụ, mỗi loạt một thư mục:
   - Khi giảng, chữ nằm sát đáy ngay trên bảng thu gọn, nền là dải mờ trong suốt.
   - Bảng thu gọn thay tên bảng bằng hàng nút Dừng, Tạm dừng, ‹ và ›.
   - Máy quay khung dọc thấy trọn Tôn tượng, tượng ở nửa trên màn hình, không bị chữ che.
+- **Bảng Thuyết giảng gọn hơn (#79):**
+  - Bỏ đoạn mô tả và ô «Đọc thành tiếng…». Bài chưa có giọng đọc mặc định dùng giọng tiếng Việt của thiết bị nếu có.
+  - Ở thẻ Thuyết giảng, thanh phát thời thiền ẩn (trừ khi thời thiền đang phát). Ở Thời thiền, thanh phát có nút thu nhỏ thành một nút ở góc dưới và mở rộng lại; app nhớ lựa chọn.
+- **Nghe lần lượt (#79):**
+  - Phát mọi bài của loạt đang chọn, từ bài đang chọn tới cuối.
+  - Lời mở đầu chỉ trước bài đầu, lời kết chỉ sau bài cuối. Giữa hai bài, hội chúng gật đầu khoảng 3 giây kèm dòng «Bài tiếp theo: …».
+  - Mỗi khe phát (bài, mở đầu, kết) dùng lại cùng một phần tử `audio` đã mở khóa trong cú chạm đầu, để Safari iOS phát tiếp bài sau mà không cần chạm lại.
+  - Dừng giảng thì thôi nghe lần lượt. Chọn một bài khác của loạt khi đang nghe thì tiếp tục lần lượt từ bài đó.
 - **Dự phòng:** không có `body_r2_key`, chạy `file://`, lỗi mạng, hoặc `cues` lệch số ý → phát như hiện nay (chữ theo nhịp, không tiếng).
 - **Service worker** (`build.mjs` sinh `sw.js`) bỏ qua `/media/`. Hiện SW gọi `cache.put` với mọi phản hồi `ok`, mà phản hồi 206 không lưu cache được.
 - Kiểm khói Playwright giả lập `/media` và API. Không gọi OpenAI hay R2 thật.

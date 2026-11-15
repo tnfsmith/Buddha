@@ -79,14 +79,18 @@ export function loadSermons(force) {
 }
 const DEDICATE = 'Nguyện công đức nghe Pháp này lan đến mọi loài: cho ai khổ được hết khổ, ai sợ được hết sợ, ai sầu được hết sầu.';
 
+/** Phần tử phát theo khe (bai: bài, mo: lời mở đầu, ket: lời kết). Giữ lại phần tử đã mở khóa trong cú chạm đầu tiên
+ * để chế độ nghe lần lượt phát tiếp bài sau trên Safari iOS mà không cần chạm lại (#79). */
+const POOL = {};
 /** Giọng đọc một bài: tệp MP3 + mốc từng ý. state: loading → ready | fail (thiếu tệp, cues lệch số ý, bị chặn phát) */
 class Track {
-  constructor(s) {
+  constructor(s, slot = 'bai') {
     this.state = 'loading'; this.cues = null; this.live = false;
-    const el = (this.el = new Audio()); el.preload = 'auto'; el.src = s.audio.src;
-    el.addEventListener('error', () => this.fail('media'));
+    const el = (this.el = POOL[slot] || (POOL[slot] = new Audio())), tok = (this.tok = (el.vdTok || 0) + 1); el.vdTok = tok;
+    el.preload = 'auto'; el.src = s.audio.src;
+    el.addEventListener('error', (this.onerr = () => { if (el.vdTok === tok) this.fail('media'); }));
     // Safari iOS chỉ cho phát khi có cú chạm: phát câm rồi dừng ngay trong cú chạm "Thỉnh giảng" để mở khóa cho lúc vào bài
-    try { el.muted = true; const p = el.play(); if (p && p.then) p.then(() => { if (!this.live) { el.pause(); el.currentTime = 0; } el.muted = false; }, () => { el.muted = false; }); } catch (e) { el.muted = false; }
+    try { el.muted = true; const p = el.play(); if (p && p.then) p.then(() => { if (el.vdTok !== tok) return; if (!this.live) { el.pause(); el.currentTime = 0; } el.muted = false; }, () => { if (el.vdTok === tok) el.muted = false; }); } catch (e) { el.muted = false; }
     const ac = (this.ac = new AbortController()), tm = setTimeout(() => ac.abort(), 8000);
     fetch(s.audio.cues, { signal: ac.signal, headers: { accept: 'application/json' } })
       .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
@@ -98,7 +102,8 @@ class Track {
   fail(why) { if (this.state !== 'fail') { this.state = 'fail'; this.why = why; } }
   play() { this.live = true; this.el.muted = false; try { this.el.currentTime = 0; } catch (e) { /* chưa có dữ liệu */ } const p = this.el.play(); if (p && p.catch) p.catch(() => this.fail('play')); }
   at(t) { let i = 0; while (i + 1 < this.cues.length && this.cues[i + 1].t <= t) i++; return i; }
-  dispose() { this.live = false; try { this.ac.abort(); } catch (e) { /* đã xong */ } try { this.el.pause(); this.el.removeAttribute('src'); this.el.load(); } catch (e) { /* bỏ qua */ } }
+  dispose() { this.live = false; try { this.ac.abort(); } catch (e) { /* đã xong */ } const el = this.el; el.removeEventListener('error', this.onerr);
+    if (el.vdTok === this.tok) { el.vdTok++; try { el.pause(); el.removeAttribute('src'); el.load(); } catch (e) { /* bỏ qua */ } } }
 }
 const mouth = (t) => Math.pow(Math.abs(Math.sin(t * 10.6)) * (0.55 + 0.45 * Math.sin(t * 2.3 + 1)), 0.7);
 
@@ -108,16 +113,19 @@ export class Sermon {
   constructor() { this.on = false; this.online = null; this.onend = null; this.tts = false; this.voice = null; this.au = null; this.oa = null; this.ca = null; this.paused = false; this.st = { on: false, speak: 0, bow: 0, anjali: false, waves: [], merit: 0 }; }
   static viVoice() { try { return (speechSynthesis.getVoices() || []).find((v) => /^vi/i.test(v.lang)) || null; } catch (e) { return null; } }
   /** Gọi trong cú chạm của người nghe (để mở khóa phát tiếng trên iOS). Bài có giọng đọc thì không dùng giọng máy của thiết bị.
-   * Lời mở đầu / lời kết có giọng đọc (riteFor) được tải cùng lúc; thiếu hay lỗi thì dùng phần chữ đảnh lễ, Sādhu, hồi hướng như cũ. */
-  start(sutta, tts) {
+   * Lời mở đầu / lời kết có giọng đọc (riteFor) được tải cùng lúc; thiếu hay lỗi thì dùng phần chữ đảnh lễ, Sādhu, hồi hướng như cũ.
+   * o (nghe lần lượt, #79): open = false bỏ phần mở đầu (vào bài sau 2 giây), close = false bỏ phần kết (gật đầu 3 giây rồi sang bài tiếp, tên ở o.next). */
+  start(sutta, tts, o = {}) {
     this.stop(true); this.s = sutta; this.on = true; this.paused = false;
-    const net = /^https?:$/.test(location.protocol);
-    this.au = sutta.audio && net ? new Track(sutta) : null;
-    this.op = riteFor(sutta.loat, 'mo-dau'); this.cl = riteFor(sutta.loat, 'ket-thuc');
-    this.oa = this.op && this.op.audio && net ? new Track(this.op) : null;
-    this.ca = this.cl && this.cl.audio && net ? new Track(this.cl) : null;
-    this.tts = !this.au && !!tts && !!(this.voice = Sermon.viVoice()); this.t = 0; this.i = -1; this.ri = -1; this.phase = 'homage'; this.left = 6.5; this.waves = []; this.spoken = false; this.rcam = 'wide';
-    this._show({ src: [sutta.pali, sutta.ref].filter(Boolean).join(' · '), ln: HOMAGE, pl: 'Thành kính đảnh lễ đức Thế Tôn, bậc Ứng Cúng, Chánh Đẳng Giác.' });
+    const net = /^https?:$/.test(location.protocol), open = o.open !== false;
+    this.noClose = o.close === false; this.nextName = o.next || '';
+    this.au = sutta.audio && net ? new Track(sutta, 'bai') : null;
+    this.op = open ? riteFor(sutta.loat, 'mo-dau') : null; this.cl = this.noClose ? null : riteFor(sutta.loat, 'ket-thuc');
+    this.oa = this.op && this.op.audio && net ? new Track(this.op, 'mo') : null;
+    this.ca = this.cl && this.cl.audio && net ? new Track(this.cl, 'ket') : null;
+    this.tts = !this.au && !!tts && !!(this.voice = Sermon.viVoice()); this.t = 0; this.i = -1; this.ri = -1; this.waves = []; this.spoken = false; this.rcam = 'wide';
+    if (open) { this.phase = 'homage'; this.left = 6.5; this._show({ src: [sutta.pali, sutta.ref].filter(Boolean).join(' · '), ln: HOMAGE, pl: 'Thành kính đảnh lễ đức Thế Tôn, bậc Ứng Cúng, Chánh Đẳng Giác.' }); }
+    else { this.phase = 'gap'; this.left = 2.2; this._show({ src: `Nghe lần lượt · ${sutta.ref}`, ln: sutta.name, pl: '' }); }
   }
   stop(silent) { if (!this.on && !silent) return; this.on = false; this.paused = false; this._drop(); this._dropRites(); try { speechSynthesis.cancel(); } catch (e) { /* không có TTS */ } this.st = { on: false, speak: 0, bow: 0, anjali: false, waves: [], merit: 0 }; if (!silent) { this._show(null); if (this.onend) this.onend(false); } }
   /** Giọng đọc đang phát theo chặng: lời mở đầu, bài, lời kết */
@@ -129,6 +137,7 @@ export class Sermon {
   /** d = 1: sang ý sau; d = -1: về ý trước. Trong lời mở đầu / lời kết: sang câu sau, hết câu thì qua chặng sau. */
   step(d) {
     if (!this.on) return; const n = this.s.lines.length;
+    if (this.phase === 'tiep') { if (d > 0) this._end(); return; }
     if (this.phase === 'homage' || this.phase === 'wait') { if (d > 0) { this._dropRite('oa'); if (this.au && this.au.state === 'loading') { this.phase = 'wait'; this.left = 4; } else this._next(); } return; }
     if (this.phase === 'mo-dau' || this.phase === 'ket-thuc') {
       const T = this._cur(), j = this.ri + d; if (!T || !T.cues) return;
@@ -180,7 +189,9 @@ export class Sermon {
     }
     this.i++;
     if (this.i < s.lines.length) { this.phase = 'line'; this._line(this.i); this._say(s.lines[this.i]); return; }
-    if (this.phase === 'sadhu' || this.phase === 'dedicate' || this.phase === 'ket-thuc' || this.phase === 'wait2') return;
+    if (this.phase === 'sadhu' || this.phase === 'dedicate' || this.phase === 'ket-thuc' || this.phase === 'wait2' || this.phase === 'tiep') return;
+    // nghe lần lượt, chưa phải bài cuối: gật đầu chào rồi sang bài tiếp (lời kết để dành cho bài cuối)
+    if (this.noClose) { this.phase = 'tiep'; this.left = 3.2; this.waves.push(0); this._show({ src: 'Nghe lần lượt', ln: this.nextName ? `Bài tiếp theo: ${this.nextName}` : 'Bài tiếp theo', pl: '' }); return; }
     // hết bài: lời kết có giọng đọc thì phát (chờ tải thêm tối đa 4 giây); không có hay lỗi thì Sādhu và hồi hướng bằng chữ
     if (this.ca && this.ca.state === 'ready') return this._riteGo('ket-thuc');
     if (this.ca && this.ca.state === 'loading') { this.phase = 'wait2'; this.left = 4; return; }
@@ -227,6 +238,7 @@ export class Sermon {
     }
     else if (this.phase === 'line') { st.speak = this.left > 0.7 ? mouth(this.t) : 0; st.bow = 0;
       if (this.left <= 0) { if ((this.i + 1) % 3 === 0 && this.i + 1 < this.s.lines.length) { this.phase = 'nod'; this.left = 2.4; } else { this.phase = 'gap'; this.left = 1.1; } } }
+    else if (this.phase === 'tiep') { const k = 3.2 - this.left; st.speak = 0; st.bow = 0.45 * Math.pow(Math.sin(Math.PI * Math.min(1, k / 2.6)), 2); if (this.left <= 0) this._end(); }
     else if (this.phase === 'nod') { const k = 2.4 - this.left; st.speak = 0; st.bow = 0.32 * Math.sin(Math.PI * Math.min(1, k / 2.2)); if (this.left <= 0) this._next(); }
     else if (this.phase === 'gap') { st.speak = 0; st.bow = 0; if (this.left <= 0) this._next(); }
     else if (this.phase === 'sadhu') { const k = 9 - this.left, c = (k % 3) / 3; st.speak = 0; st.bow = Math.pow(Math.sin(Math.PI * c), 2); const n = Math.floor(k / 3); if (n !== this._wn && c > 0.45) { this._wn = n; this.waves.push(0); }

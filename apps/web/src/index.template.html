@@ -205,6 +205,17 @@ body.pmin #panel h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   body.pmin.sermon #panel .sctl{margin-top:0;flex-wrap:nowrap;gap:6px}
   body.pmin.sermon #panel .sctl .btn{padding:5px 10px;font-size:13.5px;white-space:nowrap}
 }
+/* thẻ Thuyết giảng: ẩn thanh phát thời thiền; thanh phát thu nhỏ thành nút ở góc dưới (#79) */
+#barmin{flex:none;width:30px;height:30px;padding:0;border:1px solid var(--line);border-radius:8px;font-size:15px;line-height:1}
+body:not(.hall) #barmin{display:none}
+body.hall.stab #bar{display:none}body.hall.stab #panel{bottom:14px}
+body.hall.barmin #bar{left:14px;transform:none;width:auto;padding:8px 8px 8px 8px;bottom:14px}
+body.hall.barmin #bar .brow,body.hall.barmin #bar #track{display:none}body.hall.barmin #bar #time{min-width:0}
+body.hall.barmin #panel{bottom:14px}
+@media (max-width:820px){
+  body.hall.stab #panel{bottom:8px;max-height:34vh}
+  body.hall.barmin #bar{left:8px;bottom:8px}body.hall.barmin #panel{bottom:72px}
+}
 </style>
 </head>
 <body>
@@ -231,6 +242,7 @@ body.pmin #panel h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       <button id="play" aria-label="Phát hoặc tạm dừng">▶</button>
       <div id="track" role="slider" aria-label="Thanh thời gian" aria-valuemin="0" aria-valuemax="900"><div class="rail"><div class="fill"></div></div><div class="thumb"></div></div>
       <div id="time">00:00 / 15:00</div>
+      <button id="barmin" class="ghost" aria-label="Thu nhỏ thanh phát thời thiền" title="Thu nhỏ">▾</button>
     </div>
     <div class="brow">
       <div id="stage"></div>
