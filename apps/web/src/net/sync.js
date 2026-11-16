@@ -40,11 +40,11 @@ export async function getDeviceId() {
 }
 
 /**
- * Đưa một thao tác mới vào hàng đợi outbox
+ * Đưa một thao tác mới vào hàng đợi outbox. `id` cố định (tùy chọn) để gửi lại lần nữa thì máy chủ coi là trùng (#93).
  */
-export async function enqueueOp(type, payload, at = Date.now()) {
+export async function enqueueOp(type, payload, at = Date.now(), id = generateClientUlid()) {
   const op = {
-    id: generateClientUlid(),
+    id,
     type,
     at,
     payload

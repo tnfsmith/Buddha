@@ -8,7 +8,8 @@ const require = createRequire(import.meta.url);
 // npm workspaces đưa gói lên node_modules gốc, nên tìm thư mục phông theo cơ chế resolve của Node
 const pkgDir = (pkg) => dirname(require.resolve(`@fontsource/${pkg}/package.json`));
 
-const r = await build({ entryPoints: ['src/main.js'], bundle: true, minify: true, format: 'iife', target: 'es2020', write: false, legalComments: 'none' });
+// charset utf8: chữ tiếng Việt trong mã giữ nguyên UTF-8 (2–3 byte) thay vì \uXXXX (6 byte) — bản HTML đơn nhỏ hơn đáng kể (#93)
+const r = await build({ entryPoints: ['src/main.js'], bundle: true, minify: true, format: 'iife', target: 'es2020', write: false, legalComments: 'none', charset: 'utf8' });
 const js = r.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 // Phông nhúng sẵn (đủ dấu tiếng Việt, chạy không cần mạng)
 const F = (pkg, file) => readFileSync(join(pkgDir(pkg), 'files', file)).toString('base64');
@@ -16,7 +17,8 @@ const RANGE = { vietnamese: 'U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+0
 const face = (family, pkg, sub, w) => `@font-face{font-family:"${family}";font-style:normal;font-weight:${w};font-display:swap;src:url(data:font/woff2;base64,${F(pkg, `${pkg}-${sub}-${w}-normal.woff2`)}) format("woff2");unicode-range:${RANGE[sub]}}`;
 const fonts = [['Be Vietnam Pro', 'be-vietnam-pro', 'vietnamese', 400], ['Be Vietnam Pro', 'be-vietnam-pro', 'vietnamese', 600], ['Be Vietnam Pro', 'be-vietnam-pro', 'latin', 400], ['Be Vietnam Pro', 'be-vietnam-pro', 'latin', 600], ['Be Vietnam Pro', 'be-vietnam-pro', 'latin-ext', 400], ['Noto Serif', 'noto-serif', 'vietnamese', 600], ['Noto Serif', 'noto-serif', 'latin', 600]].map((a) => face(...a)).join('\n');
 // Chuẩn hóa NFC: chữ có dấu luôn là một ký tự dựng sẵn, không bị rời dấu khi phông thiếu dấu tổ hợp
-const html = readFileSync('src/index.template.html', 'utf8').replace('/*__FONTS__*/', () => fonts).replace('/*__BUNDLE__*/', () => js).normalize('NFC');
+// Mã JS chèn SAU khi chuẩn hóa: chuỗi trong mã giữ đúng như nguồn (trước đây chúng là \uXXXX nên NFC cũng không đụng tới)
+const html = readFileSync('src/index.template.html', 'utf8').replace('/*__FONTS__*/', () => fonts).normalize('NFC').replace('/*__BUNDLE__*/', () => js);
 
 // 1. Ghi vào dist/van-dao.html
 mkdirSync('dist', { recursive: true });
