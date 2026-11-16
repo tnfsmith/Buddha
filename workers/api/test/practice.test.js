@@ -40,6 +40,8 @@ describe('practice.event — máy chủ cho hai thiết bị', () => {
   });
 
   it.each([
+    ['invalid_event', null],
+    ['invalid_event', false],
     ['invalid_slot', { slot: 'gioi.6' }],
     ['invalid_kind', { kind: 'note' }],
     ['invalid_date', { date: '2026-02-31' }],
@@ -49,7 +51,9 @@ describe('practice.event — máy chủ cho hai thiết bị', () => {
     ['invalid_at', { at: -1 }],
   ])('từ chối %s vĩnh viễn, không ghi dấu hoặc tăng rev (%j)', async (code, payload) => {
     const { token, user } = await guest(), before = await me(token);
-    const r = await sync(token, [op('invalid', payload)]);
+    const event = op('invalid', payload);
+    if (payload === null || typeof payload !== 'object') event.payload = payload;
+    const r = await sync(token, [event]);
     expect(r.rejected).toEqual([{ id: 'invalid', code, retry: false }]); expect(r.applied).toEqual([]);
     expect(await rowCount(user.id, 'practice_event')).toBe(0); expect(await rowCount(user.id, 'sync_op')).toBe(0);
     expect(r.state.journey.rev).toBe(before.journey.rev);

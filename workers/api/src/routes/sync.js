@@ -91,7 +91,7 @@ syncApp.post('/', authMiddleware, byUser('RL_SYNC'), async (c) => {
           journeyUpdate(db, user.id, J, now), done,
         ]);
       } else if (op.type === 'practice.event') {
-        const checked = checkPracticeEvent(p);
+        const checked = checkPracticeEvent(op.payload);
         if (!checked.ok) { reject(op, checked.code); continue; }
         const ev = checked.ev, t = ev.at ?? at;
         if (shiftDate(ev.date, 0) !== ev.date) { reject(op, 'invalid_date'); continue; }
