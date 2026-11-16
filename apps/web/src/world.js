@@ -308,13 +308,16 @@ export class World {
   }
 
   _avatar() {
-    const keep = this.av ? { p: this.av.pos.clone(), rot: this.av.rot, pose: this.fig.pose, st: this.av.state, where: this.av.where } : null;
+    // Đổi diện mạo giữa lúc đang đi/ngồi (ví dụ bản từ thiết bị khác vừa về, #93): giữ nguyên đường đi và chỗ ngồi, không để
+    // trạng thái 'walk' với đường rỗng (lỗi «reading 'x'» trong _avatarStep)
+    const A0 = this.av, keep = A0 ? { p: A0.pos.clone(), rot: A0.rot, pose: this.fig.pose, st: A0.state, where: A0.where,
+      go: { path: A0.path || [], speed: A0.speed || 0, done: A0.done, sit: A0.sit, id: A0.id, an: A0.an, track: A0.track, steer: A0.steer, after: A0.after, restoreSit: A0.restoreSit, dest: A0.dest, curve: A0.curve, k: A0.k } } : null;
     if (this.fig) { this.scene.remove(this.fig.group); this.fig.dispose(); this.scene.remove(this.hallFig.group); this.hallFig.dispose(); }
     this.fig = buildFigure(this.look); this.scene.add(this.fig.group);
     this.hallFig = buildFigure(this.look); this.hallFig.setPose('sit'); this.hallFig.group.position.set(SEAT.x, SEAT.y + 0.55, SEAT.z); this.hallFig.group.rotation.y = Math.PI; this.scene.add(this.hallFig.group);
     this.av = { pos: keep ? keep.p : (this.startPos ? V(this.startPos.x, floorH(this.startPos.x, this.startPos.z), this.startPos.z) : V(2.6, floorH(2.6, 1.2), 1.2)), rot: keep ? keep.rot : (this.startPos ? this.startPos.rot || 0 : 0.5), state: keep ? keep.st : 'idle', where: keep ? keep.where : 'home', path: [], speed: 0, phase: 0, blink: 3, hold: 0 };
     if (!keep && this.startPos && this.startPos.sit && ANCHORS[this.startPos.sit]) { const an = ANCHORS[this.startPos.sit], nd = NODES[an.node], A = this.av; A.pos.set(nd[0], floorH(nd[0], nd[1]) + seatOf(an), nd[1]); A.state = 'sit'; A.sit = true; A.an = an; A.id = this.startPos.sit; A.rot = this.startPos.rot !== undefined ? this.startPos.rot : an.face || 0; A.restoreSit = true; }
-    if (keep) this.fig.setPose(keep.pose);
+    if (keep) { Object.assign(this.av, keep.go); if (this.av.state === 'walk' && !this.av.path.length) this.av.state = 'idle'; this.fig.setPose(keep.pose); }
   }
   setLook(look) { this.look = { ...this.look, ...look }; this._avatar(); }
   headPos() { const h = this.fig.pose === 'sit' ? 2.0 : 3.7; return V(this.av.pos.x, this.av.pos.y + (this.av.where === 'home' ? this.home.group.position.y : 0) + h * (this.look.height || 1), this.av.pos.z); }

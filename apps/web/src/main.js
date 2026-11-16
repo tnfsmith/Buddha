@@ -8,12 +8,12 @@ import { OPTIONS, PRESETS, checkName, suggestNames } from './people.js';
 import { S, mem, save, allDone, today, resetState, stateReady, fixMusic } from './state.js';
 import { PASSIVE, MIN_VANDU, heardEnough, listenCode, logPassive, lotus, weakest, calendar, weekSitMinutes, heardIds } from '@vandao/shared/missions.js';
 import { PARAMI } from '@vandao/shared/parami.js';
-import { nv, loadMissions, soNhapView, soNhapAct } from './ui/so-nhap.js';
+import { nv, loadMissions, soNhapView, soNhapAct, todayBox, todayLeft, missionsStale } from './ui/so-nhap.js';
 import { registerPWA, persistStorage } from './boot.js';
 import { startMetrics } from './net/metrics.js';
 import { $, fmt, esc } from './ui/dom.js';
 import { accountView, accountAct, accountHint, accountOn, accountInit } from './ui/account.js';
-import { record, recordProfile } from './net/account.js';
+import { record, recordProfile, recordPractice, syncNow } from './net/account.js';
 
 
 // ───────── Lưu trạng thái trên máy: xem state.js ─────────
@@ -41,8 +41,13 @@ function sermonStart(id, o) { const su = library.items.find((x) => x.id === id);
   document.body.classList.add('sermon'); amb.setVolume(S.music.vol * 0.4); if (amb.on && amb.voice && amb.ctx) { try { amb.voice.bowl(amb.ctx.currentTime + 0.1, 136.1, 0.3, 0); } catch (e) { /* bỏ qua */ } }
   sermon.start(su, true, o); if (world) U.sCam = null; render(); }
 function sermonStop() { U.queue = null; sermon.stop(); if (world) { world.wide = false; if (U.mode === 'hall') world.setMode('hall'); } }
+/** Một lần tự ghi nhận: vào sổ trên máy và gửi cho các thiết bị khác của cùng tài khoản (#93). `ref` chỉ là mã bài/nơi ngồi. */
+function logTu(code, minutes = 0, ref = '') {
+  const t = today(), r = /^[a-z0-9][a-z0-9-]{0,79}$/.test(ref) ? ref : '';
+  S.tu = logPassive(S.tu, t, code, { minutes, ref: r }); recordPractice('tu', code, { n: 1, min: minutes, refs: r ? [r] : [] }, t);
+}
 /** Tự ghi nhận nghe Pháp (#88): nghe thật ≥ 70 % bài (giọng đọc hoặc đọc trọn bằng chữ); nghe ≥ 80 % hồi hướng. Không cộng Kusala. */
-function heardLog(r) { if (!r) return; const t = today(); if (heardEnough(r.ratio, 1)) S.tu = logPassive(S.tu, t, listenCode(r.loat), { ref: r.id }); if (r.rite) S.tu = logPassive(S.tu, t, 'hoi_huong'); }
+function heardLog(r) { if (!r) return; if (heardEnough(r.ratio, 1)) logTu(listenCode(r.loat), 0, r.id); if (r.rite) logTu('hoi_huong'); }
 // Nghe lần lượt (#79): mọi bài của loạt đang chọn, từ bài đang chọn tới cuối; lời mở đầu trước bài đầu, lời kết sau bài cuối
 function sermonAll() { const ids = inLoat().map((x) => x.id); if (!ids.length) return; const k = Math.max(0, ids.indexOf(U.sutta)); U.queue = { ids, k, k0: k }; queuePlay(); }
 function queuePlay() { const q = U.queue, last = q.k === q.ids.length - 1, nx = !last && library.items.find((x) => x.id === q.ids[q.k + 1]);
@@ -135,8 +140,24 @@ $('#bio').addEventListener('click', (e) => {
 });
 // Tự ghi nhận (#88): thời thiền viên mãn; đang Vân Du trên đảo đủ 5 phút thì ghi thêm Vân Du
 player.onend = () => { const vd = S.vandu && U.mode === 'island' && sitMin() >= MIN_VANDU ? Math.round(sitMin()) : 0;
-  S.tu = logPassive(S.tu, today(), 'thoi_thien', { minutes: 15, ref: U.mode === 'hall' ? 'dai-thien-duong' : 'dai-thien' }); if (vd) S.tu = logPassive(S.tu, today(), 'van_du', { minutes: vd });
+  logTu('thoi_thien', 15, U.mode === 'hall' ? 'dai-thien-duong' : 'dai-thien'); if (vd) logTu('van_du', vd);
   U.sit = null; S.sessions++; save(); record('session.done', { kind: 'thien15', duration_s: 900 }); toast('Sādhu! Thời thiền đã viên mãn. Hồi hướng công đức.'); render(); };
+/** Mở Bia: kéo ngay bản mới nhất từ các thiết bị khác và danh mục việc nếu đã cũ (#93) */
+function boardFresh() {
+  if (missionsStale()) loadMissions(true).then(() => { if (U.view === 'board') render(); });
+  const p = syncNow(true); if (U.view === 'board') render();
+  p.then(() => { if (U.view === 'board') render(); }, () => {});
+}
+/** Nhắc nhẹ khi mở app hoặc quay lại: còn việc trong ngày thì báo một dòng, tối đa 3 giờ một lần, sau 6 giờ sáng (#93) */
+function remind() {
+  if (!S.name || S.completed || U.view === 'board' || new Date().getHours() < 6) return;
+  let last = 0; try { last = Number(localStorage.getItem('vandao.nhac') || 0); } catch (e) { /* không sao */ }
+  if (Date.now() - last < 3 * 3600000) return;
+  const d = S.day, left = todayLeft(S, today(), allDone(d) ? 0 : 3 - Object.keys(S.done[d] || {}).length);
+  if (!left.length) return;
+  try { localStorage.setItem('vandao.nhac', String(Date.now())); } catch (e) { /* không sao */ }
+  toast('Hôm nay còn: ' + left.map((x) => x.text).join(', ') + '. Mở Bia Tích Lũy để làm tiếp.');
+}
 function toast(msg) { const el = $('#toast'); el.textContent = msg; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 3800); }
 
 // ───────── Nhãn trong cảnh ─────────
@@ -346,6 +367,8 @@ function render() {
       `<p class="muted">Bạn đồng tu trong bản này là mô phỏng. Tùy hỷ ở đây là cử chỉ; điểm Thiện chỉ ghi khi bạn thật sự giúp người ngoài đời.</p><div class="row"><button class="ghost" data-act="home">← Vân Đảo</button></div>`;
   } else if (U.view === 'board') {
     h = `<h2>Bia Tích Lũy</h2><p class="pali">Ngày ${d}/49 · Tuần ${wk}: ${esc(W.title)}</p>${bars()}`;
+    // #93: việc còn lại hôm nay và trạng thái đồng bộ giữa các thiết bị
+    h += todayBox(S, today(), S.completed || allDone(d) ? 0 : 3 - Object.keys(S.done[d] || {}).length) + '<span id="nv-chinh"></span>';
     const tdy = S.tu[today()] || {}, ev = passiveLines(tdy);
     if (library.state === 'idle') loadSermons().then(render);
     PILLARS.forEach((p) => {
@@ -446,6 +469,7 @@ panel.addEventListener('click', (e) => {
   const act = b.dataset.act;
   if (act !== 'reset') U.resetArm = false;
   if (act.startsWith('acct-')) return accountAct(act.slice(5), b);   // T2.3: Giữ hành trình, Tài khoản (ui/account.js)
+  if (act === 'nv-jump') { const t = panel.querySelector('#' + b.dataset.to); if (t) t.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
   if (act.startsWith('nv-')) { const msg = soNhapAct(act, b, S, today()); save(); if (msg) { toast(msg); if (world && /cánh sen|Đã giữ|thọ trì|giữ nguyện/.test(msg)) world.burst(0xf3d27a); } render(); return; }   // đợt C (#91): ui/so-nhap.js
   if (['board', 'sit', 'visit'].includes(act) && meditating()) return move(() => { const again = panel.querySelector('[data-act="' + act + '"]'); if (again) again.click(); });
   if (act === 'kuti-sit') { const sat = () => { world.setFace(S.kface || 0); savePos(); U.sit = { at: Date.now(), zone: 'kuti' }; toast('Đã an tọa tại Tịnh Thất.'); render(); };
@@ -462,7 +486,7 @@ panel.addEventListener('click', (e) => {
   if (act === 'chips') { U.chips = suggestNames(6); render(); return; }
   if (act === 'rand') { const R = (n) => Math.floor(Math.random() * n), pk = (l) => l[R(l.length)][0]; Object.assign(U.draft.look, PRESETS[R(PRESETS.length)].look, { skin: R(5), build: pk(OPTIONS.build), age: pk(OPTIONS.age), hairColor: R(2) }); if (U.draft.look.age === 'cao') U.draft.look.hairColor = 2 + R(2); U.draft.name = suggestNames(1)[0]; applyDraft(); render(); return; }
   if (act === 'saveLook') { const c = checkName(U.draft.name); if (!c.ok) return; S.name = c.name; S.look = { ...U.draft.look }; save(); persistStorage(); recordProfile(S); closeCreator(true); U.view = 'home'; world.setMode('island'); toast('Đã lưu: ' + c.name + (c.meaning ? ' (' + c.meaning + ')' : '')); render(); return; }
-  if (act === 'board') { if (U.view === 'creator') closeCreator(false); U.view = 'board'; U.zone = 'stele'; if (world && world.av.where === 'home') { if (!world.goZone('stele', () => savePos())) world.setMode('zone', { zone: 'stele' }); } }
+  if (act === 'board') { if (U.view === 'creator') closeCreator(false); U.view = 'board'; U.zone = 'stele'; boardFresh(); if (world && world.av.where === 'home') { if (!world.goZone('stele', () => savePos())) world.setMode('zone', { zone: 'stele' }); } }
   else if (act === 'home') { if (U.view === 'creator') closeCreator(false); U.view = 'home'; U.zone = null; if (world) world.setMode('island'); }
   else if (act === 'sit') { goZone('pad'); return; }
   else if (act === 'play') { if (!player.playing) togglePlay(); }
@@ -631,7 +655,7 @@ if (hash.realm && world) world.setMode('realm');
 if (hash.sermon) { U.hallTab = 'sermon'; setMode('hall'); loadSermons().then(() => { sermonPick(); const id = hash.sermon === '1' ? library.items[0] && library.items[0].id : hash.sermon; if (!id) return render(); sermonStart(id); if (sermon.on && hash.sk) { for (let i = 0; i < +hash.sk * 20; i++) sermon.tick(0.05); } }); }
 if (hash.music) { U.dock = true; renderDock(); }
 if (hash.vandu !== undefined) U.vdForce = +hash.vandu;   // xem thử một chặng Vân Du: #vandu=0…6
-if (hash.view === 'board') { U.view = 'board'; render(); }
+if (hash.view === 'board') { U.view = 'board'; boardFresh(); render(); }
 if (hash.view === 'creator') openCreator();
 if (hash.at && world && World.NODES[hash.at]) { const n = World.NODES[hash.at]; world.av.pos.set(n[0], 0, n[1]); world.av.pos.y = World.floorH(n[0], n[1]); world.snap = true; }
 if (hash.zone) goZone(hash.zone);
@@ -644,6 +668,9 @@ if (S.name) persistStorage();
 accountInit({
   S, save, render,
   show: () => { if (U.view === 'creator') { closeCreator(false); if (world) world.setMode('island'); } U.view = 'account'; U.zone = null; document.body.classList.remove('pmin'); panel.scrollTop = 0; render(); },
-  remote: () => { if (world) world.setLook(S.look); fixMusic(S.music); render(); renderDock(); },
+  remote: () => { if (world && JSON.stringify(Object.entries(S.look || {}).sort()) !== JSON.stringify(Object.entries(world.look || {}).filter(([k]) => k in (S.look || {})).sort())) world.setLook(S.look); fixMusic(S.music); render(); renderDock(); },
 }).then((r) => { if (r.welcome) toast('Hành trình đã trở lại trên máy này.'); }).catch(() => {});
+// #93: tải danh mục việc sớm để nhắc việc còn lại trong ngày; quay lại app sau một lúc thì nhắc lại
+stateReady.then(() => { if (S.name) return loadMissions().then(() => setTimeout(remind, 4000)); }).catch(() => {});
+window.addEventListener('focus', () => setTimeout(remind, 1500));
 requestAnimationFrame(frame);

@@ -3,23 +3,26 @@
 // Máy vẫn là nơi chạy chính (offline-first): mọi thao tác ghi S trước, rồi xếp vào outbox để đồng bộ.
 // Không có gì ở đây tự chạy khi người dùng chưa chọn "Giữ hành trình" hoặc "Tôi đã có hành trình".
 import * as A from './api.js';
-import { enqueueOp, triggerSync, startAutoSync, setSyncEnabled, onSyncComplete } from './sync.js';
+import { enqueueOp, triggerSync, startAutoSync, setSyncEnabled, onSyncComplete, getDeviceId } from './sync.js';
 import { idbGet, idbSet, idbGetAll } from './idb.js';
+import { foldPractice, importEvents, mergePractice } from '@vandao/shared/practice.js';
 
 const FLAG = 'vandao.acct';
 /** Trạng thái tài khoản trên máy này. `available`: có máy chủ (không phải bản HTML đơn mở bằng file://) */
-export const acct = { available: typeof location !== 'undefined' && /^https?:$/.test(location.protocol), on: false, uid: null, guest: true, cycle: null, rejected: [] };
+// `practice`: máy chủ đã nhận sổ việc (giới, hạnh, nguyện, ngày trai, tự ghi nhận — #93/#94); `mark`: dấu bản máy chủ đã áp lần cuối;
+// `syncedAt`: lần cuối máy này khớp với máy chủ (hiện trên Bia); `pulling`: đang kéo bản mới.
+export const acct = { available: typeof location !== 'undefined' && /^https?:$/.test(location.protocol), on: false, uid: null, guest: true, cycle: null, rejected: [], practice: false, imported: null, mark: null, syncedAt: 0, pulling: false };
 let hooks = { S: null, apply: () => {} };
 
 const readFlag = () => { try { return JSON.parse(localStorage.getItem(FLAG) || 'null'); } catch { return null; } };
 function writeFlag() {
-  const v = acct.on ? { uid: acct.uid, guest: acct.guest, cycle: acct.cycle } : null;
+  const v = acct.on ? { uid: acct.uid, guest: acct.guest, cycle: acct.cycle, practice: acct.practice, imported: acct.imported, mark: acct.mark, syncedAt: acct.syncedAt } : null;
   try { if (v) localStorage.setItem(FLAG, JSON.stringify(v)); else localStorage.removeItem(FLAG); } catch { /* chỉ giữ trong bộ nhớ */ }
   idbSet('meta', 'acct', v).catch(() => {});
 }
 function setOn(user, cycle) {
   acct.on = true; acct.uid = user.id; acct.guest = Boolean(user.isAnonymous); if (cycle !== undefined) acct.cycle = cycle;
-  writeFlag(); setSyncEnabled(true); startAutoSync();
+  writeFlag(); setSyncEnabled(true); startAutoSync(); startLive();
 }
 
 const r2 = (x) => Math.round(x * 100) / 100;
@@ -75,15 +78,116 @@ export async function initAccount(S, apply) {
   onSyncComplete(async (state, res) => {
     acct.rejected = (res.rejected || []).filter((r) => r.code !== 'exists');
     const first = acct.cycle === null, changedCycle = !first && state.journey.cycle !== acct.cycle;
-    acct.cycle = state.journey.cycle; writeFlag();
-    if (first || (await idbGetAll('outbox').catch(() => [])).length) return;
-    // Thiết bị khác đã đi trước (xác nhận thêm, sang ngày mới, mở chu kỳ mới): lấy bản máy chủ về
-    if (changedCycle || state.journey.day > S.day || state.totals.all > sum(S.totals) + 0.05) {
-      try { const f = fromServer(await A.getMe(true)); hooks.apply(changedCycle ? f : keepNotes(f, S), false); } catch { /* lần đồng bộ sau thử lại */ }
-    }
+    acct.cycle = state.journey.cycle; acct.syncedAt = Date.now();
+    if (state.practice && !acct.practice) acct.practice = true;   // máy chủ vừa nhận sổ việc (#94)
+    writeFlag();
+    // Lần đầu máy chủ nhận sổ việc: đưa sổ đang có trên máy lên một lần, lượt đồng bộ sau mới kéo về
+    if (acct.practice && await importOnce(state.journey)) return;
+    if (first) { acct.mark = markOf(state); writeFlag(); return; }
+    // Thiết bị khác đã đi trước (việc mới, xác nhận thêm, sang ngày mới, mở chu kỳ mới): lấy bản máy chủ về
+    if (changedCycle || markOf(state) !== acct.mark || state.journey.day > S.day || state.totals.all > sum(S.totals) + 0.05) await pull(changedCycle).catch(() => {});
   });
-  if (f && f.uid) { acct.on = true; acct.uid = f.uid; acct.guest = f.guest !== false; acct.cycle = f.cycle ?? null; setSyncEnabled(true); startAutoSync(); }
+  if (f && f.uid) {
+    acct.on = true; acct.uid = f.uid; acct.guest = f.guest !== false; acct.cycle = f.cycle ?? null;
+    acct.practice = Boolean(f.practice); acct.imported = f.imported ?? null; acct.mark = f.mark ?? null; acct.syncedAt = f.syncedAt || 0;
+    setSyncEnabled(true); startAutoSync(); startLive();
+  }
   return acct;
+}
+
+const canon = (v) => (Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v);
+const same = (a, b) => JSON.stringify(canon(a)) === JSON.stringify(canon(b));
+/** Dấu bản máy chủ: đổi khi có việc mới, Kusala, sang ngày, chu kỳ mới (journey.rev) hoặc hồ sơ (profile.rev) */
+const markOf = (st) => (st && st.journey ? `${st.journey.cycle}:${st.journey.rev}:${st.profile ? st.profile.rev : ''}` : null);
+const pendingOps = () => idbGetAll('outbox').catch(() => []);
+/** Thao tác sổ việc còn chờ gửi → sự kiện, để gộp cùng bản máy chủ (việc vừa làm trên máy không bị bản cũ đè mất) */
+const pendingEvents = (ops) => ops.filter((o) => o.type === 'practice.event' && o.payload).map((o) => ({ ...o.payload, id: o.id, at: o.payload.at ?? o.at }));
+
+/**
+ * Kéo bản máy chủ về và áp vào S. Hồ sơ/Kusala chỉ áp khi máy không còn thao tác Kusala chờ gửi (giữ luật cũ);
+ * sổ việc luôn áp được vì gộp cả thao tác còn chờ. `full`: chu kỳ mới, lấy hẳn bản máy chủ.
+ */
+async function pull(full = false) {
+  const S = hooks.S; if (!acct.on || !S) return false;
+  acct.pulling = true;
+  try {
+    const me = await A.getMe(true);
+    // Máy chủ vừa nhận sổ việc: xếp hàng sổ trên máy TRƯỚC khi gộp, để bản máy chủ (còn trống) không đè mất việc đã làm
+    if (me.practice && me.journey) { acct.practice = true; await importOnce(me.journey); }
+    const ops = await pendingOps(), kusalaWaiting = ops.some((o) => o.type !== 'practice.event');
+    const fields = kusalaWaiting && !full ? {} : full ? fromServer(me) : keepNotes(fromServer(me), S);
+    if (me.practice && Array.isArray(me.events)) {
+      acct.practice = true;
+      Object.assign(fields, mergePractice(S, foldPractice([...me.events, ...pendingEvents(ops)]), me.journey && me.journey.started_on));
+    }
+    acct.cycle = me.journey ? me.journey.cycle : acct.cycle; acct.mark = markOf(me); acct.syncedAt = Date.now(); writeFlag();
+    // chỉ áp các trường thật sự khác (so không phụ thuộc thứ tự khóa), để màn hình không vẽ lại/đổi diện mạo vô cớ
+    for (const k of Object.keys(fields)) if (same(fields[k], S[k])) delete fields[k];
+    const changed = Object.keys(fields).length > 0;
+    if (changed) hooks.apply(fields, false);
+    return changed;
+  } finally { acct.pulling = false; }
+}
+
+/**
+ * Đưa sổ việc đang có trên máy lên một lần cho mỗi (tài khoản, chu kỳ). Mã sự kiện cố định theo máy: lặp lại cũng không cộng đôi.
+ * Trả true nếu vừa xếp hàng. `acct.imported` ghi lại để `recordPractice` biết từ lúc nào gửi từng việc riêng.
+ */
+async function importOnce(journey) {
+  const S = hooks.S; if (!S || !journey || !journey.started_on || !acct.uid) return false;
+  const k = `${acct.uid}:${journey.cycle}`, key = 'practiceImport:' + k;
+  if (acct.imported === k) return false;
+  if (await idbGet('meta', key).catch(() => null)) { acct.imported = k; writeFlag(); return false; }
+  const dev = await getDeviceId(), now = Date.now(), evs = importEvents(S, journey.started_on, dev + journey.cycle);
+  for (const e of evs) await enqueueOp('practice.event', { date: e.date, kind: e.kind, slot: e.slot, value: e.value, at: e.at }, now, e.id);
+  await idbSet('meta', key, { at: now, n: evs.length }).catch(() => {});
+  acct.imported = k; writeFlag();
+  if (evs.length) { triggerSync(); return true; }
+  return false;
+}
+
+/**
+ * Ghi một việc của sổ việc để đồng bộ. Máy chủ chưa nhận (`practice` chưa bật) hoặc sổ trên máy chưa được đưa lên cho chu kỳ này
+ * thì chỉ giữ trên máy: lần đưa lên sẽ gồm cả việc này (không gửi riêng nữa để sổ tự ghi nhận không bị cộng đôi).
+ */
+export function recordPractice(kind, slot, value, date) {
+  if (!acct.on || !acct.practice || acct.imported !== `${acct.uid}:${acct.cycle}`) return;
+  enqueueOp('practice.event', { date, kind, slot, value }).catch(() => {});
+}
+
+let lastKick = 0, liveOn = false;
+/**
+ * Hỏi máy chủ có gì mới: còn thao tác chờ thì gửi (kết quả tự kéo bản mới), không thì hỏi nhẹ `GET /me` và chỉ tải đủ khi dấu đổi.
+ * `force`: mở Bia hoặc người dùng chủ động — luôn tải đủ.
+ */
+export async function syncNow(force = false) {
+  if (!acct.on) return false;
+  if (!force && Date.now() - lastKick < 4000) return false;
+  lastKick = Date.now();
+  if ((await pendingOps()).length) { await triggerSync(); if (!force) return true; }
+  try {
+    if (!force) {
+      const me = await A.getMe(); acct.syncedAt = Date.now();
+      if (me.practice && !acct.practice) { acct.practice = true; writeFlag(); await triggerSync(); return true; }   // máy chủ vừa cập nhật (#94)
+      if (markOf(me) === acct.mark && me.journey.day === hooks.S.day) { writeFlag(); return false; }
+    }
+    return await pull();
+  } catch { return false; }
+}
+/**
+ * Đang mở trang: quay lại cửa sổ/tab hoặc có mạng lại thì hỏi máy chủ ngay; trang đang hiện và người dùng còn thao tác trong
+ * 10 phút gần đây thì 30 giây hỏi một lần (tab bỏ quên không tốn lượt gọi của gói Free) (#93)
+ */
+function startLive() {
+  if (liveOn || typeof window === 'undefined') return;
+  liveOn = true;
+  let lastInput = Date.now();
+  const kick = () => { if (document.visibilityState === 'visible') syncNow().catch(() => {}); };
+  for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart']) window.addEventListener(ev, () => { lastInput = Date.now(); }, { passive: true, capture: true });
+  window.addEventListener('focus', kick);
+  window.addEventListener('online', kick);
+  document.addEventListener('visibilitychange', kick);
+  setInterval(() => { if (Date.now() - lastInput < 600000) kick(); }, 30000);
 }
 
 /** Ghi chú quán chiếu chỉ nằm trên máy (không gửi lên): khi lấy cùng hành trình từ máy chủ về thì giữ lại ghi chú đang có */
@@ -151,5 +255,5 @@ export function markSecured() { if (acct.on) { acct.guest = false; writeFlag(); 
 /** Đăng xuất máy này: dữ liệu trên máy giữ nguyên, ngừng đồng bộ */
 export async function signOutHere() {
   await A.signOut().catch(() => {});
-  acct.on = false; acct.uid = null; acct.guest = true; acct.cycle = null; acct.rejected = []; writeFlag(); setSyncEnabled(false);
+  acct.on = false; acct.uid = null; acct.guest = true; acct.cycle = null; acct.rejected = []; acct.practice = false; acct.imported = null; acct.mark = null; acct.syncedAt = 0; writeFlag(); setSyncEnabled(false);
 }
