@@ -11,6 +11,64 @@ export const OUT = `gl_FragColor = vec4(pow(max(col, 0.), vec3(2.2)), a);
 #include <tonemapping_fragment>
 #include <colorspace_fragment>`;
 
+// ───────── Trình vẽ và bậc chất lượng (§12.2–12.5) ─────────
+// GĐ7 (§12.4): cờ thử ?r=webgpu (hoặc #r=webgpu khi mở bằng file://). Shader hiện còn là GLSL/onBeforeCompile và bản HTML đơn
+// không đóng gói three/webgpu (vượt trần kích thước), nên cờ chỉ được ghi nhận và trình vẽ vẫn là WebGL2 — không có nhánh mã thứ hai.
+// Khi port TSL xong (T7.1), đây là chỗ duy nhất quyết định dùng trình vẽ nào.
+export function gfxBackend() {
+  let ask = false;
+  try { const f = (s) => new URLSearchParams(s).get('r') === 'webgpu'; ask = f(location.search) || f(location.hash.slice(1)); } catch (e) { void e; }
+  return { ask, gpu: ask && !!navigator.gpu, use: 'webgl2' };
+}
+// Bậc 0/1/2: trần DPR (điện thoại không quá 1,5; máy tính 2), có hậu kỳ + bóng đổ hay không, tỉ lệ độ phân giải bloom
+export const tierOf = (q, mobile) => ({ dpr: q >= 2 ? (mobile ? 1.5 : 2) : q === 1 ? 1.25 : 1, post: q >= 1, bloom: mobile ? 0.5 : 1 });
+// Bộ điều tốc: gom thời gian khung theo cửa sổ 2 giây (kẹp 250 ms: một lần khựng không kéo cả trung bình).
+// Trả −1 khi chậm hơn ~30 fps, +1 khi dư sức, 0 khi giữ nguyên; 5 giây đầu còn biên dịch shader nên chưa đo.
+export function governor() {
+  let t0 = 0, last = 0, n = 0, sum = 0, born = 0, changed = 0;
+  const g = (now, busy) => {
+    if (!born) born = t0 = last = changed = now;
+    sum += Math.min(now - last, 250); last = now; n++;
+    if (now - t0 < 2000) return 0;
+    const avg = sum / n; t0 = now; n = sum = 0;
+    if (now - born < 5000 || now - changed < 2500 || busy) return 0;
+    return avg > 34 ? -1 : avg < 22 ? 1 : 0;
+  };
+  g.mark = (now) => { changed = now; };
+  g.reset = (now) => { t0 = last = now; n = sum = 0; };
+  return g;
+}
+
+// ───────── Bốn tâm trạng ánh sáng: Sương Sớm · Ngày Vàng · Hoàng Hôn Tím · Trăng Thiền ─────────
+// Mỗi dòng: thiên đỉnh, chân trời, mặt trời/trăng, mây sáng, mây tối (màu hiển thị sRGB), cường độ nắng, ánh nền, độ phơi sáng.
+export const MOOD = [
+  [0.46, 0.64, 0.92, 0.97, 0.92, 0.88, 1.0, 0.86, 0.74, 1.0, 0.975, 0.96, 0.66, 0.71, 0.90, 2.3, 0.6, 0.94],
+  [0.15, 0.40, 0.90, 1.0, 0.93, 0.80, 1.0, 0.80, 0.50, 1.0, 0.985, 0.955, 0.58, 0.68, 0.92, 2.9, 0.5, 0.95],
+  [0.34, 0.28, 0.66, 1.0, 0.70, 0.46, 1.0, 0.60, 0.32, 1.0, 0.85, 0.70, 0.56, 0.48, 0.78, 2.5, 0.46, 0.92],
+  [0.03, 0.05, 0.14, 0.18, 0.22, 0.38, 0.72, 0.82, 1.0, 0.42, 0.48, 0.68, 0.16, 0.19, 0.34, 1.0, 0.22, 0.95],
+];
+// Uniform dùng chung cho mọi shader tự viết (trời, biển mây, nước, tia sáng…): một nguồn màu duy nhất nên chuyển tâm trạng luôn mượt
+const v3 = () => ({ value: new THREE.Vector3() });
+export const UNI = { uTime: { value: 0 }, uNight: { value: 0 }, uZen: v3(), uHz: v3(), uSunC: v3(), uCl: v3(), uSh: v3(), uSun: { value: new THREE.Vector3(-60, 108, -190).normalize() } };
+const moodNow = new Float32Array(18);
+/** Trộn bốn tâm trạng theo trọng số w (tổng = 1), ghi màu vào UNI và trả mảng 18 số (3 số cuối: nắng, ánh nền, phơi sáng). */
+export function moodMix(w) {
+  for (let i = 0; i < 18; i++) moodNow[i] = MOOD[0][i] * w[0] + MOOD[1][i] * w[1] + MOOD[2][i] * w[2] + MOOD[3][i] * w[3];
+  [UNI.uZen, UNI.uHz, UNI.uSunC, UNI.uCl, UNI.uSh].forEach((u, i) => u.value.fromArray(moodNow, i * 3));
+  return moodNow;
+}
+
+// Sương theo độ cao (hàm mũ) cộng sương xa (mũ bình phương) cho mọi vật liệu dựng sẵn của three: chân đảo tan dần vào biển mây
+// (đỉnh mây y ≈ −6). Thay chunk `fog_*` một lần lúc nạp mô-đun; GĐ7 sẽ viết lại bằng fogNode của TSL.
+// Cùng chỗ đó chỉnh bước tone mapping: ACES Filmic làm nhạt sắc vàng, lục, lam ở vùng sáng nên bù trước 22 % độ bão hòa.
+// Bước này chạy một lần cho mỗi điểm ảnh: trong vật liệu khi vẽ thẳng ra màn hình (mức 0), hoặc ở lượt hậu kỳ cuối (mức ≥ 1).
+{ const SC = THREE.ShaderChunk;
+  SC.tonemapping_fragment = '#if defined( TONE_MAPPING )\ngl_FragColor.rgb = toneMapping(max(mix(vec3(dot(gl_FragColor.rgb, vec3(.2126,.7152,.0722))), gl_FragColor.rgb, 1.22), 0.));\n#endif';
+  SC.fog_pars_vertex = '#ifdef USE_FOG\nvarying float vFogDepth; varying float vFogY;\n#endif';
+  SC.fog_vertex = '#ifdef USE_FOG\nvFogDepth = -mvPosition.z; vFogY = cameraPosition.y + dot(viewMatrix[1].xyz, mvPosition.xyz);\n#endif';
+  SC.fog_pars_fragment = '#ifdef USE_FOG\nuniform vec3 fogColor; uniform float fogNear; uniform float fogFar; varying float vFogDepth; varying float vFogY;\n#endif';
+  SC.fog_fragment = '#ifdef USE_FOG\nfloat fogD = vFogDepth/fogFar; gl_FragColor.rgb = mix(fogColor, gl_FragColor.rgb, exp(-fogD*fogD*3.)*(1. - .9*exp(-max(vFogY + 6., 0.)*.3)));\n#endif'; }
+
 // LOD hai mức cho một tập instance tĩnh: `hi` (gần) và `lo` (xa) dùng chung ma trận `mats`; điểm `pts[i]` cách máy quay
 // dưới ngưỡng T[mức chất lượng] (trừ bán kính `pad[i]` nếu có) thì vào `hi`. Độ trễ 8% để không nhấp nháy ở sát ngưỡng.
 // Trả về hàm gọi mỗi khung: lod(cam, q); chỉ ghi lại ma trận khi có instance đổi mức.
@@ -47,6 +105,50 @@ export function makeNoise(seed = 1) {
 export function canvasTex(w, h, draw, srgb = true) {
   const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
   const t = new THREE.CanvasTexture(c); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+}
+
+// ───────── Chất liệu sờ thấy được (PBR thủ tục) ─────────
+// Một tấm vân xám 128² lặp liền mép, dùng chung cho đá, gỗ, bia: vừa là độ gồ (bump) vừa là độ nhám (roughness).
+let _dt = null;
+export function detailTex() {
+  if (_dt) return _dt;
+  const S = 128, N = makeNoise(5), f = (x, y) => N.fbm(x * 0.06, y * 0.06, 1.5, 3), L = (a, b, t) => a + (b - a) * t;
+  _dt = canvasTex(S, S, (g) => {
+    const im = g.createImageData(S, S);
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {   // trộn bốn bản lệch một chu kỳ để hai mép khớp nhau
+      const v = L(L(f(x, y), f(x - S, y), x / S), L(f(x, y - S), f(x - S, y - S), x / S), y / S), i = (y * S + x) * 4;
+      im.data[i] = im.data[i + 1] = im.data[i + 2] = Math.max(0, Math.min(255, (v - 0.12) * 330)); im.data[i + 3] = 255;
+    }
+    g.putImageData(im, 0, 0);
+  }, false);
+  _dt.wrapS = _dt.wrapT = THREE.RepeatWrapping; return _dt;
+}
+// Gắn vân vào một MeshStandardMaterial theo tọa độ thế giới (không cần UV nên hình đã gộp vẫn dùng được).
+// k = [mật độ vân, độ gồ, rêu phủ mặt ngửa 0..1, thớ kéo dọc 0..1 (gỗ)]. Mọi vật liệu gọi hàm này dùng chung một chương trình shader.
+export function tactile(m, k) {
+  const U = { uDt: { value: detailTex() }, uTk: { value: new THREE.Vector4(...k) } };
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, U);
+    sh.vertexShader = 'varying vec3 vTp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vTp = mvPosition.xyz * mat3(viewMatrix) + cameraPosition;');
+    sh.fragmentShader = 'varying vec3 vTp; uniform sampler2D uDt; uniform vec4 uTk;\n' + sh.fragmentShader
+      .replace('#include <color_fragment>', `#include <color_fragment>
+ vec3 tq = vTp*uTk.x; tq.y *= 1. - .85*uTk.w;
+ float td = texture2D(uDt, tq.xz + tq.y*vec2(.37,.61)).r*.6 + texture2D(uDt, tq.xy*2.3 + tq.z*.53).r*.4;
+ diffuseColor.rgb *= .7 + .6*td;
+ diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.19,.3,.1)*(.5 + td), uTk.z*smoothstep(.35, .75, dot(normalize(vNormal), viewMatrix[1].xyz) + td*.5 - .25));`)
+      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = clamp(roughnessFactor*(.72 + .56*td), .05, 1.);')
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+ { vec2 dH = vec2(dFdx(td), dFdy(td))*uTk.y; vec3 sx = dFdx(-vViewPosition), sy = dFdy(-vViewPosition), r1 = cross(sy, normal), r2 = cross(normal, sx); float det = dot(sx, r1);
+   normal = normalize(abs(det)*normal - sign(det)*(dH.x*r1 + dH.y*r2)); }`);
+  };
+  return m;
+}
+// Tô một màu lên mọi đỉnh (cho vật liệu vertexColors dùng chung). Hình đã có màu thì nhân bản để không đổi màu nơi khác đang dùng.
+export function hue(g, c) {
+  if (g.attributes.color) g = g.clone();
+  const n = g.attributes.position.count, a = new Float32Array(n * 3), k = new THREE.Color(c);
+  for (let i = 0; i < n; i++) k.toArray(a, i * 3);
+  g.setAttribute('color', new THREE.BufferAttribute(a, 3)); return g;
 }
 
 // Bốn dáng mây tích: đáy phẳng, đỉnh cuộn, mặt dưới ngả lam xám
