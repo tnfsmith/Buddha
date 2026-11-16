@@ -1,39 +1,37 @@
-// Cõi mở rộng: hàng trăm đảo xa dựng theo lô, bảo tháp, đàn hạc — để không gian giãn nở về mọi phía.
+// Cõi mở rộng: hàng trăm đảo xa trong một InstancedMesh, bảo tháp, đàn hạc — để không gian giãn nở về mọi phía.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { rng, lodPair } from './gfx.js';
+import { rng } from './gfx.js';
 
 const C = new THREE.Color();
-function paint(g, fn) {
-  g = g.index ? g.toNonIndexed() : g; const p = g.attributes.position, c = new Float32Array(p.count * 3);
-  for (let i = 0; i < p.count; i++) { fn(C, p.getX(i), p.getY(i), p.getZ(i)); c[i * 3] = C.r; c[i * 3 + 1] = C.g; c[i * 3 + 2] = C.b; }
-  g.setAttribute('color', new THREE.BufferAttribute(c, 3)); if (g.attributes.uv) g.deleteAttribute('uv'); if (!g.attributes.normal) g.computeVertexNormals(); return g;
+// Tô màu từng đỉnh và gắn nhãn `aT`: 0 giữ nguyên màu · 1 tán cây (nhuộm theo màu riêng của từng đảo) · 2 am nhỏ (đảo không có am thì thu về 0)
+function paint(g, fn, t = 0) {
+  g = g.index ? g.toNonIndexed() : g; const p = g.attributes.position, n = p.count, c = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) { fn(C, p.getX(i), p.getY(i), p.getZ(i)); c[i * 3] = C.r; c[i * 3 + 1] = C.g; c[i * 3 + 2] = C.b; }
+  g.setAttribute('color', new THREE.BufferAttribute(c, 3)); g.setAttribute('aT', new THREE.BufferAttribute(new Float32Array(n).fill(t), 1));
+  if (g.attributes.uv) g.deleteAttribute('uv'); if (!g.attributes.normal) g.computeVertexNormals(); return g;
 }
 const flat = (hex, v = 0) => (c, x, y, z) => { c.set(hex); if (v) c.offsetHSL(0, 0, Math.sin(x * 9.1 + z * 7.3 + y * 5) * v); };
 const lathe = (pts, seg) => new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg);
+// khối 20 mặt với pháp tuyến hình cầu: tán cây tròn mịn dù rất ít tam giác
+const ico = (r) => { const g = new THREE.IcosahedronGeometry(r, 0), p = g.attributes.position, n = g.attributes.normal; for (let i = 0; i < p.count; i++) n.setXYZ(i, p.getX(i) / r, p.getY(i) / r, p.getZ(i) / r); return g; };
 
-// Một đảo đơn vị (bán kính 1). v: 0 rừng xanh · 1 hoa đào + tịnh thất · 2 cây vàng + tịnh thất · 3 có bảo tháp
-// lo: bản xa (LOD) cùng hình dáng và cùng chuỗi ngẫu nhiên, ít mặt hơn ~3 lần: vỏ đảo 8 cạnh, tán cây khối 20 mặt, bỏ đá vụn.
-const ico = (r, lo) => { const g = new THREE.IcosahedronGeometry(r, lo ? 0 : 1); if (lo) { const p = g.attributes.position, n = g.attributes.normal; for (let i = 0; i < p.count; i++) n.setXYZ(i, p.getX(i) / r, p.getY(i) / r, p.getZ(i) / r); } return g; };
-function isleGeo(v, seed, lo = false) {
-  const r = rng(seed), list = [];
+// Một đảo đơn vị (bán kính 1), ~220 tam giác: vỏ đá 8 cạnh, mặt cỏ, bốn cây, một am nhỏ. Dùng chung cho mọi đảo xa (§12.3 mục 3);
+// khác biệt giữa các đảo đến từ màu tán, có/không có am, độ sâu vỏ đá (shader) cùng góc xoay và tỉ lệ của từng instance.
+// stupa: đảo lớn mang bảo tháp năm tầng (chỉ 15 đảo nên giữ nhiều chi tiết hơn).
+function isleGeo(seed, stupa) {
+  const r = rng(seed), list = [], deep = 1.3, seg = stupa ? 11 : 8;
   const warp = (g) => { const p = g.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i), a = Math.atan2(z, x), k = 1 + 0.15 * Math.sin(a * 3 + seed) + 0.09 * Math.sin(a * 5 + y * 3 + seed * 2.3) + 0.05 * Math.sin(a * 9 + y * 7); p.setXYZ(i, x * k, y + (y < -0.2 ? 0.07 * Math.sin(a * 4 + seed) : 0), z * k); } g.computeVertexNormals(); return g; };
-  const deep = 1.05 + r() * 0.5;
-  list.push(paint(warp(lathe(lo ? [[0.02, -deep], [0.5, -deep * 0.56], [0.78, -0.3], [0.95, -0.1], [1.0, 0]] : [[0.02, -deep], [0.2, -deep * 0.86], [0.5, -deep * 0.56], [0.78, -0.3], [0.95, -0.1], [1.0, 0]], lo ? 8 : 11)), (c, x, y) => { c.set('#8d7f72').lerp(new THREE.Color('#55505f'), Math.min(1, -y / deep)); c.offsetHSL(0, 0, Math.sin(x * 11 + y * 13) * 0.035); }));
-  const grass = v === 2 ? '#a9b060' : v === 1 ? '#86ad68' : '#74a05a';
-  list.push(paint(warp(lathe(lo ? [[1.0, 0], [0.72, 0.12], [0.001, 0.18]] : [[1.0, 0], [0.97, 0.06], [0.72, 0.12], [0.36, 0.16], [0.001, 0.18]], lo ? 8 : 11)), flat(grass, 0.05)));
-  const tops = v === 1 ? ['#f3bccb', '#f7d3dc', '#7fae62'] : v === 2 ? ['#e6c45e', '#f0d77e', '#b9b85a'] : ['#5f9a54', '#77ad5e', '#4f8a50'];
-  const nT = 3 + Math.floor(r() * 4);
-  for (let i = 0; i < nT; i++) { const a = r() * 6.28, d = 0.25 + r() * 0.5, x = Math.cos(a) * d, z = Math.sin(a) * d, h = 0.16 + r() * 0.14, cr = 0.15 + r() * 0.13;
-    const tr = new THREE.CylinderGeometry(0.02, 0.034, h, lo ? 3 : 5, 1, lo); tr.translate(x, 0.13 + h / 2, z); list.push(paint(tr, flat('#6b4b34')));
-    const cn = ico(cr, lo); cn.scale(1, 0.82, 1); cn.translate(x, 0.13 + h + cr * 0.6, z); list.push(paint(cn, flat(tops[i % 3], 0.06)));
-    if (r() < 0.6) { const c2 = ico(cr * 0.7, lo); c2.translate(x + cr * 0.7, 0.13 + h + cr * 0.35, z + cr * 0.3); list.push(paint(c2, flat(tops[(i + 1) % 3], 0.06))); } }
-  if (v === 1 || v === 2) { const b = new THREE.BoxGeometry(0.34, 0.15, 0.26); b.translate(0, 0.24, 0); list.push(paint(b, flat(v === 2 ? '#c9a45a' : '#8d5a3c')));
-    const rf = new THREE.ConeGeometry(0.34, 0.16, 4); rf.rotateY(Math.PI / 4); rf.scale(1.15, 1, 0.95); rf.translate(0, 0.39, 0); list.push(paint(rf, flat(v === 2 ? '#d8b25c' : '#4d5f68'))); }
-  if (v === 3) { let y = 0.16; for (let k = 0; k < 5; k++) { const s = 1 - k * 0.14, bd = new THREE.CylinderGeometry(0.15 * s, 0.17 * s, 0.2, lo ? 4 : 6, 1, lo); bd.translate(0, y + 0.1, 0); list.push(paint(bd, flat('#efe3c8')));
-      const rf = new THREE.ConeGeometry(0.33 * s, 0.11, lo ? 4 : 6, 1, lo); rf.translate(0, y + 0.255, 0); list.push(paint(rf, flat(k % 2 ? '#c98a3a' : '#b5533c'))); y += 0.3; }
+  list.push(paint(warp(lathe([[0.02, -deep], [0.5, -deep * 0.56], [0.78, -0.3], [0.95, -0.1], [1.0, 0]], seg)), (c, x, y) => { c.set('#8d7f72').lerp(new THREE.Color('#55505f'), Math.min(1, -y / deep)); c.offsetHSL(0, 0, Math.sin(x * 11 + y * 13) * 0.035); }));
+  list.push(paint(warp(lathe([[1.0, 0], [0.72, 0.12], [0.001, 0.18]], seg)), flat('#7ea85f', 0.05)));
+  for (let i = 0; i < 4; i++) { const a = r() * 6.28, d = 0.3 + r() * 0.45, x = Math.cos(a) * d, z = Math.sin(a) * d, h = 0.16 + r() * 0.14, cr = 0.16 + r() * 0.13;
+    const tr = new THREE.CylinderGeometry(0.02, 0.034, h, 3, 1, true); tr.translate(x, 0.13 + h / 2, z); list.push(paint(tr, flat('#6b4b34')));
+    const cn = ico(cr); cn.scale(1, 0.82, 1); cn.translate(x, 0.13 + h + cr * 0.6, z); list.push(paint(cn, flat(['#ffffff', '#e2e2e2', '#f1f1f1', '#d6d6d6'][i]), 1)); }
+  if (stupa) { let y = 0.16; for (let k = 0; k < 5; k++) { const s = 1 - k * 0.14, bd = new THREE.CylinderGeometry(0.15 * s, 0.17 * s, 0.2, 6, 1, true); bd.translate(0, y + 0.1, 0); list.push(paint(bd, flat('#efe3c8')));
+      const rf = new THREE.ConeGeometry(0.33 * s, 0.11, 6, 1, true); rf.translate(0, y + 0.255, 0); list.push(paint(rf, flat(k % 2 ? '#c98a3a' : '#b5533c'))); y += 0.3; }
     const sp = new THREE.ConeGeometry(0.03, 0.34, 5); sp.translate(0, y + 0.17, 0); list.push(paint(sp, flat('#f0d27a'))); }
-  const rocks = 2 + Math.floor(r() * 3); for (let i = 0; i < rocks; i++) { const a = r() * 6.28, d = 0.6 + r() * 0.3, rk = new THREE.IcosahedronGeometry(0.06 + r() * 0.07, 0); rk.scale(1, 0.7, 1); rk.translate(Math.cos(a) * d, 0.1, Math.sin(a) * d); if (!lo) list.push(paint(rk, flat('#8a8580', 0.04))); }
+  else { const b = new THREE.BoxGeometry(0.34, 0.15, 0.26); b.translate(0, 0.24, 0); list.push(paint(b, flat('#a8794c'), 2));
+    const rf = new THREE.ConeGeometry(0.34, 0.16, 4, 1, true); rf.rotateY(Math.PI / 4); rf.scale(1.15, 1, 0.95); rf.translate(0, 0.39, 0); list.push(paint(rf, flat('#4d5f68'), 2)); }
   return mergeGeometries(list);
 }
 
@@ -49,6 +47,9 @@ function craneGeo() {
 export function buildRealm(seed = 91) {
   const r = rng(seed), group = new THREE.Group(), isles = [];
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, side: THREE.DoubleSide });
+  mat.onBeforeCompile = (sh) => { sh.vertexShader = 'attribute float aT; attribute vec4 iV;\n' + sh.vertexShader
+    .replace('#include <color_vertex>', '#include <color_vertex>\n if (aT > .5 && aT < 1.5) vColor.rgb *= iV.rgb;')
+    .replace('#include <begin_vertex>', '#include <begin_vertex>\n if (aT > 1.5) transformed *= step(.5, iV.a); if (transformed.y < 0.) transformed.y *= .7 + .6*fract(iV.a*7.); else if (aT < 1.5 && transformed.y > .19) transformed.y = .19 + (transformed.y - .19)*(.7 + .9*fract(iV.a*13.));'); };
   const place = (v, x, y, z, size) => isles.push({ v, x, y, z, size, rot: r() * 6.28, sy: 0.85 + r() * 0.4 });
   // vỏ đảo trải khắp mọi hướng; càng xa càng cao và càng lớn. Chừa trục Đại Thiền Đường – Tôn tượng.
   let tries = 0;
@@ -62,15 +63,15 @@ export function buildRealm(seed = 91) {
   }
   // bảo tháp trên các đảo lớn, rải thành vòng cung xa
   [[-560, 150, -330, 62], [610, 170, -420, 66], [-900, 250, -900, 84], [940, 270, -1000, 88], [-380, 95, 420, 46], [470, 110, 520, 50], [-1150, 320, -260, 90], [1220, 340, -180, 94], [-240, 420, -1500, 110], [300, 440, -1560, 112], [-760, 60, 180, 52], [820, 70, 60, 54], [60, 210, 980, 70], [-1320, 180, 700, 86], [1380, 200, 760, 88]].forEach(([x, y, z, s]) => place(3, x, y, z, s));
-  const d = new THREE.Object3D();
-  // Mỗi loại đảo hai InstancedMesh: bản đầy đủ cho đảo gần máy quay, bản xa cho phần còn lại (§12.3 mục 3).
-  // Ngưỡng theo mức chất lượng 0/1/2, đo tới mép đảo; mức 0 (điện thoại) dùng bản xa cho mọi đảo.
-  const NEAR = [0, 420, 620], kinds = [];
-  for (let v = 0; v < 4; v++) { const L = isles.filter((o) => o.v === v), mats = L.map((o) => { d.position.set(o.x, o.y, o.z); d.rotation.set(0, o.rot, 0); d.scale.set(o.size, o.size * o.sy, o.size); d.updateMatrix(); return d.matrix.clone(); });
-    const hi = new THREE.InstancedMesh(isleGeo(v, 17 + v * 5), mat, L.length), lo = new THREE.InstancedMesh(isleGeo(v, 17 + v * 5, true), mat, L.length);
-    group.add(hi, lo); kinds.push(lodPair(hi, lo, mats, L.map((o) => new THREE.Vector3(o.x, o.y, o.z)), NEAR, L.map((o) => o.size))); }
-  const lod = (cam, q, force) => kinds.map((k) => k(cam, q, force)).some(Boolean);
-  lod(new THREE.Vector3(0, 0, 0), 2, true);
+  // Hai InstancedMesh cho cả cõi: 300 đảo thường và 15 đảo bảo tháp (trước đây 8 lưới theo 4 loại × 2 mức LOD).
+  // iV = (màu tán r,g,b, số ngẫu nhiên: ≥ 0,5 thì có am; phần lẻ ×7 đổi độ sâu vỏ đá, ×13 đổi chiều cao cây). Xa dần thì tan vào sương (gfx.js).
+  const d = new THREE.Object3D(), TINT = [['#5f9a54', '#77ad5e', '#4f8a50'], ['#f3bccb', '#f7d3dc', '#eab0c4'], ['#e6c45e', '#f0d77e', '#d9b44e']];
+  const mesh = (L, geo) => { const m = new THREE.InstancedMesh(geo, mat, L.length), iv = new Float32Array(L.length * 4);
+    L.forEach((o, i) => { d.position.set(o.x, o.y, o.z); d.rotation.set(0, o.rot, 0); d.scale.set(o.size, o.size * o.sy, o.size); d.updateMatrix(); m.setMatrixAt(i, d.matrix);
+      const k = r(); C.set(TINT[o.v % 3][i % 3]); iv.set([C.r, C.g, C.b, o.v ? 0.5 + k * 0.5 : k * 0.5], i * 4); });
+    geo.setAttribute('iV', new THREE.InstancedBufferAttribute(iv, 4)); m.computeBoundingSphere(); group.add(m); return m; };
+  const far = isles.filter((o) => o.v < 3), big = isles.filter((o) => o.v === 3);
+  mesh(far, isleGeo(17)); mesh(big, isleGeo(32, true));
   // đàn hạc
   const U = { uT: { value: 0 } }, cm = new THREE.MeshBasicMaterial({ color: '#fffdf4', side: THREE.DoubleSide });
   cm.onBeforeCompile = (sh) => { sh.uniforms.uT = U.uT; sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n float w = abs(position.x); float ph = float(gl_InstanceID)*1.7; transformed.y += w * (sin(uT*3.6 + ph)*0.45 + 0.08) * smoothstep(0.04, 0.3, w);'); };
@@ -82,6 +83,6 @@ export function buildRealm(seed = 91) {
       for (let i = 0; i < f.n; i++) { const row = Math.ceil(i / 2), side = i % 2 ? 1 : -1, lat = row * 1.7 * f.s * side, back = row * 1.5 * f.s;
         d.position.set(cx + rx * lat - fx * back, cy + Math.sin(time * 0.7 + i * 1.3) * 0.6 * f.s * 0.3 - row * 0.25, cz + rz * lat - fz * back); d.rotation.set(0, Math.atan2(fx, fz), -0.22 * sg); d.scale.setScalar(f.s); d.updateMatrix(); cranes.setMatrixAt(k++, d.matrix); } });
     cranes.instanceMatrix.needsUpdate = true; };
-  const stats = () => kinds.reduce((a, k) => { const t = k.stats(); return { near: a.near + t.near, far: a.far + t.far }; }, { near: 0, far: 0 });
-  return { group, isles, update, lod, stats };
+  // Giữ giao diện cũ: lod() không còn việc gì (một mức hình cho mọi khoảng cách), stats() báo số đảo chi tiết (bảo tháp) và đảo thường
+  return { group, isles, update, lod: () => false, stats: () => ({ near: big.length, far: far.length }) };
 }
