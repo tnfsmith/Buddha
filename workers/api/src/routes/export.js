@@ -40,6 +40,10 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
     `SELECT kind, version, granted, at FROM consent WHERE user_id = ?`
   ).bind(user.id).all();
 
+  const events = await db.prepare(
+    'SELECT id, program, cycle, local_date AS date, kind, slot, value_json, at, server_at FROM practice_event WHERE user_id = ? ORDER BY at, id',
+  ).bind(user.id).all();
+
   return c.json({
     exported_at: now,
     user: userRow,
@@ -52,6 +56,7 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
     journeys: journeys?.results || [],
     kusala_entries: kusalaEntries?.results || [],
     practice_sessions: sessions?.results || [],
+    practice_events: (events?.results || []).map(({ value_json, ...e }) => ({ ...e, value: value_json === null ? null : JSON.parse(value_json) })),
     consents: consents?.results || []
   });
 });

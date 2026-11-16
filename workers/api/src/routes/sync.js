@@ -9,6 +9,7 @@ import { byUser } from '../guard.js';
 import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
 import { kusala, validFactor, KUSALA, DAYS } from '@vandao/shared';
+import { checkPracticeEvent, MAX_EVENTS_PER_DAY, PRACTICE_V } from '@vandao/shared/practice.js';
 import { computeUnlockedZones, profileView } from './me.js';
 import { getLocalDate } from '../utils/time.js';
 import { readJson, bad, jsonCapped, dayPillars, stepJourney, isComplete, journeyUpdate, currentJourney, kusalaTotals } from '../lib.js';
@@ -17,6 +18,8 @@ import { readJson, bad, jsonCapped, dayPillars, stepJourney, isComplete, journey
 // Client (net/sync.js) tự chia outbox thành từng lô 8.
 const MAX_OPS = 8;
 const PAST_MS = 7 * 24 * 60 * 60 * 1000, FUTURE_MS = 2 * 60 * 1000;
+const DAY_MS = 86400000;
+const shiftDate = (date, days) => new Date(Date.parse(date) + days * DAY_MS).toISOString().slice(0, 10);
 const KINDS = ['thien15', 'thien_tu_do', 'nghe_giang', 'kinh_hanh', 'tra_dao', 'thien_duong'];
 const str = (v, max) => (v === undefined || v === null ? null : String(v).slice(0, max));
 
@@ -46,7 +49,11 @@ syncApp.post('/', authMiddleware, byUser('RL_SYNC'), async (c) => {
     .sort((a, b) => (Number(a.at) || 0) - (Number(b.at) || 0));
 
   for (const op of sorted) {
-    if (await db.prepare('SELECT 1 FROM sync_op WHERE user_id = ? AND op_id = ?').bind(user.id, op.id).first()) { applied.push(op.id); continue; }
+    // practice_event giữ chống trùng cả khi cron đã dọn sync_op sau 30 ngày (đặc biệt imp.*).
+    const seen = op.type === 'practice.event'
+      ? db.prepare('SELECT 1 FROM sync_op WHERE user_id = ?1 AND op_id = ?2 UNION ALL SELECT 1 FROM practice_event WHERE user_id = ?1 AND id = ?2 LIMIT 1')
+      : db.prepare('SELECT 1 FROM sync_op WHERE user_id = ?1 AND op_id = ?2');
+    if (await seen.bind(user.id, op.id).first()) { applied.push(op.id); continue; }
     const at = Number(op.at);
     if (!Number.isFinite(at) || at < now - PAST_MS || at > now + FUTURE_MS) { reject(op, 'invalid_timestamp'); continue; }
     const date = getLocalDate(at, tz), p = op.payload && typeof op.payload === 'object' ? op.payload : {};
@@ -82,6 +89,24 @@ syncApp.post('/', authMiddleware, byUser('RL_SYNC'), async (c) => {
           db.prepare('INSERT INTO practice_session (id, user_id, kind, ref, place, started_at, duration_s, completed, server_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
             .bind(op.id, user.id, p.kind ?? 'thien15', str(p.ref, 64), str(p.place ?? 'pad', 32), at, Math.min(Math.max(Math.round(Number(p.duration_s) || 0), 0), 14400), p.completed === false ? 0 : 1, now),
           journeyUpdate(db, user.id, J, now), done,
+        ]);
+      } else if (op.type === 'practice.event') {
+        const checked = checkPracticeEvent(op.payload);
+        if (!checked.ok) { reject(op, checked.code); continue; }
+        const ev = checked.ev, t = ev.at ?? at;
+        if (shiftDate(ev.date, 0) !== ev.date) { reject(op, 'invalid_date'); continue; }
+        if (ev.date < shiftDate(J.started_on, -1) || ev.date > shiftDate(getLocalDate(now, tz), 1)) { reject(op, 'date_out_of_range'); continue; }
+        if (t > now + FUTURE_MS || t < Date.parse(J.started_on) - 2 * DAY_MS) { reject(op, 'invalid_timestamp'); continue; }
+        const value = ev.value === null ? null : JSON.stringify(ev.value);
+        if (value !== null && value.length > 1024) { reject(op, 'invalid_value'); continue; }
+        const count = await db.prepare('SELECT COUNT(*) AS n FROM practice_event WHERE user_id = ? AND program = ? AND cycle = ? AND local_date = ?')
+          .bind(user.id, J.program, J.cycle, ev.date).first();
+        if (count.n >= MAX_EVENTS_PER_DAY) { reject(op, 'too_many_events'); continue; }
+        await db.batch([
+          db.prepare('INSERT INTO practice_event (user_id, id, program, cycle, local_date, kind, slot, value_json, at, server_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+            .bind(user.id, op.id, J.program, J.cycle, ev.date, ev.kind, ev.slot, value, t, now),
+          db.prepare('UPDATE journey SET rev = rev + 1, updated_at = ? WHERE user_id = ? AND is_current = 1').bind(now, user.id),
+          done,
         ]);
       } else if (op.type === 'profile.patch') {
         const settings = p.settings === undefined ? profileRow.settings_json : jsonCapped({ ...JSON.parse(profileRow.settings_json || '{}'), ...p.settings });
@@ -141,6 +166,7 @@ syncApp.post('/', authMiddleware, byUser('RL_SYNC'), async (c) => {
       applied.push(op.id);
     } catch (err) {
       J = snapshot;
+      if (op.type === 'practice.event' && err?.message?.includes('too_many_events')) { reject(op, 'too_many_events'); continue; }
       console.error('[sync]', op.type, err && err.message);
       reject(op, 'db_error', true);
     }
@@ -155,7 +181,7 @@ syncApp.post('/', authMiddleware, byUser('RL_SYNC'), async (c) => {
   J = (await currentJourney(db, user.id, getLocalDate(now, tz), now)) || J;
   return c.json({
     applied, rejected,
-    state: { profile: profileView(profileRow), journey: J, totals: await kusalaTotals(db, user.id, J), unlocked_zones: computeUnlockedZones(J.day), server_now: now },
+    state: { practice: PRACTICE_V, profile: profileView(profileRow), journey: J, totals: await kusalaTotals(db, user.id, J), unlocked_zones: computeUnlockedZones(J.day), server_now: now },
   });
 });
 
