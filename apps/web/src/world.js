@@ -52,11 +52,11 @@ function saveGfx(q) { try { localStorage.setItem(GFX_KEY, JSON.stringify({ q, at
  * mức 1 cho điện thoại/máy tính bảng còn lại và máy tính yếu; mức 2 cho máy tính. Lần trước đã phải tự hạ mức
  * (lưu ở localStorage 'vandao.gfx', hết hạn sau 14 ngày để thử lại) thì bắt đầu luôn ở mức đó.
  */
+// Trình vẽ phần mềm (SwiftShader, llvmpipe…): mọi điểm ảnh do CPU tô, nên chỉ làm phần bắt buộc
+const isSoft = (renderer) => { let gpu = ''; try { const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info'); gpu = String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || ''); } catch (e) { void e; } return /swiftshader|llvmpipe|software|microsoft basic render/i.test(gpu); };
 export function pickQuality(renderer, nav = navigator, mobile = isMobile()) {
-  let gpu = '';
-  try { const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info'); gpu = String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || ''); } catch (e) { void e; }
   const mem = nav.deviceMemory || 8, cores = nav.hardwareConcurrency || 8, small = Math.min(screen.width || 0, screen.height || 0) <= 400;
-  let q = /swiftshader|llvmpipe|software|microsoft basic render/i.test(gpu) ? 0 : mobile ? (mem <= 4 || cores <= 4 || small ? 0 : 1) : mem <= 4 && cores <= 4 ? 1 : 2;
+  let q = isSoft(renderer) ? 0 : mobile ? (mem <= 4 || cores <= 4 || small ? 0 : 1) : mem <= 4 && cores <= 4 ? 1 : 2;
   try { const g = JSON.parse(localStorage.getItem(GFX_KEY) || 'null'); if (g && Date.now() - g.at < GFX_TTL && g.q < q) q = g.q; } catch (e) { void e; }
   return q;
 }
@@ -83,7 +83,7 @@ export class World {
     this.touch = 0; this.controls.addEventListener('start', () => { this.touch = 1e18; }); this.controls.addEventListener('end', () => { this.touch = performance.now(); });
     this.mode = 'island'; this.time = 0; this.tween = null; this.rnd = rng(7); this.baseFov = 58;
     // Mức chất lượng: cố định khi URL có ?q / #q=, không thì chọn theo thiết bị ngay từ đầu (pickQuality) rồi tự hạ khi chậm
-    this.fixedQ = quality !== undefined; this.mobile = isMobile(); this.quality = quality !== undefined ? quality : pickQuality(r); this.res = 1; this.hold = null;
+    this.fixedQ = quality !== undefined; this.mobile = isMobile(); this.soft = isSoft(r); this.quality = quality !== undefined ? quality : pickQuality(r); this.res = 1; this.hold = null;
     this.gov = governor(); this.acc = 0; this.drawn = 0;
     this.u = { ...UNI, uAmber: { value: 0 }, uJade: { value: 0 }, uCalm: { value: 0 }, uCam: { value: V(0, 0, 0) }, uMist: { value: 0.7 },
       uHalo: { value: 1 }, uRainbow: { value: 0.5 }, uHaloWhite: { value: 0 }, uTier2: { value: 0 }, uBud: { value: V(0, 0.2, -1).normalize() }, uB: { value: 0 }, uP: { value: 0 }, uRay: { value: 0 }, uVeil: { value: 0 } };
@@ -610,8 +610,8 @@ void main(){ float n = fbm(vUv*vec2(3.,1.8) + vec2(uTime*.05, uVeil*.6)); vec3 c
       this.scene.fog.color.setRGB(hz.x, hz.y, hz.z, THREE.SRGBColorSpace); this.sun.color.setRGB(L(sc.x), L(sc.y), L(sc.z), THREE.SRGBColorSpace);
       this.hemi.color.setRGB(hz.x / mx, hz.y / mx, hz.z / mx, THREE.SRGBColorSpace); this.hemi.intensity = M[16]; this.sun.intensity = M[15]; this.fill.intensity = 0.6 * dim; this.scene.environmentIntensity = 0.75 * dim; this.renderer.toneMappingExposure = M[17];
       this.budFig.material.color.setScalar(1 - 0.12 * n);
-      // IBL theo tâm trạng: PMREM tốn kém nên chỉ dựng lại ở mức 2, khi trọng số lệch quá 0,2 so với lần dựng trước và cách nhau ít nhất 3 giây
-      if (q > 1 && this.pm && now - this.envAt > 3000 && W.reduce((d, w, i) => d + Math.abs(w - this.envW[i]), 0) > 0.2) this._env(); }
+      // IBL theo tâm trạng: PMREM tốn kém nên chỉ dựng lại ở mức 2 trên GPU thật, khi trọng số lệch quá 0,2 so với lần dựng trước và cách nhau ít nhất 3 giây
+      if (q > 1 && !this.soft && this.pm && now - this.envAt > 3000 && W.reduce((d, w, i) => d + Math.abs(w - this.envW[i]), 0) > 0.2) this._env(); }
     let pulse = 0; s.waves.forEach((age, i) => { const m = this.waves[i]; if (!m) return; const k = age / 14; m.visible = k < 1; m.scale.setScalar(40 + age * 58); m.material.opacity = (1 - k) * 0.6; pulse = Math.max(pulse, Math.exp(-age / 2.5)); });
     for (let i = s.waves.length; i < this.waves.length; i++) this.waves[i].visible = false;
     { const dB = Math.hypot(cam.x - BUD.x, cam.y - BUD_EYE, cam.z - BUD.z), near = Math.min(1, Math.max(0, (dB - 160) / 420)); this.haloK = (this.haloK ?? 1) + ((0.32 + 0.68 * near) - (this.haloK ?? 1)) * Math.min(1, 0.05 * 60 * 0.016 * 4); u.uHalo.value = (1 + 0.5 * pulse + 0.35 * v.merit) * this.haloK; } u.uRainbow.value = v.rainbow; u.uHaloWhite.value = v.haloWhite;
