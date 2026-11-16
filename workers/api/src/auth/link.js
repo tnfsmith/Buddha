@@ -12,6 +12,7 @@ const MOVE = ['practice_session', 'device', 'sync_op'];   // dữ liệu đi the
 export async function hasProgress(db, uid) {
   const r = await db.prepare(
     `SELECT (SELECT COUNT(*) FROM kusala_entry WHERE user_id = ?1) + (SELECT COUNT(*) FROM practice_session WHERE user_id = ?1)
+          + (SELECT COUNT(*) FROM practice_event WHERE user_id = ?1)
           + (SELECT COUNT(*) FROM journey WHERE user_id = ?1 AND (day > 1 OR cycle > 1)) + (SELECT COUNT(*) FROM profile WHERE user_id = ?1 AND tinh_danh IS NOT NULL) AS n`,
   ).bind(uid).first();
   return (r?.n || 0) > 0;
@@ -25,14 +26,15 @@ export async function linkGuest(db, guest, target) {
   if (!(await hasProgress(db, t))) {
     mode = 'guest';
     await db.batch([
-      ...['kusala_entry', 'journey', 'profile', 'tier_progress'].map((tb) => db.prepare(`DELETE FROM ${tb} WHERE user_id = ?`).bind(t)),
-      ...['profile', 'journey', 'kusala_entry', 'tier_progress'].map((tb) => db.prepare(`UPDATE ${tb} SET user_id = ? WHERE user_id = ?`).bind(t, g)),
+      ...['kusala_entry', 'practice_event', 'journey', 'profile', 'tier_progress'].map((tb) => db.prepare(`DELETE FROM ${tb} WHERE user_id = ?`).bind(t)),
+      ...['profile', 'journey', 'kusala_entry', 'practice_event', 'tier_progress'].map((tb) => db.prepare(`UPDATE ${tb} SET user_id = ? WHERE user_id = ?`).bind(t, g)),
       ...moveAll,
     ]);
   } else {
     mode = 'archive';
     const js = (await db.prepare(
-      `SELECT program, cycle FROM journey j WHERE user_id = ? AND (day > 1 OR EXISTS (SELECT 1 FROM kusala_entry k WHERE k.user_id = j.user_id AND k.program = j.program AND k.cycle = j.cycle)) ORDER BY program, cycle`,
+      `SELECT program, cycle FROM journey j WHERE user_id = ? AND (day > 1 OR EXISTS (SELECT 1 FROM kusala_entry k WHERE k.user_id = j.user_id AND k.program = j.program AND k.cycle = j.cycle)
+       OR EXISTS (SELECT 1 FROM practice_event e WHERE e.user_id = j.user_id AND e.program = j.program AND e.cycle = j.cycle)) ORDER BY program, cycle`,
     ).bind(g).all()).results || [];
     const top = {};
     for (const r of (await db.prepare('SELECT program, MAX(cycle) AS c FROM journey WHERE user_id = ? GROUP BY program').bind(t).all()).results || []) top[r.program] = r.c;
@@ -41,6 +43,7 @@ export async function linkGuest(db, guest, target) {
       const nc = (top[j.program] = (top[j.program] || 0) + 1);
       stmts.push(
         db.prepare('UPDATE kusala_entry SET user_id = ?, cycle = ? WHERE user_id = ? AND program = ? AND cycle = ?').bind(t, nc, g, j.program, j.cycle),
+        db.prepare('UPDATE practice_event SET user_id = ?, cycle = ? WHERE user_id = ? AND program = ? AND cycle = ?').bind(t, nc, g, j.program, j.cycle),
         db.prepare('UPDATE journey SET user_id = ?, cycle = ?, is_current = 0, updated_at = ? WHERE user_id = ? AND program = ? AND cycle = ?').bind(t, nc, now, g, j.program, j.cycle),
       );
     }

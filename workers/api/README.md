@@ -45,6 +45,10 @@ Phân hệ API máy chủ và phục vụ tài nguyên tĩnh của dự án Vân
      - `journey.reset_cycle` ("Trở về ngày 1") mở chu kỳ mới, giữ Tịnh danh và diện mạo.
      - `sacca.add` cộng một lời Chân thật (`sacca_count`).
      - `legacy.import` đưa hành trình đang có trên máy lên lần đầu ("Giữ hành trình", T2.3): chỉ nhận khi hành trình máy chủ còn trống (`not_empty`); các ngày đã qua phải đủ ba trục và hệ số hợp lệ (`invalid_import`); máy chủ đặt `started_on = hôm nay − (day − 1)` và tính lại mọi `e_score`; ghi chú quán chiếu không gửi lên.
+   - **Sổ tu tập — đợt D rút gọn (#94, sau client #96):** migration `0009_practice_event.sql`, thao tác `practice.event` theo `@vandao/shared/practice.js` cho `viec`/`vow`/`tu`. Không nhận chữ tự do hoặc cộng Kusala từ các sự kiện này.
+     - `GET /me` và `state` của `/sync` báo `practice:1`. `/me?entries=1` thêm `events` chu kỳ hiện tại, theo `at,id`; `/me` nhẹ không tải sổ. Export thêm `practice_events` mọi chu kỳ; reset giữ lịch sử, xóa tài khoản cascade, gộp khách giữ sự kiện theo chu kỳ.
+     - Ngày lấy từ payload, trong `[started_on − 1 ngày, hôm nay theo tz + 1 ngày]`. Giờ sự kiện `payload.at ?? op.at` trong `[started_on UTC − 2 ngày, now + 2 phút]`; vỏ `op.at` vẫn có cửa sổ bảy ngày. JSON chuẩn hóa tối đa 1024 ký tự; 60 sự kiện/ngày/chu kỳ, có chặn tranh chấp tại D1. Sự kiện, rev và sync_op ghi chung batch; bản ghi sự kiện tiếp tục chống trùng khi sync_op đã được dọn.
+     - Phát hành: #96 trước (đã merge), PR #94 sau. PR có migration không upload preview vào D1 staging chung; kiểm cục bộ, rồi chủ dự án merge để workflow áp migration trước deploy staging. Claude nghiệm thu hai thiết bị trước tag; không chạy migration từ PR vào môi trường thật bằng tay.
    - `GET /api/v1/export`: Xuất dữ liệu cá nhân theo Luật BVDLCN 91/2025 và GDPR.
    - `POST/DELETE /api/v1/account/delete`: Yêu cầu xóa tài khoản với thời gian ân hạn 7 ngày và hủy yêu cầu.
    - `POST /api/v1/rt/ticket`: vé HMAC-SHA256 (60 giây) vào phòng thời gian thực. Cần secret `RT_SECRET` (`npx wrangler secret put RT_SECRET [--env staging]`); thiếu thì trả 503, không có khóa mặc định.

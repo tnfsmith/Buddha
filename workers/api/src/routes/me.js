@@ -4,6 +4,7 @@ import { byUser } from '../guard.js';
 import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
 import { ZONE_UNLOCK, gateLevel } from '@vandao/shared';
+import { PRACTICE_V } from '@vandao/shared/practice.js';
 import { getLocalDate } from '../utils/time.js';
 import { bad, currentJourney, kusalaTotals } from '../lib.js';
 import { guestPurgeAfter } from '../cron.js';
@@ -38,6 +39,7 @@ meApp.get('/', authMiddleware, byUser('RL_API'), async (c) => {
   const J = await currentJourney(db, user.id, getLocalDate(now, profileRow.tz), now);
   return c.json({
     user,
+    practice: PRACTICE_V,
     profile: profileView(profileRow),
     journey: J,
     totals: J ? await kusalaTotals(db, user.id, J) : { duc: 0, thien: 0, tue: 0, all: 0 },
@@ -48,6 +50,9 @@ meApp.get('/', authMiddleware, byUser('RL_API'), async (c) => {
     entries: J && c.req.query('entries') ? ((await db.prepare(
       'SELECT day, pillar, pre, during, post, wise, self, e_score, at FROM kusala_entry WHERE user_id = ? AND program = ? AND cycle = ? ORDER BY day',
     ).bind(user.id, J.program, J.cycle).all()).results || []) : undefined,
+    events: J && c.req.query('entries') ? ((await db.prepare(
+      'SELECT id, local_date AS date, kind, slot, value_json, at FROM practice_event WHERE user_id = ? AND program = ? AND cycle = ? ORDER BY at, id',
+    ).bind(user.id, J.program, J.cycle).all()).results || []).map(({ value_json, ...e }) => ({ ...e, value: value_json === null ? null : JSON.parse(value_json) })) : undefined,
     server_now: now,
   });
 });
