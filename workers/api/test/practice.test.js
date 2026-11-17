@@ -1,5 +1,5 @@
 // #94: chạy route thật trong workerd + D1, dùng nguyên hợp đồng client #96.
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { foldPractice, importEvents, MAX_EVENTS_PER_DAY, PRACTICE_V } from '@vandao/shared/practice.js';
 import { getLocalDate } from '../src/utils/time.js';
 import { linkGuest } from '../src/auth/link.js';
@@ -118,17 +118,21 @@ describe('practice.event — máy chủ cho hai thiết bị', () => {
     expect((await sync(token, [op('rollback-op')])).applied).toEqual(['rollback-op']);
   });
 
-  it('imp.* đưa sổ cũ lên: chống trùng cả sau khi cron dọn sync_op', async () => {
-    const { token, user } = await guest(), date = getLocalDate(Date.now(), TZ);
-    const source = { viec: { [date]: { gioi: { 1: { id: 'sn-gioi-1-01', parami: ['sila'] } } } },
-      nguyen: { 1: { id: 'sn-nguyen-tuan-1', at: Date.now() } }, tu: { [date]: { thoi_thien: { n: 2, min: 30, refs: [] } } } };
-    const ops = importEvents(source, date, 'device-cycle1').map(({ id, ...payload }) => op(id, payload));
-    expect((await sync(token, ops)).applied).toHaveLength(3);
-    const full = await me(token); expect(foldPractice(full.events)).toMatchObject({ viec: source.viec, tu: source.tu });
-    await env.DB.prepare('DELETE FROM sync_op WHERE user_id = ?').bind(user.id).run();
-    const retry = await sync(token, ops);
-    expect(retry.applied).toHaveLength(3); expect(retry.rejected).toEqual([]);
-    expect(retry.state.journey.rev).toBe(full.journey.rev); expect((await me(token)).events).toEqual(full.events);
+  it.each(['00:00:00', '06:59:59', '07:00:00', '23:59:59'])('imp.* lúc %s +07: đủ sổ ngày đầu, chống trùng cả sau khi cron dọn sync_op', async (time) => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(`2026-11-17T${time}+07:00`));
+    try {
+      const { token, user } = await guest(), date = getLocalDate(Date.now(), TZ);
+      const source = { viec: { [date]: { gioi: { 1: { id: 'sn-gioi-1-01', parami: ['sila'] } } } },
+        nguyen: { 1: { id: 'sn-nguyen-tuan-1', at: Date.now() } }, tu: { [date]: { thoi_thien: { n: 2, min: 30, refs: [] } } } };
+      const ops = importEvents(source, date, 'device-cycle1').map(({ id, ...payload }) => op(id, payload));
+      expect((await sync(token, ops)).applied).toHaveLength(3);
+      const full = await me(token); expect(foldPractice(full.events)).toMatchObject({ viec: source.viec, tu: source.tu });
+      await env.DB.prepare('DELETE FROM sync_op WHERE user_id = ?').bind(user.id).run();
+      const retry = await sync(token, ops);
+      expect(retry.applied).toHaveLength(3); expect(retry.rejected).toEqual([]);
+      expect(retry.state.journey.rev).toBe(full.journey.rev); expect((await me(token)).events).toEqual(full.events);
+    } finally { vi.useRealTimers(); }
   });
 
   it('cách ly tài khoản/chu kỳ: /me chỉ chu kỳ hiện tại, export đủ lịch sử, xóa user cascade', async () => {

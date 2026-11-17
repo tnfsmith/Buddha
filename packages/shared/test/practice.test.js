@@ -81,6 +81,20 @@ describe('foldPractice: hai máy cùng một hành trình', () => {
 });
 
 describe('importEvents + mergePractice: đưa dữ liệu cũ lên một lần, không mất, không cộng đôi', () => {
+  it.each(['00:00:00', '06:20:00', '06:59:59', '07:00:00', '12:00:00'])('giữ nguyện ngày đầu lúc %s +07 dù ngày UTC có thể còn là hôm trước', (time) => {
+    const from = '2026-11-17', S = { nguyen: { 1: { id: 'sn-nguyen-tuan-1', at: Date.parse(`${from}T${time}+07:00`) } } };
+    const events = importEvents(S, from, 'stable1');
+    expect(events).toEqual([{ id: 'imp.stable1.20261117.vow.1', date: from, kind: 'vow', slot: '1',
+      value: { id: 'sn-nguyen-tuan-1' }, at: Date.parse(from) - 86400000 }]);
+    expect(importEvents(S, from, 'stable1')).toEqual(events);
+    expect(foldPractice(events).nguyen[1].id).toBe('sn-nguyen-tuan-1');
+  });
+  it('chỉ bù chênh một ngày ở biên chu kỳ, giữ mã cũ ngoài biên và lọc nguyện quá cũ', () => {
+    const S = { nguyen: { 1: { id: 'sn-nguyen-tuan-1', at: Date.parse('2026-11-14T12:00:00Z') },
+      2: { id: 'sn-nguyen-tuan-2', at: Date.parse('2026-11-18T12:00:00Z') } } };
+    expect(importEvents(S, '2026-11-17', 'stable1').map((e) => e.id)).toEqual(['imp.stable1.20261118.vow.2']);
+    expect(importEvents(S, undefined, 'stable1').map((e) => e.id)).toEqual(['imp.stable1.20261114.vow.1', 'imp.stable1.20261118.vow.2']);
+  });
   const S = {
     viec: setAct(setAct(setAct({}, '2026-11-16', 'gioi.2', { id: 'sn-gioi-2-03', parami: ['sila', 'dana'] }), '2026-11-16', 'hanh', { id: 'sn-hanh-metta-01', parami: ['metta'], done: true }), '2026-11-10', 'gioi.1', { id: 'sn-gioi-1-01', parami: ['sila'] }),
     nguyen: { 1: { id: 'sn-nguyen-tuan-1', at: Date.parse('2026-11-14T02:00:00Z') } },
