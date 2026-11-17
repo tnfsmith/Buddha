@@ -5,7 +5,7 @@ import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { buildRealm } from './realm.js';
 import { buildBirds } from './birds.js';
-import { NOISE, OUT, rng, puffAtlas, buddhaTex, lodPair, UNI, moodMix, gfxBackend, tierOf, governor, hue } from './gfx.js';
+import { NOISE, OUT, rng, puffAtlas, buildBuddha, buddhaFace, lodPair, UNI, moodMix, gfxBackend, tierOf, governor, hue } from './gfx.js';
 import { buildHome, buildNeighbor, bakeLocal, groundH, floorH, pvFloor, DECKS, STAIR, P, SX, SZ, HILL, POND } from './island.js';
 import { buildFigure, makeCrowd, defaultLook, suggestNames } from './people.js';
 
@@ -158,16 +158,9 @@ void main(){ vec3 v = vW - uCam; float ds = length(v.xz); v = normalize(v);
 
   _buddha() {
     const g = (this.budGroup = new THREE.Group()); g.position.set(BUD.x, BL, BUD.z); g.scale.setScalar(BS); this.scene.add(g);
-    // Tôn tượng: tranh vẽ được nhuộm lại thành đồng cổ ấm (tối → nâu đồng, sáng → vàng đánh bóng) và viền sáng vàng ở mép hình
-    // (xấp xỉ Fresnel cho hình phẳng: càng sát mép, alpha láng giềng càng thiếu)
-    const bm = new THREE.MeshBasicMaterial({ map: buddhaTex(), alphaTest: 0.5, fog: false });
-    bm.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
- { vec2 e = vec2(.014,.011); float rim = 1. - .25*(texture2D(map, vMapUv+vec2(e.x,0.)).a + texture2D(map, vMapUv-vec2(e.x,0.)).a + texture2D(map, vMapUv+vec2(0.,e.y)).a + texture2D(map, vMapUv-vec2(0.,e.y)).a);
-   float lum = dot(sampledDiffuseColor.rgb, vec3(.34));
-   diffuseColor.rgb *= mix(vec3(.46,.25,.1), vec3(1.,.77,.42), smoothstep(.12,.85,lum));
-   diffuseColor.rgb += vec3(2.1,1.5,.62)*rim*rim*(.5+.5*vMapUv.y); }`); };
-    this.budFig = new THREE.Mesh(new THREE.PlaneGeometry(262, 328), bm);
-    this.budFig.position.set(0, 148, 0); g.add(this.budFig);
+    // Tôn tượng tạc khối bằng vàng (gfx.buildBuddha): quay mặt về Đại Thiền Đường và Vân Đảo; nhìn từ các tầng hai bên thấy dáng nghiêng,
+    // từ cụm Vân Tọa sau lưng thấy lưng và nhục kế. Tay phải giơ ấn thuyết pháp bằng phép xoay trên GPU (budArm), không dựng lại hình.
+    const B = buildBuddha(this.soft); this.budFig = B.mesh; this.budArm = B.arm; this.budK = 0; g.add(this.budFig);
     const halo = new THREE.Mesh(new THREE.PlaneGeometry(1100, 1100), new THREE.ShaderMaterial({ transparent: true, depthWrite: false, fog: false, uniforms: this.u,
       vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }',
       fragmentShader: `uniform float uTime,uHalo,uRainbow,uHaloWhite; varying vec2 vUv;
@@ -180,7 +173,7 @@ void main(){ vec2 p = vUv*2.-1.; float r = length(p); float ang = atan(p.y,p.x);
  col = mix(col, c6*1.12, clamp(rays*uRainbow*0.9,0.,0.85));
  col = mix(col, vec3(1.0,1.04,1.16)*(0.62+0.55*glow), uHaloWhite*0.8);
  float a = clamp((glow*0.85 + rings*0.30)*min(uHalo,1.6) + rays*(0.16+0.26*uRainbow)*uHalo, 0., 1.)*smoothstep(1.0,0.8,r); ${OUT} }` }));
-    halo.position.set(0, 196, -14); halo.scale.setScalar(0.8); halo.renderOrder = -1; g.add(halo); this.halo = halo;
+    halo.position.set(0, 199, -40); halo.scale.setScalar(0.8); halo.renderOrder = -1; g.add(halo); this.halo = halo;
     this.waves = [];
     for (let i = 0; i < 4; i++) { const m = new THREE.Mesh(new THREE.RingGeometry(0.975, 1, 160), ADD(RGB(1.7, 1.4, 0.8), { opacity: 0, side: THREE.DoubleSide })); m.rotation.x = -Math.PI / 2; m.position.set(BUD.x, 7, BUD.z); m.renderOrder = 6; this.scene.add(m); this.waves.push(m); }
   }
@@ -361,18 +354,26 @@ void main(){ float n = fbm(vUv*vec2(3.,1.8) + vec2(uTime*.05, uVeil*.6)); vec3 c
       const b = (this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.3, 0.55, 1.02)); b.highPassUniforms.smoothWidth.value = 0.4;
       // điện thoại: bloom nửa độ phân giải (applyQuality) và chỉ 3 tầng mờ thay vì 5 → bớt 4 lượt vẽ toàn màn hình
       if (this.mobile) { b.nMips = 3; b.compositeMaterial.uniforms.bloomFactors.value = [1, 0.8, 0.6, 0, 0]; }
-      this.out = new FullScreenQuad(new THREE.ShaderMaterial({ uniforms: { t: { value: this.rt.texture } }, depthTest: false, depthWrite: false,
+      // Lượt cuối có làm nét thích ứng độ tương phản (kiểu AMD CAS, 5 điểm lấy mẫu): nét mảnh như lá, viền áo, tóc xoắn rõ lại sau MSAA
+      // và bloom; chỗ tương phản cao hoặc vượt 1 trong HDR (hào quang, mặt trời) thì tự giảm về 0 nên không có viền sáng giả.
+      this.out = new FullScreenQuad(new THREE.ShaderMaterial({ uniforms: { t: { value: this.rt.texture }, px: { value: new THREE.Vector2(1, 1) }, sh: { value: 0.16 } }, depthTest: false, depthWrite: false,
         vertexShader: 'varying vec2 v; void main(){ v = uv; gl_Position = vec4(position.xy, 0., 1.); }',
-        fragmentShader: 'uniform sampler2D t; varying vec2 v; void main(){ gl_FragColor = texture2D(t, v);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>\n}' }));
+        fragmentShader: `uniform sampler2D t; uniform vec2 px; uniform float sh; varying vec2 v;
+void main(){ vec3 c = texture2D(t, v).rgb, a = texture2D(t, v + vec2(0., px.y)).rgb, b = texture2D(t, v - vec2(0., px.y)).rgb, d = texture2D(t, v + vec2(px.x, 0.)).rgb, e = texture2D(t, v - vec2(px.x, 0.)).rgb;
+ vec3 mn = min(c, min(min(a, b), min(d, e))), mx = max(c, max(max(a, b), max(d, e))), w = -sh*sqrt(clamp(min(mn, 1. - mx)/max(mx, 1e-4), 0., 1.));
+ gl_FragColor = vec4(max((c + (a + b + d + e)*w)/(1. + 4.*w), 0.), 1.);
+#include <tonemapping_fragment>
+#include <colorspace_fragment>
+}` }));
     } catch (e) { this.rt = null; }
   }
-  // DPR tối đa theo bậc (gfx.tierOf: điện thoại không quá 1,5; máy tính 2) nhân hệ số độ phân giải động `res` (0,6–1)
+  // DPR tối đa theo bậc (gfx.tierOf: điện thoại không quá 1,5; máy tính 2; trình vẽ phần mềm luôn 1) nhân hệ số độ phân giải động `res` (0,6–1)
   applyQuality() {
-    const q = this.quality, T = tierOf(q, this.mobile), pr = Math.min(window.devicePixelRatio || 1, T.dpr) * this.res, w = Math.max(1, Math.round(this.w * pr)), h = Math.max(1, Math.round(this.h * pr));
+    const q = this.quality, T = tierOf(q, this.mobile), pr = Math.min(window.devicePixelRatio || 1, this.soft ? 1 : T.dpr) * this.res, w = Math.max(1, Math.round(this.w * pr)), h = Math.max(1, Math.round(this.h * pr));
     this.renderer.setPixelRatio(pr); this.renderer.setSize(this.w, this.h, false); this.sun.castShadow = T.post; this.shDirty = 3;
     if (this.puff) { this.puff.geometry = this.puffGeos[q === 0 ? 0 : 1]; this.rays.count = q ? 10 : 5; this.home.grass.count = this.soft ? 600 : q ? 3000 : 1800; }   // trình vẽ phần mềm: CPU tô từng lá cỏ, chỉ giữ 600 bụi
     // §12.3 mục 5: đích hậu kỳ theo đúng độ phân giải động; bloom nửa độ phân giải trên điện thoại (ánh hào quang vốn mờ, khác biệt khó thấy)
-    if (this.rt) { this.rt.setSize(w, h); this.bloom.setSize(Math.round(w * T.bloom), Math.round(h * T.bloom)); }
+    if (this.rt) { this.rt.setSize(w, h); this.bloom.setSize(Math.round(w * T.bloom), Math.round(h * T.bloom)); this.out.material.uniforms.px.value.set(1 / w, 1 / h); }
   }
   // Biên dịch trước shader của biến thể `q` (bóng đổ bật/tắt; qua bloom thì vẽ vào render target nên không tone mapping)
   _warm(q = this.quality) {
@@ -588,8 +589,9 @@ void main(){ float n = fbm(vUv*vec2(3.,1.8) + vec2(uTime*.05, uVeil*.6)); vec3 c
     this._avatarStep(dt, s); this.realm.update(this.time, v.night);
     // Thuyết giảng: Tôn tượng mở mắt, cử động miệng, giơ ấn thuyết pháp; hội chúng chắp tay và đảnh lễ
     { const sm = s.sermon || { on: false, speak: 0, bow: 0, anjali: false };
-      if (sm.on && !this.budFrames) this.budFrames = [this.budFig.material.map, buddhaTex({ open: true, hand: true }), buddhaTex({ open: true, hand: true, mouth: 0.5 }), buddhaTex({ open: true, hand: true, mouth: 1 })];
+      if (sm.on && !this.budFrames) this.budFrames = [this.budFig.material.map, buddhaFace({ open: true }), buddhaFace({ open: true, mouth: 0.5 }), buddhaFace({ open: true, mouth: 1 })];
       if (this.budFrames) { const f = sm.on ? 1 + (sm.speak > 0.62 ? 2 : sm.speak > 0.22 ? 1 : 0) : 0; if (this.budFig.material.map !== this.budFrames[f]) this.budFig.material.map = this.budFrames[f]; }
+      { const k = this.budK + ((sm.on ? 1 : 0) - this.budK) * Math.min(1, dt * 1.6); if (Math.abs(k - this.budK) > 1e-4) { this.budK = k; this.budArm(k * k * (3 - 2 * k)); } }
       this.sBow = (this.sBow || 0) + ((sm.bow || 0) - (this.sBow || 0)) * Math.min(1, dt * 7);
       [this.hallCrowd, this.tierCrowd].forEach((c) => { if (c && c.userData.bow) { c.userData.bow.value = this.sBow; c.userData.setAnjali(!!sm.anjali); } });
       [this.hallFig, ...this.friends.map((f) => f.fig)].forEach((f) => f.bow(this.sBow)); }   // chỗ ngồi của mình và bạn đồng tu cúi lạy cùng hội chúng
@@ -601,7 +603,6 @@ void main(){ float n = fbm(vUv*vec2(3.,1.8) + vec2(uTime*.05, uVeil*.6)); vec3 c
     // Nhân vật chi tiết ở xa chỉ còn vài điểm ảnh: bạn đồng tu quá 150/200/260 (theo mức) thì không vẽ; mức 0 cũng bỏ nhân vật của mình ở Đại Thiền Đường khi đứng xa
     this.friends.forEach((f) => { f.fig.group.visible = cam.distanceTo(f.pos) < [150, 200, 260][q]; }); this.hallFig.group.visible = q > 0 || cam.distanceTo(SEAT) < 300;
     u.uBud.value.set(BUD.x - cam.x, BUD_EYE - cam.y, BUD.z - cam.z).normalize();
-    this.budFig.lookAt(cam.x, BL + 148 * BS, cam.z);
     u.uNight.value = v.night; u.uAmber.value = v.amber; u.uJade.value = v.jade; u.uCalm.value = v.calm;
     // Tâm trạng ánh sáng: Trăng Thiền theo đêm của thời thiền, Hoàng Hôn Tím theo sắc hổ phách, Sương Sớm theo mốc «Niệm hơi thở mây»
     // (và phảng phất trong màn sương những ngày đầu hành trình), còn lại là Ngày Vàng
