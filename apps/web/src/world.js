@@ -370,7 +370,7 @@ void main(){ float n = fbm(vUv*vec2(3.,1.8) + vec2(uTime*.05, uVeil*.6)); vec3 c
   applyQuality() {
     const q = this.quality, T = tierOf(q, this.mobile), pr = Math.min(window.devicePixelRatio || 1, T.dpr) * this.res, w = Math.max(1, Math.round(this.w * pr)), h = Math.max(1, Math.round(this.h * pr));
     this.renderer.setPixelRatio(pr); this.renderer.setSize(this.w, this.h, false); this.sun.castShadow = T.post; this.shDirty = 3;
-    if (this.puff) { this.puff.geometry = this.puffGeos[q === 0 ? 0 : 1]; this.rays.count = q ? 10 : 5; this.home.grass.count = q ? 3000 : 1800; }
+    if (this.puff) { this.puff.geometry = this.puffGeos[q === 0 ? 0 : 1]; this.rays.count = q ? 10 : 5; this.home.grass.count = this.soft ? 600 : q ? 3000 : 1800; }   // trình vẽ phần mềm: CPU tô từng lá cỏ, chỉ giữ 600 bụi
     // §12.3 mục 5: đích hậu kỳ theo đúng độ phân giải động; bloom nửa độ phân giải trên điện thoại (ánh hào quang vốn mờ, khác biệt khó thấy)
     if (this.rt) { this.rt.setSize(w, h); this.bloom.setSize(Math.round(w * T.bloom), Math.round(h * T.bloom)); }
   }
@@ -591,7 +591,8 @@ void main(){ float n = fbm(vUv*vec2(3.,1.8) + vec2(uTime*.05, uVeil*.6)); vec3 c
       if (sm.on && !this.budFrames) this.budFrames = [this.budFig.material.map, buddhaTex({ open: true, hand: true }), buddhaTex({ open: true, hand: true, mouth: 0.5 }), buddhaTex({ open: true, hand: true, mouth: 1 })];
       if (this.budFrames) { const f = sm.on ? 1 + (sm.speak > 0.62 ? 2 : sm.speak > 0.22 ? 1 : 0) : 0; if (this.budFig.material.map !== this.budFrames[f]) this.budFig.material.map = this.budFrames[f]; }
       this.sBow = (this.sBow || 0) + ((sm.bow || 0) - (this.sBow || 0)) * Math.min(1, dt * 7);
-      [this.hallCrowd, this.tierCrowd].forEach((c) => { if (c && c.userData.bow) { c.userData.bow.value = this.sBow; c.userData.setAnjali(!!sm.anjali); } }); }
+      [this.hallCrowd, this.tierCrowd].forEach((c) => { if (c && c.userData.bow) { c.userData.bow.value = this.sBow; c.userData.setAnjali(!!sm.anjali); } });
+      [this.hallFig, ...this.friends.map((f) => f.fig)].forEach((f) => f.bow(this.sBow)); }   // chỗ ngồi của mình và bạn đồng tu cúi lạy cùng hội chúng
     if (this.vd && !this.tween) { const w = this.vanduAt(this.vd.k), k = this.snap ? 1 : 1 - Math.exp(-dt * 0.5);   // lướt chậm tới điểm đang muốn: vào Vân Du không giật
       this.controls.enabled = false; this.camera.position.lerp(w.p, k); this.controls.target.lerp(w.t, k); if (Math.abs(this.baseFov - 54) > 0.05) { this.baseFov += (54 - this.baseFov) * k; this.applyFov(); } }
     if (this.tween || !this.controls.enabled) this.camera.lookAt(this.controls.target); else this.controls.update();
@@ -709,6 +710,7 @@ void main(){ float n = fbm(vUv*vec2(3.,1.8) + vec2(uTime*.05, uVeil*.6)); vec3 c
     const base = this.look.height ? 1.9 * this.look.height : 1.9, bob = A.state === 'walk' ? 0.045 * Math.abs(Math.sin(A.phase)) : 0;
     g.position.set(A.pos.x, A.pos.y + bob + (A.where === 'home' ? io : 0), A.pos.z); g.rotation.y = A.rot; g.rotation.z = A.state === 'walk' ? 0.018 * Math.sin(A.phase) : 0;
     g.scale.set(base, base * (1 + 0.012 * s.breath * (this.fig.pose === 'sit' ? 1 : 0.5)), base);
+    this.fig.walk(A.phase, A.state === 'walk' ? Math.min(1, A.speed / 3.3) : 0);   // kinh hành: gấu áo đưa theo từng bước
     if (this.mode === 'creator' && !this.tween) { const t = V(A.pos.x, g.position.y + (this.fig.pose === 'sit' ? 1.4 : 2.5), A.pos.z); this.controls.target.lerp(t, Math.min(1, dt * 4)); }
   }
 }

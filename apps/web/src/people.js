@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { faceTex, rng } from './gfx.js';
+import { faceTex, rng, sweep, UNI } from './gfx.js';
 
 export const S = 1.9; // mét → đơn vị cảnh
 
@@ -28,88 +28,139 @@ const Y = new THREE.Vector3(0, 1, 0);
 let AJ = false;   // true: dựng tư thế ngồi chắp tay (dùng cho hội chúng khi nghe Pháp)
 let DET = 1; const dn = (n, min) => Math.max(min, Math.round(n * DET));
 const sph = (rx, ry, rz, x, y, z, ws = 14, hs = 10) => { const g = new THREE.SphereGeometry(1, dn(ws, 6), dn(hs, 4)); g.scale(rx, ry, rz); g.translate(x, y, z); return g; };
-const limb = (a, b, ra, rb, seg = 10) => {
-  const va = new THREE.Vector3(...a), d = new THREE.Vector3(...b).sub(va), len = d.length(), g = new THREE.CylinderGeometry(rb, ra, len, dn(seg, 5), 1);
-  g.translate(0, len / 2, 0); g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(Y, d.normalize())); g.translate(va.x, va.y, va.z); return g;
-};
 const blankUV = (g) => { const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, 0.9, 0.08); return g; };
-const merge = (list) => mergeGeometries(list.map((g) => (g.index ? g.toNonIndexed() : g)));
-
-// Các khối của một người theo tư thế: 'sit' (tọa thiền), 'stand' (đứng, tay chắp trước bụng), 'anjali' (chắp tay)
-const torso = (pts, bw) => { const g = new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), dn(22, 8)); g.scale(bw, 1, 0.68); return g; };
-function parts(pose, bw) {
-  const cloth = [], trim = [], skin = [];
-  let hc, neckY, waistY, shY;
-  if (pose === 'sit') {
-    hc = [0, 0.80, 0]; neckY = 0.66; waistY = 0.27; shY = 0.60;
-    cloth.push(sph(0.37 * bw, 0.115, 0.31, 0, 0.115, 0.05, 18, 12), torso([[0.21, 0.16], [0.2, 0.3], [0.228, 0.47], [0.222, 0.565], [0.13, 0.632], [0.058, 0.662]], bw));
-    [-1, 1].forEach((s) => {
-      cloth.push(sph(0.15, 0.10, 0.17, s * 0.29 * bw, 0.105, 0.10), limb([s * 0.215 * bw, 0.59, 0], [s * 0.25 * bw, 0.36, 0.05], 0.062, 0.056), sph(0.058, 0.058, 0.058, s * 0.25 * bw, 0.36, 0.05, 8, 6),
-        limb([s * 0.25 * bw, 0.36, 0.05], AJ ? [s * 0.04, 0.5, 0.2] : [s * 0.075, 0.215, 0.22], 0.06, AJ ? 0.07 : 0.086));
-      trim.push(limb([s * 0.085, 0.635, 0.105], [0, 0.43, 0.168], 0.017, 0.017, 6));
-      skin.push(blankUV(AJ ? sph(0.02, 0.062, 0.04, s * 0.017, 0.535, 0.215, 8, 6) : sph(0.055, 0.026, 0.042, s * 0.022, 0.20, 0.245, 8, 6)));
-    });
-  } else {
-    hc = [0, 1.61, 0]; neckY = 1.47; waistY = 1.03; shY = 1.41;
-    const sk = new THREE.LatheGeometry([[0.27, 0.02], [0.285, 0.06], [0.265, 0.25], [0.23, 0.55], [0.195, 0.82], [0.175, 1.03]].map(([r, y]) => new THREE.Vector2(r, y)), 22); sk.scale(bw, 1, 0.9);
-    cloth.push(sk, torso([[0.178, 1.0], [0.19, 1.12], [0.226, 1.28], [0.222, 1.375], [0.13, 1.442], [0.058, 1.472]], bw));
-    [-1, 1].forEach((s) => {
-      const el = pose === 'anjali' ? [s * 0.225 * bw, 1.17, 0.07] : [s * 0.235 * bw, 1.14, 0.04], wr = pose === 'anjali' ? [s * 0.04, 1.30, 0.2] : [s * 0.06, 1.0, 0.2];
-      cloth.push(limb([s * 0.205 * bw, 1.385, 0], el, 0.066, 0.06), sph(0.062, 0.062, 0.062, el[0], el[1], el[2], 8, 6), limb(el, wr, 0.06, 0.088));
-      trim.push(limb([s * 0.085, 1.445, 0.10], [0, 1.24, 0.158], 0.017, 0.017, 6), sph(0.045, 0.022, 0.08, s * 0.085, 0.025, 0.13, 8, 6));
-      skin.push(blankUV(pose === 'anjali' ? sph(0.02, 0.062, 0.036, s * 0.014, 1.34, 0.215, 8, 6) : sph(0.05, 0.03, 0.045, s * 0.022, 0.995, 0.225, 8, 6)));
-    });
-  }
-  const sash = new THREE.TorusGeometry(0.172, 0.02, dn(8, 4), dn(24, 10)); sash.rotateX(Math.PI / 2); sash.scale(bw * 1.06, 1, 0.84); sash.translate(0, waistY, 0); trim.push(sash);
-  skin.push(blankUV(limb([0, neckY - 0.03, 0], [0, neckY + 0.07, 0], 0.05, 0.046)), sph(0.108, 0.123, 0.114, hc[0], hc[1], hc[2], 28, 20));
-  [-1, 1].forEach((s) => skin.push(blankUV(sph(0.02, 0.034, 0.014, s * 0.107, hc[1], 0, 8, 6))));
-  return { cloth, trim, skin, hc, neckY, waistY, shY };
+const sm = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+// Chuẩn hóa để gộp: không chỉ số, luôn có uv và aK = (gió, thở) — vertex shader dùng aK để lay gấu áo, phồng ngực khi thở
+const norm = (g) => { g = g.index ? g.toNonIndexed() : g; const n = g.attributes.position.count;
+  if (!g.attributes.uv) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(n * 2), 2));
+  if (!g.attributes.aK) g.setAttribute('aK', new THREE.BufferAttribute(new Float32Array(n * 2), 2)); return g; };
+const merge = (list) => mergeGeometries(list.filter(Boolean).map(norm));
+// Ghi trọng số gió w và thở b (hằng số hoặc hàm theo vị trí) cho mọi đỉnh
+const K = (g, w, b) => { g = norm(g); const p = g.attributes.position, a = g.attributes.aK, f = (v, i) => (typeof v === 'function' ? v(p.getX(i), p.getY(i), p.getZ(i)) : v); for (let i = 0; i < p.count; i++) a.setXY(i, f(w, i), f(b, i)); return g; };
+// Thân áo tiện tròn (đường nối ở sau lưng) rồi ép dẹt; fold(y) là biên độ nếp vải dọc theo chiều cao
+const lathe = (pts, seg, sx, sz, fold) => { const g = new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), dn(seg, 8), Math.PI), p = g.attributes.position;
+  if (fold) for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i), f = 1 + fold(y) * Math.sin(Math.atan2(x, z) * 9 + y * 3); p.setXYZ(i, x * f, y, z * f); }
+  g.scale(sx, 1, sz); g.computeVertexNormals(); return g; };
+const prof = (P, y) => { for (let i = 1; i < P.length; i++) if (y <= P[i][1]) { const [r0, y0] = P[i - 1], [r1, y1] = P[i]; return r0 + ((r1 - r0) * (y - y0)) / (y1 - y0); } return P[P.length - 1][0]; };
+// Dải vải (cổ áo giao lĩnh, dải đai, khăn vai): ống quét ép dẹt theo hướng pháp tuyến thân người, bản rộng 2w
+const ribbon = (pts, w, k) => sweep(pts, dn(pts.length * 5, 6), dn(6, 4), (t, d, P) => { const h = Math.hypot(P.x, P.z) || 1; return w * (1 - 0.86 * Math.abs((d.x * P.x + d.z * P.z) / h)); }, k);
+// Mặt: hình cầu nặn lại — cằm thon, sống mũi, gờ mày, hốc mắt nông — khớp vị trí nét vẽ trên faceTex (u = 0,25 nhìn về +z)
+function head(hc) {
+  const g = sph(0.108, 0.123, 0.114, 0, 0, 0, 32, 24), p = g.attributes.position, G = (u, v) => Math.exp(-u * u - v * v);
+  for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i), nx = x / 0.108, ny = y / 0.123, f = z > 0 ? 1 : 0;
+    const kx = 1 - 0.14 * sm(-0.05, -0.95, ny), kz = 1 + f * (0.075 * G(nx / 0.13, (ny + 0.02) / 0.1) + 0.035 * G(nx / 0.45, (ny - 0.2) / 0.08) - 0.025 * G((Math.abs(nx) - 0.29) / 0.12, (ny - 0.085) / 0.07) + 0.02 * G(nx / 0.2, (ny + 0.62) / 0.12)) - (1 - f) * 0.04 * sm(-0.2, -0.9, ny);
+    p.setXYZ(i, x * kx, y, z * kz); }
+  g.computeVertexNormals(); g.translate(...hc); return g;
 }
 
+// Các khối của một người theo tư thế: 'sit' (tọa thiền), 'stand' (đứng, tay chắp trước bụng), 'anjali' (đứng chắp tay).
+// Đơn vị mét; đỉnh đầu ≈ 1,73 khi đứng. Mọi khối quét/tiện liền mạch nên không còn khớp cầu lộ ra ở vai, khuỷu.
+const TP = [[0.17, 0.98], [0.18, 1.06], [0.205, 1.18], [0.228, 1.29], [0.232, 1.35], [0.215, 1.395], [0.16, 1.432], [0.09, 1.457], [0.054, 1.472]];
+function parts(pose, bw) {
+  const cloth = [], trim = [], skin = [], sit = pose === 'sit', dy = sit ? -0.81 : 0, zs = 0.66, P = (sit ? [[0.205, 0.95]] : []).concat(TP).map(([r, y]) => [r, y + dy]);
+  const hc = [0, 1.61 + dy, 0], neckY = 1.47 + dy, waistY = 1.03 + dy, shY = 1.4 + dy;
+  const surf = (a, y, off = 0) => { const R = prof(P, y) + off; return [Math.sin(a) * R * bw, y, Math.cos(a) * R * zs]; };
+  cloth.push(K(lathe(P, 24, bw, zs), 0, (x, y) => sm(waistY, waistY + 0.12, y) * (1 - sm(shY - 0.04, shY + 0.04, y))));
+  if (sit) {   // vạt áo phủ lòng và hai gối khi ngồi kiết già
+    const lap = lathe([[0.02, 0.22], [0.17, 0.215], [0.3, 0.18], [0.385, 0.115], [0.402, 0.055], [0.375, 0.012], [0.29, 0]], 30, bw, 0.8, (y) => 0.05 * sm(0.18, 0.02, y)); lap.translate(0, 0, 0.06);
+    cloth.push(K(lap, (x, y) => 0.35 * sm(0.1, 0, y), 0));
+    [-1, 1].forEach((s) => cloth.push(sph(0.15, 0.095, 0.17, s * 0.25 * bw, 0.105, 0.11)));
+  } else {     // vạt áo dài tới mắt cá, loe dần, nếp dọc rõ dần về phía gấu; gấu áo lay theo gió và theo bước chân
+    cloth.push(K(lathe([[0.172, 1.03], [0.19, 0.9], [0.222, 0.7], [0.258, 0.45], [0.29, 0.22], [0.308, 0.07], [0.312, 0.026], [0.29, 0.012]], 28, bw, 0.86, (y) => 0.05 * sm(0.95, 0.25, y)), (x, y) => sm(0.8, 0.05, y), 0));
+    [-1, 1].forEach((s) => trim.push(sph(0.045, 0.026, 0.085, s * 0.085, 0.022, 0.15)));
+  }
+  [-1, 1].forEach((s) => {   // tay áo rộng: thuôn ở vai, loe ở cổ tay, phần dưới cẳng tay rủ thành túi vải
+    const A = [s * 0.19 * bw, shY - 0.02, 0], [E, C, H] = sit ? [[s * 0.25 * bw, 0.36, 0.05], AJ ? [s * 0.06, 0.46, 0.18] : [s * 0.09, 0.235, 0.205], AJ ? sph(0.022, 0.065, 0.04, s * 0.017, 0.535, 0.215) : sph(0.055, 0.026, 0.045, s * 0.022, 0.205, 0.245)]
+      : pose === 'anjali' ? [[s * 0.225 * bw, 1.17, 0.07], [s * 0.06, 1.27, 0.18], sph(0.022, 0.07, 0.042, s * 0.017, 1.345, 0.215)] : [[s * 0.24 * bw, 1.14, 0.045], [s * 0.085, 1.015, 0.19], sph(0.055, 0.03, 0.05, s * 0.024, 1.0, 0.215)];
+    cloth.push(sweep([A, E, C], dn(16, 6), dn(12, 6), (t, d) => (0.05 + 0.014 * sm(0, 0.5, t) + 0.045 * sm(0.45, 1, t)) * (d.y < 0 ? 1 + 1.1 * sm(0.35, 1, t) * -d.y : 1), (t) => [0.9 * sm(0.4, 1, t), 0]), sph(0.056, 0.05, 0.058, A[0] * 0.96, A[1] + 0.004, 0));
+    skin.push(blankUV(H), blankUV(sph(0.02, 0.036, 0.013, s * 0.106, hc[1] - 0.005, -0.005, 8, 6)));
+  });
+  // cổ áo giao lĩnh: vạt phải phủ chéo qua vạt trái tới hông, viền cổ ôm sau gáy
+  trim.push(ribbon([surf(1.25, neckY - 0.004, 0.004), surf(0.8, neckY - 0.035, 0.007), surf(0.3, neckY - 0.15, 0.009), surf(-0.22, neckY - 0.3, 0.009), surf(-0.45, waistY + 0.04, 0.009)], 0.021),
+    ribbon([surf(-1.25, neckY - 0.004, 0.004), surf(-0.8, neckY - 0.035, 0.006), surf(-0.3, neckY - 0.14, 0.006)], 0.021),
+    ribbon([surf(1.25, neckY - 0.004, 0.004), surf(2.2, neckY - 0.01, 0.004), surf(Math.PI, neckY - 0.012, 0.004), surf(-2.2, neckY - 0.01, 0.004), surf(-1.25, neckY - 0.004, 0.004)], 0.018));
+  // đai lưng bản rộng; khi đứng có hai dải buông trước hông, lay theo gió
+  const R = prof(P, waistY), sash = new THREE.TorusGeometry(1, 0.1, dn(8, 4), dn(32, 10)); sash.rotateX(Math.PI / 2); sash.scale(R * bw * 1.05, 0.3, R * zs * 1.1); sash.translate(0, waistY, 0); trim.push(sash);
+  if (!sit) [0, 0.05].forEach((o, i) => { const q = surf(-0.42 + o * 2, waistY - 0.02, 0.03); trim.push(ribbon([q, [q[0] + o, q[1] - 0.15, q[2] + 0.025], [q[0] + o * 2, q[1] - 0.34 + i * 0.06, q[2] + 0.03]], 0.022, (t) => [sm(0, 1, t), 0])); });
+  skin.push(blankUV(sweep([[0, neckY - 0.05, 0], [0, neckY + 0.08, 0.004]], 3, dn(12, 6), () => 0.047)), head(hc));
+  return { cloth, trim, skin, hc, neckY, waistY, shY, surf };
+}
+
+// Tóc: chỏm cầu ôm đầu, đỉnh có vệt chải; dưới chân tóc (cao ở trán, thấp dần về sau gáy) thì thu vào trong đầu nên viền tóc tự nhiên
 function hairGeo(style, hc) {
   if (style === 'cao') return null;
-  const cap = new THREE.SphereGeometry(1, dn(22, 9), dn(12, 5), 0, Math.PI * 2, 0, 1.62); cap.scale(0.1135, 0.129, 0.1195); cap.rotateX(-0.42);
-  const list = [cap];
-  if (style === 'buicao') list.push(sph(0.05, 0.05, 0.05, 0, 0.135, -0.03));
-  if (style === 'buithap') list.push(sph(0.05, 0.045, 0.045, 0, -0.035, -0.125));
-  if (style === 'dai') list.push(limb([0, -0.02, -0.11], [0, -0.31, -0.135], 0.046, 0.028), sph(0.03, 0.02, 0.03, 0, -0.06, -0.118, 8, 6));
+  const cap = sph(0.117, 0.132, 0.122, 0, 0, 0, 28, 18), p = cap.attributes.position;
+  for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i), ny = y / 0.132, a = Math.abs(Math.atan2(x, z)), h = 0.32 - 0.6 * sm(0, 1.6, a) - 0.3 * sm(1.6, 3.14, a);
+    const k = ny < h - 0.05 ? 0.9 : (0.92 + 0.08 * sm(h - 0.05, h + 0.06, ny)) * (1 + 0.018 * Math.sin(Math.atan2(x, z) * 16 + ny * 4) * sm(h, h + 0.4, ny)); p.setXYZ(i, x * k, y * k, z * k); }
+  cap.computeVertexNormals(); const list = [cap], ring = (x, y, z, r) => { const t = new THREE.TorusGeometry(r, 0.008, 5, 16); t.rotateX(Math.PI / 2 - 0.5); t.translate(x, y, z); return t; };
+  if (style === 'buicao') list.push(sph(0.055, 0.05, 0.055, 0, 0.13, -0.04), ring(0, 0.1, -0.035, 0.035));
+  if (style === 'buithap') list.push(sph(0.055, 0.048, 0.05, 0, -0.04, -0.13), ring(0, -0.035, -0.105, 0.034));
+  if (style === 'dai') list.push(K(sweep([[0, -0.02, -0.112], [0, -0.16, -0.14], [0, -0.33, -0.13]], dn(10, 5), dn(8, 5), (t) => 0.045 - 0.025 * t, (t) => [0.8 * t, 0]), (x, y) => 0.8 * sm(-0.05, -0.33, y), 0), ring(0, -0.035, -0.115, 0.03));
   const g = merge(list); g.translate(hc[0], hc[1], hc[2]); return g;
 }
 
-function accGeo(kind, p, bw) {
-  if (kind === 'hat') { const g = new THREE.TorusGeometry(0.118, 0.0105, 6, 30); g.rotateX(Math.PI / 2 + 0.95); g.scale(1, 1, 1.2); g.translate(0, p.neckY - 0.075, 0.062); return g; }
-  if (kind === 'khan') return merge([limb([-0.17 * bw, p.shY + 0.03, 0.085], [0.15 * bw, p.waistY + 0.04, 0.135], 0.036, 0.03, 8), limb([-0.17 * bw, p.shY + 0.03, -0.085], [0.15 * bw, p.waistY + 0.04, -0.12], 0.036, 0.03, 8), sph(0.04, 0.03, 0.09, -0.17 * bw, p.shY + 0.045, 0, 8, 6)]);
+// Phụ kiện: tràng hạt 26 hạt rủ trước ngực (hạt mẫu lớn ở giữa), khăn vai vắt chéo trước và sau
+function accGeo(kind, p) {
+  if (kind === 'hat') { const L = []; for (let i = 0; i < 26; i++) { const a = (i / 26) * 2 * Math.PI - Math.PI, f = (Math.cos(a) + 1) / 2, r = i === 13 ? 0.02 : 0.012; L.push(sph(r, r, r, ...p.surf(a, p.neckY - 0.012 - 0.2 * f * f, 0.016 + 0.01 * f), 6, 4)); } return merge(L); }
+  if (kind === 'khan') { const s = p.surf, w = (t) => [0.3 * t, 0]; return merge([ribbon([s(-1.15, p.shY + 0.03, 0.02), s(-0.55, p.shY - 0.08, 0.02), s(0.05, p.waistY + 0.2, 0.02), s(0.55, p.waistY + 0.06, 0.02)], 0.04, w),
+    ribbon([s(-1.15, p.shY + 0.03, 0.02), s(-2, p.shY - 0.08, 0.02), s(3, p.waistY + 0.2, 0.02), s(2.4, p.waistY + 0.06, 0.02)], 0.04, w)]); }
   return null;
 }
 
 const BW = { thanh: 0.92, vua: 1, day: 1.1 };
 const shade = (hex, k) => new THREE.Color(hex).multiplyScalar(k);
+const paint = (list, c) => list.filter(Boolean).map((g) => { g = norm(g); const n = g.attributes.position.count, a = new Float32Array(n * 3), k = new THREE.Color(c); for (let i = 0; i < n; i++) k.toArray(a, i * 3); g.setAttribute('color', new THREE.BufferAttribute(a, 3)); return g; });
 
-// Nhân vật của người dùng: ba tư thế dựng sẵn, vật liệu dùng chung, mặt mở mắt / khép mắt
-export function buildFigure(look) {
-  const L = { ...defaultLook(), ...look }, bw = BW[L.build] || 1, robeHex = OPTIONS.robe[L.robe][1], trimHex = OPTIONS.trim[L.trim][1];
-  const mats = {
-    cloth: new THREE.MeshStandardMaterial({ color: robeHex, roughness: 0.92 }),
-    trim: new THREE.MeshStandardMaterial({ color: trimHex ? new THREE.Color(trimHex) : shade(robeHex, 0.62), roughness: 0.85 }),
-    skin: new THREE.MeshStandardMaterial({ color: OPTIONS.skin[L.skin][1], roughness: 0.75 }),
-    hair: new THREE.MeshStandardMaterial({ color: OPTIONS.hairColor[L.hairColor][1], roughness: 0.6 }),
-    bead: new THREE.MeshStandardMaterial({ color: '#5a3b28', roughness: 0.5 }),
+// Vật liệu nhân vật (dùng cho cả hội chúng). kind 1 vải · 2 da · 3 tóc. Trên GPU, không tốn CPU:
+// thở 4 giây (ngực phồng theo aK.y, mỗi người lệch pha), gió lay gấu áo/tay áo/dải đai (aK.x), gấu áo đưa theo bước kinh hành
+// (uWalk pha bước, uWalkA biên độ), cúi lạy quanh hông (uBow, uHinge); viền sáng Fresnel ấm để nổi trên mây sáng lẫn trời đêm;
+// vải có vân dệt mịn (mờ dần ở xa để không gợn), da có ánh ấm như tán xạ dưới da.
+function figMat(m, U, kind) {
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, U, { uT: UNI.uTime });
+    sh.vertexShader = 'attribute vec2 aK; uniform float uT, uWalk, uWalkA, uBow, uHinge; varying vec3 vOp;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+ vOp = position; float ph = 0.;
+#ifdef USE_INSTANCING
+ ph = instanceMatrix[3].x*.37 + instanceMatrix[3].z*.21;
+#endif
+ float br = sin(uT*1.5708 + ph), wd = aK.x*(.55 + .45*sin(uT*.6 + ph + position.y*2.));
+ transformed.xz *= 1. + .022*aK.y*br; transformed.y += .005*aK.y*br;
+ transformed.x += sin(uT*1.9 + position.y*7. + ph)*.012*wd + aK.x*uWalkA*.022*sin(uWalk);
+ transformed.z += cos(uT*1.3 + position.x*6. + ph)*.009*wd + aK.x*uWalkA*.05*max(0., sin(uWalk + step(0., position.x)*3.1416));
+ if (transformed.y > uHinge) { float cb = cos(uBow), sb = sin(uBow); vec3 q = transformed - vec3(0., uHinge, .04); transformed = vec3(q.x, q.y*cb - q.z*sb, q.y*sb + q.z*cb) + vec3(0., uHinge, .04); }`);
+    sh.fragmentShader = 'varying vec3 vOp;\n' + sh.fragmentShader
+      .replace('#include <color_fragment>', '#include <color_fragment>\n' + (kind === 1 ? ' float wv = sin(vOp.x*700. + vOp.z*700.)*sin(vOp.y*700.); diffuseColor.rgb *= 1. + .06*wv*clamp(1. - fwidth(vOp.y)*900., 0., 1.);' : ''))
+      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+ float rimF = 1. - abs(dot(normalize(vViewPosition), normal)); totalEmissiveRadiance += vec3(1., .85, .62)*${kind === 2 ? '.16' : '.22'}*rimF*rimF*rimF;` + (kind === 2 ? ' totalEmissiveRadiance += diffuseColor.rgb*vec3(.13,.045,.03);' : ''));
   };
+  m.customProgramCacheKey = () => 'fig' + kind;
+  return m;
+}
+
+// Nhân vật của người dùng: ba tư thế dựng sẵn; áo, viền, tóc, phụ kiện gộp một lần vẽ (màu ở đỉnh), da một lần vẽ (gương mặt vẽ)
+export function buildFigure(look) {
+  const L = { ...defaultLook(), ...look }, bw = BW[L.build] || 1, robeHex = OPTIONS.robe[L.robe][1], trimHex = OPTIONS.trim[L.trim][1], trimC = trimHex ? new THREE.Color(trimHex) : shade(robeHex, 0.62);
+  const U = { uBow: { value: 0 }, uHinge: { value: 1 }, uWalk: { value: 0 }, uWalkA: { value: 0 } };
+  const mats = { cloth: figMat(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.88, side: THREE.DoubleSide }), U, 1), skin: figMat(new THREE.MeshStandardMaterial({ color: OPTIONS.skin[L.skin][1], roughness: 0.62 }), U, 2) };
   const fOpt = { mood: L.mood, age: L.age, shaved: L.hair === 'cao' }, faces = { open: faceTex({ ...fOpt, closed: false }), closed: faceTex({ ...fOpt, closed: true }) };
   mats.skin.map = faces.open;
   const group = new THREE.Group(), poses = {};
   ['stand', 'anjali', 'sit'].forEach((pose) => {
     const p = parts(pose, bw), g = new THREE.Group();
-    const add = (geo, m) => { if (!geo) return; const mesh = new THREE.Mesh(geo, m); mesh.castShadow = true; g.add(mesh); };
-    add(merge(p.cloth), mats.cloth); add(merge(p.trim), mats.trim); add(merge(p.skin), mats.skin); add(hairGeo(L.hair, p.hc), mats.hair);
-    add(accGeo(L.acc, p, bw), L.acc === 'hat' ? mats.bead : mats.trim);
+    const add = (geo, m) => { const mesh = new THREE.Mesh(geo, m); mesh.castShadow = true; g.add(mesh); };
+    add(merge([...paint(p.cloth, robeHex), ...paint(p.trim, trimC), ...paint([hairGeo(L.hair, p.hc)], OPTIONS.hairColor[L.hairColor][1]), ...paint([accGeo(L.acc, p)], L.acc === 'hat' ? '#5a3b28' : trimC)]), mats.cloth);
+    add(merge(p.skin), mats.skin);
     g.visible = pose === 'stand'; poses[pose] = g; group.add(g);
   });
   group.scale.setScalar(S * (L.height || 1));
   return {
     group, poses, mats, pose: 'stand',
-    setPose(p) { this.pose = p; Object.keys(poses).forEach((k) => (poses[k].visible = k === p)); this.eyes(p === 'sit'); },
+    setPose(p) { this.pose = p; U.uHinge.value = p === 'sit' ? 0.2 : 1; Object.keys(poses).forEach((k) => (poses[k].visible = k === p)); this.eyes(p === 'sit'); },
     eyes(closed) { mats.skin.map = closed ? faces.closed : faces.open; },
+    // kinh hành: pha bước (theo nhịp nhún của world.js) và biên độ 0..1 → gấu áo đưa trước theo từng chân
+    walk(phase, amt) { U.uWalk.value = phase; U.uWalkA.value = amt; },
+    // cúi lạy (radian) quanh hông, như hội chúng
+    bow(v) { U.uBow.value = v; },
     dispose() { group.traverse((o) => o.geometry && o.geometry.dispose()); Object.values(mats).forEach((m) => m.dispose()); faces.open.dispose(); faces.closed.dispose(); },
   };
 }
@@ -154,7 +205,7 @@ export const CROWD_LOD = [{ near: 30, mid: 130 }, { near: 45, mid: 170 }, { near
 const ROBES = ['#8a94a8', '#8a94a8', '#b9bcc4', '#8d6548', '#e9e2d0', '#4f5d86', '#75805a', '#9aa3b5'];
 export function makeCrowd(list, seed = 3) {
   const G = crowdGeos(), LG = lodGeos(), r = rng(seed), n = list.length, d = new THREE.Object3D(), c = new THREE.Color(), group = new THREE.Group();
-  const cloth = new THREE.InstancedMesh(G.cloth, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92 }), n);
+  const cloth = new THREE.InstancedMesh(G.cloth, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide }), n);
   const skin = new THREE.InstancedMesh(G.skin, new THREE.MeshStandardMaterial({ map: faceTex({ closed: true, mood: 'hoa' }), roughness: 0.75 }), n);
   const hairOf = new Int8Array(n), mats = [], robe = new Float32Array(n * 3), skinC = new Float32Array(n * 3), hairC = new Float32Array(n * 3), pos = [];
   list.forEach((p, i) => {
@@ -168,8 +219,8 @@ export function makeCrowd(list, seed = 3) {
   const hairMat = new THREE.MeshStandardMaterial({ roughness: 0.6 });
   const caps = new THREE.InstancedMesh(G.cap, hairMat, n), buns = new THREE.InstancedMesh(G.bun, hairMat, n);
   // cúi lạy: phần thân trên gập về trước quanh hông; chắp tay: đổi sang bộ hình ngồi chắp tay
-  const bow = { value: 0 }, bend = (m) => { m.onBeforeCompile = (sh) => { sh.uniforms.uBow = bow; sh.vertexShader = 'uniform float uBow;\n' + sh.vertexShader.replace('#include <begin_vertex>', BEND); }; };
-  [cloth.material, skin.material, hairMat].forEach(bend);
+  const bow = { value: 0 }, CU = { uBow: bow, uHinge: { value: 0.2 }, uWalk: { value: 0 }, uWalkA: { value: 0 } };   // cả hội chúng thở lệch nhịp, gấu áo lay, viền sáng như nhân vật chính
+  [cloth.material, skin.material, hairMat].forEach((m, i) => figMat(m, CU, i + 1));
   const lodMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
   lodMat.onBeforeCompile = (sh) => {
     sh.uniforms.uBow = bow;

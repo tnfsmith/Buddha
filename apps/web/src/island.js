@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { NOISE, OUT, UNI, rng, makeNoise, leafTex, grassTex, tileTex, steleTex, tactile, hue } from './gfx.js';
+import { NOISE, OUT, UNI, rng, makeNoise, leafTex, tileTex, steleTex, tactile, hue, sweep } from './gfx.js';
 
 export const SX = 34, SZ = 24, HILL = { x: -13, z: -7, h: 8, r: 8.5 }, POND = { x: -3, z: 9.3, rx: 7.4, rz: 5.2 };
 export function groundH(x, z) {
@@ -194,13 +194,15 @@ function leafMat(kind) {
 }
 export function leafTree({ count = 700, kind = 'bodhi', radius = 5, trunkH = 6.5, seed = 2, far = false }) {
   const G = new THREE.Group(), r = rng(seed), sh = far ? 0 : 1, BARK = '#6b4b34';
-  const tg = new THREE.CylinderGeometry(radius * 0.085, radius * 0.19, trunkH, far ? 5 : 10, far ? 2 : 6), tp = tg.attributes.position;
-  for (let i = 0; i < tp.count; i++) { const y = tp.getY(i) / trunkH + 0.5; tp.setX(i, tp.getX(i) + Math.sin(y * 2.6) * radius * 0.07); tp.setZ(i, tp.getZ(i) + Math.cos(y * 2.1) * radius * 0.04); }
-  tg.translate(0, trunkH / 2, 0); tg.computeVertexNormals(); G.add(M(tg, WOOD, BARK, 0, 0, 0, sh));
-  const blobs = [[0, trunkH + radius * 0.5, 0, radius * 0.8]];
+  // thân cong nhẹ, gốc loe thành rễ bám đất, vỏ có gờ dọc; cành cong vồng lên tới từng chùm tán, cây gần có thêm cành con
+  const lx = (r() - 0.5) * radius * 0.16, lz = (r() - 0.5) * radius * 0.16, ang = (d) => Math.atan2(d.x, d.z);
+  G.add(M(sweep([[0, -0.4, 0], [lx, trunkH * 0.4, lz], [-lx * 0.5, trunkH * 0.75, -lz * 0.5], [0, trunkH * 1.02, 0]], far ? 5 : 16, far ? 5 : 11,
+    (t, d) => radius * (0.09 + 0.1 * (1 - t) ** 3 + (far ? 0 : 0.14 * (1 - t) ** 8 * Math.max(0, Math.sin(ang(d) * 5)))) * (far ? 1 : 1 + 0.07 * Math.sin(ang(d) * 7 + t * 5))), WOOD, BARK, 0, 0, 0, sh));
+  const blobs = [[0, trunkH + radius * 0.5, 0, radius * 0.8]], limb = (A, B, r0, r1, n) => G.add(M(sweep([A, [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2 + radius * 0.12, (A[2] + B[2]) / 2], B], n, far ? 4 : 6, (t) => radius * (r0 - (r0 - r1) * t)), WOOD, BARK, 0, 0, 0, sh));
   for (let i = 0; i < 6; i++) { const a = (i / 6) * 6.28 + r(), d = radius * (0.55 + r() * 0.25), y = trunkH + radius * (0.05 + r() * 0.35); blobs.push([Math.cos(a) * d, y, Math.sin(a) * d, radius * (0.5 + r() * 0.2)]);
     if (far && i % 2) continue;   // cây ở xa: ba cành là đủ
-    const bl = new THREE.CylinderGeometry(radius * 0.025, radius * 0.06, d * 1.25, far ? 4 : 6, 1, far); bl.translate(0, d * 0.62, 0); const b = M(bl, WOOD, BARK, 0, trunkH * 0.82, 0, sh); b.rotation.set(0, -a + Math.PI / 2, 0); b.rotateZ(-1.05); G.add(b); }
+    const o = [0, trunkH * (0.62 + r() * 0.22), 0], e = [Math.cos(a) * d * 0.85, y - radius * 0.12, Math.sin(a) * d * 0.85]; limb(o, e, 0.055, 0.018, far ? 3 : 8);
+    if (!far) { const m = [e[0] * 0.55, (o[1] + e[1]) / 2 + radius * 0.1, e[2] * 0.55], b2 = a + (r() - 0.5) * 1.6; limb(m, [m[0] + Math.cos(b2) * radius * 0.45, m[1] + radius * 0.3, m[2] + Math.sin(b2) * radius * 0.45], 0.026, 0.01, 4); } }
   const center = new THREE.Vector3(0, trunkH + radius * 0.25, 0), geo = QUAD.clone(), aC = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) center.toArray(aC, i * 3);
   geo.setAttribute('aC', new THREE.InstancedBufferAttribute(aC, 3));
@@ -208,7 +210,7 @@ export function leafTree({ count = 700, kind = 'bodhi', radius = 5, trunkH = 6.5
   for (let i = 0; i < count; i++) {
     const b = blobs[Math.floor(r() * blobs.length)], u = r() * 2 - 1, a = r() * 6.28, s = Math.sqrt(1 - u * u), rr = b[3] * (0.55 + 0.45 * Math.cbrt(r()));
     d.position.set(b[0] + rr * s * Math.cos(a), b[1] + rr * u * 0.72, b[2] + rr * s * Math.sin(a)); d.rotation.set(r() * 3, r() * 6, r() * 3); d.scale.setScalar((0.75 + r() * 0.6) * radius * 0.2); d.updateMatrix();
-    leaves.setMatrixAt(i, d.matrix); leaves.setColorAt(i, c.setScalar(0.72 + r() * 0.5));
+    leaves.setMatrixAt(i, d.matrix); const k = 0.72 + r() * 0.5; leaves.setColorAt(i, c.setRGB(k * (0.9 + r() * 0.2), k, k * (0.85 + r() * 0.2)));   // lệch sắc nhẹ từng chùm
   }
   leaves.userData.leaf = { kind, center };
   if (!far) { leaves.castShadow = true; leaves.customDepthMaterial = leafMat(kind).userData.depth; leaves.frustumCulled = false; }
@@ -263,16 +265,27 @@ export function buildHome() {
   const lamp = (p, x, y, z, k = 1) => { add(M(new THREE.CylinderGeometry(0.15 * k, 0.24 * k, 0.9 * k, 6), STONE, '#bdb6a8', x, y + 0.45 * k, z, 1), p); add(M(new THREE.BoxGeometry(0.4 * k, 0.34 * k, 0.4 * k), LAMP, 0, x, y + 1.07 * k, z, 0), p); const cap = new THREE.ConeGeometry(0.44 * k, 0.3 * k, 4); cap.rotateY(Math.PI / 4); add(M(cap, STONE, '#bdb6a8', x, y + 1.39 * k, z, 1), p); };
 
   // Cỏ, hoa, đá, lối đá
-  const q1 = new THREE.PlaneGeometry(0.95, 0.8); q1.translate(0, 0.4, 0); const q2 = q1.clone(); q2.rotateY(Math.PI / 2);
-  const gq = mergeGeometries([q1, q2]); const nn = gq.attributes.normal; for (let i = 0; i < nn.count; i++) nn.setXYZ(i, 0, 1, 0);
-  const gm = new THREE.MeshStandardMaterial({ map: grassTex(), alphaTest: 0.35, side: THREE.DoubleSide, roughness: 1 });
-  gm.onBeforeCompile = (sh) => { sh.uniforms.uTime = U.uTime; sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n transformed.x += sin(uTime*1.7 + instanceMatrix[3].x*0.7 + instanceMatrix[3].z*0.5)*0.1*uv.y;'); };
-  const grass = (H.grass = add(new THREE.InstancedMesh(gq, gm, 3000)));   // world.js giảm số bụi cỏ ở mức chất lượng 0
-  scatter(3000, -0.3, (x, z, i) => { d.position.set(x, groundH(x, z) - 0.05, z); d.rotation.set(0, r() * 6.28, 0); d.scale.set(0.8 + r() * 0.9, 0.6 + r() * 0.9, 0.8 + r() * 0.9); d.updateMatrix(); grass.setMatrixAt(i, d.matrix); grass.setColorAt(i, c.setHSL(0.24 + r() * 0.07, 0.42 + r() * 0.2, 0.3 + r() * 0.16)); });
+  // Cỏ: mỗi bụi 6 lá cong thuôn nhọn (36 tam giác, không texture, không alpha test), gốc sẫm ngọn sáng. Hoa nhỏ 5 cánh trên cuống.
+  // Gió thổi thành đợt cùng một hướng khắp đảo (dời trong hệ thế giới rồi xoay ngược về hệ từng bụi): ngọn lay nhiều, gốc đứng yên.
+  const blades = (() => { const pos = [], col = [], idx = [], q = rng(9);
+    for (let b = 0; b < 6; b++) { const a = q() * 6.28, lean = 0.2 + q() * 0.45, h = 0.42 + q() * 0.48, w = 0.04 + q() * 0.025, ox = (q() - 0.5) * 0.32, oz = (q() - 0.5) * 0.32, ca = Math.cos(a), sa = Math.sin(a), o = pos.length / 3;
+      for (let k = 0; k <= 3; k++) { const t = k / 3, ww = w * (1 - t * 0.92), x = ox + ca * lean * h * t * t, z = oz + sa * lean * h * t * t, v = 0.42 + 0.7 * t;
+        pos.push(x - sa * ww, h * t, z + ca * ww, x + sa * ww, h * t, z - ca * ww); col.push(v * 0.9, v, v * 0.72, v * 0.9, v, v * 0.72);
+        if (k < 3) idx.push(o + k * 2, o + k * 2 + 1, o + k * 2 + 2, o + k * 2 + 1, o + k * 2 + 3, o + k * 2 + 2); } }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(pos.map((_, i) => (i % 3 === 1 ? 1 : 0)), 3)); g.setIndex(idx); return g; })();
+  const sway = (m, k) => { m.onBeforeCompile = (sh) => { sh.uniforms.uTime = U.uTime; sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+ vec2 wp = instanceMatrix[3].xz; float hh = min(position.y*${k}, 1.), gust = .5 + .5*sin(uTime*1.1 - wp.x*.22 - wp.y*.13); hh *= hh;
+ mat3 R = mat3(normalize(instanceMatrix[0].xyz), normalize(instanceMatrix[1].xyz), normalize(instanceMatrix[2].xyz));
+ transformed += transpose(R)*vec3((.03 + .1*gust)*sin(uTime*1.7 + wp.x*.8 + wp.y*.6) + .14*gust, 0., .05*cos(uTime*1.3 + wp.y*.7))*hh;`); }; m.customProgramCacheKey = () => k; return m; };
+  const grass = (H.grass = add(new THREE.InstancedMesh(blades, sway(new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.85 }), '1.1'), 3000)));   // world.js giảm số bụi cỏ ở mức chất lượng 0
+  scatter(3000, -0.3, (x, z, i) => { d.position.set(x, groundH(x, z) - 0.05, z); d.rotation.set(0, r() * 6.28, 0); d.scale.set(0.8 + r() * 0.9, 0.55 + r() * 0.7, 0.8 + r() * 0.9); d.updateMatrix(); grass.setMatrixAt(i, d.matrix); grass.setColorAt(i, c.setHSL(0.22 + r() * 0.08, 0.45 + r() * 0.18, 0.32 + r() * 0.14)); });
   grass.receiveShadow = true;
-  const flowers = add(new THREE.InstancedMesh(new THREE.SphereGeometry(0.075, 4, 3), new THREE.MeshStandardMaterial({ roughness: 0.6, emissive: '#ffffff', emissiveIntensity: 0.25 }), 190));
+  const fg = (() => { const h = hue(new THREE.CircleGeometry(0.1, 15), '#fff'), p = h.attributes.position; h.attributes.color.setXYZ(0, 1, 0.78, 0.3);
+    for (let i = 1; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), k = 0.45 + 0.55 * Math.abs(Math.cos(Math.atan2(y, x) * 2.5)); p.setXY(i, x * k, y * k); }
+    h.rotateX(-Math.PI / 2); h.translate(0, 0.42, 0); const st = new THREE.CylinderGeometry(0.006, 0.009, 0.42, 3, 1, true); st.translate(0, 0.21, 0); return mergeGeometries([h, hue(st, '#6f9a4a')].map((g) => g.toNonIndexed())); })();
+  const flowers = add(new THREE.InstancedMesh(fg, sway(new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.6 }), '2.2'), 190));
   const fc = ['#fff6d8', '#ffd9e6', '#ffe58a', '#e6dcff', '#ffffff'];
-  scatter(190, 0, (x, z, i) => { d.position.set(x, groundH(x, z) + 0.42 + r() * 0.2, z); d.rotation.set(0, 0, 0); d.scale.setScalar(0.7 + r() * 0.8); d.updateMatrix(); flowers.setMatrixAt(i, d.matrix); flowers.setColorAt(i, c.set(fc[Math.floor(r() * fc.length)])); });
+  scatter(190, 0, (x, z, i) => { d.position.set(x, groundH(x, z) - 0.02, z); d.rotation.set(0, r() * 6.28, 0); d.scale.setScalar(0.8 + r() * 0.8); d.updateMatrix(); flowers.setMatrixAt(i, d.matrix); flowers.setColorAt(i, c.set(fc[Math.floor(r() * fc.length)])); });
   // lối đá lớn dần theo tiến trình (uGrow), cùng vân đá với phần còn lại
   H.grow = { value: 1 }; const stoneMat = tactile(std('#bdb6a8', { roughness: 1 }), [0.34, 0.18, 0, 0]), vein = stoneMat.onBeforeCompile;
   stoneMat.onBeforeCompile = (sh) => { vein(sh); sh.uniforms.uGrow = H.grow; sh.vertexShader = 'uniform float uGrow;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n float gI = float(gl_InstanceID); float keep = step(0.5, uGrow*3.0 - mod(gI, 3.0)*0.9 + 0.4); float gs = mix(0.5, 1.12, smoothstep(0.0, 0.95, uGrow))*keep; transformed.xz *= gs*(1.0 + (1.0-uGrow)*0.25*sin(gI*7.3)); transformed.y *= keep*mix(1.6, 1.0, uGrow);'); };

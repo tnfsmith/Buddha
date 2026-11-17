@@ -4,27 +4,30 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 const PAL = ['#e8b93a', '#8a6a4c', '#4f86c6', '#d9694a', '#7aa65a'];
-// aK = (cánh: +1 trái · −1 phải · 0 thân, 1 nếu lấy màu lông của instance / 0 nếu giữ màu đỉnh: bụng, mỏ, mắt, chân)
+// aK = (cánh: +1 trái · −1 phải · 0 thân, tỉ lệ màu lông của instance 0..1 — còn lại là màu đỉnh: bụng, mỏ, mắt, chân)
+const sm = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const shape = (pts) => new THREE.ShapeGeometry(new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y))));
 function birdGeo() {
-  const C = new THREE.Color(), part = (g, hex, wing = 0) => { g = g.index ? g.toNonIndexed() : g; const n = g.attributes.position.count, c = new Float32Array(n * 3), k = new Float32Array(n * 2); C.set(hex || '#fff');
-    for (let i = 0; i < n; i++) { C.toArray(c, i * 3); k[i * 2] = wing; k[i * 2 + 1] = hex ? 0 : 1; } g.setAttribute('color', new THREE.BufferAttribute(c, 3)); g.setAttribute('aK', new THREE.BufferAttribute(k, 2)); g.deleteAttribute('uv'); return g; };
-  const b = new THREE.SphereGeometry(1, 8, 6); b.scale(0.13, 0.125, 0.2); b.translate(0, 0.13, 0);
-  const bl = new THREE.SphereGeometry(1, 6, 4); bl.scale(0.105, 0.09, 0.15); bl.translate(0, 0.095, 0.03);
-  const h = new THREE.SphereGeometry(0.095, 8, 6); h.translate(0, 0.25, 0.14);
-  const bk = new THREE.ConeGeometry(0.03, 0.09, 5); bk.rotateX(Math.PI / 2); bk.translate(0, 0.245, 0.265);
-  const tl = new THREE.BoxGeometry(0.09, 0.02, 0.2); tl.rotateX(-0.35); tl.translate(0, 0.16, -0.25);
-  const e1 = new THREE.SphereGeometry(0.016, 4, 3); e1.translate(0.06, 0.275, 0.2); const e2 = e1.clone(); e2.translate(-0.12, 0, 0);
-  const l1 = new THREE.CylinderGeometry(0.008, 0.008, 0.09, 4); l1.translate(0.04, 0.02, 0.02); const l2 = l1.clone(); l2.translate(-0.08, 0, 0);
-  const wing = (s) => { const g = new THREE.BoxGeometry(0.26, 0.015, 0.16); g.translate(s * 0.22, 0.17, 0); return part(g, 0, s); };   // gốc cánh ở (±0,09; 0,17)
-  return mergeGeometries([part(b), part(bl, '#efe6d2'), part(h), part(bk, '#e0902a'), part(tl), part(e1, '#151515'), part(e2, '#151515'), part(l1, '#6b4a2a'), part(l2, '#6b4a2a'), wing(1), wing(-1)]);
+  const C = new THREE.Color(), part = (g, hex, wing = 0, fy = null) => { g = g.index ? g.toNonIndexed() : g; const p = g.attributes.position, n = p.count, c = new Float32Array(n * 3), k = new Float32Array(n * 2); C.set(hex || '#efe6d2');
+    for (let i = 0; i < n; i++) { C.toArray(c, i * 3); k[i * 2] = wing; k[i * 2 + 1] = hex ? 0 : fy ? fy(p.getY(i)) : 1; } g.setAttribute('color', new THREE.BufferAttribute(c, 3)); g.setAttribute('aK', new THREE.BufferAttribute(k, 2)); g.deleteAttribute('uv'); return g; };
+  // thân hình giọt nước liền một khối (ngực tròn, thuôn về đuôi); lưng màu lông, bụng sáng chuyển dần
+  const b = new THREE.LatheGeometry([[0.001, -0.27], [0.05, -0.21], [0.105, -0.1], [0.13, 0], [0.118, 0.1], [0.07, 0.17], [0.001, 0.2]].map(([r, y]) => new THREE.Vector2(r, y)), 12); b.rotateX(Math.PI / 2); b.scale(1, 0.95, 1); b.translate(0, 0.13, 0);
+  const h = new THREE.SphereGeometry(0.095, 12, 10); h.translate(0, 0.25, 0.14);
+  const bk = new THREE.ConeGeometry(0.028, 0.09, 6); bk.rotateX(Math.PI / 2); bk.translate(0, 0.245, 0.265);
+  const eye = (s) => { const e = new THREE.SphereGeometry(0.017, 8, 6); e.translate(s * 0.062, 0.275, 0.205); const l = new THREE.SphereGeometry(0.006, 5, 4); l.translate(s * 0.068, 0.283, 0.219); return [part(e, '#151515'), part(l, '#ffffff')]; };
+  // đuôi xòe ba lông; cánh dẹt có mép sau khía thành lông vũ, gốc cánh ở (±0,09; 0,17) để shader vỗ cánh quanh trục thân
+  const tl = shape([[0, 0], [-0.07, -0.2], [-0.035, -0.235], [0, -0.215], [0.035, -0.235], [0.07, -0.2]]); tl.rotateX(Math.PI / 2 - 0.3); tl.translate(0, 0.17, -0.17);
+  const wing = (s) => { const g = shape([[0, 0.08], [0.1, 0.1], [0.22, 0.07], [0.31, 0.01], [0.25, -0.02], [0.26, -0.06], [0.19, -0.05], [0.18, -0.09], [0.11, -0.07], [0.08, -0.1], [0, -0.07]]); g.rotateX(Math.PI / 2); g.translate(0.09, 0.17, 0); if (s < 0) g.scale(-1, 1, 1); return part(g, 0, s); };
+  const leg = (s) => { const g = new THREE.CylinderGeometry(0.008, 0.008, 0.09, 4); g.translate(s * 0.04, 0.02, 0.02); return part(g, '#6b4a2a'); };
+  return mergeGeometries([part(b, 0, 0, (y) => sm(0.05, 0.14, y)), part(h, 0, 0, (y) => sm(0.2, 0.26, y)), part(bk, '#e0902a'), part(tl), ...eye(1), ...eye(-1), leg(1), leg(-1), wing(1), wing(-1)]);
 }
 
 export function buildBirds(n = 12) {
   const group = new THREE.Group(), birds = [], V = (x, y, z) => new THREE.Vector3(x, y, z), geo = birdGeo(), flap = new Float32Array(n), C = new THREE.Color();
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8, side: THREE.DoubleSide });
   mat.onBeforeCompile = (sh) => { sh.vertexShader = 'attribute vec2 aK; attribute float iF;\n' + sh.vertexShader
-    .replace('#include <color_vertex>', 'vColor = vec4(aK.y > .5 ? instanceColor : color, 1.);')
-    .replace('#include <begin_vertex>', '#include <begin_vertex>\n if (aK.x != 0.) { vec2 pv = vec2(.09*aK.x, .17), q = transformed.xy - pv; float a = iF*aK.x, c = cos(a), s = sin(a); transformed.xy = pv + vec2(q.x*c - q.y*s, q.x*s + q.y*c); }'); };
+    .replace('#include <color_vertex>', 'vColor = vec4(mix(color, instanceColor, aK.y), 1.);')
+    .replace('#include <begin_vertex>', '#include <begin_vertex>\n if (aK.x != 0.) { vec3 pv = vec3(.09*aK.x, .17, 0.), q = transformed - pv; float f = clamp(-iF - 1., 0., 1.), a = mix(iF, -.25, f)*aK.x, b = 1.4*f*aK.x, c = cos(b), s = sin(b); q = vec3(q.x*c + q.z*s, q.y, q.z*c - q.x*s); c = cos(a); s = sin(a); transformed = pv + vec3(q.x*c - q.y*s, q.x*s + q.y*c, q.z); }'); };
   geo.setAttribute('iF', new THREE.InstancedBufferAttribute(flap, 1));
   const mesh = new THREE.InstancedMesh(geo, mat, n); mesh.castShadow = true; mesh.frustumCulled = false; mesh.count = 0; mesh.visible = false; group.add(mesh);
   for (let i = 0; i < n; i++) {
@@ -55,7 +58,7 @@ export function buildBirds(n = 12) {
         if (k >= 1) { if (B.state === 'arrive') { B.state = 'perch'; B.t = 0; B.dur = 7 + Math.random() * 9; B.chirpIn = 0.6 + Math.random(); B.yaw0 = B.yaw; } else { B.state = 'away'; B.t = 0; B.wait = (9 + Math.random() * 20) / fq; B.g.visible = false; busy.delete(B.perch); } } }
       else if (B.state === 'perch') { const P = perches[B.perch]; if (P) B.b.copy(P.p);
         const hop = Math.max(0, Math.sin(B.t * 5.2 + B.a.z)) * (Math.sin(B.t * 0.9 + B.a.x) > 0.55 ? 0.07 : 0); B.g.position.set(B.b.x, B.b.y + hop, B.b.z);
-        B.g.rotation.set(Math.sin(B.t * 3.1) * 0.08, B.yaw0 + Math.sin(B.t * 0.8 + B.a.x) * 0.9, Math.sin(B.t * 2.3) * 0.12); B.flap = -1.25;
+        B.g.rotation.set(Math.sin(B.t * 3.1) * 0.08, B.yaw0 + Math.sin(B.t * 0.8 + B.a.x) * 0.9, Math.sin(B.t * 2.3) * 0.12); B.flap = -2;   // đậu: xếp cánh dọc theo lưng
         B.chirpIn -= dt; if (B.chirpIn <= 0) { B.chirpIn = (1.6 + Math.random() * 3.2) / Math.sqrt(fq); if (onChirp && cam) { tmp.copy(B.g.position).project(cam); onChirp(Math.max(-1, Math.min(1, tmp.x)), 2 + Math.floor(Math.random() * 4), B.a.x); } }
         if (B.t > B.dur || !P || (P.moved && P.moved())) { B.state = 'leave'; B.t = 0; B.dur = 4.5 + Math.random(); const an = Math.random() * 6.283; B.a.set(B.b.x + Math.cos(an) * 60, B.b.y + 24, B.b.z + Math.sin(an) * 60); B.c.set(B.b.x + Math.cos(an) * 12, B.b.y + 9, B.b.z + Math.sin(an) * 12); } }
     }

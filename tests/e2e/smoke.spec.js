@@ -29,7 +29,7 @@ test('Vân Đảo dựng đủ cảnh, không lỗi', async ({ page }) => {
   await expect(page).toHaveTitle(/Vân Đạo/);
   const s = await stats(page);
   console.log('Vân Đảo', JSON.stringify(s));
-  expect(s.geometries).toBeGreaterThan(80);
+  expect(s.geometries).toBeGreaterThan(60);   // #95: áo, viền, tóc, phụ kiện của mỗi nhân vật gộp một khối (86 → 78), ngưỡng như Đại Thiền Đường
   expect(s.programs).toBeGreaterThan(20);
   expect(s.calls).toBeGreaterThan(40);
   await expect(page.locator('#panel')).toContainText('Vân Đảo');

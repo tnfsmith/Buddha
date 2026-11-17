@@ -246,31 +246,46 @@ export function buddhaTex(st = {}) {
   });
 }
 
-// Chùm lá: kind 'bodhi' (lá hình tim có đuôi), 'pine' (kim), 'blossom' (hoa nhạt)
+// Chùm lá (128², nền trong suốt): 'bodhi' lá hình tim đuôi nhọn có gân, 'gold' cùng dáng màu vàng, 'blossom' hoa anh đào
+// năm cánh khía, 'pine' các quạt kim thông. Màu viết theo sRGB; instance color của tán lá nhân thêm độ sáng.
 export function leafTex(kind = 'bodhi') {
   return canvasTex(128, 128, (g) => {
-    const r = rng(kind.length * 7 + 3);
+    const r = rng(kind.length * 7 + 3), P = (a) => g.beginPath() || a();
     if (kind === 'pine') {
-      for (let i = 0; i < 90; i++) { const x = 64 + (r() - 0.5) * 100, y = 64 + (r() - 0.5) * 70, a = r() * Math.PI; g.strokeStyle = `rgba(${40 + r() * 30},${80 + r() * 50},${50 + r() * 20},0.95)`; g.lineWidth = 2.2; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * 16, y + Math.sin(a) * 10); g.stroke(); }
+      for (let f = 0; f < 7; f++) { const x = 24 + r() * 80, y = 30 + r() * 70, a0 = -2.4 + r() * 0.6;
+        for (let i = 0; i < 16; i++) { const a = a0 + i * 0.11, L = 16 + r() * 10, k = 0.7 + r() * 0.5;
+          g.strokeStyle = `rgb(${34 * k},${74 * k + 20 * r()},${42 * k})`; g.lineWidth = 2; P(() => { g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a) * L * 0.5, y + Math.sin(a) * L * 0.5 - 3, x + Math.cos(a) * L, y + Math.sin(a) * L); }); g.stroke(); } }
       return;
     }
-    for (let i = 0; i < 7; i++) {
-      const x = 28 + r() * 72, y = 28 + r() * 72, s = 15 + r() * 9, rot = r() * 6.28;
+    if (kind === 'blossom') {
+      for (let i = 0; i < 8; i++) { const x = 20 + r() * 88, y = 20 + r() * 88, s = 9 + r() * 6, rot = r() * 6.28, gb = 186 + r() * 40;
+        for (let k = 0; k < 5; k++) { g.save(); g.translate(x, y); g.rotate(rot + k * 1.2566);
+          const gr = g.createLinearGradient(0, 0, 0, s); gr.addColorStop(0, `rgb(232,${gb - 84},${gb - 70})`); gr.addColorStop(0.45, `rgb(255,${gb - 10},${gb - 4})`); gr.addColorStop(1, 'rgb(255,238,236)');
+          g.fillStyle = gr; P(() => { g.moveTo(0, 0); g.bezierCurveTo(-s * 0.75, s * 0.3, -s * 0.55, s * 1.05, -s * 0.14, s * 1.02); g.lineTo(0, s * 0.86); g.lineTo(s * 0.14, s * 1.02); g.bezierCurveTo(s * 0.55, s * 1.05, s * 0.75, s * 0.3, 0, 0); }); g.fill(); g.restore(); }
+        g.fillStyle = '#c94a6a'; P(() => g.arc(x, y, s * 0.2, 0, 6.3)); g.fill(); g.fillStyle = '#ffd66b'; for (let k = 0; k < 6; k++) { P(() => g.arc(x + Math.cos(k + rot) * s * 0.3, y + Math.sin(k + rot) * s * 0.3, 1.1, 0, 6.3)); g.fill(); } }
+      return;
+    }
+    for (let i = 0; i < 10; i++) {
+      const x = 24 + r() * 80, y = 24 + r() * 80, s = 13 + r() * 8, rot = r() * 6.28;
       g.save(); g.translate(x, y); g.rotate(rot);
-      const c = kind === 'blossom' ? [250, 226 + r() * 20, 232] : kind === 'gold' ? [226 + r() * 20, 184 + r() * 30, 70] : [70 + r() * 50, 130 + r() * 60, 52 + r() * 30];
-      const gr = g.createLinearGradient(0, -s, 0, s * 1.5); gr.addColorStop(0, `rgb(${c[0] * 0.78},${c[1] * 0.78},${c[2] * 0.78})`); gr.addColorStop(1, `rgb(${c[0]},${c[1]},${c[2]})`);
-      g.fillStyle = gr; g.beginPath(); g.moveTo(0, -s * 0.5); g.bezierCurveTo(s, -s * 1.2, s * 1.2, s * 0.3, 0, s * 0.9); g.bezierCurveTo(0, s * 1.1, 0, s * 1.3, 0, s * 1.6); g.bezierCurveTo(0, s * 1.3, 0, s * 1.1, 0, s * 0.9); g.bezierCurveTo(-s * 1.2, s * 0.3, -s, -s * 1.2, 0, -s * 0.5); g.fill();
-      g.strokeStyle = 'rgba(255,255,255,0.22)'; g.lineWidth = 1; g.beginPath(); g.moveTo(0, -s * 0.4); g.lineTo(0, s * 1.3); g.stroke();
+      const c = kind === 'gold' ? [226 + r() * 22, 176 + r() * 36, 64] : [64 + r() * 46, 118 + r() * 58, 44 + r() * 26];
+      const gr = g.createLinearGradient(-s, 0, s, 0); gr.addColorStop(0, `rgb(${c[0] * 0.7},${c[1] * 0.72},${c[2] * 0.7})`); gr.addColorStop(0.5, `rgb(${c})`); gr.addColorStop(1, `rgb(${Math.min(255, c[0] * 1.18)},${Math.min(255, c[1] * 1.15)},${c[2] * 1.05})`);
+      g.fillStyle = gr; P(() => { g.moveTo(0, -s * 0.5); g.bezierCurveTo(s, -s * 1.25, s * 1.15, s * 0.35, 0, s * 0.95); g.quadraticCurveTo(0, s * 1.3, 0, s * 1.75); g.quadraticCurveTo(0, s * 1.3, 0, s * 0.95); g.bezierCurveTo(-s * 1.15, s * 0.35, -s, -s * 1.25, 0, -s * 0.5); }); g.fill();
+      g.strokeStyle = 'rgba(30,50,20,0.35)'; g.lineWidth = 0.8; g.stroke();
+      g.strokeStyle = 'rgba(255,255,220,0.32)'; g.lineWidth = 1; P(() => { g.moveTo(0, -s * 0.45); g.lineTo(0, s * 1.4); for (let k = 0; k < 4; k++) { const v = -s * 0.2 + k * s * 0.3; g.moveTo(0, v); g.quadraticCurveTo(s * 0.35, v - s * 0.08, s * 0.6, v - s * 0.3); g.moveTo(0, v); g.quadraticCurveTo(-s * 0.35, v - s * 0.08, -s * 0.6, v - s * 0.3); } }); g.stroke();
       g.restore();
     }
   });
 }
 
-export function grassTex() {
-  return canvasTex(64, 64, (g) => {
-    const r = rng(5);
-    for (let i = 0; i < 9; i++) { const x = 8 + r() * 48, lean = (r() - 0.5) * 16, h = 34 + r() * 26; const gr = g.createLinearGradient(0, 64, 0, 64 - h); gr.addColorStop(0, 'rgb(150,150,150)'); gr.addColorStop(1, 'rgb(255,255,255)'); g.fillStyle = gr; g.beginPath(); g.moveTo(x - 2.6, 64); g.quadraticCurveTo(x + lean * 0.3, 64 - h * 0.6, x + lean, 64 - h); g.quadraticCurveTo(x + lean * 0.5, 64 - h * 0.5, x + 2.6, 64); g.fill(); }
-  });
+// Ống quét theo đường cong (thân cây, cành, tay áo, dải lụa, đuôi tóc). pts: mảng [x,y,z]; n đoạn dọc, s cạnh quanh ống.
+// r(t, d, P) cho bán kính tại vị trí t ∈ [0,1] theo hướng d (vector đơn vị từ tâm P): đổi theo t thì thuôn, theo d thì ép dẹt
+// hoặc phình (túi tay áo). k(t) → [gió, thở] ghi vào thuộc tính `aK` cho vertex shader. Hai đầu hở.
+export function sweep(pts, n, s, r, k = null) {
+  const c = new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...p))), g = new THREE.TubeGeometry(c, n, 1, s), p = g.attributes.position, P = new THREE.Vector3(), d = new THREE.Vector3(), K = new Float32Array(p.count * 2);
+  for (let i = 0; i <= n; i++) { c.getPointAt(i / n, P); const kk = k ? k(i / n) : [0, 0];
+    for (let j = 0; j <= s; j++) { const v = i * (s + 1) + j; d.fromBufferAttribute(p, v).sub(P); d.multiplyScalar(r(i / n, d, P)).add(P); p.setXYZ(v, d.x, d.y, d.z); K.set(kk, v * 2); } }
+  g.computeVertexNormals(); g.setAttribute('aK', new THREE.BufferAttribute(K, 2)); return g;
 }
 
 export function tileTex() {
