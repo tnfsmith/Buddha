@@ -94,7 +94,10 @@ export function importEvents(S, from, key) {
   }
   for (const [w, v] of Object.entries(S.nguyen || {})) {
     if (!v || !v.id) continue;
-    const d = Number.isFinite(v.at) ? new Date(v.at).toISOString().slice(0, 10) : from;
+    let d = Number.isFinite(v.at) ? new Date(v.at).toISOString().slice(0, 10) : from;
+    // Nguyện thuộc chu kỳ; ngày UTC có thể lùi một ngày so với started_on (00–07h ở VN).
+    // Chỉ bù biên này, giữ nguyên mã các ngày khác và tiếp tục lọc dữ liệu quá cũ.
+    if (from && d && Date.parse(from) - Date.parse(d) === 86400000) d = from;
     if (d && ok(d)) add(d, 'vow', String(w), { id: v.id });
   }
   for (const [d, day] of Object.entries(S.tu || {})) {
