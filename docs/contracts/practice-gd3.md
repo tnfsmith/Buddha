@@ -23,7 +23,7 @@ Mọi timestamp là UTC milliseconds; ngày nghiệp vụ theo profile.tz. Khôn
 | Thứ tự | Người / Issue | Kết quả trước khi bên kia dùng |
 |---|---|---|
 | 1 | Codex #102 | Schema + kiểm nâng DB 9→10, mặc định tắt, FK/cascade, rollback; không tự bật API |
-| 2 | Codex #105 | PUT practice/profile trước; chốt request/response/error và rev trong PR hợp đồng rồi mới viết client. Export/gộp khách/reset/xóa phải xử lý bảng mới trước bật ghi |
+| 2 | Codex #105 | [Hợp đồng GET/PUT hồ sơ](practice-profile.md) chốt request, response, lỗi, rev và vòng đời. Duyệt và merge hợp đồng trước khi triển khai Worker/client. Kiểm export/gộp khách/reset/xóa cùng gói mở ghi |
 | 3 | Hermes #103 + Claude #104 | Hợp đồng biến thể 7 tuần/3 trục và bộ chọn tất định; không nhét nhóm mới vào 73 mục hiện hành khi chưa đổi validator có kiểm thử |
 | 4 | Codex #105 | GET practice/today, POST practice/swap, GET practice/summary?range=week\|cycle sau bộ chọn; một đổi/trục/ngày, không tự ghi nhận Kusala |
 | 5 | Codex #105 + Claude #104 | POST deeds và attest/invite, GET/POST attest/{token}; cap 5/ngày không điểm, chứng thực tùy chọn, token băm/một lần/hết hạn, chống trùng trong cùng batch |
@@ -34,6 +34,6 @@ Nhắc: mặc định tắt, tối đa hai/ngày, quiet 21:30–05:00, Tịnh kh
 
 ## Phối hợp và GĐ4
 
-Claude giữ 8 tệp 3D và tests/e2e/smoke.spec.js của #101; Codex không sửa. `workers/realtime/`/ReminderClock do Claude nhận ở #106 sau hợp đồng, API/migration do Codex. Không hai người sửa package-lock hoặc vùng shared cùng lúc. GĐ4 theo #108, chưa có Lobby/HallRoom/codec/client thật hoặc báo cáo k6; vé HMAC hiện tại chỉ là nền T4.3.
+#101 đã merge vào `8fd09d4`. Claude giữ triển khai Duyên khởi/#104 và `workers/realtime/`/ReminderClock #106 theo quyền tệp ghi trên từng Issue. Codex giữ API/migration. GĐ4 theo #108, chưa có Lobby/HallRoom/codec/client thật hoặc báo cáo k6; vé HMAC hiện tại chỉ là nền T4.3.
 
 Khi thiếu credits, bàn giao trong Issue trước đổi người: người cũ → người nhận, SHA/base, worktree, tệp đang giữ, commit/patch còn dở, kiểm đã đạt/lỗi, bước tiếp và điều kiện nhận lại. Người nhận xác nhận claim, dùng checkout riêng và tiền tố/nhãn đúng; ghi nguồn tác giả khi cherry-pick. Phân công thay đổi không bỏ qua phê duyệt công cụ, CI hoặc quyền merge/tag của chủ dự án.

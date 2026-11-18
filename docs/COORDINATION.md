@@ -4,7 +4,7 @@ Ngày cập nhật: 18/11/2026. Người tổng hợp duy nhất: **Codex**. Quy
 
 **Quyết định nội dung mới của chủ dự án (#55):** bỏ điều kiện Hội đồng bắt buộc. Nội dung tham khảo có nguồn, phát hành theo quy trình biên tập/PR; Hội đồng/chuyên gia chỉ tư vấn tùy chọn. ADR 0003 thay các yêu cầu cũ còn xuất hiện trong bằng chứng lịch sử dưới đây. Quyết định đã ghi không có nghĩa mã UI đang chạy đã thay đổi.
 
-**Hiện hành 18/11:** production v0.17.1 ở `4e84324`, main đã merge #109. GĐ3 còn việc ở §19–20 và trên các Issue liên kết. Codex giữ #46, Claude giữ PR #101 và `apps/web/src/main.js` theo #95. Xem trạng thái khóa tệp mới nhất ở Issue/PR.
+**Hiện hành 18/11:** production v0.17.1 ở `4e84324`. Main `c9edcaa` có #109, #101 và #110. Codex nhận hợp đồng hồ sơ tu tập #105. Xem §21 và Issue/PR mới nhất để biết khóa tệp và trạng thái GĐ3.
 
 Đọc tệp này khi bắt đầu phiên; sau đó kiểm Issue/PR và `origin/main` hiện tại. Tệp là bản bàn giao có thời điểm, không thay bảng việc GitHub. Claude gửi cập nhật trong Issue/PR; Codex tổng hợp để tránh hai agent cùng sửa tệp này.
 
@@ -254,3 +254,10 @@ PR81 chưa merge/deploy; #82 phải cập nhật máy quay hướng chúng sanh 
 - Codex giữ phạm vi [#46](https://github.com/tnfsmith/Buddha/issues/46#issuecomment-6970019782), cộng roadmap và tệp này theo [bàn giao](https://github.com/tnfsmith/Buddha/issues/46#issuecomment-6970093607). Nhánh `ag/46-withdraw-content`, worktree `gd3-46-content-withdrawal`, base triển khai `da45e04`. D1 giữ lịch sử, API và MP3/cues của bản cũ bị chặn khi có phiên bản `ngung` mới hơn, và nháp không che bản đang phát hành. Dữ liệu thử nằm ở kiểm D1/R2 cục bộ. Trả quyền khi PR merge/đóng hoặc bàn giao rõ trên #46.
 - Claude giữ 8 tệp 3D, `smoke.spec.js` và `main.js` theo [#95](https://github.com/tnfsmith/Buddha/issues/95#issuecomment-6967569975). Head #101 đã đổi từ `6c4c3ac` sang `4200bdc`. Kết quả ghép ở head trước là bằng chứng lịch sử. #46 không sửa tệp #101. Đồng thời xác nhận riêng CI và nghiệm thu thiết bị thật cho từng thay đổi trước khi chọn merge.
 - #105 dùng nền #109 và triển khai vòng đời dữ liệu trước khi bật ghi. Endpoint today cần danh mục #46 và hợp đồng bộ chọn đã duyệt. #103/#104/#106 phối hợp trên các Issue tương ứng. #107 còn chờ chốt tiêu chí Tầng 1. GĐ4 theo #108 sau khi GĐ3 có đủ bằng chứng.
+
+## 21. Hợp đồng hồ sơ tu tập #105 — 18/11/2026
+
+- Chủ dự án đã merge [#101](https://github.com/tnfsmith/Buddha/pull/101) vào `8fd09d4` và [#110](https://github.com/tnfsmith/Buddha/pull/110) vào `c9edcaa`. Hai PR đã trả quyền theo phạm vi cũ. Migration 0010 đã qua [deploy/kiểm khói staging](https://github.com/tnfsmith/Buddha/actions/runs/44246588132). Theo dõi bản ghép mới ở [CI main](https://github.com/tnfsmith/Buddha/actions/runs/44248588459).
+- Codex giữ bốn tệp `docs/contracts/{practice-profile,practice-gd3}.md`, `docs/COORDINATION.md` và `PROJECT_ROADMAP.md` trong [#105](https://github.com/tnfsmith/Buddha/issues/105), nhánh `ag/105-practice-profile-contract`, worktree riêng cùng mục đích. Phạm vi là hợp đồng và tiêu chí nghiệm thu. Trả quyền khi PR merge/đóng hoặc bàn giao trên Issue.
+- [Hợp đồng hồ sơ](contracts/practice-profile.md) nêu tám trường được đồng bộ, rev riêng cho hai thiết bị, export, gộp khách, đổi chu kỳ và xóa. Sau khi hợp đồng merge, Codex làm Worker/D1 và Claude nối Duyên khởi #104. Phản tỉnh lưu trên máy có thể triển khai riêng sau khi Claude ghi tệp giữ trên #104.
+- Codex/Hermes #103 phối hợp với Claude #104 về lược đồ danh mục và bộ chọn trước khi thêm biến thể. #105 today/swap theo sau hợp đồng đó. #106 giữ phần DO/nhắc giờ và có hợp đồng riêng. #107 vẫn chờ quyết định về tiêu chí mở Tầng 1.
