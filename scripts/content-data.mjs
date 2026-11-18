@@ -30,7 +30,7 @@ function header(article) {
   const id = textField(article.id, 'id');
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) throw new Error('id không hợp lệ');
   if (!Number.isSafeInteger(article.version) || article.version < 1) throw new Error('version không hợp lệ');
-  if (!['bai_giang', 'nhiem_vu'].includes(article.kind)) throw new Error('Chỉ nạp kind bai_giang hoặc nhiem_vu');
+  if (!['bai_giang', 'nhiem_vu', 'chuong_trinh'].includes(article.kind)) throw new Error('kind không được bộ nạp hỗ trợ');
   const tier = article.tier ?? 0, lang = article.lang ?? 'vi';
   if (!Number.isInteger(tier) || tier < 0 || tier > 4 || typeof lang !== 'string' || !/^[a-z]{2}(?:-[A-Z]{2})?$/.test(lang)) throw new Error('tier/lang không hợp lệ');
   textField(article.title, 'title'); textField(article.source_ref, 'source_ref');
@@ -65,8 +65,9 @@ export function validateMission(article) {
 }
 
 export function contentRow(article) {
+  const variant = article.kind === 'chuong_trinh' ? variantHeader(article) : null;
   if (article.status !== 'da_duyet' && article.status !== 'ngung') return null;
-  const { id, tier, lang } = header(article);
+  const { id, tier, lang } = variant ?? header(article);
   const row = { id, version: article.version, kind: article.kind, tier, lang,
     title: textField(article.title, 'title'), source_ref: textField(article.source_ref, 'source_ref'), status: article.status,
   };
@@ -86,6 +87,71 @@ export function contentRow(article) {
     reviewed_by: article.reviewed_by == null || article.reviewed_by === '' ? null : textField(article.reviewed_by, 'reviewed_by'), reviewed_at: reviewedAt,
     meta: article.meta == null ? null : JSON.stringify(article.meta),
   };
+}
+
+const pillars = ['duc', 'thien', 'tue'];
+const variantFields = ['program', 'schema', 'week', 'pillar', 'level', 'minutes', 'money',
+  'at_home', 'outdoors', 'needs_others', 'punna', 'parami', 'scope'];
+
+/** #112: kiểm cả bản nháp biến thể, nhưng chỉ ghi bản được chọn hoặc đã ngừng. */
+function variantHeader(article) {
+  const identity = header(article);
+  if (!identity.id.startsWith('sn49-') || article.lang !== 'vi' || article.tier !== 0) {
+    throw new Error('Biến thể Sơ nhập cần id sn49-, tier 0 và lang vi');
+  }
+  if (!['nhap', 'cho_duyet', 'da_duyet', 'ngung'].includes(article.status)) throw new Error('status biến thể không hợp lệ');
+  if (article.status === 'ngung') return identity;
+
+  const body = textField(article.body, 'body');
+  if ([...body].length > 90 || /[\r\n]|[.!?]\s+\S|\[\[|\]\]|^>/.test(body)) {
+    throw new Error('Biến thể cần một câu hành động ≤90 ký tự');
+  }
+  if (article.body_r2_key != null) throw new Error('Biến thể không có âm thanh body_r2_key');
+  const m = article.meta;
+  if (!m || typeof m !== 'object' || Array.isArray(m) ||
+      Object.keys(m).length !== variantFields.length || !variantFields.every((field) => Object.hasOwn(m, field))) {
+    throw new Error('meta biến thể phải có đúng các trường hợp đồng');
+  }
+  if (m.program !== 'so-nhap-49' || m.schema !== 1) throw new Error('meta.program/schema không hợp lệ');
+  if (!Number.isInteger(m.week) || m.week < 1 || m.week > 7 || !pillars.includes(m.pillar)) throw new Error('meta.week/pillar không hợp lệ');
+  if (!['nhe', 'vua', 'sau'].includes(m.level) || !Number.isInteger(m.minutes) || m.minutes < 1 || m.minutes > 120) {
+    throw new Error('meta.level/minutes không hợp lệ');
+  }
+  if (m.money !== false && m.money !== 'optional') throw new Error('meta.money chỉ nhận false hoặc optional');
+  if (['at_home', 'outdoors', 'needs_others'].some((key) => typeof m[key] !== 'boolean')) throw new Error('Cờ hoàn cảnh phải là boolean');
+  if (typeof m.punna !== 'string' || !isPunna(m.punna) || !Array.isArray(m.parami) || !m.parami.length ||
+      !m.parami.every((code) => typeof code === 'string' && isParami(code)) || new Set(m.parami).size !== m.parami.length) {
+    throw new Error('Mã parami/punna không hợp lệ');
+  }
+  if (!['doi_thuc', 'dong_tu'].includes(m.scope)) throw new Error('meta.scope không hợp lệ');
+  return identity;
+}
+
+/** Kiểm khi chuẩn bị bật bộ chọn. Lượt nạp thường vẫn cho rút nội dung khi cần. */
+export function checkVariantCoverage(rows) {
+  const latest = new Map(), cells = new Map();
+  for (const row of rows) {
+    if (row.kind !== 'chuong_trinh' || !['da_duyet', 'ngung'].includes(row.status)) continue;
+    if (!latest.has(row.id) || latest.get(row.id).version < row.version) latest.set(row.id, row);
+  }
+  for (const row of latest.values()) {
+    if (row.status !== 'da_duyet') continue;
+    const meta = JSON.parse(row.meta);
+    const key = `${meta.week}/${meta.pillar}`;
+    if (!cells.has(key)) cells.set(key, []);
+    cells.get(key).push({ meta, body: row.body_inline });
+  }
+  for (let week = 1; week <= 7; week++) {
+    for (const pillar of pillars) {
+      const label = `Tuần ${week}/${pillar}`, items = cells.get(`${week}/${pillar}`) || [];
+      if (items.length < 3 || items.length > 6 || new Set(items.map((item) => item.body)).size !== items.length) {
+        throw new Error(`${label} cần 3–6 biến thể công khai khác nhau`);
+      }
+      if (!items.some(({ meta: m }) => m.level === 'nhe' && m.minutes <= 5 && m.money === false && m.at_home && !m.needs_others)) {
+        throw new Error(`${label} thiếu phương án nhẹ, tối đa 5 phút, miễn phí, ở nhà và làm một mình`);
+      }
+    }
+  }
 }
 
 export function readContentRows(dir) {
