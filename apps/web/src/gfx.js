@@ -408,7 +408,7 @@ export function steleTex() {
 }
 
 // Gương mặt: nền trắng để nhân với màu da; nét vẽ là sắc tối nên hợp mọi tông da
-export function faceTex({ closed = false, mood = 'tuoi', age = 'tre', shaved = false } = {}) {
+export function faceTex({ closed = false, mood = 'tuoi', age = 'tre', shaved = false, fem = false } = {}) {
   return canvasTex(256, 256, (g) => {
     g.fillStyle = '#fff'; g.fillRect(0, 0, 256, 256);
     const cx = 64, ey = 121, ink = 'rgba(58,38,30,0.92)';
@@ -418,14 +418,17 @@ export function faceTex({ closed = false, mood = 'tuoi', age = 'tre', shaved = f
     }
     // má hồng
     [[-17, 139], [17, 139]].forEach(([dx, y]) => { const gr = g.createRadialGradient(cx + dx, y, 0, cx + dx, y, 10); gr.addColorStop(0, 'rgba(232,120,110,0.34)'); gr.addColorStop(1, 'rgba(232,120,110,0)'); g.fillStyle = gr; g.fillRect(cx + dx - 12, y - 12, 24, 24); });
-    g.lineCap = 'round'; g.strokeStyle = age === 'cao' ? 'rgba(120,112,108,0.9)' : 'rgba(52,34,26,0.85)'; g.lineWidth = 2.2;
+    g.lineCap = 'round'; g.strokeStyle = age === 'cao' ? 'rgba(120,112,108,0.9)' : 'rgba(52,34,26,0.85)'; g.lineWidth = fem ? 1.5 : 2.2;
     const tilt = mood === 'hoa' ? 0.12 : mood === 'nghiem' ? -0.04 : 0.05;
-    [[-1, cx - 12], [1, cx + 12]].forEach(([s, x]) => { g.beginPath(); g.moveTo(x - 6 * s - 0, 110 - tilt * 8 * 1); g.quadraticCurveTo(x, 106, x + 6 * s, 109 + tilt * 14); g.stroke(); });
+    [[-1, cx - 12], [1, cx + 12]].forEach(([s, x]) => { g.beginPath(); g.moveTo(x - 6 * s - 0, 110 - tilt * 8 * 1); g.quadraticCurveTo(x, fem ? 104 : 106, x + 6 * s, 109 + tilt * 14); g.stroke(); });
     g.strokeStyle = ink; g.lineWidth = 2;
     [cx - 12, cx + 12].forEach((x) => {
       if (closed) { g.beginPath(); g.arc(x, ey - 3, 5.2, 0.14 * Math.PI, 0.86 * Math.PI); g.stroke(); }
       else { g.fillStyle = '#fbfbfb'; g.beginPath(); g.ellipse(x, ey, 5.2, mood === 'tuoi' ? 3.1 : 2.7, 0, 0, 6.3); g.fill(); g.fillStyle = 'rgba(44,28,22,1)'; g.beginPath(); g.arc(x, ey, 2.6, 0, 6.3); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.arc(x + 0.9, ey - 1, 0.8, 0, 6.3); g.fill(); g.beginPath(); g.arc(x, ey + 0.6, 5.4, 1.12 * Math.PI, 1.88 * Math.PI); g.stroke(); }
     });
+    // nữ: mi mắt cong ở đuôi mắt (mở hay khép), môi hồng tô đầy
+    if (fem) { g.strokeStyle = ink; g.lineWidth = 1.2; [-1, 1].forEach((s) => { const x = cx + 12 * s; [[3.2, 1], [5, 0.6]].forEach(([dx, k]) => { g.beginPath(); g.moveTo(x + dx * s, closed ? ey - 1.2 : ey - 2.6); g.lineTo(x + (dx + 2.2) * s, (closed ? ey + 1.6 : ey - 5) - k); g.stroke(); }); });
+      g.fillStyle = 'rgba(214,96,98,0.72)'; g.beginPath(); g.ellipse(cx, mood === 'nghiem' ? 149.5 : 147, 5.6, 2.5, 0, 0, 6.3); g.fill(); }
     g.strokeStyle = 'rgba(120,70,56,0.45)'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(cx - 1, 126); g.quadraticCurveTo(cx - 3.5, 137, cx, 139); g.quadraticCurveTo(cx + 3, 138.5, cx + 3, 136.5); g.stroke();
     g.strokeStyle = 'rgba(168,74,66,0.9)'; g.lineWidth = 2.2; g.beginPath();
     if (mood === 'nghiem') { g.moveTo(cx - 5.5, 149); g.quadraticCurveTo(cx, 150.2, cx + 5.5, 149); } else g.arc(cx, mood === 'tuoi' ? 143.5 : 145, mood === 'tuoi' ? 7.5 : 6.2, 0.2 * Math.PI, 0.8 * Math.PI);

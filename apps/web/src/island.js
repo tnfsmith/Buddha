@@ -357,19 +357,27 @@ export function buildHome() {
     add(M(new THREE.CircleGeometry(0.93, 36), new THREE.MeshStandardMaterial({ color: '#dfe9f2', metalness: 1, roughness: 0.06, side: THREE.DoubleSide }), 0, 0, 1.5, 0, 0), mir);
     [[-25.6, 1.2], [-17.6, 2.6], [-24.6, 9.6]].forEach(([x, z]) => lamp(G, x, groundH(x, z), z));
     [[-27.2, 2.4, 'blossom', 2.6, 3.6], [-25.2, 11.2, 'pine', 2.2, 4.6], [-18.2, 13.2, 'blossom', 2.4, 3.2], [-20.4, -0.6, 'pine', 2.0, 4.2], [-28.4, 7.4, 'blossom', 2.0, 3.0]].forEach(([x, z, kind, rad, th], i) => { if (T.frac(x, z) > 0.9) return; const t2 = leafTree({ count: 300, kind, radius: rad, trunkH: th, seed: 40 + i }); t2.group.position.copy(P(x, z, -0.15)); add(t2.group); }); }
-  // Mặt nước (Hồ Sen và chum nước khu trà): bốn lớp sóng sin lệch hướng cho pháp tuyến giải tích, phản chiếu màu trời theo Fresnel,
-  // vệt nắng/trăng lóa theo hướng mặt trời, đáy trong dần theo tiến trình (uClar)
+  // Mặt nước tiên cảnh (Hồ Sen và chum nước khu trà), dựng lại từ bản lấp lánh ban đầu:
+  // - bốn lớp sóng sin cho pháp tuyến, cộng gợn tròn lan từ bốn điểm như giọt sương rơi;
+  // - lòng hồ ngọc bích trong dần theo tiến trình (uClar), ánh sáng gợn dưới đáy (caustics), mép nông sáng hơn lòng sâu;
+  // - phản chiếu màu trời theo Fresnel, vệt lóa mặt trời/trăng;
+  // - hạt lấp lánh như sao (vượt 1 trong HDR nên bloom tỏa), ánh ngũ sắc nhẹ; viền bờ phát sương sáng; đêm thì bạc lạnh.
   const wy = groundH(POND.x, POND.z) + 0.72;
   H.water = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { ...U, uClar: { value: 0 }, uWater: { value: 0 } },
     vertexShader: 'varying vec2 vUv; varying vec3 vW; void main(){ vUv = uv; vec4 w = modelMatrix*vec4(position,1.); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }',
-    fragmentShader: `uniform float uTime,uClar,uWater; uniform vec3 uZen,uHz,uSunC,uSun; varying vec2 vUv; varying vec3 vW;
-void main(){ vec2 p = vW.xz, n = vec2(0.); float hh = 0.;
- for (int i = 0; i < 4; i++) { float fi = float(i), an = fi*2.4 + .6, f = 1.1 + fi*fi*.47 + fi*.5, ph; vec2 d = vec2(cos(an), sin(an)); ph = dot(p,d)*f + uTime*(.8 + fi*.4) + sin(p.x*.6 + p.y*.4 + fi)*.8; n += d*cos(ph)*f*.045/(1.+fi); hh += sin(ph)/(1.+fi); }
- vec3 N = normalize(vec3(-n.x, 1., -n.y)), V = normalize(cameraPosition - vW), R = reflect(-V, N);
- float fr = .1 + .8*pow(1. - max(dot(N,V),0.), 3.);
- vec3 col = mix(mix(vec3(.2,.32,.3), vec3(.08,.42,.4), uClar)*(.88+.12*hh), mix(uHz, uZen, clamp(R.y*1.4, 0., 1.)), fr*(.6+.4*uClar));
- col += uSunC*pow(max(dot(R, uSun),0.), 60.)*1.6*(.4+.6*uClar) + vec3(.9,.97,1.)*smoothstep(.6,1.,hh*.5+.5)*.07;
- float a = (.66+.3*uClar)*smoothstep(1.,.9,length(vUv*2.-1.))*uWater; ${OUT} }` });
+    fragmentShader: `uniform float uTime,uClar,uWater,uNight;uniform vec3 uZen,uHz,uSunC,uSun;varying vec2 vUv;varying vec3 vW;${NOISE}
+float rd(vec2 q){return 1.-abs(noise(q)*2.-1.);}
+void main(){vec2 p=vW.xz,n=vec2(0.);float rp=0.,e=length(vUv*2.-1.);
+for(int i=0;i<4;i++){float fi=float(i),an=fi*2.4+.6,f=1.1+fi*fi*.47+fi*.5;vec2 d=vec2(cos(an),sin(an));n+=d*cos(dot(p,d)*f+uTime*(.8+fi*.4)+sin(p.x*.6+p.y*.4+fi)*.8)*f*.03/(1.+fi);
+vec2 q=p-vec2(${POND.x.toFixed(1)}+sin(fi*2.4)*4.2,${POND.z.toFixed(1)}+cos(fi*1.7)*2.8);float dd=max(length(q),.01),w=sin(dd*6.5-uTime*(1.6+fi*.3)+fi)*exp(-dd*.45);rp+=w;n+=q/dd*w*.035;}
+vec3 N=normalize(vec3(-n.x,1.,-n.y)),V=normalize(cameraPosition-vW),R=reflect(-V,N);
+float fr=.04+.7*pow(1.-max(dot(N,V),0.),4.),ca=pow(rd(p*1.5+n*5.+vec2(uTime*.35,0.))*rd(p*2.1-n*4.-vec2(0.,uTime*.3)),6.);
+vec3 col=mix(mix(vec3(.15,.3,.29),vec3(.03,.42,.42),uClar),mix(vec3(.3,.46,.38),vec3(.3,.8,.72),uClar),smoothstep(.15,1.,e))+vec3(.8,1.,.9)*ca*(.15+.5*uClar);
+col=mix(col,mix(uHz,uZen,clamp(R.y*1.4,0.,1.))*.8,fr*.85)+uSunC*pow(max(dot(R,uSun),0.),140.)*1.5+vec3(.9,.97,1.)*max(rp,0.)*.06;
+float sp=noise(p*14.+vec2(uTime*.7,-uTime*.4))*noise(p*10.5-vec2(uTime*.5,uTime*.6)+3.7);sp=pow(sp,3.)*9.;
+col+=mix(vec3(2.,1.8,1.3),vec3(1.3,1.7,2.2),uNight)*(.8+.4*cos(6.283*(p.x*.3+p.y*.2+vec3(0.,.33,.67))))*smoothstep(.7,1.,sp)*(.45+.5*uClar);
+col+=mix(vec3(.9,1.,.85),vec3(.5,.8,1.),uNight)*smoothstep(.82,.98,e)*.25;col=mix(col,col*vec3(.5,.55,.85),uNight*.6);
+float a=(.7+.25*uClar)*smoothstep(1.,.92,e)*uWater;${OUT}}` });
   const disc = (rad, seg) => { const g = new THREE.CircleGeometry(rad, seg); g.rotateX(-Math.PI / 2); return g; };
   const pond = add(new THREE.Mesh(disc(1, 48), H.water)); pond.scale.set(POND.rx, 1, POND.rz); pond.position.set(POND.x, wy, POND.z); pond.renderOrder = 3;
   for (let i = 0; i < 22; i++) { const a = (i / 22) * 6.28 + r() * 0.2, s = 0.45 + r() * 0.5, x = POND.x + Math.cos(a) * (POND.rx + 0.5), z = POND.z + Math.sin(a) * (POND.rz + 0.5); rock(ROCK1[1], x, groundH(x, z) + 0.15, z, s, s * 0.65, s, r() * 6, r(), r()); }

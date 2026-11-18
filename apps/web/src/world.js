@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { buildRealm } from './realm.js';
@@ -7,7 +6,7 @@ import { BIO } from './audio.js';
 import { buildBirds } from './birds.js';
 import { NOISE, OUT, rng, puffAtlas, buildBuddha, buddhaFace, lodPair, UNI, moodMix, gfxBackend, tierOf, governor, hue } from './gfx.js';
 import { buildHome, buildNeighbor, bakeLocal, groundH, floorH, pvFloor, DECKS, STAIR, P, SX, SZ, HILL, POND } from './island.js';
-import { buildFigure, makeCrowd, defaultLook, suggestNames } from './people.js';
+import { buildFigure, buildPet, makeCrowd, defaultLook, suggestNames } from './people.js';
 
 export { groundH };
 const BUD = new THREE.Vector3(0, 0, -760), SEAT = new THREE.Vector3(0, 3, -256);
@@ -17,6 +16,29 @@ const V = (x, y, z) => new THREE.Vector3(x, y, z);
 // Bloom lọc kép (dual filter kiểu Kawase): tầng đầu lọc sáng (chỉ phần vượt ~1 trong HDR: hào quang, lõi đèn, hạt công đức, viền
 // mây ngược nắng), thu nhỏ dần qua n tầng (5 điểm lấy mẫu), phóng to dần cộng ngược lên (8 điểm), cuối cùng cộng vào ảnh HDR với
 // cường độ k. 2n lượt vẽ nhỏ, gọn hơn UnrealBloomPass (bỏ khỏi gói, ~8 KB).
+// Máy quay quỹ đạo (thay OrbitControls, gọn hơn ~17 KB, chỉ những gì cảnh dùng): kéo một ngón hoặc chuột trái để xoay quanh tâm,
+// cuộn chuột hoặc chụm hai ngón để tiến lùi; quán tính theo dampingFactor như OrbitControls; giới hạn khoảng cách và góc ngẩng;
+// phát 'start'/'end' khi bắt đầu/thôi chạm. Chạm nhẹ để đi (main.js) vẫn nhận click như trước.
+class Orbit extends THREE.EventDispatcher {
+  constructor(cam, el) {
+    super(); Object.assign(this, { object: cam, target: new THREE.Vector3(), enabled: true, enableDamping: true, dampingFactor: 0.05, rotateSpeed: 1, zoomSpeed: 1, minDistance: 0, maxDistance: Infinity, minPolarAngle: 0, maxPolarAngle: Math.PI });
+    const P = new Map(), d = (this.d = { th: 0, ph: 0, k: 1 }); let pin = 0; this.s = new THREE.Spherical(); this.o = new THREE.Vector3(); el.style.touchAction = 'none';
+    const gap = () => { const [a, b] = [...P.values()]; return Math.hypot(a.x - b.x, a.y - b.y); }, ev = (type) => this.dispatchEvent({ type });
+    el.addEventListener('pointerdown', (e) => { if (!this.enabled || (e.pointerType === 'mouse' && e.button)) return; if (!P.size) { try { el.setPointerCapture(e.pointerId); } catch (x) { void x; } ev('start'); } P.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (P.size === 2) pin = gap(); });
+    el.addEventListener('pointermove', (e) => { const q = P.get(e.pointerId); if (!q || !this.enabled) return; const h = (2 * Math.PI * this.rotateSpeed) / (el.clientHeight || 1);
+      if (P.size === 1) { d.th -= (e.clientX - q.x) * h; d.ph -= (e.clientY - q.y) * h; } q.x = e.clientX; q.y = e.clientY;
+      if (P.size === 2) { const n = gap(); if (pin > 0 && n > 0) d.k *= pin / n; pin = n; } });
+    const up = (e) => { if (!P.delete(e.pointerId)) return; pin = 0; if (!P.size) ev('end'); };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    el.addEventListener('wheel', (e) => { if (!this.enabled) return; e.preventDefault(); ev('start'); d.k *= Math.pow(0.95, (this.zoomSpeed * Math.abs(e.deltaY * 0.01)) * (e.deltaY < 0 ? 1 : -1)); ev('end'); }, { passive: false });
+  }
+  update() {
+    const c = this.object, t = this.target, s = this.s, d = this.d, f = this.enableDamping ? this.dampingFactor : 1;
+    s.setFromVector3(this.o.copy(c.position).sub(t)); s.theta += d.th * f; s.phi = Math.max(this.minPolarAngle, Math.min(this.maxPolarAngle, s.phi + d.ph * f)); s.makeSafe();
+    s.radius = Math.max(this.minDistance, Math.min(this.maxDistance, s.radius * d.k)); c.position.copy(t).add(this.o.setFromSpherical(s)); c.lookAt(t);
+    d.th *= 1 - f; d.ph *= 1 - f; d.k = 1; return true;
+  }
+}
 function bloomFx(n) {
   const q = new FullScreenQuad(), M = (f, add) => new THREE.ShaderMaterial({ uniforms: { t: { value: null }, h: { value: new THREE.Vector2() }, k: { value: 1 } }, depthTest: false, depthWrite: false, transparent: add, blending: add ? THREE.AdditiveBlending : THREE.NoBlending,
     vertexShader: 'varying vec2 v;void main(){v=uv;gl_Position=vec4(position.xy,0.,1.);}', fragmentShader: 'uniform sampler2D t;uniform vec2 h;uniform float k;varying vec2 v;vec3 s(vec2 o){return texture2D(t,v+o*h).rgb;}void main(){' + f + '}' });
@@ -93,7 +115,7 @@ export class World {
     r.info.autoReset = false; this.pf = { t0: 0, n: 0, calls: 0, tris: 0, last: null };   // số liệu hiệu năng gộp mọi lượt vẽ của một khung hình (kể cả bloom)
     this.scene = new THREE.Scene(); this.scene.fog = new THREE.Fog(0xffffff, 260, 2000);
     this.camera = new THREE.PerspectiveCamera(52, 1, 0.5, 7000);
-    this.controls = new OrbitControls(this.camera, canvas);
+    this.controls = new Orbit(this.camera, canvas);
     Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.08, enablePan: false, rotateSpeed: 0.45, zoomSpeed: 0.7 });
     this.controls.target.set(12, 36, 0);
     this.touch = 0; this.controls.addEventListener('start', () => { this.touch = 1e18; }); this.controls.addEventListener('end', () => { this.touch = performance.now(); });
@@ -395,6 +417,9 @@ void main(){ float n = fbm(vUv*vec2(3.,1.8) + vec2(uTime*.05, uVeil*.6)); vec3 c
       go: { path: A0.path || [], speed: A0.speed || 0, done: A0.done, sit: A0.sit, id: A0.id, an: A0.an, track: A0.track, steer: A0.steer, after: A0.after, restoreSit: A0.restoreSit, dest: A0.dest, curve: A0.curve, k: A0.k } } : null;
     if (this.fig) { this.scene.remove(this.fig.group); this.fig.dispose(); this.scene.remove(this.hallFig.group); this.hallFig.dispose(); }
     this.fig = buildFigure(this.look); this.scene.add(this.fig.group);
+    // thú cưng đồng hành (people.buildPet): dựng lại theo diện mạo mới, xuất hiện ngay cạnh chủ
+    if (this.pet) { this.scene.remove(this.pet.group); this.pet.dispose(); this.pet = null; }
+    if (/^(meo|cho|tho)$/.test(this.look.pet)) { this.pet = buildPet(this.look.pet, this.look.petv); this.scene.add(this.pet.group); }
     this.hallFig = buildFigure(this.look); this.hallFig.setPose('sit'); this.hallFig.group.position.set(SEAT.x, SEAT.y + 0.55, SEAT.z); this.hallFig.group.rotation.y = Math.PI; this.scene.add(this.hallFig.group);
     this.av = { pos: keep ? keep.p : (this.startPos ? V(this.startPos.x, floorH(this.startPos.x, this.startPos.z), this.startPos.z) : V(2.6, floorH(2.6, 1.2), 1.2)), rot: keep ? keep.rot : (this.startPos ? this.startPos.rot || 0 : 0.5), state: keep ? keep.st : 'idle', where: keep ? keep.where : 'home', path: [], speed: 0, phase: 0, blink: 3, hold: 0 };
     if (!keep && this.startPos && this.startPos.sit && ANCHORS[this.startPos.sit]) { const an = ANCHORS[this.startPos.sit], nd = NODES[an.node], A = this.av; A.pos.set(nd[0], floorH(nd[0], nd[1]) + seatOf(an), nd[1]); A.state = 'sit'; A.sit = true; A.an = an; A.id = this.startPos.sit; A.rot = this.startPos.rot !== undefined ? this.startPos.rot : an.face || 0; A.restoreSit = true; }
@@ -611,7 +636,9 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     else if (mode === 'overview') { if (this.portrait) this.flyTo(V(60, 262, 560), V(-190, 244, -470), 58, 2.2); else this.flyTo(V(180, 262, 520), V(-10, 196, -470), 58, 2.2); }
     else if (mode === 'realm') this.flyTo(V(-460, 420, 900), V(40, 210, -450), 60, 3.2);
     else if (mode === 'tier') { const k = opt.tier; if (k === 4) this.flyTo(V(-188, 382, -640), V(-30, 366, -742), 52, 2.2); else { const I = this.isles.find((x) => x.tier === k), s = I.size / 14; this.flyTo(V(I.x + 20 * s * Math.sign(-I.x), I.y + 9 * s, I.z + 30 * s), V(I.x, I.y + 2.5, I.z), 44, 2.2); } }
-    else if (mode === 'creator') { const a = this.av.pos.clone(); a.y += this.av.where === 'home' ? this.home.group.position.y : 0; this.flyTo(V(a.x + 2.2, a.y + 3.5, a.z + 8.2), V(a.x, a.y + 2.2, a.z), 34, 1.4); }
+    else if (mode === 'creator') {   // nhìn trực diện, thấy trọn người từ đầu tới chân (khung dọc dời ảnh lên để chừa bảng tùy chọn: điểm nhắm hiện ở ~27 % từ trên)
+      const A = this.av, a = A.pos.clone(), P = this.portrait; a.y += A.where === 'home' ? this.home.group.position.y : 0;
+      this.flyTo(a.clone().add(V(Math.sin(A.rot) * (P ? 8.6 : 8), P ? 2.4 : 1.9, Math.cos(A.rot) * (P ? 8.6 : 8))), V(a.x, a.y + (P ? 2.5 : 1.6), a.z), 34, 1.4); }
     else if (mode === 'zone') { const c = ANCHORS[opt.zone].cam, y = this.home.group.position.y; this.flyTo(V(c[0][0], c[0][1] + y, c[0][2]), V(c[1][0], c[1][1] + y, c[1][2]), 48, 1.5); }
     else this.flyTo(this.islandCam(), this.islandTarget(), this.portrait ? 64 : 58, 1.8);
   }
@@ -673,6 +700,8 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     if (!this.tween || !this.tween.glide) u.uVeil.value = Math.max(0, u.uVeil.value - dt * 1.5);   // bị ngắt giữa chừng thì màn mây vẫn tan dần
     this.veil.visible = u.uVeil.value > 0;
     this._avatarStep(dt, s);
+    if (this.pet) { const A = this.av, h = this.mode === 'hall', io = A.where === 'home' ? this.home.group.position.y : 0;   // Đại Thiền Đường: ngồi cạnh Vân Tọa của mình
+      this.pet.step(dt, this.time, h ? SEAT : A.pos, h ? Math.PI : A.rot, h || A.state === 'sit' || this.mode === 'creator', h ? () => SEAT.y + 0.55 : (x, z) => (A.where === 'home' ? floorH(x, z) + io : A.pos.y), isl.lv === undefined ? 1 : isl.lv); }
     { const K = this.ud.material.uniforms.uK; K.value += ((BIO.mode === 'uddhacca' ? (this.mode === 'hall' ? 1.1 : 0.6) : 0) - K.value) * Math.min(1, dt * 0.8); this.ud.visible = K.value > 0.01;
       if (this.ud.visible) { const h = this.mode === 'hall'; this.ud.position.set(h ? SEAT.x : this.av.pos.x, h ? -2 : this.av.pos.y + 0.5, h ? SEAT.z : this.av.pos.z); this.ud.scale.setScalar(h ? 170 : 16); } }
     this.realm.update(this.time, v.night);
@@ -804,6 +833,6 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     g.scale.set(base, base * (1 + 0.012 * s.breath * (this.fig.pose === 'sit' ? 1 : 0.5)), base);
     { const K = this.aura.material.uniforms.uK, k = A.state === 'sit' && A.where === 'home' ? 0.5 + 0.35 * s.breath : 0; K.value += (k - K.value) * Math.min(1, dt * 2); this.aura.visible = K.value > 0.01; this.aura.position.set(A.pos.x, A.pos.y + 0.04, A.pos.z); }
     this.fig.walk(A.phase, A.state === 'walk' ? Math.min(1, A.speed / 3.3) : 0);   // kinh hành: gấu áo đưa theo từng bước
-    if (this.mode === 'creator' && !this.tween) { const t = V(A.pos.x, g.position.y + (this.fig.pose === 'sit' ? 1.4 : 2.5), A.pos.z); this.controls.target.lerp(t, Math.min(1, dt * 4)); }
+    if (this.mode === 'creator' && !this.tween) { const t = V(A.pos.x, g.position.y + (this.fig.pose === 'sit' ? (this.portrait ? 1.8 : 1) : this.portrait ? 2.5 : 1.6), A.pos.z); this.controls.target.lerp(t, Math.min(1, dt * 4)); }
   }
 }

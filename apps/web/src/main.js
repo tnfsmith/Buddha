@@ -338,6 +338,7 @@ function render() {
       <p class="muted">Tịnh danh là tên tu tập trong ứng dụng. Nếu đã có pháp danh do thầy ban khi quy y, hãy dùng pháp danh ấy.</p>
       <h3>Phong cách</h3><div class="chips" data-opt="preset">${PRESETS.map((p, i) => `<button class="chip" data-v="${i}" title="${esc(p.note)}">${esc(p.name)}</button>`).join('')}</div>
       <h3>Diện mạo</h3>
+      <label class="fl">Giới tính</label>${seg('gender', OPTIONS.gender, k.gender || 'nam')}
       <label class="fl">Dáng người</label>${seg('build', OPTIONS.build, k.build)}
       <div class="sl"><span>Chiều cao</span><input type="range" data-opt="height" min="0.94" max="1.06" step="0.01" value="${k.height}"><b></b></div>
       <label class="fl">Màu da</label>${sw('skin', OPTIONS.skin, k.skin)}
@@ -350,6 +351,9 @@ function render() {
       <label class="fl">Viền và đai</label>${seg('trim', OPTIONS.trim.map((t, i) => [i, t[0]]), k.trim)}
       <label class="fl">Vật tùy thân</label>${seg('acc', OPTIONS.acc, k.acc)}
       <p class="muted">Bảng màu chỉ gồm áo của người tại gia; y vàng dành cho chư Tăng.</p>
+      <h3>Thú cưng đồng hành</h3>
+      <label class="fl">Loài</label>${seg('pet', OPTIONS.pet, k.pet || 'khong')}
+      ${OPTIONS.petv[k.pet] ? `<label class="fl">Bộ lông</label>${seg('petv', OPTIONS.petv[k.pet], k.petv || '0')}<p class="muted">Thú cưng theo bạn quanh Vân Đảo, ngồi cạnh khi bạn tọa thiền, và lớn dần theo hành trình 49 ngày.</p>` : ''}
       <h3>Chim cảnh trên Vân Đảo</h3>
       <label class="fl">Số chim ghé đảo: <strong data-bnv>${S.birds.n}</strong></label><input type="range" data-bn min="0" max="12" step="1" value="${S.birds.n}" aria-label="Số chim ghé đảo">
       <label class="fl">Tần suất ghé</label>${seg('bfreq', [[0.5, 'Thưa'], [1, 'Vừa'], [2, 'Năng ghé']], S.birds.freq)}
@@ -463,6 +467,8 @@ panel.addEventListener('click', (e) => {
     const key = ob.parentElement.dataset.opt, v = ob.dataset.v, D = U.draft;
     if (key === 'chip') D.name = v; else if (key === 'preset') Object.assign(D.look, PRESETS[+v].look); else if (key === 'pose') U.pose = v;
     else D.look[key] = ['skin', 'robe', 'trim', 'hairColor'].includes(key) ? +v : v;
+    if (key === 'gender') { const h = D.look.hair; if (v === 'nu' && (h === 'ngan' || h === 'cao')) D.look.hair = 'xoa'; if (v === 'nam' && h === 'xoa') D.look.hair = 'ngan'; }   // đổi giới tính thì gợi kiểu tóc hợp, vẫn đổi lại được
+    if (key === 'pet') D.look.petv = '0';
     applyDraft(); render(); return;
   }
   const b = e.target.closest('[data-act]'); if (!b) return;
