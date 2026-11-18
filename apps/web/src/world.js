@@ -707,7 +707,7 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
   _trip(dest, done) {
     const A = this.av; if (A.state === 'travel' || A.where === dest) return;
     const io = this.home.group.position.y, hp = (x, z) => V(x, floorH(x, z) + io, z), home = A.where === 'home', fs = !home && this.friends[A.where], ts = dest !== 'home' && this.friends[dest];
-    const HG = hp(15.5, 15.5), HW = hp(17.8, 17.8), HP = V(19.6, HW.y, 19.6), gA = home ? HG : fs.gate, pA = home ? HP : fs.pad, gB = ts ? ts.gate : HG, pB = ts ? ts.pad : HP, up = V(0, 2.4, 0);
+    const HG = hp(15.5, 15.5), HW = hp(16.2, 16.2), HP = V(17.8, HW.y, 17.8), gA = home ? HG : fs.gate, pA = home ? HP : fs.pad, gB = ts ? ts.gate : HG, pB = ts ? ts.pad : HP, up = V(0, 2.4, 0);
     const br = this.bridges[home ? dest : A.where].getPoints(20), out = pA.clone().sub(gA).setY(0).normalize(), walk = [...(home ? this._route('gate').map(([x, z]) => hp(x, z)) : []), gA, home ? HW : pA.clone().addScaledVector(out, -1.7)];
     const curve = new THREE.CatmullRomCurve3(home ? [pA.clone().add(up), ...br] : [...br.reverse(), pB.clone().add(up)]);
     A.trip = { st: 'walk', t: 0, i: 0, walk, out, inn: gB.clone().sub(pB).setY(0).normalize(), curve, fly: Math.min(11, Math.max(6.5, curve.getLength() / 20)), pA, pB, gB, end: ts ? ts.arrive : hp(12.5, 12.5), op: 0 };
