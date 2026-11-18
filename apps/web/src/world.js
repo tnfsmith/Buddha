@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { buildRealm } from './realm.js';
+import { BIO } from './audio.js';
 import { buildBirds } from './birds.js';
-import { NOISE, OUT, rng, puffAtlas, buddhaTex, lodPair, UNI, moodMix, gfxBackend, tierOf, governor, hue } from './gfx.js';
+import { NOISE, OUT, rng, puffAtlas, buildBuddha, buddhaFace, lodPair, UNI, moodMix, gfxBackend, tierOf, governor, hue } from './gfx.js';
 import { buildHome, buildNeighbor, bakeLocal, groundH, floorH, pvFloor, DECKS, STAIR, P, SX, SZ, HILL, POND } from './island.js';
 import { buildFigure, makeCrowd, defaultLook, suggestNames } from './people.js';
 
@@ -14,6 +14,22 @@ const BUD = new THREE.Vector3(0, 0, -760), SEAT = new THREE.Vector3(0, 3, -256);
 // Tôn tượng phóng 1,5 lần và ngự trên đài mây cao BL: vai ≈ 305, mắt ≈ 370, đỉnh đầu ≈ 460 — luôn cao hơn mọi tầng
 export const BS = 1.5, BL = 75, BUD_EYE = BL + 196 * BS, BUD_SHOULDER = BL + 153 * BS;
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
+// Bloom lọc kép (dual filter kiểu Kawase): tầng đầu lọc sáng (chỉ phần vượt ~1 trong HDR: hào quang, lõi đèn, hạt công đức, viền
+// mây ngược nắng), thu nhỏ dần qua n tầng (5 điểm lấy mẫu), phóng to dần cộng ngược lên (8 điểm), cuối cùng cộng vào ảnh HDR với
+// cường độ k. 2n lượt vẽ nhỏ, gọn hơn UnrealBloomPass (bỏ khỏi gói, ~8 KB).
+function bloomFx(n) {
+  const q = new FullScreenQuad(), M = (f, add) => new THREE.ShaderMaterial({ uniforms: { t: { value: null }, h: { value: new THREE.Vector2() }, k: { value: 1 } }, depthTest: false, depthWrite: false, transparent: add, blending: add ? THREE.AdditiveBlending : THREE.NoBlending,
+    vertexShader: 'varying vec2 v;void main(){v=uv;gl_Position=vec4(position.xy,0.,1.);}', fragmentShader: 'uniform sampler2D t;uniform vec2 h;uniform float k;varying vec2 v;vec3 s(vec2 o){return texture2D(t,v+o*h).rgb;}void main(){' + f + '}' });
+  const D = M('vec3 c=(s(vec2(0.))*4.+s(vec2(-1.))+s(vec2(1.))+s(vec2(1.,-1.))+s(vec2(-1.,1.)))/8.;if(k>.5)c*=smoothstep(1.02,1.42,dot(c,vec3(.2126,.7152,.0722)));gl_FragColor=vec4(c,1.);', false),
+    U = M('gl_FragColor=vec4(k*(s(vec2(-2.,0.))+s(vec2(2.,0.))+s(vec2(0.,-2.))+s(vec2(0.,2.))+2.*(s(vec2(-1.))+s(vec2(1.))+s(vec2(1.,-1.))+s(vec2(-1.,1.))))/12.,1.);', true),
+    mips = Array.from({ length: n }, () => new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType }));
+  const pass = (m, src, dst, k) => { m.uniforms.t.value = src.texture; m.uniforms.h.value.set(0.5 / src.width, 0.5 / src.height); m.uniforms.k.value = k; q.material = m; r0.setRenderTarget(dst); q.render(r0); };
+  let r0;
+  return { k: 0.3, mips,
+    setSize(w, h) { mips.forEach((m) => { w = Math.max(1, w >> 1); h = Math.max(1, h >> 1); m.setSize(w, h); }); },
+    render(r, src) { const ac = r.autoClear; r0 = r; r.autoClear = false;   // cộng dồn lên đích có sẵn: không được xóa
+      mips.forEach((m, i) => pass(D, i ? mips[i - 1] : src, m, i ? 0 : 1)); for (let i = n - 1; i > 0; i--) pass(U, mips[i], mips[i - 1], 1); pass(U, mips[0], src, this.k); r.autoClear = ac; } };
+}
 const faceBud = (x, z) => Math.atan2(BUD.x - x, BUD.z - z);
 const ease = (k) => k * k * (3 - 2 * k);
 // Đường cong cubic-bezier(x1, y1, x2, y2) như CSS: giải t theo x bằng Newton rồi lấy y
@@ -161,16 +177,9 @@ col=mix(col*1.08,uHz,1.-exp(-ds*ds*1.4e-6));float a=1.;${OUT}}` }));
 
   _buddha() {
     const g = (this.budGroup = new THREE.Group()); g.position.set(BUD.x, BL, BUD.z); g.scale.setScalar(BS); this.scene.add(g);
-    // Tôn tượng: tranh vẽ được nhuộm lại thành đồng cổ ấm (tối → nâu đồng, sáng → vàng đánh bóng) và viền sáng vàng ở mép hình
-    // (xấp xỉ Fresnel cho hình phẳng: càng sát mép, alpha láng giềng càng thiếu)
-    const bm = new THREE.MeshBasicMaterial({ map: buddhaTex(), alphaTest: 0.5, fog: false });
-    bm.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
-{vec2 e=vec2(.014,.011);float rim=1.-.25*(texture2D(map,vMapUv+vec2(e.x,0.)).a+texture2D(map,vMapUv-vec2(e.x,0.)).a+texture2D(map,vMapUv+vec2(0.,e.y)).a+texture2D(map,vMapUv-vec2(0.,e.y)).a);
-float lum=dot(sampledDiffuseColor.rgb,vec3(.34));
-diffuseColor.rgb*=mix(vec3(.46,.25,.1),vec3(1.,.77,.42),smoothstep(.12,.85,lum));
-diffuseColor.rgb+=vec3(2.1,1.5,.62)*rim*rim*(.5+.5*vMapUv.y);}`); };
-    this.budFig = new THREE.Mesh(new THREE.PlaneGeometry(262, 328), bm);
-    this.budFig.position.set(0, 148, 0); g.add(this.budFig);
+    // Tôn tượng tạc khối bằng vàng (gfx.buildBuddha): quay mặt về Đại Thiền Đường và Vân Đảo; nhìn từ các tầng hai bên thấy dáng nghiêng,
+    // từ cụm Vân Tọa sau lưng thấy lưng và nhục kế. Tay phải giơ ấn thuyết pháp bằng phép xoay trên GPU (budArm), không dựng lại hình.
+    const B = buildBuddha(this.soft); this.budFig = B.mesh; this.budArm = B.arm; this.budK = 0; g.add(this.budFig);
     const halo = new THREE.Mesh(new THREE.PlaneGeometry(1100, 1100), new THREE.ShaderMaterial({ transparent: true, depthWrite: false, fog: false, uniforms: this.u,
       vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }',
       fragmentShader: `uniform float uTime,uHalo,uRainbow,uHaloWhite; varying vec2 vUv;
@@ -183,7 +192,7 @@ void main(){ vec2 p = vUv*2.-1.; float r = length(p); float ang = atan(p.y,p.x);
  col = mix(col, c6*1.12, clamp(rays*uRainbow*0.9,0.,0.85));
  col = mix(col, vec3(1.0,1.04,1.16)*(0.62+0.55*glow), uHaloWhite*0.8);
  float a = clamp((glow*0.85 + rings*0.30)*min(uHalo,1.6) + rays*(0.16+0.26*uRainbow)*uHalo, 0., 1.)*smoothstep(1.0,0.8,r); ${OUT} }` }));
-    halo.position.set(0, 196, -14); halo.scale.setScalar(0.8); halo.renderOrder = -1; g.add(halo); this.halo = halo;
+    halo.position.set(0, 199, -40); halo.scale.setScalar(0.8); halo.renderOrder = -1; g.add(halo); this.halo = halo;
     // Quanh Tôn tượng: mưa hoa (cánh hoa hồng nhạt xoay nhẹ, rơi chậm trước tượng; dày lên khi thuyết giảng) và hạt sáng vàng bay lên
     // quanh thân tượng. Một hệ Points cộng sáng trên GPU (hoa luôn là đốm sáng, kể cả trước hào quang), cỡ hạt theo đơn vị thế giới (uPx);
     // không chạm tới khuôn mặt tranh vẽ.
@@ -365,6 +374,12 @@ float a=t.a*t.a*(3.-2.*t.a)*vA*(1.-f*0.5)*smoothstep(1.,8.,vD)*(vG>6.5?smoothste
       vertexShader: 'varying vec2 v; void main(){ v = position.xy/1.8; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }',
       fragmentShader: `uniform float uK;varying vec2 v;void main(){float r=length(v);vec3 col=vec3(1.,.82,.5);float a=uK*exp(-r*r*5.)*(1.-r);${OUT}}` }));
     this.aura.rotation.x = -Math.PI / 2; this.aura.renderOrder = 5; this.aura.visible = false; this.scene.add(this.aura);
+    // Sóng âm trầm 136,1 Hz khi «Trị phóng dật»: hai vòng sóng mềm lan chậm trên mặt mây từ dưới Vân Tọa (Vân Đảo: dưới chân nhân vật),
+    // mỗi vòng sống 10 giây như một nhịp thở; vàng đất nhạt, sáng dịu theo nhịp 0,1 Hz cùng âm trầm (audio.js)
+    this.ud = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { uTime: this.u.uTime, uK: { value: 0 } },
+      vertexShader: 'varying vec2 v; void main(){ v = position.xy; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }',
+      fragmentShader: `uniform float uTime,uK;varying vec2 v;void main(){float r=length(v),a=0.;for(int i=0;i<2;i++){float f=fract(uTime*.1+float(i)*.5);a+=(exp(-pow((r-f)*26.,2.))+.35*exp(-pow((r-f+.06)*18.,2.)))*f*(1.-f)*4.;}vec3 col=vec3(.92,.66,.34);a*=.5*uK*(.65+.35*sin(uTime*.628))*smoothstep(1.,.75,r);${OUT}}` }));
+    this.ud.rotation.x = -Math.PI / 2; this.ud.renderOrder = 7; this.ud.visible = false; this.scene.add(this.ud);
     // Màn mây trước ống kính cho đoạn lướt vào cảnh (reveal): phủ kín rồi tan dần; ẩn hẳn khi uVeil về 0
     this.veil = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ transparent: true, depthTest: false, depthWrite: false, fog: false, uniforms: this.u,
       vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }',
@@ -388,15 +403,14 @@ void main(){ float n = fbm(vUv*vec2(3.,1.8) + vec2(uTime*.05, uVeil*.6)); vec3 c
   setLook(look) { this.look = { ...this.look, ...look }; this._avatar(); }
   headPos() { const h = this.fig.pose === 'sit' ? 2.0 : 3.7; return V(this.av.pos.x, this.av.pos.y + (this.av.where === 'home' ? this.home.group.position.y : 0) + h * (this.look.height || 1), this.av.pos.z); }
 
-  // Hậu kỳ (mức ≥ 1): cảnh vẽ vào đích HDR nửa-float khử răng cưa ×4 → UnrealBloomPass cộng quầng sáng ngay trên đích đó →
-  // một lượt cuối tone mapping ACES + đổi không gian màu ra màn hình. Không dùng EffectComposer/OutputPass (nhẹ hơn ~8 KB).
+  // Hậu kỳ (mức ≥ 1): cảnh vẽ vào đích HDR nửa-float khử răng cưa ×4 → bloom lọc kép (bloomFx) cộng quầng sáng ngay trên đích đó →
+  // một lượt cuối tone mapping ACES + đổi không gian màu ra màn hình. Không dùng EffectComposer/OutputPass/UnrealBloomPass (nhẹ hơn ~16 KB).
   // Ngưỡng bloom đặt trên mức trắng của mây: chỉ hào quang, lõi đèn đá, hạt công đức, viền mây ngược nắng (đều > 1 trong HDR) mới tỏa sáng.
   _composer() {
     try {
       this.rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: 4 });
-      const b = (this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.3, 0.55, 1.02)); b.highPassUniforms.smoothWidth.value = 0.4;
-      // điện thoại: bloom nửa độ phân giải (applyQuality) và chỉ 3 tầng mờ thay vì 5 → bớt 4 lượt vẽ toàn màn hình
-      if (this.mobile) { b.nMips = 3; b.compositeMaterial.uniforms.bloomFactors.value = [1, 0.8, 0.6, 0, 0]; }
+      // điện thoại: bloom nửa độ phân giải (applyQuality) và chỉ 3 tầng thay vì 5 → bớt 4 lượt vẽ toàn màn hình
+      this.bloom = bloomFx(this.mobile ? 3 : 5);
       // Lượt cuối có làm nét thích ứng độ tương phản (kiểu AMD CAS, 5 điểm lấy mẫu): nét mảnh như lá, viền áo, tóc xoắn rõ lại sau MSAA
       // và bloom; chỗ tương phản cao hoặc vượt 1 trong HDR (hào quang, mặt trời) thì tự giảm về 0 nên không có viền sáng giả.
       // Sau tone mapping: chỉnh màu kiểu điện ảnh (đường cong chữ S nhẹ, vùng sáng ngả ấm, vùng tối ngả lạnh, tối góc khung) và nhiễu
@@ -421,7 +435,7 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
   applyQuality() {
     const q = this.quality, T = tierOf(q, this.mobile), pr = Math.min(window.devicePixelRatio || 1, this.soft ? 1 : T.dpr) * this.res, w = Math.max(1, Math.round(this.w * pr)), h = Math.max(1, Math.round(this.h * pr));
     this.renderer.setPixelRatio(pr); this.renderer.setSize(this.w, this.h, false); this.sun.castShadow = T.post; this.shDirty = 3;
-    if (this.puff) { this.puff.geometry = this.puffGeos[q === 0 ? 0 : 1]; this.rays.count = q ? 10 : 5; this.home.grass.count = this.soft ? 600 : q ? 3000 : 1800; }   // trình vẽ phần mềm: CPU tô từng lá cỏ, chỉ giữ 600 bụi
+    if (this.puff) { this.puff.geometry = this.puffGeos[q === 0 ? 0 : 1]; this.rays.count = q ? 10 : 5; this.home.grass.count = this.soft ? 600 : q ? 3000 : 1550; }   // trình vẽ phần mềm: CPU tô từng lá cỏ, chỉ giữ 600 bụi; điện thoại mức 0 giữ 1.550 bụi cho vừa ngân sách tam giác
     // §12.3 mục 5: đích hậu kỳ theo đúng độ phân giải động; bloom nửa độ phân giải trên điện thoại (ánh hào quang vốn mờ, khác biệt khó thấy)
     if (this.rt) { this.rt.setSize(w, h); this.bloom.setSize(Math.round(w * T.bloom), Math.round(h * T.bloom)); this.out.material.uniforms.px.value.set(1 / w, 1 / h); }
     this.u.uPx.value = h / 2;
@@ -611,6 +625,25 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     else if (m === 'island') Object.assign(c, { minDistance: 4, maxDistance: 380, minPolarAngle: 0.5, maxPolarAngle: this.portrait ? 1.95 : 1.64 });
     else Object.assign(c, { minDistance: 3.2, maxDistance: 260, minPolarAngle: 0.5, maxPolarAngle: 1.54 });   // phân khu: zoom được tới sát nhân vật
   }
+  // Máy quay mở đầu thuyết giảng (sermon.js chọn cảnh theo chặng, st.shot): cận trực diện Tôn tượng mở mắt (face) → lia ngang
+  // theo vòng cung trước hàng đệ tử đầu tiên, thấy hội chúng đảnh lễ hướng về Tôn tượng (pan) → nâng máy sau hội chúng, thấy cả Đại Thiền Đường (rise) →
+  // xoay chậm quanh hội chúng trong lời mở đầu (orbit) → nửa giây trước nội dung bài giảng thì về cận Tôn tượng (close, đúng góc
+  // của main.js). Mỗi cảnh hòa từ vị trí máy quay lúc chuyển cảnh; hết các cảnh này thì trả máy quay cho main.js.
+  _direct(dt, sm) {
+    const sh = sm.on && this.mode === 'hall' ? sm.shot : '';
+    if (!sh) { if (this.dir) { this.dir = null; this.controls.enabled = true; } return; }
+    let d = this.dir; if (!d || d.sh !== sh) d = this.dir = { sh, t: 0, p: this.camera.position.clone(), q: this.controls.target.clone(), f: this.baseFov };
+    const t = (d.t += dt), P = this.portrait, e = (x) => { x = Math.min(1, x); return x * x * (3 - 2 * x); };
+    let p, q, f, b = 0.5;
+    if (sh === 'face') { p = V(0, P ? 262 : 250, P ? -380 : -455); q = V(0, 335, -760); f = P ? 62 : 50; b = 0.4; }
+    else if (sh === 'pan') { const a = (e(t / 3.5) * 2 - 1) * (P ? 0.3 : 0.48); p = V(172 * Math.sin(a), 10, -760 + 172 * Math.cos(a)); q = V(270 * Math.sin(a * 0.85), 3, -760 + 270 * Math.cos(a * 0.85)); f = P ? 62 : 46; b = 0.4; }
+    else if (sh === 'rise') { const u = e(t / 1.8); p = V(0, 35 + 85 * u, -215 + 65 * u); q = V(0, 210, -720); f = P ? 68 : 60; }
+    else if (sh === 'orbit') { const a = 0.55 * Math.sin(t * 0.09); p = V(Math.sin(a) * 330, (P ? 75 : 45) + 12 * Math.sin(t * 0.13), -600 + Math.cos(a) * 330); q = V(0, P ? 250 : 150, -700); f = P ? 70 : 62; b = 1.4; }
+    else { p = P ? V(-20, 240, -175) : V(-30, 96, -300); q = V(0, P ? 365 : 318, -760); f = P ? 58 : 56; }
+    const k = e(t / b);
+    this.camera.position.lerpVectors(d.p, p, k); this.controls.target.lerpVectors(d.q, q, k); this.baseFov = d.f + (f - d.f) * k; this.applyFov();
+    this.tween = null; this.controls.enabled = false;
+  }
   applyFov() { const b = (this.baseFov * Math.PI) / 360, k = this.portrait ? 1.5 : 1; this.camera.fov = (Math.atan(Math.tan(b) * k) * 360) / Math.PI; this.camera.updateProjectionMatrix(); }
   project(v) { const p = v.clone().project(this.camera); return { x: (p.x * 0.5 + 0.5) * this.w, y: (-p.y * 0.5 + 0.5) * this.h, vis: p.z < 1 && p.z > -1 }; }
   resize() {
@@ -621,27 +654,34 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
   }
 
   update(dt, s) {
-    const u = this.u, v = s.vis, isl = s.isl, H = this.home, now = performance.now();
+    const u = this.u, isl = s.isl, H = this.home, now = performance.now(), ud = BIO.mode === 'uddhacca' ? Math.min(1, (now - BIO.at) / 5000) : 0;
+    const v = ud ? { ...s.vis, amber: s.vis.amber * (1 - 0.6 * ud) } : s.vis;   // «Trị phóng dật»: sắc hổ phách nhạt hơn, phần chính là sóng âm (this.ud)
     this._adapt();
     // Lần cập nhật đầu tiên: nếu cảnh mở ở Vân Đảo, không nhảy thẳng (snap) và người dùng không chọn giảm chuyển động thì lướt vào cảnh
     if (!this.began) { this.began = 1; let calm = false; try { calm = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { void e; } if (!this.snap && !calm && !this.tween && this.mode === 'island') this.reveal(); }
     // Thiền tiết kiệm (§12.5): đang tọa thiền hay ở Đại Thiền Đường, máy quay đứng yên và không ai chạm màn hình → chỉ vẽ 30 khung/giây.
     // `world.meditating = true/false` để lớp ứng dụng chỉ định rõ; để trống thì suy từ tư thế ngồi. Thời gian bỏ qua được cộng dồn nên chuyển động không chậm đi.
-    this.saver = (this.meditating ?? (this.av.state === 'sit' || this.mode === 'hall')) && !this.tween && now - this.touch > 1500;
+    this.saver = (this.meditating ?? (this.av.state === 'sit' || this.mode === 'hall')) && !this.tween && !this.dir && now - this.touch > 1500;
     this.acc += dt; if (this.saver && now - this.drawn < 28) return;
     dt = this.acc; this.acc = 0; this.drawn = now;
     this.time += dt; u.uTime.value = this.time;
+    this._direct(dt, s.sermon || {});
     if (this.tween) { const tw = this.tween; tw.k = Math.min(1, tw.k + dt / tw.dur); const e = tw.glide ? GLIDE(tw.k) : ease(tw.k);
       this.camera.position.lerpVectors(tw.p0, tw.p, e); this.controls.target.lerpVectors(tw.t0, tw.t, e); this.baseFov = tw.f0 + (tw.fov - tw.f0) * e; this.applyFov();
       if (tw.glide) u.uVeil.value = Math.max(0, 1 - tw.k * 1.7);
       if (tw.k >= 1) { this.tween = null; this.controls.enabled = true; this.setLimits(); } }
     if (!this.tween || !this.tween.glide) u.uVeil.value = Math.max(0, u.uVeil.value - dt * 1.5);   // bị ngắt giữa chừng thì màn mây vẫn tan dần
     this.veil.visible = u.uVeil.value > 0;
-    this._avatarStep(dt, s); this.realm.update(this.time, v.night);
+    this._avatarStep(dt, s);
+    { const K = this.ud.material.uniforms.uK; K.value += ((BIO.mode === 'uddhacca' ? (this.mode === 'hall' ? 1.1 : 0.6) : 0) - K.value) * Math.min(1, dt * 0.8); this.ud.visible = K.value > 0.01;
+      if (this.ud.visible) { const h = this.mode === 'hall'; this.ud.position.set(h ? SEAT.x : this.av.pos.x, h ? -2 : this.av.pos.y + 0.5, h ? SEAT.z : this.av.pos.z); this.ud.scale.setScalar(h ? 170 : 16); } }
+    this.realm.update(this.time, v.night);
     // Thuyết giảng: Tôn tượng mở mắt, cử động miệng, giơ ấn thuyết pháp; hội chúng chắp tay và đảnh lễ
     { const sm = s.sermon || { on: false, speak: 0, bow: 0, anjali: false };
-      if (sm.on && !this.budFrames) this.budFrames = [this.budFig.material.map, buddhaTex({ open: true, hand: true }), buddhaTex({ open: true, hand: true, mouth: 0.5 }), buddhaTex({ open: true, hand: true, mouth: 1 })];
+      if (sm.on && !this.budFrames) this.budFrames = [this.budFig.material.map, buddhaFace({ open: true }), buddhaFace({ open: true, mouth: 0.5 }), buddhaFace({ open: true, mouth: 1 })];
       if (this.budFrames) { const f = sm.on ? 1 + (sm.speak > 0.62 ? 2 : sm.speak > 0.22 ? 1 : 0) : 0; if (this.budFig.material.map !== this.budFrames[f]) this.budFig.material.map = this.budFrames[f]; }
+      // giơ ấn thuyết pháp khi bắt đầu thí pháp (sau phần hội chúng đảnh lễ), hạ về ấn thiền định khi hết bài
+      { const up = sm.on && sm.ph !== 'homage' && sm.ph !== 'wait1' ? 1 : 0, k = this.budK + (up - this.budK) * Math.min(1, dt * 1.4); if (Math.abs(k - this.budK) > 1e-4) { this.budK = k; this.budArm(k * k * (3 - 2 * k)); } }
       { const R = this.budFx.material.uniforms.uRain; R.value += ((sm.on ? 1 : 0.45) - R.value) * Math.min(1, dt * 0.5); }   // mưa hoa dày dần khi thuyết giảng
       this.sBow = (this.sBow || 0) + ((sm.bow || 0) - (this.sBow || 0)) * Math.min(1, dt * 7);
       [this.hallCrowd, this.tierCrowd].forEach((c) => { if (c && c.userData.bow) { c.userData.bow.value = this.sBow; c.userData.setAnjali(!!sm.anjali); } });
@@ -654,7 +694,6 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     // Nhân vật chi tiết ở xa chỉ còn vài điểm ảnh: bạn đồng tu quá 150/200/260 (theo mức) thì không vẽ; mức 0 cũng bỏ nhân vật của mình ở Đại Thiền Đường khi đứng xa
     this.friends.forEach((f) => { f.fig.group.visible = cam.distanceTo(f.pos) < [150, 200, 260][q]; }); this.hallFig.group.visible = q > 0 || cam.distanceTo(SEAT) < 300;
     u.uBud.value.set(BUD.x - cam.x, BUD_EYE - cam.y, BUD.z - cam.z).normalize();
-    this.budFig.lookAt(cam.x, BL + 148 * BS, cam.z);
     u.uNight.value = v.night; u.uAmber.value = v.amber; u.uJade.value = v.jade; u.uCalm.value = v.calm;
     // Tâm trạng ánh sáng: Trăng Thiền theo đêm của thời thiền, Hoàng Hôn Tím theo sắc hổ phách, Sương Sớm theo mốc «Niệm hơi thở mây»
     // (và phảng phất trong màn sương những ngày đầu hành trình), còn lại là Ngày Vàng
@@ -706,7 +745,7 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     const r = this.renderer, inf = r.info; inf.reset();
     // bóng đổ chỉ phủ Vân Đảo: vẽ lại khi máy quay ở gần đảo (hoặc vài khung đầu / sau khi đổi mức), còn lại dùng bản đồ bóng sẵn có
     if (home || this.shDirty > 0) { r.shadowMap.needsUpdate = true; this.shDirty--; }
-    if (q >= 1 && this.rt) { this.bloom.strength = 0.26 + 0.2 * v.night; r.setRenderTarget(this.rt); r.render(this.scene, this.camera); this.bloom.render(r, null, this.rt, dt, false); r.setRenderTarget(null); this.out.render(r); }
+    if (q >= 1 && this.rt) { this.bloom.k = 0.2 + 0.16 * v.night; r.setRenderTarget(this.rt); r.render(this.scene, this.camera); this.bloom.render(r, this.rt); r.setRenderTarget(null); this.out.render(r); }
     else r.render(this.scene, this.camera);
     this._perfTick(inf);
   }

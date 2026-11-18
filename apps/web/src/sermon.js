@@ -141,6 +141,13 @@ export class Sermon {
   resume() { if (!this.paused) return; this.paused = false; const T = this._cur(); if (T) { const p = T.el.play(); if (p && p.catch) p.catch(() => T.fail('play')); } try { speechSynthesis.resume(); } catch (e) { /* không có TTS */ } }
   /** Góc máy quay muốn có: 'close' (cận Tôn tượng khi nói, hồi hướng) hoặc 'wide' (hội chúng đảnh lễ Đức Phật: Namo, Sādhu, chờ tải) */
   get cam() { const p = this.phase; return p === 'line' || p === 'audio' || p === 'gap' || p === 'dedicate' || p === 'mo-dau' || p === 'ket-thuc' ? 'close' : 'wide'; }
+  /** Cảnh quay mở đầu cho world._direct (chủ dự án yêu cầu 18/11/2026): nửa giây đầu cận trực diện Tôn tượng mở mắt (face), rồi lia
+   * qua hàng hàng đệ tử đang đảnh lễ (pan), nâng máy thấy cả Đại Thiền Đường (rise); lời mở đầu thì xoay chậm quanh hội chúng (orbit);
+   * nửa giây trước nội dung bài giảng thì cận Tôn tượng (close). Chuỗi rỗng: main.js tự đặt máy quay như cũ. */
+  _shot() { const p = this.phase, k = 6.5 - this.left;
+    if (p === 'homage') return k < 0.9 ? 'face' : k < 4.4 ? 'pan' : this.left < 0.55 && !this.oa ? 'close' : 'rise';
+    if (p === 'wait1' || p === 'mo-dau') return 'orbit';
+    return (p === 'gap' || p === 'wait') && this.i < 0 ? 'close' : ''; }
   /** d = 1: sang ý sau; d = -1: về ý trước. Trong lời mở đầu / hồi hướng: sang câu sau, hết câu thì qua chặng sau. */
   step(d) {
     if (!this.on) return; const n = this.s.lines.length;
@@ -248,6 +255,7 @@ export class Sermon {
     else if (this.phase === 'sadhu') { const k = 9 - this.left, c = (k % 3) / 3; st.speak = 0; st.bow = Math.pow(Math.sin(Math.PI * c), 2); const n = Math.floor(k / 3); if (n !== this._wn && c > 0.45) { this._wn = n; this.waves.push(0); }
       if (this.left <= 0) this._afterSadhu(); }
     else if (this.phase === 'dedicate') { st.speak = this.left > 0.7 ? Math.abs(Math.sin(this.t * 10.6)) * 0.8 : 0; st.bow = 0; st.merit = 1; if (this.left <= 0) { this.riteText = true; this._end(); } }
+    if (this.on) { st.ph = this.phase; st.shot = this._shot(); }
     return this.st;
   }
 }

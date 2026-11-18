@@ -72,11 +72,15 @@ export class Engine {
     this.bellBus = c.createGain(); this.bellBus.connect(this.master);
     this.live = [];
 
-    // Âm trầm lắng dịu (can thiệp phóng dật)
+    // Âm trầm lắng dịu (can thiệp phóng dật): 136,1 Hz (âm «Om» của năm Trái Đất), quãng tám dưới cho chỗ dựa sâu, một bè lệch 0,25 Hz
+    // để tiếng ngân như chuông bát thay vì một nốt điện tử đứng yên; quãng năm và quãng tám trên rất nhẹ, lọc mềm dưới 480 Hz.
+    // Âm lượng thở theo nhịp 0,1 Hz (mỗi chu kỳ 10 giây, như hít 4 – thở 6) để dẫn hơi thở người nghe chậm lại.
     this.ov = c.createGain(); this.ov.gain.value = 0;
-    const ovLP = c.createBiquadFilter(); ovLP.type = 'lowpass'; ovLP.frequency.value = 650;
-    this.ov.connect(ovLP); ovLP.connect(this.master);
-    [[136.1, 0.5], [204.15, 0.3], [272.2, 0.28], [408.3, 0.1]].forEach(([f, w]) => {
+    const ovLP = c.createBiquadFilter(); ovLP.type = 'lowpass'; ovLP.frequency.value = 480;
+    const sw = c.createGain(); sw.gain.value = 0.7; const lfo = c.createOscillator(); lfo.frequency.value = 0.1; const ld = c.createGain(); ld.gain.value = 0.3;
+    lfo.connect(ld); ld.connect(sw.gain); lfo.start();
+    this.ov.connect(sw); sw.connect(ovLP); ovLP.connect(this.master);
+    [[68.05, 0.24], [136.1, 0.45], [136.35, 0.2], [204.15, 0.15], [272.2, 0.09]].forEach(([f, w]) => {
       const o = c.createOscillator(); o.frequency.value = f; const g = c.createGain(); g.gain.value = w;
       o.connect(g); g.connect(this.ov); o.start();
     });
@@ -144,12 +148,15 @@ export class Engine {
   setBio(mode) {
     const c = this.ctx, now = c.currentTime, g = this.ov.gain;
     g.cancelScheduledValues(now); g.setValueAtTime(g.value, now);
-    if (mode === 'uddhacca') { g.linearRampToValueAtTime(0.14, now + 6); g.setValueAtTime(0.14, now + 180); g.linearRampToValueAtTime(0, now + 192); }
+    if (mode === 'uddhacca') { g.linearRampToValueAtTime(0.12, now + 6); g.setValueAtTime(0.12, now + 180); g.linearRampToValueAtTime(0, now + 192); }
     else g.linearRampToValueAtTime(0, now + 4);
     this.killBells(true, true);
     if (mode === 'thina') for (let i = 0; i < 9; i++) this.bell({ type: 'tinh', az: (i * 80) % 360, el: 60, gain: 0.15, bio: true }, now + 0.3 + i * 10);
   }
 }
+
+// Chế độ can thiệp đang chọn (Định tĩnh, Trị phóng dật, Trị hôn trầm) và lúc chọn: world.js vẽ sóng âm theo đây
+export const BIO = { mode: 'samadhi', at: 0 };
 
 // Trình phát thời gian thực: đồng hồ AudioContext là đồng hồ chủ cho cả cảnh 3D.
 export class Player {
@@ -228,7 +235,7 @@ export class Player {
 
   setVolume(v) { this.volume = v; if (this.eng) this.eng.vol.gain.setTargetAtTime(v, this.ctx.currentTime, 0.05); }
   setBinaural(on) { this.bin = on; if (this.eng) this.eng.binGain.gain.setTargetAtTime(on ? 0.03 : 0, this.ctx.currentTime, 0.2); }
-  setBio(mode) { this.bio = mode; if (this.eng && this.playing) this.eng.setBio(mode); }
+  setBio(mode) { this.bio = BIO.mode = mode; BIO.at = performance.now(); if (this.eng && this.playing) this.eng.setBio(mode); }
   scope(arr) { if (this.eng) this.eng.analyser.getFloatTimeDomainData(arr); return !!this.eng; }
 }
 

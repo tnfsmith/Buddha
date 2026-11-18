@@ -91,7 +91,7 @@ export function buildRealm(seed = 91) {
   const last = new THREE.Vector3(1e9, 0, 0); let lastQ = -1;
   const lod = (cam, q = 2) => {
     if (q === lastQ && cam.distanceToSquared(last) < 400) return false;
-    last.copy(cam); lastQ = q; const T = [380, 520, 700][q] ?? 700;
+    last.copy(cam); lastQ = q; const T = [330, 520, 700][q] ?? 700;
     sets.forEach((S) => { const c = [0, 0];
       S.L.forEach((o, i) => { const dd = S.P[i].distanceTo(cam) - o.size, nv = dd < (S.near[i] === 0 ? T * 1.08 : T / 1.08) ? 0 : 1; S.near[i] = nv;
         const m = S.m[nv], at = c[nv]++; m.setMatrixAt(at, S.M[i]); m.geometry.attributes.iV.array.set(S.V[i], at * 4); });
