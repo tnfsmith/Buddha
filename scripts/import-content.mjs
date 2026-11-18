@@ -3,15 +3,16 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
-import { readPublished, contentSql } from './content-data.mjs';
+import { readContentRows, contentSql } from './content-data.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 try {
   const { values } = parseArgs({ options: { env: { type: 'string' }, remote: { type: 'boolean' }, local: { type: 'boolean' }, check: { type: 'boolean' } } });
   const { remote, local, env: target, check } = values;
   if ((remote && local) || (check && (remote || local)) || (target && !['staging', 'production'].includes(target)) || ((remote || local) && !target)) throw new Error('Dùng --check hoặc --env staging|production --local|--remote');
-  const rows = readPublished(join(root, 'content'));
-  console.log(`content: ${rows.length} mục đã chọn phát hành (${rows.filter(x => x.kind === 'bai_giang').length} bài giảng, ${rows.filter(x => x.kind === 'nhiem_vu').length} nhiệm vụ); reviewed_* tùy chọn; ghi meta JSON sau migration 0008.`);
+  const rows = readContentRows(join(root, 'content'));
+  const approved = rows.filter(x => x.status === 'da_duyet');
+  console.log(`content: ${approved.length} mục da_duyet (${approved.filter(x => x.kind === 'bai_giang').length} bài giảng, ${approved.filter(x => x.kind === 'nhiem_vu').length} nhiệm vụ), ${rows.length - approved.length} phiên bản ngung.`);
   if ((remote || local) && rows.length) {
     const scratch = join(root, '.wrangler');
     await mkdir(scratch, { recursive: true });

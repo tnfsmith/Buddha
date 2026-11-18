@@ -64,9 +64,16 @@ export function validateMission(article) {
   return article;
 }
 
-export function publishedRow(article) {
-  if (article.status !== 'da_duyet') return null;
+export function contentRow(article) {
+  if (article.status !== 'da_duyet' && article.status !== 'ngung') return null;
   const { id, tier, lang } = header(article);
+  const row = { id, version: article.version, kind: article.kind, tier, lang,
+    title: textField(article.title, 'title'), source_ref: textField(article.source_ref, 'source_ref'), status: article.status,
+  };
+  // Phiên bản ngừng chỉ giữ thông tin nhận diện, không mang bài hoặc khóa phát.
+  if (article.status === 'ngung') return { ...row,
+    body_inline: null, body_r2_key: null, reviewed_by: null, reviewed_at: null, meta: null,
+  };
   if (article.kind === 'nhiem_vu') validateMission(article);
   const body = displayBody(article.body);
   if (!body.split('\n').some(x => !x.startsWith('>'))) throw new Error('Bài không có ý nào');
@@ -75,15 +82,13 @@ export function publishedRow(article) {
   const reviewedAt = article.reviewed_at === '' ? null : article.reviewed_at ?? null;
   if (reviewedAt !== null && (!Number.isSafeInteger(reviewedAt) || reviewedAt < 0)) throw new Error('reviewed_at không hợp lệ');
   if (article.meta != null && (typeof article.meta !== 'object' || Array.isArray(article.meta))) throw new Error('meta phải là khối YAML');
-  return { id, version: article.version, kind: article.kind, tier, lang,
-    title: textField(article.title, 'title'), body_inline: body, body_r2_key: key,
-    source_ref: textField(article.source_ref, 'source_ref'), status: 'da_duyet',
+  return { ...row, body_inline: body, body_r2_key: key,
     reviewed_by: article.reviewed_by == null || article.reviewed_by === '' ? null : textField(article.reviewed_by, 'reviewed_by'), reviewed_at: reviewedAt,
     meta: article.meta == null ? null : JSON.stringify(article.meta),
   };
 }
 
-export function readPublished(dir) {
+export function readContentRows(dir) {
   const seen = new Set(), rows = [];
   const files = (folder) => readdirSync(folder, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name)).flatMap(entry => {
     const file = join(folder, entry.name);
@@ -93,8 +98,8 @@ export function readPublished(dir) {
     let row;
     try {
       const article = parseContent(readFileSync(file, 'utf8'), file);
-      if (article.kind === 'nhiem_vu') validateMission(article);
-      row = publishedRow(article);
+      if (article.kind === 'nhiem_vu' && article.status !== 'ngung') validateMission(article);
+      row = contentRow(article);
     }
     catch (error) { throw new Error(`${file}: ${error.message}`, { cause: error }); }
     if (!row) continue;

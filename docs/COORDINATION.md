@@ -4,7 +4,7 @@ Ngày cập nhật: 18/11/2026. Người tổng hợp duy nhất: **Codex**. Quy
 
 **Quyết định nội dung mới của chủ dự án (#55):** bỏ điều kiện Hội đồng bắt buộc. Nội dung tham khảo có nguồn, phát hành theo quy trình biên tập/PR; Hội đồng/chuyên gia chỉ tư vấn tùy chọn. ADR 0003 thay các yêu cầu cũ còn xuất hiện trong bằng chứng lịch sử dưới đây. Quyết định đã ghi không có nghĩa mã UI đang chạy đã thay đổi.
 
-**Hiện hành 18/11:** main `4e84324`/v0.17.1 đã phát hành sau #100; GĐ3 chưa xong toàn bộ. Codex giữ #102 (nền schema/hợp đồng và audit tài liệu), Claude giữ PR #101 (8 tệp 3D + smoke.spec.js, chưa merge). Xem mục 19; các mục trước là snapshot lịch sử, không là claim hoặc trạng thái phát hành hiện tại.
+**Hiện hành 18/11:** production v0.17.1 ở `4e84324`, main đã merge #109. GĐ3 còn việc ở §19–20 và trên các Issue liên kết. Codex giữ #46, Claude giữ PR #101 và `apps/web/src/main.js` theo #95. Xem trạng thái khóa tệp mới nhất ở Issue/PR.
 
 Đọc tệp này khi bắt đầu phiên; sau đó kiểm Issue/PR và `origin/main` hiện tại. Tệp là bản bàn giao có thời điểm, không thay bảng việc GitHub. Claude gửi cập nhật trong Issue/PR; Codex tổng hợp để tránh hai agent cùng sửa tệp này.
 
@@ -247,3 +247,10 @@ PR81 chưa merge/deploy; #82 phải cập nhật máy quay hướng chúng sanh 
 **Luân chuyển khi thiếu credits:** chủ dự án đã cho phép Claude ↔ Codex, không cần hỏi lại quyền phân công. Người dừng ghi Issue: lý do dừng, người nhận, SHA/base, worktree, tệp đang giữ, commit/patch, phần xong/dở, kiểm đã đạt/lỗi và lệnh/bước tiếp; trả quyền rõ. Người nhận xác nhận claim, dùng checkout riêng, giữ ghi công tác giả, ghi điều kiện trả lại. Không hai người cùng giữ một tệp; chưa có bàn giao thì giữ nguyên quyền hiện tại. Đổi người không bỏ qua phê duyệt công cụ/quyền truy cập/CI hoặc quyền merge/tag của chủ dự án. Claude ghi tiến độ trong Issue/PR, Codex tổng hợp tệp này.
 
 **Thứ tự:** chủ dự án xét #101 riêng; #102 chỉ schema/hợp đồng/audit. Khi #102 được duyệt/merge, Codex nhận từng API #105 (đồng thời khép #46 trước catalogue động), Hermes #103 và Claude #104/#106 theo dependency; #107 sau chốt tiêu chí. Chỉ công nhận xong GĐ3 khi các cửa còn thiếu có bằng chứng nghiệm thu. GĐ4 theo #108, không dùng mô phỏng đám đông làm bằng chứng realtime.
+
+## 20. Bàn giao sau #109 và phần rút nội dung #46 — 18/11/2026
+
+- Chủ dự án đã merge [#109](https://github.com/tnfsmith/Buddha/pull/109) vào `da45e04` sau khi CI PR xanh. Codex trả quyền của #102. Migration 0010 có trên main. Trạng thái triển khai staging theo [CI main](https://github.com/tnfsmith/Buddha/actions/runs/44244544583) và workflow deploy theo sau.
+- Codex giữ phạm vi [#46](https://github.com/tnfsmith/Buddha/issues/46#issuecomment-6970019782), cộng roadmap và tệp này theo [bàn giao](https://github.com/tnfsmith/Buddha/issues/46#issuecomment-6970093607). Nhánh `ag/46-withdraw-content`, worktree `gd3-46-content-withdrawal`, base triển khai `da45e04`. D1 giữ lịch sử, API và MP3/cues của bản cũ bị chặn khi có phiên bản `ngung` mới hơn, và nháp không che bản đang phát hành. Dữ liệu thử nằm ở kiểm D1/R2 cục bộ. Trả quyền khi PR merge/đóng hoặc bàn giao rõ trên #46.
+- Claude giữ 8 tệp 3D, `smoke.spec.js` và `main.js` theo [#95](https://github.com/tnfsmith/Buddha/issues/95#issuecomment-6967569975). Head #101 đã đổi từ `6c4c3ac` sang `4200bdc`. Kết quả ghép ở head trước là bằng chứng lịch sử. #46 không sửa tệp #101. Đồng thời xác nhận riêng CI và nghiệm thu thiết bị thật cho từng thay đổi trước khi chọn merge.
+- #105 dùng nền #109 và triển khai vòng đời dữ liệu trước khi bật ghi. Endpoint today cần danh mục #46 và hợp đồng bộ chọn đã duyệt. #103/#104/#106 phối hợp trên các Issue tương ứng. #107 còn chờ chốt tiêu chí Tầng 1. GĐ4 theo #108 sau khi GĐ3 có đủ bằng chứng.

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseContent, publishedRow, displayBody, contentSql, readPublished, validateMission } from '../content-data.mjs';
+import { parseContent, contentRow, displayBody, contentSql, readContentRows, validateMission } from '../content-data.mjs';
 import { readFileSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, relative, sep } from 'node:path';
@@ -11,40 +11,40 @@ describe('nạp bài giảng đã chọn phát hành', () => {
   it('đọc YAML lồng meta, không đòi reviewed_*', () => {
     const parsed = parseContent('---\nid: bai-thu\nmeta:\n  chuong: [4, 5]\n  loat: duong-xua\n---\nÝ thứ nhất.');
     expect(parsed.meta).toEqual({ chuong: [4, 5], loat: 'duong-xua' });
-    expect(publishedRow(article)).toMatchObject({ reviewed_at: null, reviewed_by: null, body_r2_key: null });
+    expect(contentRow(article)).toMatchObject({ reviewed_at: null, reviewed_by: null, body_r2_key: null });
   });
   it('giữ khối meta dưới dạng JSON, không ép bài thiếu meta hoặc mở bản nháp', () => {
     const meta = { loat: 'duong-xua', phan: 1, thu_tu: 20, chuong: [4], dot: 'B', note: "Dấu 'nháy' và tiếng Việt" };
-    expect(JSON.parse(publishedRow({ ...article, meta }).meta)).toEqual(meta);
-    expect(publishedRow(article).meta).toBeNull();
-    expect(publishedRow({ ...article, meta, status: 'cho_duyet' })).toBeNull();
-    expect(() => publishedRow({ ...article, meta: [] })).toThrow('meta');
-    expect(contentSql([publishedRow({ ...article, meta })])).toContain('meta=excluded.meta');
+    expect(JSON.parse(contentRow({ ...article, meta }).meta)).toEqual(meta);
+    expect(contentRow(article).meta).toBeNull();
+    expect(contentRow({ ...article, meta, status: 'cho_duyet' })).toBeNull();
+    expect(() => contentRow({ ...article, meta: [] })).toThrow('meta');
+    expect(contentSql([contentRow({ ...article, meta })])).toContain('meta=excluded.meta');
   });
-  it.each(['nhap', 'cho_duyet', 'ngung'])('không nạp %s kể cả có dấu reviewed', status => {
-    expect(publishedRow({ ...article, status, reviewed_at: 123 })).toBeNull();
+  it.each(['nhap', 'cho_duyet'])('không nạp %s kể cả có dấu reviewed', status => {
+    expect(contentRow({ ...article, status, reviewed_at: 123 })).toBeNull();
   });
   it.each(['id', 'title', 'source_ref'])('từ chối bài công khai thiếu %s', field => {
-    expect(() => publishedRow({ ...article, [field]: '' })).toThrow();
+    expect(() => contentRow({ ...article, [field]: '' })).toThrow();
   });
   it('không coi dòng Pāli là ý; bỏ cách đọc khi ghi chữ hiển thị', () => {
-    expect(() => publishedRow({ ...article, body: '> Pāli.' })).toThrow('không có ý');
+    expect(() => contentRow({ ...article, body: '> Pāli.' })).toThrow('không có ý');
     expect(displayBody('[[Pháp Cú 129|Pháp Cú một trăm hai mươi chín]]\n> Pāli.')).toBe('Pháp Cú 129\n> Pāli.');
     expect(() => displayBody('[[chưa đóng')).toThrow();
   });
   it('từ chối YAML trùng khóa và khóa media nguy hiểm', () => {
     expect(() => parseContent('---\nid: a\nid: b\n---\nÝ')).toThrow('YAML');
-    for (const key of ['../a.mp3', 'https://x/a.mp3', 'bai-giang/_mau-giong/a.mp3', 'bai-giang/x/../a.mp3']) expect(() => publishedRow({ ...article, body_r2_key: key })).toThrow();
+    for (const key of ['../a.mp3', 'https://x/a.mp3', 'bai-giang/_mau-giong/a.mp3', 'bai-giang/x/../a.mp3']) expect(() => contentRow({ ...article, body_r2_key: key })).toThrow();
   });
   it('SQL escape dấu nháy, có upsert, không có DELETE; tách dòng bằng char(10)', () => {
-    const sql = contentSql([publishedRow(article)]);
+    const sql = contentSql([contentRow(article)]);
     expect(sql).toContain("'Tên ''thử'''" );
     expect(sql).toContain('ON CONFLICT(id,version) DO UPDATE SET');
     expect(sql).toContain('||char(10)||');
     expect(sql).not.toMatch(/DELETE|DROP|\n/);
   });
   it('giữ đủ bảy bài Lời Phật dạy v2 khi bổ sung loạt khác', () => {
-    const rows = readPublished('content/bai-giang');
+    const rows = readContentRows('content/bai-giang');
     const baseline = rows.filter(row => JSON.parse(row.meta || '{}').loat === 'loi-phat-day');
     expect(baseline).toHaveLength(7);
     expect(baseline.every(row => row.version === 2 && row.source_ref)).toBe(true);
@@ -65,12 +65,26 @@ function temporaryCatalog(run) {
   }
 }
 
+it('đọc phiên bản ngừng ở thư mục riêng, không ghi thân bài hoặc khóa R2', () => temporaryCatalog(dir => {
+  const stopped = join(dir, 'ngung');
+  mkdirSync(stopped);
+  writeFileSync(join(dir, 'bai.md'), markdown(article));
+  writeFileSync(join(dir, 'cho-duyet.md'), markdown({ ...article, version: 4, status: 'cho_duyet' }));
+  writeFileSync(join(stopped, 'bai-v3.md'), markdown({
+    ...article, version: 3, status: 'ngung', body: '', body_r2_key: 'bai-giang/bai-thu/cu.mp3',
+  }));
+  expect(readContentRows(dir)).toMatchObject([
+    { id: article.id, version: 2, status: 'da_duyet' },
+    { id: article.id, version: 3, status: 'ngung', body_inline: null, body_r2_key: null },
+  ]);
+}));
+
 describe('nạp danh mục nhiệm vụ #87 cùng bài giảng', () => {
   it('giữ đúng kind, cờ boolean và mã meta; nháp không được chọn phát hành', () => {
-    expect(publishedRow(mission)).toMatchObject({ kind: 'nhiem_vu', tier: 0, body_r2_key: null, reviewed_at: null });
-    expect(JSON.parse(publishedRow(mission).meta)).toEqual(mission.meta);
-    expect(publishedRow({ ...mission, status: 'cho_duyet' })).toBeNull();
-    expect(() => publishedRow({ ...article, kind: 'kinh_van' })).toThrow('kind');
+    expect(contentRow(mission)).toMatchObject({ kind: 'nhiem_vu', tier: 0, body_r2_key: null, reviewed_at: null });
+    expect(JSON.parse(contentRow(mission).meta)).toEqual(mission.meta);
+    expect(contentRow({ ...mission, status: 'cho_duyet' })).toBeNull();
+    expect(() => contentRow({ ...article, kind: 'kinh_van' })).toThrow('kind');
   });
   it.each([
     ['nhom', 'tuan'], ['gioi', 6], ['parami', []], ['parami', ['sila', 'sila']], ['parami', ['khong-co']],
@@ -104,11 +118,11 @@ describe('nạp danh mục nhiệm vụ #87 cùng bài giảng', () => {
     writeFileSync(join(nested, 'README.md'), 'Tài liệu không phải mục nội dung.');
     const draftFile = join(nested, 'nhap.md');
     writeFileSync(draftFile, markdown({ ...mission, id: 'nhap', status: 'cho_duyet' }));
-    expect(readPublished(dir).map(x => x.kind).sort()).toEqual(['bai_giang', 'nhiem_vu']);
+    expect(readContentRows(dir).map(x => x.kind).sort()).toEqual(['bai_giang', 'nhiem_vu']);
     writeFileSync(draftFile, markdown({ ...mission, id: 'nhap', status: 'cho_duyet', meta: { ...mission.meta, money: 'false' } }));
-    expect(() => readPublished(dir)).toThrow('money');
+    expect(() => readContentRows(dir)).toThrow('money');
     writeFileSync(draftFile, markdown({ ...mission, id: article.id, version: article.version }));
-    expect(() => readPublished(dir)).toThrow('Trùng');
+    expect(() => readContentRows(dir)).toThrow('Trùng');
   }));
 });
 
@@ -126,7 +140,7 @@ describe('độ phủ danh mục Sơ nhập theo chỉ thị #87', () => {
       expect(['cho_duyet', 'da_duyet']).toContain(item.status);
       expect(item.body).not.toMatch(/chứng đắc|mua.*phóng sinh|(?:\d+).*\bVND\b/i);
     }
-    expect(readPublished('content').filter(x => x.kind === 'nhiem_vu').map(x => x.id).sort()).toEqual(items.filter(x => x.status === 'da_duyet').map(x => x.id).sort());
+    expect(readContentRows('content').filter(x => x.kind === 'nhiem_vu').map(x => x.id).sort()).toEqual(items.filter(x => x.status === 'da_duyet').map(x => x.id).sort());
   });
   it('mỗi giới 5 việc, đúng tên tích cực và ít nhất 2 việc ở nhà không tốn tiền', () => {
     const names = ['Bảo vệ sự sống', 'Tôn trọng của người', 'Thủy chung và tôn trọng', 'Lời thật, lời lành', 'Tỉnh thức khi tiêu thụ'];
