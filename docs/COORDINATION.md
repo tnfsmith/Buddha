@@ -1,10 +1,10 @@
 # Vân Đạo — phối hợp Codex và Claude
 
-Ngày cập nhật: 17/11/2026. Người tổng hợp duy nhất: **Codex**. Quyết định chủ dự án: Codex nhận việc Antigravity + Hermes; Claude tiếp tục độc lập phần của Claude.
+Ngày cập nhật: 18/11/2026. Người tổng hợp duy nhất: **Codex**. Quyết định chủ dự án: Codex nhận việc Antigravity + Hermes; Claude tiếp tục độc lập phần của Claude.
 
 **Quyết định nội dung mới của chủ dự án (#55):** bỏ điều kiện Hội đồng bắt buộc. Nội dung tham khảo có nguồn, phát hành theo quy trình biên tập/PR; Hội đồng/chuyên gia chỉ tư vấn tùy chọn. ADR 0003 thay các yêu cầu cũ còn xuất hiện trong bằng chứng lịch sử dưới đây. Quyết định đã ghi không có nghĩa mã UI đang chạy đã thay đổi.
 
-**Hiện hành 17/11:** #97 (máy chủ đồng bộ) và #98 (3D của Claude) đã merge, main `7f9064b`. Chủ dự án giao Codex vá riêng lỗi nguyện ngày đầu trước 07h/CI phụ thuộc giờ ở #99, không sửa phần 3D của #98. Xem mục 18; các mục trước là snapshot lịch sử. Trạng thái release/tag hiện hành xem GitHub/#33, không suy ra từ mã đã có.
+**Hiện hành 18/11:** main `4e84324`/v0.17.1 đã phát hành sau #100; GĐ3 chưa xong toàn bộ. Codex giữ #102 (nền schema/hợp đồng và audit tài liệu), Claude giữ PR #101 (8 tệp 3D + smoke.spec.js, chưa merge). Xem mục 19; các mục trước là snapshot lịch sử, không là claim hoặc trạng thái phát hành hiện tại.
 
 Đọc tệp này khi bắt đầu phiên; sau đó kiểm Issue/PR và `origin/main` hiện tại. Tệp là bản bàn giao có thời điểm, không thay bảng việc GitHub. Claude gửi cập nhật trong Issue/PR; Codex tổng hợp để tránh hai agent cùng sửa tệp này.
 
@@ -223,3 +223,27 @@ PR81 chưa merge/deploy; #82 phải cập nhật máy quay hướng chúng sanh 
 - **Bản vá nhỏ:** chỉ khi ngày UTC của nguyện sát trước `started_on` đúng một ngày thì đặt về ngày đầu chu kỳ trước khi lọc. Tiếp tục lọc nguyện quá cũ; mã sự kiện ngoài biên, chữ ký hàm, giá trị, cách đặt giờ nhập cũ và chống trùng giữ nguyên. Không đổi Kusala, lịch thiền, schema/migration hoặc hợp đồng API.
 - **Kiểm đã chạy:** 260/260 kiểm thử đạt. Shared kiểm 00:00, 06:20, 06:59:59, 07:00, 12:00 +07 bằng timestamp cố định; API/D1 đóng băng riêng Date ở 00:00, 06:59:59, 07:00, 23:59:59 +07, nhận đủ ba sổ và gửi lại sau dọn sync_op không cộng đôi. Lint không lỗi/cảnh báo, chín migration hợp lệ. HTML 1.081.452 byte, tăng 49 byte so main sau #98, dưới trần 1.100.000 byte; không sửa apps/web.
 - **Bàn giao/phát hành:** một PR hotfix, CI/preview kiểm đúng head trước Ready. Không cần chờ qua 07h hoặc nới/skip test; giờ giả lập kiểm cả ban đêm ngay trong mỗi lượt CI. Chủ dự án merge rồi workflow deploy staging; bản vá chỉ vào production qua tag mới của chủ dự án. Không tự merge/tag hoặc đổi tag đã có. Nếu nguyện đã bị bỏ trước bản vá và lần đưa sổ cũ đã đánh dấu xong, người dùng có thể phát nguyện lại trong app; bản vá này không tự khôi phục một nguyện chưa từng được ghi trên máy chủ.
+
+## 19. Audit GĐ3/GĐ4 và quyền sửa hiện hành — 18/11/2026
+
+**Kết luận:** GĐ3 chưa hoàn tất. Đã phát hành nội dung/TTS/menu/cues/nghi thức và gói Sơ nhập A/B/C/D rút gọn, chưa đủ biến thể/Duyên khởi/phản tỉnh/chứng thực, API nâng cao/nhắc giờ/push hoặc cổng Tầng 1. Bộ nạp rút phát hành theo phiên bản mới còn ở #46. GĐ4 chưa có worker realtime/client người thật/k6; `/rt/ticket` mới là nền. Không gán trạng thái hoàn tất pha từ số PR đã merge.
+
+**Bằng chứng hiện tại:** CI [44002540504](https://github.com/tnfsmith/Buddha/actions/runs/44002540504), staging [44004041369](https://github.com/tnfsmith/Buddha/actions/runs/44004041369), production [44005737082](https://github.com/tnfsmith/Buddha/actions/runs/44005737082) đều success cho `4e84324`; Release v0.17.1 đã xuất bản 17/11. GET content ở cả hai môi trường vừa xác nhận 42 mục (33 Đường Xưa + 7 Lời Phật dạy + 2 nghi thức) và 73 nhiệm vụ (25 giới/40 hạnh/7 nguyện/1 trai). Đây là kiểm API thật; không tự nhận đã kiểm hai điện thoại vật lý.
+
+| Người / Issue | Quyền hiện tại và bước tiếp | Điều kiện bàn giao |
+|---|---|---|
+| Codex [AG] #102 | `0010_practice_foundation.sql`, API test mới, `docs/contracts/practice-gd3.md`, ROADMAP/COORDINATION/AGENTS/CLAUDE; worktree riêng `gd3-gd4-audit-18` | Một PR shared-ok; trả khi merge/đóng hoặc bàn giao rõ. Không apps/web/shared runtime/9 tệp #101 |
+| Claude #95/PR #101 | `apps/web/src/{audio,birds,gfx,island,people,realm,sermon,world}.js`, `tests/e2e/smoke.spec.js`; head `6c4c3ac` đang mở | Claude giữ đến merge/đóng hoặc bàn giao rõ. Mốc render của nhánh chưa thay mốc main |
+| Codex [H] #103 | Biến thể tối thiểu 7×3×3, tách 73 mục đã duyệt | Chưa claim tệp; chốt hợp đồng/validator trước soạn, chủ dự án chọn phát hành |
+| Claude #104/#106 | Onboarding/bộ chọn/phản tỉnh/chứng thực/E; ReminderClock DO riêng sau hợp đồng | Chưa claim tệp mới; #104 tránh chồng #101; API/DO interface merge trước hai phía |
+| Codex [AG] #105/#46 | API practice/deeds/attest/reminders/push; phần rút phát hành content | Nhận từng gói sau #102/contract; trước bật ghi phải khép export/gộp khách/reset/xóa; #46 còn mở, không gọi đã xong |
+| Codex + Claude #107 | Tiêu chí/cổng Tầng 0→1 | Chốt đề xuất §8.6/§16 trước áp ngưỡng; không khẳng định chứng đắc |
+| Claude/Codex/Hermes #108 | Checklist GĐ4 T4.1–4 theo lane | Chưa chuyển pha; chỉ chuẩn bị hợp đồng độc lập, kiểm tải sau worker/budget |
+
+**Gói đã triển khai cục bộ #102:** thêm năm bảng theo §4.6, không tạo dòng/sender/endpoint. Lịch mặc định tắt, giờ 00–23/mask hợp lệ, FK/cascade/token và endpoint duy nhất. 16 kiểm D1 mới đạt, gồm nâng DB 9→10 giữ journey/practice_event; toàn bộ 276 tests đạt, lint không lỗi, 10 migration hợp lệ. HTML 1.081.452 byte không đổi so main; cảnh báo mốc cũ 967 KB vẫn giữ. Schema mới chưa ở staging/production trước chủ dự án merge; preview dùng D1 chung phải bị guard bỏ qua.
+
+**Sửa ghi nhận thiếu:** khép các Issue Codex đã phát hành #48/#50/#53/#70/#80/#87, gỡ claim lịch sử đã hết. Giữ #49 mở chỉ cho khóa R2 cũ ≥30 ngày theo thời điểm retire, đã sửa tiêu đề/trạng thái OpenAI/64k cũ; không xóa khóa. #85 còn mở cho toàn bộ phần dư; #93 chờ Claude ghi nghiệm thu hai thiết bị thật; #3 tư vấn tùy chọn không chặn. Chi tiết từng T3/T4 đã cập nhật ở ROADMAP §19.
+
+**Luân chuyển khi thiếu credits:** chủ dự án đã cho phép Claude ↔ Codex, không cần hỏi lại quyền phân công. Người dừng ghi Issue: lý do dừng, người nhận, SHA/base, worktree, tệp đang giữ, commit/patch, phần xong/dở, kiểm đã đạt/lỗi và lệnh/bước tiếp; trả quyền rõ. Người nhận xác nhận claim, dùng checkout riêng, giữ ghi công tác giả, ghi điều kiện trả lại. Không hai người cùng giữ một tệp; chưa có bàn giao thì giữ nguyên quyền hiện tại. Đổi người không bỏ qua phê duyệt công cụ/quyền truy cập/CI hoặc quyền merge/tag của chủ dự án. Claude ghi tiến độ trong Issue/PR, Codex tổng hợp tệp này.
+
+**Thứ tự:** chủ dự án xét #101 riêng; #102 chỉ schema/hợp đồng/audit. Khi #102 được duyệt/merge, Codex nhận từng API #105 (đồng thời khép #46 trước catalogue động), Hermes #103 và Claude #104/#106 theo dependency; #107 sau chốt tiêu chí. Chỉ công nhận xong GĐ3 khi các cửa còn thiếu có bằng chứng nghiệm thu. GĐ4 theo #108, không dùng mô phỏng đám đông làm bằng chứng realtime.
