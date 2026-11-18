@@ -1,6 +1,6 @@
 // Kiểm thử các luật bất biến ở máy chủ (AGENTS.md §1): Tịnh danh không tự đặt, Kusala chỉ nhận hệ số 0,5–1,2,
 // khóa 1 nấc mỗi ngày kể cả khi đồng bộ dồn nhiều ngày ngoại tuyến, CORS chỉ mở cho nguồn của Vân Đạo.
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import app from '../src/index.js';
 import { getLocalDate } from '../src/utils/time.js';
 import { env, call, guest, sync, confirm, DAY, TZ } from './helpers.js';
@@ -53,6 +53,52 @@ describe('Kusala và khóa ngày', () => {
   it('thao tác có ngày trước khi bắt đầu hành trình bị từ chối', async () => {
     const { token } = await guest(), r = await sync(token, [confirm('OP_OLD', Date.now() - 2 * DAY, 1, 'duc')]);
     expect(r.rejected[0]).toMatchObject({ id: 'OP_OLD', code: 'before_start', retry: false });
+  });
+
+  it('đồng hồ thiết bị qua nửa đêm trước máy chủ: giữ sổ trong hàng chờ rồi ghi một lần qua ngày', async () => {
+    const before = Date.parse('2026-11-18T23:59:30+07:00'), after = before + 60_000;
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(before);
+      const { token, user } = await guest();
+      const today = await sync(token, ['duc', 'thien', 'tue'].map((p, i) => confirm(`MIDNIGHT_DAY1_${p}`, before + i, 1, p)));
+      expect(today.applied).toHaveLength(3); // lệch nhẹ nhưng vẫn trong cùng ngày
+      const op = confirm('MIDNIGHT_DAY2_DUC', after, 2, 'duc');
+      const waiting = await sync(token, [op]);
+      expect(waiting.applied).toEqual([]);
+      expect(waiting.rejected).toEqual([{ id: op.id, code: 'day_locked', retry: true }]);
+      expect(waiting.state.journey).toMatchObject({ day: 1, rev: today.state.journey.rev });
+      expect(waiting.state.totals.all).toBe(30);
+      expect(await env.DB.prepare('SELECT 1 FROM sync_op WHERE user_id = ? AND op_id = ?').bind(user.id, op.id).first()).toBeNull();
+      vi.setSystemTime(after);
+      const accepted = await sync(token, [op]);
+      expect(accepted.applied).toEqual([op.id]);
+      expect(accepted.state.journey.day).toBe(2);
+      expect((await sync(token, [op])).state.totals.all).toBe(40);
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('chu kỳ mới và thao tác nối sau cùng chờ ngày của máy chủ', async () => {
+    const before = Date.parse('2026-11-18T23:59:30+07:00'), after = before + 60_000;
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(before);
+      const { token, user } = await guest();
+      const ops = [
+        { id: 'MIDNIGHT_RESET', type: 'journey.reset_cycle', at: after },
+        confirm('MIDNIGHT_NEW_DAY1_DUC', after + 1, 1, 'duc'),
+      ];
+      const waiting = await sync(token, ops);
+      expect(waiting.rejected).toEqual(ops.map(({ id }) => ({ id, code: 'day_locked', retry: true })));
+      expect(waiting.state.journey).toMatchObject({ cycle: 1, started_on: '2026-11-18' });
+      expect(waiting.state.totals.all).toBe(0);
+      vi.setSystemTime(after + 1);
+      const accepted = await sync(token, ops);
+      expect(accepted.applied).toEqual(ops.map(({ id }) => id));
+      expect(accepted.state.journey).toMatchObject({ cycle: 2, started_on: '2026-11-19' });
+      expect(await env.DB.prepare('SELECT cycle, local_date FROM kusala_entry WHERE user_id = ?').bind(user.id).first())
+        .toEqual({ cycle: 2, local_date: '2026-11-19' });
+    } finally { vi.useRealTimers(); }
   });
 
   it('GET /me tự tiến ngày tới hôm nay theo luật chung', async () => {

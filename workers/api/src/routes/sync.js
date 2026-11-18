@@ -37,6 +37,7 @@ syncApp.post('/', authMiddleware, byUser('RL_SYNC'), async (c) => {
   ).bind(user.id).first();
   if (!profileRow) return bad(c, 'profile_not_found', 'Hồ sơ không tồn tại', 404);
   const tz = profileRow.tz || 'Asia/Ho_Chi_Minh';
+  const today = getLocalDate(now, tz);
 
   let J = await db.prepare(
     'SELECT program, cycle, day, started_on, last_done_on, completed_at, sacca_count, sessions_done, sermons_done, rev FROM journey WHERE user_id = ? AND is_current = 1',
@@ -57,6 +58,9 @@ syncApp.post('/', authMiddleware, byUser('RL_SYNC'), async (c) => {
     const at = Number(op.at);
     if (!Number.isFinite(at) || at < now - PAST_MS || at > now + FUTURE_MS) { reject(op, 'invalid_timestamp'); continue; }
     const date = getLocalDate(at, tz), p = op.payload && typeof op.payload === 'object' ? op.payload : {};
+    // Dung sai đồng hồ cho phép lệch vài phút, nhưng không mở ngày mới sớm hơn máy chủ.
+    // Giữ thao tác trong outbox để phát lại theo thứ tự sau khi ngày đó bắt đầu.
+    if (date > today) { reject(op, 'day_locked', true); continue; }
     const done = db.prepare('INSERT INTO sync_op (user_id, op_id, applied_at) VALUES (?, ?, ?)').bind(user.id, op.id, now);
     const snapshot = { ...J };
     try {
@@ -95,7 +99,7 @@ syncApp.post('/', authMiddleware, byUser('RL_SYNC'), async (c) => {
         if (!checked.ok) { reject(op, checked.code); continue; }
         const ev = checked.ev, t = ev.at ?? at;
         if (shiftDate(ev.date, 0) !== ev.date) { reject(op, 'invalid_date'); continue; }
-        if (ev.date < shiftDate(J.started_on, -1) || ev.date > shiftDate(getLocalDate(now, tz), 1)) { reject(op, 'date_out_of_range'); continue; }
+        if (ev.date < shiftDate(J.started_on, -1) || ev.date > shiftDate(today, 1)) { reject(op, 'date_out_of_range'); continue; }
         if (t > now + FUTURE_MS || t < Date.parse(J.started_on) - 2 * DAY_MS) { reject(op, 'invalid_timestamp'); continue; }
         const value = ev.value === null ? null : JSON.stringify(ev.value);
         if (value !== null && value.length > 1024) { reject(op, 'invalid_value'); continue; }
@@ -134,7 +138,7 @@ syncApp.post('/', authMiddleware, byUser('RL_SYNC'), async (c) => {
         if (J.day !== 1 || J.completed_at || (has?.n || 0) > 0) { reject(op, 'not_empty'); continue; }
         const day = Number(p.day), src = p.done && typeof p.done === 'object' ? p.done : {};
         if (!Number.isInteger(day) || day < 1 || day > DAYS) { reject(op, 'invalid_import'); continue; }
-        const today = getLocalDate(now, tz), startMs = now - (day - 1) * 86400000, rows = []; let ok = true, last = null;
+        const startMs = now - (day - 1) * 86400000, rows = []; let ok = true, last = null;
         for (let d = 1; d <= day && ok; d++) {
           const e = src[d] && typeof src[d] === 'object' ? src[d] : {};
           if (d < day && !KUSALA.PILLARS.every((k) => e[k])) ok = false;
@@ -178,7 +182,7 @@ syncApp.post('/', authMiddleware, byUser('RL_SYNC'), async (c) => {
   }
 
   // Trạng thái sau đồng bộ: tiến ngày tới hôm nay (ngày địa phương) rồi trả đủ hồ sơ, hành trình, tổng Kusala
-  J = (await currentJourney(db, user.id, getLocalDate(now, tz), now)) || J;
+  J = (await currentJourney(db, user.id, today, now)) || J;
   return c.json({
     applied, rejected,
     state: { practice: PRACTICE_V, profile: profileView(profileRow), journey: J, totals: await kusalaTotals(db, user.id, J), unlocked_zones: computeUnlockedZones(J.day), server_now: now },
