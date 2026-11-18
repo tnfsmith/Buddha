@@ -1,0 +1,12 @@
+---
+id: sn49-w6-tue-cam-giac-doi
+version: 1
+kind: chuong_trinh
+tier: 0
+lang: vi
+title: "Thấy cảm giác đổi khác"
+source_ref: "Vân Đạo tự biên soạn; tham khảo SN 22.59 (https://www.dhammatalks.org/suttas/SN/SN22_59.html) theo chủ đề §8.2."
+status: cho_duyet
+meta: { program: so-nhap-49, schema: 1, week: 6, pillar: tue, level: nhe, minutes: 4, money: false, at_home: true, outdoors: false, needs_others: false, punna: bhavana, parami: [panna, upekkha], scope: doi_thuc }
+---
+Nhìn một cảm giác đổi khác trong vài hơi thở mà không cố giữ lại.
