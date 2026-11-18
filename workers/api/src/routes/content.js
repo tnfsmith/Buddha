@@ -1,6 +1,7 @@
 // workers/api/src/routes/content.js
 // Nội dung đã chọn phát hành; không yêu cầu Hội đồng (ADR 0003).
 import { Hono } from 'hono';
+import { publicContent } from '../content-public.js';
 
 const contentApp = new Hono();
 
@@ -10,8 +11,8 @@ contentApp.get('/', async (c) => {
   const kind = c.req.query('kind');
 
   let sql = `SELECT id, version, kind, tier, lang, title, body_inline, body_r2_key, source_ref, reviewed_at, meta
-             FROM content_item
-             WHERE status = 'da_duyet'`;
+             FROM content_item AS item
+             WHERE ${publicContent}`;
   const params = [];
 
   if (tier !== undefined && tier !== '') {

@@ -1,5 +1,6 @@
 // #50: R2 chỉ công khai khi D1 của CHÍNH môi trường có bài đang phát hành.
 import { Hono } from 'hono';
+import { publicContent } from '../content-public.js';
 
 const mediaApp = new Hono();
 const matches = (header, etag) => header?.split(',').some(x => x.trim() === '*' || x.trim().replace(/^W\//, '') === etag);
@@ -21,13 +22,14 @@ mediaApp.on(['GET', 'HEAD'], '/*', async c => {
   if (!/^bai-giang\/[a-z0-9_./-]+\.(?:mp3|cues\.json)$/.test(key) || key.includes('..') || key.includes('//') || key.startsWith('bai-giang/_')) return c.notFound();
   if (!c.env.DB || !c.env.MEDIA) return c.notFound();
   const audioKey = key.replace(/\.cues\.json$/, '.mp3');
-  const published = await c.env.DB.prepare("SELECT 1 FROM content_item WHERE status = 'da_duyet' AND body_r2_key = ? LIMIT 1").bind(audioKey).first();
-  if (!published) return c.notFound();
+  const published = await c.env.DB.prepare(`SELECT 1 FROM content_item AS item
+    WHERE item.kind = 'bai_giang' AND item.body_r2_key = ? AND ${publicContent} LIMIT 1`).bind(audioKey).first();
+  if (!published) return c.body(null, 404, { 'Cache-Control': 'no-store' });
   const head = await c.env.MEDIA.head(key);
   if (!head) return c.notFound();
   const headers = new Headers({
     'Content-Type': key.endsWith('.mp3') ? 'audio/mpeg' : 'application/json; charset=utf-8',
-    'Cache-Control': 'public, max-age=31536000, immutable',
+    'Cache-Control': 'public, no-cache',
     'X-Content-Type-Options': 'nosniff', 'Accept-Ranges': 'bytes', 'ETag': head.httpEtag,
     'Last-Modified': head.uploaded.toUTCString(),
   });

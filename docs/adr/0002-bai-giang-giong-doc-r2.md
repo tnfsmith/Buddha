@@ -126,10 +126,10 @@ Ví dụ, mỗi loạt một thư mục:
 
 ### 4. Phục vụ: `GET /media/<khóa>` trong `workers/api`
 
-- **Chỉ phục vụ khóa của bài đã duyệt:** khóa `.mp3` (hoặc `.cues.json` đổi về `.mp3`) phải bằng `body_r2_key` của một dòng `status = 'da_duyet'`. Ngoài ra trả 404, gồm cả `_mau-giong/` và bài chưa duyệt.
+- **Chỉ phục vụ khóa của bài đang phát hành:** khóa `.mp3` (hoặc `.cues.json` đổi về `.mp3`) phải bằng `body_r2_key` của một bài `da_duyet` chưa bị phiên bản `ngung` mới hơn của cùng `id` che. Ngoài ra trả 404, gồm cả `_mau-giong/` và bài chưa duyệt.
 - Hỗ trợ `HEAD`, `Range` (206 với `Content-Range`, `Accept-Ranges: bytes`; Safari iOS bắt buộc) và `If-None-Match` (ETag của R2).
 - Header:
-  - `Cache-Control: public, max-age=31536000, immutable`;
+  - `Cache-Control: public, no-cache` cho phép lưu bản sao và dùng ETag, nhưng buộc kiểm lại quyền phát ở máy chủ trước khi dùng. Bản sao đã tải hoặc được lưu theo chính sách `immutable` cũ có thể vẫn còn ở thiết bị nhận;
   - `Content-Type: audio/mpeg` hoặc `application/json`;
   - `X-Content-Type-Options: nosniff`.
 - Không liệt kê thư mục; không ghi nhận danh tính người nghe vào log.
@@ -247,7 +247,7 @@ Ví dụ, mỗi loạt một thư mục:
 2. Chủ dự án đọc trên GitHub và nghe từng bài. Ghi "Duyệt: id…" hoặc góp ý sửa trong PR.
 3. Codex chuyển bài chủ dự án đã chọn sang `da_duyet` (có thể ghi `reviewed_by`, `reviewed_at`, không bắt buộc theo #55); sinh lại giọng nếu chữ đổi. Chủ dự án merge.
 4. Merge `main` → công cụ nạp (#46) đưa vào D1 staging và tải âm thanh lên `vandao-media-staging`. Gắn tag → production.
-5. Rút một bài: phiên bản mới `status: ngung`; API thôi trả bài, `/media` thôi phục vụ.
+5. Rút một bài: thêm tệp `content/ngung/<id>-v<version>.md` với `version` mới cao hơn mọi phiên bản trước của bài, giữ `id, kind, tier, lang, title, source_ref` và đặt `status: ngung`. Bộ nạp ghi phiên bản ngừng vào D1, không cần thân bài hoặc khóa R2. API và `/media` ngừng phục vụ các bản cũ của bài, kể cả khi lọc theo tầng. `nhap` và `cho_duyet` không đổi trạng thái công khai. Khi phát hành lại, tạo phiên bản `da_duyet` cao hơn phiên bản ngừng. Giữ tệp ngừng và lịch sử D1 để các lần nạp tiếp theo giữ đúng trạng thái. Quản lý khóa R2 cũ theo thời hạn lưu ở §3.
 
 ## Hệ quả
 

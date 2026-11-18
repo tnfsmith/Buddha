@@ -20,7 +20,7 @@ it('GET/HEAD đúng header, byte và body_r2_key có trong API', async () => {
   expect(response.status).toBe(200);
   expect(await text(response)).toBe('0123456789');
   expect(response.headers.get('content-type')).toBe('audio/mpeg');
-  expect(response.headers.get('cache-control')).toBe('public, max-age=31536000, immutable');
+  expect(response.headers.get('cache-control')).toBe('public, no-cache');
   expect(response.headers.get('x-content-type-options')).toBe('nosniff');
   const head = await call(url, { method: 'HEAD' });
   expect(head.status).toBe(200); expect(head.headers.get('content-length')).toBe('10'); expect(await head.text()).toBe('');
