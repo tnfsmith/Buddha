@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { NOISE, OUT, UNI, rng, makeNoise, leafTex, grassTex, tileTex, steleTex, tactile, hue } from './gfx.js';
+import { NOISE, OUT, UNI, rng, makeNoise, leafTex, tileTex, steleTex, tactile, hue, sweep } from './gfx.js';
 
 export const SX = 34, SZ = 24, HILL = { x: -13, z: -7, h: 8, r: 8.5 }, POND = { x: -3, z: 9.3, rx: 7.4, rz: 5.2 };
 export function groundH(x, z) {
@@ -26,7 +26,7 @@ export const pathDist = (x, z) => Math.min(...PATH.map((s) => segD(x, z, s[0], s
 
 const U = UNI;   // uniform dùng chung với world.js (thời gian, màu tâm trạng)
 export const islandUniforms = U;
-const C = (h) => new THREE.Color(h);
+const C = (h) => new THREE.Color(h), TEA_SPOUT = new THREE.Vector3(0.3, 0.88, 0);
 
 // Địa hình một hòn đảo nổi: mặt trên theo hàm cao độ, vách đá lởm chởm thu nhỏ dần xuống dưới
 export function terrain({ sx, sz, M = 96, NT = 20, NS = 14, depth = 46, seed = 1, height, paint, phases }) {
@@ -194,13 +194,15 @@ function leafMat(kind) {
 }
 export function leafTree({ count = 700, kind = 'bodhi', radius = 5, trunkH = 6.5, seed = 2, far = false }) {
   const G = new THREE.Group(), r = rng(seed), sh = far ? 0 : 1, BARK = '#6b4b34';
-  const tg = new THREE.CylinderGeometry(radius * 0.085, radius * 0.19, trunkH, far ? 5 : 10, far ? 2 : 6), tp = tg.attributes.position;
-  for (let i = 0; i < tp.count; i++) { const y = tp.getY(i) / trunkH + 0.5; tp.setX(i, tp.getX(i) + Math.sin(y * 2.6) * radius * 0.07); tp.setZ(i, tp.getZ(i) + Math.cos(y * 2.1) * radius * 0.04); }
-  tg.translate(0, trunkH / 2, 0); tg.computeVertexNormals(); G.add(M(tg, WOOD, BARK, 0, 0, 0, sh));
-  const blobs = [[0, trunkH + radius * 0.5, 0, radius * 0.8]];
+  // thân cong nhẹ, gốc loe thành rễ bám đất, vỏ có gờ dọc; cành cong vồng lên tới từng chùm tán, cây gần có thêm cành con
+  const lx = (r() - 0.5) * radius * 0.16, lz = (r() - 0.5) * radius * 0.16, ang = (d) => Math.atan2(d.x, d.z);
+  G.add(M(sweep([[0, -0.4, 0], [lx, trunkH * 0.4, lz], [-lx * 0.5, trunkH * 0.75, -lz * 0.5], [0, trunkH * 1.02, 0]], far ? 5 : 16, far ? 5 : 11,
+    (t, d) => radius * (0.09 + 0.1 * (1 - t) ** 3 + (far ? 0 : 0.14 * (1 - t) ** 8 * Math.max(0, Math.sin(ang(d) * 5)))) * (far ? 1 : 1 + 0.07 * Math.sin(ang(d) * 7 + t * 5))), WOOD, BARK, 0, 0, 0, sh));
+  const blobs = [[0, trunkH + radius * 0.5, 0, radius * 0.8]], limb = (A, B, r0, r1, n) => G.add(M(sweep([A, [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2 + radius * 0.12, (A[2] + B[2]) / 2], B], n, far ? 4 : 6, (t) => radius * (r0 - (r0 - r1) * t)), WOOD, BARK, 0, 0, 0, sh));
   for (let i = 0; i < 6; i++) { const a = (i / 6) * 6.28 + r(), d = radius * (0.55 + r() * 0.25), y = trunkH + radius * (0.05 + r() * 0.35); blobs.push([Math.cos(a) * d, y, Math.sin(a) * d, radius * (0.5 + r() * 0.2)]);
     if (far && i % 2) continue;   // cây ở xa: ba cành là đủ
-    const bl = new THREE.CylinderGeometry(radius * 0.025, radius * 0.06, d * 1.25, far ? 4 : 6, 1, far); bl.translate(0, d * 0.62, 0); const b = M(bl, WOOD, BARK, 0, trunkH * 0.82, 0, sh); b.rotation.set(0, -a + Math.PI / 2, 0); b.rotateZ(-1.05); G.add(b); }
+    const o = [0, trunkH * (0.62 + r() * 0.22), 0], e = [Math.cos(a) * d * 0.85, y - radius * 0.12, Math.sin(a) * d * 0.85]; limb(o, e, 0.055, 0.018, far ? 3 : 8);
+    if (!far) { const m = [e[0] * 0.55, (o[1] + e[1]) / 2 + radius * 0.1, e[2] * 0.55], b2 = a + (r() - 0.5) * 1.6; limb(m, [m[0] + Math.cos(b2) * radius * 0.45, m[1] + radius * 0.3, m[2] + Math.sin(b2) * radius * 0.45], 0.026, 0.01, 4); } }
   const center = new THREE.Vector3(0, trunkH + radius * 0.25, 0), geo = QUAD.clone(), aC = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) center.toArray(aC, i * 3);
   geo.setAttribute('aC', new THREE.InstancedBufferAttribute(aC, 3));
@@ -208,7 +210,7 @@ export function leafTree({ count = 700, kind = 'bodhi', radius = 5, trunkH = 6.5
   for (let i = 0; i < count; i++) {
     const b = blobs[Math.floor(r() * blobs.length)], u = r() * 2 - 1, a = r() * 6.28, s = Math.sqrt(1 - u * u), rr = b[3] * (0.55 + 0.45 * Math.cbrt(r()));
     d.position.set(b[0] + rr * s * Math.cos(a), b[1] + rr * u * 0.72, b[2] + rr * s * Math.sin(a)); d.rotation.set(r() * 3, r() * 6, r() * 3); d.scale.setScalar((0.75 + r() * 0.6) * radius * 0.2); d.updateMatrix();
-    leaves.setMatrixAt(i, d.matrix); leaves.setColorAt(i, c.setScalar(0.72 + r() * 0.5));
+    leaves.setMatrixAt(i, d.matrix); const k = 0.72 + r() * 0.5; leaves.setColorAt(i, c.setRGB(k * (0.9 + r() * 0.2), k, k * (0.85 + r() * 0.2)));   // lệch sắc nhẹ từng chùm
   }
   leaves.userData.leaf = { kind, center };
   if (!far) { leaves.castShadow = true; leaves.customDepthMaterial = leafMat(kind).userData.depth; leaves.frustumCulled = false; }
@@ -263,16 +265,27 @@ export function buildHome() {
   const lamp = (p, x, y, z, k = 1) => { add(M(new THREE.CylinderGeometry(0.15 * k, 0.24 * k, 0.9 * k, 6), STONE, '#bdb6a8', x, y + 0.45 * k, z, 1), p); add(M(new THREE.BoxGeometry(0.4 * k, 0.34 * k, 0.4 * k), LAMP, 0, x, y + 1.07 * k, z, 0), p); const cap = new THREE.ConeGeometry(0.44 * k, 0.3 * k, 4); cap.rotateY(Math.PI / 4); add(M(cap, STONE, '#bdb6a8', x, y + 1.39 * k, z, 1), p); };
 
   // Cỏ, hoa, đá, lối đá
-  const q1 = new THREE.PlaneGeometry(0.95, 0.8); q1.translate(0, 0.4, 0); const q2 = q1.clone(); q2.rotateY(Math.PI / 2);
-  const gq = mergeGeometries([q1, q2]); const nn = gq.attributes.normal; for (let i = 0; i < nn.count; i++) nn.setXYZ(i, 0, 1, 0);
-  const gm = new THREE.MeshStandardMaterial({ map: grassTex(), alphaTest: 0.35, side: THREE.DoubleSide, roughness: 1 });
-  gm.onBeforeCompile = (sh) => { sh.uniforms.uTime = U.uTime; sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n transformed.x += sin(uTime*1.7 + instanceMatrix[3].x*0.7 + instanceMatrix[3].z*0.5)*0.1*uv.y;'); };
-  const grass = (H.grass = add(new THREE.InstancedMesh(gq, gm, 3000)));   // world.js giảm số bụi cỏ ở mức chất lượng 0
-  scatter(3000, -0.3, (x, z, i) => { d.position.set(x, groundH(x, z) - 0.05, z); d.rotation.set(0, r() * 6.28, 0); d.scale.set(0.8 + r() * 0.9, 0.6 + r() * 0.9, 0.8 + r() * 0.9); d.updateMatrix(); grass.setMatrixAt(i, d.matrix); grass.setColorAt(i, c.setHSL(0.24 + r() * 0.07, 0.42 + r() * 0.2, 0.3 + r() * 0.16)); });
+  // Cỏ: mỗi bụi 6 lá cong thuôn nhọn (36 tam giác, không texture, không alpha test), gốc sẫm ngọn sáng. Hoa nhỏ 5 cánh trên cuống.
+  // Gió thổi thành đợt cùng một hướng khắp đảo (dời trong hệ thế giới rồi xoay ngược về hệ từng bụi): ngọn lay nhiều, gốc đứng yên.
+  const blades = (() => { const pos = [], col = [], idx = [], q = rng(9);
+    for (let b = 0; b < 6; b++) { const a = q() * 6.28, lean = 0.2 + q() * 0.45, h = 0.42 + q() * 0.48, w = 0.04 + q() * 0.025, ox = (q() - 0.5) * 0.32, oz = (q() - 0.5) * 0.32, ca = Math.cos(a), sa = Math.sin(a), o = pos.length / 3;
+      for (let k = 0; k <= 3; k++) { const t = k / 3, ww = w * (1 - t * 0.92), x = ox + ca * lean * h * t * t, z = oz + sa * lean * h * t * t, v = 0.42 + 0.7 * t;
+        pos.push(x - sa * ww, h * t, z + ca * ww, x + sa * ww, h * t, z - ca * ww); col.push(v * 0.9, v, v * 0.72, v * 0.9, v, v * 0.72);
+        if (k < 3) idx.push(o + k * 2, o + k * 2 + 1, o + k * 2 + 2, o + k * 2 + 1, o + k * 2 + 3, o + k * 2 + 2); } }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(pos.map((_, i) => (i % 3 === 1 ? 1 : 0)), 3)); g.setIndex(idx); return g; })();
+  const sway = (m, k) => { m.onBeforeCompile = (sh) => { sh.uniforms.uTime = U.uTime; sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+ vec2 wp = instanceMatrix[3].xz; float hh = min(position.y*${k}, 1.), gust = .5 + .5*sin(uTime*1.1 - wp.x*.22 - wp.y*.13); hh *= hh;
+ mat3 R = mat3(normalize(instanceMatrix[0].xyz), normalize(instanceMatrix[1].xyz), normalize(instanceMatrix[2].xyz));
+ transformed += transpose(R)*vec3((.03 + .1*gust)*sin(uTime*1.7 + wp.x*.8 + wp.y*.6) + .14*gust, 0., .05*cos(uTime*1.3 + wp.y*.7))*hh;`); }; m.customProgramCacheKey = () => k; return m; };
+  const grass = (H.grass = add(new THREE.InstancedMesh(blades, sway(new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.85 }), '1.1'), 3000)));   // world.js giảm số bụi cỏ ở mức chất lượng 0
+  scatter(3000, -0.3, (x, z, i) => { d.position.set(x, groundH(x, z) - 0.05, z); d.rotation.set(0, r() * 6.28, 0); d.scale.set(0.8 + r() * 0.9, 0.55 + r() * 0.7, 0.8 + r() * 0.9); d.updateMatrix(); grass.setMatrixAt(i, d.matrix); grass.setColorAt(i, c.setHSL(0.22 + r() * 0.08, 0.45 + r() * 0.18, 0.32 + r() * 0.14)); });
   grass.receiveShadow = true;
-  const flowers = add(new THREE.InstancedMesh(new THREE.SphereGeometry(0.075, 4, 3), new THREE.MeshStandardMaterial({ roughness: 0.6, emissive: '#ffffff', emissiveIntensity: 0.25 }), 190));
+  const fg = (() => { const h = hue(new THREE.CircleGeometry(0.1, 15), '#fff'), p = h.attributes.position; h.attributes.color.setXYZ(0, 1, 0.78, 0.3);
+    for (let i = 1; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), k = 0.45 + 0.55 * Math.abs(Math.cos(Math.atan2(y, x) * 2.5)); p.setXY(i, x * k, y * k); }
+    h.rotateX(-Math.PI / 2); h.translate(0, 0.42, 0); const st = new THREE.CylinderGeometry(0.006, 0.009, 0.42, 3, 1, true); st.translate(0, 0.21, 0); return mergeGeometries([h, hue(st, '#6f9a4a')].map((g) => g.toNonIndexed())); })();
+  const flowers = add(new THREE.InstancedMesh(fg, sway(new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.6 }), '2.2'), 190));
   const fc = ['#fff6d8', '#ffd9e6', '#ffe58a', '#e6dcff', '#ffffff'];
-  scatter(190, 0, (x, z, i) => { d.position.set(x, groundH(x, z) + 0.42 + r() * 0.2, z); d.rotation.set(0, 0, 0); d.scale.setScalar(0.7 + r() * 0.8); d.updateMatrix(); flowers.setMatrixAt(i, d.matrix); flowers.setColorAt(i, c.set(fc[Math.floor(r() * fc.length)])); });
+  scatter(190, 0, (x, z, i) => { d.position.set(x, groundH(x, z) - 0.02, z); d.rotation.set(0, r() * 6.28, 0); d.scale.setScalar(0.8 + r() * 0.8); d.updateMatrix(); flowers.setMatrixAt(i, d.matrix); flowers.setColorAt(i, c.set(fc[Math.floor(r() * fc.length)])); });
   // lối đá lớn dần theo tiến trình (uGrow), cùng vân đá với phần còn lại
   H.grow = { value: 1 }; const stoneMat = tactile(std('#bdb6a8', { roughness: 1 }), [0.34, 0.18, 0, 0]), vein = stoneMat.onBeforeCompile;
   stoneMat.onBeforeCompile = (sh) => { vein(sh); sh.uniforms.uGrow = H.grow; sh.vertexShader = 'uniform float uGrow;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n float gI = float(gl_InstanceID); float keep = step(0.5, uGrow*3.0 - mod(gI, 3.0)*0.9 + 0.4); float gs = mix(0.5, 1.12, smoothstep(0.0, 0.95, uGrow))*keep; transformed.xz *= gs*(1.0 + (1.0-uGrow)*0.25*sin(gI*7.3)); transformed.y *= keep*mix(1.6, 1.0, uGrow);'); };
@@ -281,7 +294,7 @@ export function buildHome() {
   stones.count = sn; stones.receiveShadow = true;
   // đá rải: hình tĩnh, gộp chung một lệnh vẽ với mọi khối đá rêu khác
   const rock = (geo, x, y, z, sx, sy, sz, ry = 0, rx = 0, rz = 0, p = G) => { const m = add(M(geo, MOSS, 0, x, y, z), p); m.scale.set(sx, sy, sz); m.rotation.set(rx, ry, rz); return m; };
-  ROCK1.forEach((geo) => scatter(18, 0.6, (x, z) => { const f = T.frac(x, z), s = 0.35 + r() * (f > 0.6 ? 1.3 : 0.6); rock(geo, x, groundH(x, z) + s * 0.2, z, s, s * 0.7, s, r() * 6, r(), r()); }));
+  ROCK.forEach((geo) => scatter(18, 0.6, (x, z) => { const f = T.frac(x, z), s = 0.35 + r() * (f > 0.6 ? 1.3 : 0.6); rock(geo, x, groundH(x, z) + s * 0.2, z, s, s * 0.7, s, r() * 6, r(), r()); }));
 
   // Đài Thiền: phiến đá phủ rêu vươn ra biển mây
   rock(ROCK[0], 26.5, 10.5, 2, 7.4, 1.5, 5.2);
@@ -306,9 +319,20 @@ export function buildHome() {
     add(M(BLOB[i % 2], MATTE, '#4f8a45', bx, 0.12, bz, 0), pu.flowers).scale.set(0.42, 0.3, 0.42);
     for (let k = 0; k < 3; k++) add(M(new THREE.SphereGeometry(0.1, 5, 4), MATTE, '#f3a9c2', bx + (k - 1) * 0.17, 0.4 + (k % 2) * 0.06, bz + (k % 2) * 0.14, 0), pu.flowers); }
   H.padPos = new THREE.Vector3(26.5, deckBase(DECKS[0]) + 0.62, 2);
+  // Lư hương: bát đồng ba chân, ba nén hương đầu đỏ cháy âm ỉ. Trả về đầu nén hương (tọa độ của nhóm cha) để đặt nguồn khói.
+  const burner = (p, x, y, z) => {
+    add(M(new THREE.LatheGeometry([[0.001, 0], [0.17, 0], [0.22, 0.05], [0.27, 0.14], [0.28, 0.25], [0.24, 0.3], [0.27, 0.33], [0.2, 0.33], [0.19, 0.28]].map(([a, b]) => new THREE.Vector2(a, b)), 18), MATTE, '#7c5c34', x, y + 0.08, z, 1), p);
+    for (let i = 0; i < 3; i++) { const a = i * 2.094; add(M(new THREE.CylinderGeometry(0.025, 0.035, 0.12, 5), MATTE, '#6a4c2a', x + Math.cos(a) * 0.17, y + 0.05, z + Math.sin(a) * 0.17, 0), p); }
+    for (let i = -1; i <= 1; i++) { const rz = i * 0.09; add(M(new THREE.CylinderGeometry(0.008, 0.008, 0.5, 4), MATTE, '#8a3b2a', x + i * 0.06, y + 0.55, z, 0), p).rotation.z = rz;
+      add(M(new THREE.SphereGeometry(0.016, 6, 4), LAMP, 0, x + i * 0.06 - Math.sin(rz) * 0.25, y + 0.55 + Math.cos(rz) * 0.25, z, 0), p); }
+    return new THREE.Vector3(x, y + 0.8, z);
+  };
+  pu.incense = add(new THREE.Group(), padDeck); const padTip = burner(pu.incense, 0, 0.6, -1.75).add(padDeck.position);   // trước chỗ ngồi, hướng về Tôn tượng
 
   // Tịnh Thất
   const pv = (H.pv = pavilion()); pv.group.position.set(HILL.x, groundH(HILL.x, HILL.z) - 0.35, HILL.z); pv.group.scale.setScalar(1.2); add(pv.group);
+  const altarG = add(new THREE.Group(), pv.group); altarG.position.set(0, 1.7, -1.62); altarG.scale.setScalar(0.7);   // trên bàn thờ, trước bài vị sáng
+  const altarTip = burner(altarG, 0, 0, 0).multiplyScalar(0.7).add(altarG.position).multiplyScalar(1.2).add(pv.group.position);
   { const fy = pvFloor(), list = [], posts = [], rough = [];
     for (let k = 0; k < 26; k++) { const z = STAIR.z0 + (k + 0.5) * STAIR.run, top = fy - (k + 1) * STAIR.rise, gy = groundH(STAIR.x, z); if (top < gy + 0.05) break;
       const hgt = top - gy + 0.9, bx = new THREE.BoxGeometry(STAIR.hw * 2, hgt, STAIR.run + 0.02); bx.translate(STAIR.x, top - hgt / 2, z); list.push(bx);
@@ -333,19 +357,27 @@ export function buildHome() {
     add(M(new THREE.CircleGeometry(0.93, 36), new THREE.MeshStandardMaterial({ color: '#dfe9f2', metalness: 1, roughness: 0.06, side: THREE.DoubleSide }), 0, 0, 1.5, 0, 0), mir);
     [[-25.6, 1.2], [-17.6, 2.6], [-24.6, 9.6]].forEach(([x, z]) => lamp(G, x, groundH(x, z), z));
     [[-27.2, 2.4, 'blossom', 2.6, 3.6], [-25.2, 11.2, 'pine', 2.2, 4.6], [-18.2, 13.2, 'blossom', 2.4, 3.2], [-20.4, -0.6, 'pine', 2.0, 4.2], [-28.4, 7.4, 'blossom', 2.0, 3.0]].forEach(([x, z, kind, rad, th], i) => { if (T.frac(x, z) > 0.9) return; const t2 = leafTree({ count: 300, kind, radius: rad, trunkH: th, seed: 40 + i }); t2.group.position.copy(P(x, z, -0.15)); add(t2.group); }); }
-  // Mặt nước (Hồ Sen và chum nước khu trà): bốn lớp sóng sin lệch hướng cho pháp tuyến giải tích, phản chiếu màu trời theo Fresnel,
-  // vệt nắng/trăng lóa theo hướng mặt trời, đáy trong dần theo tiến trình (uClar)
+  // Mặt nước tiên cảnh (Hồ Sen và chum nước khu trà), dựng lại từ bản lấp lánh ban đầu:
+  // - bốn lớp sóng sin cho pháp tuyến, cộng gợn tròn lan từ bốn điểm như giọt sương rơi;
+  // - lòng hồ ngọc bích trong dần theo tiến trình (uClar), ánh sáng gợn dưới đáy (caustics), mép nông sáng hơn lòng sâu;
+  // - phản chiếu màu trời theo Fresnel, vệt lóa mặt trời/trăng;
+  // - hạt lấp lánh như sao (vượt 1 trong HDR nên bloom tỏa), ánh ngũ sắc nhẹ; viền bờ phát sương sáng; đêm thì bạc lạnh.
   const wy = groundH(POND.x, POND.z) + 0.72;
   H.water = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { ...U, uClar: { value: 0 }, uWater: { value: 0 } },
     vertexShader: 'varying vec2 vUv; varying vec3 vW; void main(){ vUv = uv; vec4 w = modelMatrix*vec4(position,1.); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }',
-    fragmentShader: `uniform float uTime,uClar,uWater; uniform vec3 uZen,uHz,uSunC,uSun; varying vec2 vUv; varying vec3 vW;
-void main(){ vec2 p = vW.xz, n = vec2(0.); float hh = 0.;
- for (int i = 0; i < 4; i++) { float fi = float(i), an = fi*2.4 + .6, f = 1.1 + fi*fi*.47 + fi*.5, ph; vec2 d = vec2(cos(an), sin(an)); ph = dot(p,d)*f + uTime*(.8 + fi*.4) + sin(p.x*.6 + p.y*.4 + fi)*.8; n += d*cos(ph)*f*.045/(1.+fi); hh += sin(ph)/(1.+fi); }
- vec3 N = normalize(vec3(-n.x, 1., -n.y)), V = normalize(cameraPosition - vW), R = reflect(-V, N);
- float fr = .1 + .8*pow(1. - max(dot(N,V),0.), 3.);
- vec3 col = mix(mix(vec3(.2,.32,.3), vec3(.08,.42,.4), uClar)*(.88+.12*hh), mix(uHz, uZen, clamp(R.y*1.4, 0., 1.)), fr*(.6+.4*uClar));
- col += uSunC*pow(max(dot(R, uSun),0.), 60.)*1.6*(.4+.6*uClar) + vec3(.9,.97,1.)*smoothstep(.6,1.,hh*.5+.5)*.07;
- float a = (.66+.3*uClar)*smoothstep(1.,.9,length(vUv*2.-1.))*uWater; ${OUT} }` });
+    fragmentShader: `uniform float uTime,uClar,uWater,uNight;uniform vec3 uZen,uHz,uSunC,uSun;varying vec2 vUv;varying vec3 vW;${NOISE}
+float rd(vec2 q){return 1.-abs(noise(q)*2.-1.);}
+void main(){vec2 p=vW.xz,n=vec2(0.);float rp=0.,e=length(vUv*2.-1.);
+for(int i=0;i<4;i++){float fi=float(i),an=fi*2.4+.6,f=1.1+fi*fi*.47+fi*.5;vec2 d=vec2(cos(an),sin(an));n+=d*cos(dot(p,d)*f+uTime*(.8+fi*.4)+sin(p.x*.6+p.y*.4+fi)*.8)*f*.03/(1.+fi);
+vec2 q=p-vec2(${POND.x.toFixed(1)}+sin(fi*2.4)*4.2,${POND.z.toFixed(1)}+cos(fi*1.7)*2.8);float dd=max(length(q),.01),w=sin(dd*6.5-uTime*(1.6+fi*.3)+fi)*exp(-dd*.45);rp+=w;n+=q/dd*w*.035;}
+vec3 N=normalize(vec3(-n.x,1.,-n.y)),V=normalize(cameraPosition-vW),R=reflect(-V,N);
+float fr=.04+.7*pow(1.-max(dot(N,V),0.),4.),ca=pow(rd(p*1.5+n*5.+vec2(uTime*.35,0.))*rd(p*2.1-n*4.-vec2(0.,uTime*.3)),6.);
+vec3 col=mix(mix(vec3(.15,.3,.29),vec3(.03,.42,.42),uClar),mix(vec3(.3,.46,.38),vec3(.3,.8,.72),uClar),smoothstep(.15,1.,e))+vec3(.8,1.,.9)*ca*(.15+.5*uClar);
+col=mix(col,mix(uHz,uZen,clamp(R.y*1.4,0.,1.))*.8,fr*.85)+uSunC*pow(max(dot(R,uSun),0.),140.)*1.5+vec3(.9,.97,1.)*max(rp,0.)*.06;
+float sp=noise(p*14.+vec2(uTime*.7,-uTime*.4))*noise(p*10.5-vec2(uTime*.5,uTime*.6)+3.7);sp=pow(sp,3.)*9.;
+col+=mix(vec3(2.,1.8,1.3),vec3(1.3,1.7,2.2),uNight)*(.8+.4*cos(6.283*(p.x*.3+p.y*.2+vec3(0.,.33,.67))))*smoothstep(.7,1.,sp)*(.45+.5*uClar);
+col+=mix(vec3(.9,1.,.85),vec3(.5,.8,1.),uNight)*smoothstep(.82,.98,e)*.25;col=mix(col,col*vec3(.5,.55,.85),uNight*.6);
+float a=(.7+.25*uClar)*smoothstep(1.,.92,e)*uWater;${OUT}}` });
   const disc = (rad, seg) => { const g = new THREE.CircleGeometry(rad, seg); g.rotateX(-Math.PI / 2); return g; };
   const pond = add(new THREE.Mesh(disc(1, 48), H.water)); pond.scale.set(POND.rx, 1, POND.rz); pond.position.set(POND.x, wy, POND.z); pond.renderOrder = 3;
   for (let i = 0; i < 22; i++) { const a = (i / 22) * 6.28 + r() * 0.2, s = 0.45 + r() * 0.5, x = POND.x + Math.cos(a) * (POND.rx + 0.5), z = POND.z + Math.sin(a) * (POND.rz + 0.5); rock(ROCK1[1], x, groundH(x, z) + 0.15, z, s, s * 0.65, s, r() * 6, r(), r()); }
@@ -378,7 +410,21 @@ void main(){ vec3 p = position; float ph = aS.x*6.283, a, sz;
  vec4 mv = modelViewMatrix*vec4(p,1.); gl_PointSize = clamp(sz*60./-mv.z, 2.2, 14.); gl_Position = projectionMatrix*mv; vA = a; }`,
       fragmentShader: `varying float vA; void main(){ vec2 q = gl_PointCoord*2.-1.; vec3 col = vec3(1.75,1.45,.85); float a = exp(-dot(q,q)*4.5)*vA; ${OUT} }` }))); H.motes.frustumCulled = false; }
   H.fall = add(waterfall(2.0, 30)); H.fall.position.set(-8, groundH(-8, 17) - 0.9, 20.2); H.fall.rotation.y = 0.15;
-
+  // Khói hương (lư hương Đài Thiền, bàn thờ Tịnh Thất) và hơi trà bốc từ vòi ấm: một hệ Points trên GPU. Mỗi hạt bay lên, uốn lượn,
+  // nở dần rồi tan; màu theo mây của tâm trạng nên đêm tự tối lại. uOn = (hương Đài Thiền, hương bàn thờ, hơi trà) do evolve bật/tắt.
+  { const src = [[padTip, 0, 40], [altarTip, 1, 30], [padTip, 2, 18]], pos = [], sd = [];
+    src.forEach(([p, ty, n]) => { for (let i = 0; i < n; i++) { pos.push(p.x, p.y, p.z); sd.push(i / n, ty, r()); } });
+    const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); sg.setAttribute('aS', new THREE.Float32BufferAttribute(sd, 3));
+    H.smokeU = { uTime: U.uTime, uPx: U.uPx, uCl: U.uCl, uOn: { value: new THREE.Vector3(0, 1, 0) }, uTea: { value: new THREE.Vector3() } };
+    H.smoke = add(new THREE.Points(sg, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: H.smokeU,
+      vertexShader: `attribute vec3 aS;uniform float uTime,uPx;uniform vec3 uOn,uTea;varying float vA,vT;
+void main(){float ty=aS.y,tea=step(1.5,ty),f=fract(uTime*mix(.09,.28,tea)*(.85+.3*aS.z)+aS.x),sw=f*f*mix(.8,.28,tea);
+vec3 p=tea>.5?uTea:position;p.y+=f*mix(4.6,1.3,tea);p.x+=sin(uTime*.9+aS.z*20.+f*5.)*sw;p.z+=cos(uTime*.7+aS.z*13.+f*4.)*sw;
+vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;
+gl_PointSize=mix(.08+1.1*f,.14+.7*f,tea)*projectionMatrix[1][1]*uPx/max(-mv.z,.1);
+vA=smoothstep(0.,.08,f)*(1.-f)*(ty<.5?uOn.x:ty<1.5?uOn.y:uOn.z)*mix(.55,.5,tea);vT=tea;}`,
+      fragmentShader: `uniform vec3 uCl;varying float vA,vT;void main(){float d=length(gl_PointCoord-.5)*2.;vec3 col=uCl*mix(.88,1.02,vT);float a=(1.-smoothstep(.15,1.,d))*vA;${OUT}}` })));
+    H.smoke.frustumCulled = false; H.smoke.renderOrder = 4; }
   // Trà Đạo Tỉnh Thức
   const Tea = (H.tea = add(new THREE.Group())); Tea.position.set(7, deckBase(DECKS[1]) + 0.6, -8.5);
   { const dk = (H.teaDeck = deck(DECKS[1])); dk.position.set(0, -0.6, 0); Tea.add(dk); dk.userData.seat.visible = false; }
@@ -427,10 +473,11 @@ void main(){ float sp = 0.5 + 1.1*uFlow; float n = fbm(vec2(vUv.x*3.0, vUv.y*9.0
   H.evolve = (L, isl, time) => {
     const st = L < 0.14 ? 0 : L < 0.43 ? 1 : L < 0.71 ? 2 : L < 0.9 ? 3 : 4;
     DECKS[0].lv = st === 0 ? 0 : st === 1 ? 1 : 2; DECKS[0].seat = st === 0 ? 0.17 : st === 1 ? 0.22 : 0.16;
-    pu.lo.visible = st >= 1; pu.hi.visible = st >= 2; pu.seat.visible = st < 2; pu.seat.position.y = st === 0 ? 0.12 : 0.36; pu.zafu.visible = st >= 2; pu.rings.visible = pu.lamps.visible = st >= 3; pu.flowers.visible = st >= 2; pu.flowers.scale.setScalar(st >= 3 ? 1 : 0.6);
+    pu.lo.visible = st >= 1; pu.hi.visible = st >= 2; pu.seat.visible = st < 2; pu.seat.position.y = st === 0 ? 0.12 : 0.36; pu.zafu.visible = pu.incense.visible = st >= 2; pu.rings.visible = pu.lamps.visible = st >= 3; pu.flowers.visible = st >= 2; pu.flowers.scale.setScalar(st >= 3 ? 1 : 0.6);
     pu.glow.visible = st >= 4; pu.glowMat.opacity = 0.45 + 0.3 * Math.sin(time * 1.3);
     const tu = H.teaDeck.userData, ts = L < 0.5 ? 1 : L < 0.75 ? 2 : L < 0.9 ? 3 : 4; DECKS[1].lv = ts >= 2 ? 2 : 1; tu.hi.visible = ts >= 2; tu.rings.visible = ts >= 3; tu.glow.visible = ts >= 4; H.tea.position.y = deckBase(DECKS[1]) + (ts >= 2 ? 0.6 : 0.3); H.teaDeck.position.y = ts >= 2 ? -0.6 : -0.3;
     H.grow.value = L; H.stairRough.visible = L < 0.3; H.stairs.visible = L >= 0.3; H.stairPosts.visible = L >= 0.6;
+    H.smokeU.uOn.value.set(pu.incense.visible ? 1 : 0, 1, H.tea.visible ? 1 : 0); H.smokeU.uTea.value.copy(H.tea.position).add(TEA_SPOUT);
     LAMP.emissiveIntensity = 2 + 0.35 * Math.sin(time * 2.3) * Math.sin(time * 0.71);   // lõi đèn đá thở nhẹ
     const flow = Math.min(1, isl.water) * (0.25 + 0.75 * L); H.brook.material.uniforms.uFlow.value = flow; H.brook.visible = flow > 0.03; H.fall.visible = flow > 0.1; H.fall.scale.x = 0.25 + 0.75 * flow;
     return st;
@@ -440,7 +487,7 @@ void main(){ float sp = 0.5 + 1.1*uFlow; float n = fbm(vec2(vUv.x*3.0, vUv.y*9.0
   bakeLocal(tree.group, [tree.leaves]);
   bakeLocal(H.veil, [], [], { transparent: true }); bakeLocal(Gt, [H.veil], [], { transparent: true });
   bakeLocal(pv.group, [], [pv.mats.roof, pv.mats.wood, pv.altar.material]);
-  bakeLocal(pu.lamps); bakeLocal(pu.flowers); bakeLocal(Tea, [H.teaDeck]);
+  bakeLocal(pu.lamps); bakeLocal(pu.flowers); bakeLocal(pu.incense); bakeLocal(Tea, [H.teaDeck]);
   bakeLocal(G, [land, pv.group, padDeck, Tea, H.stairs, H.stairPosts, H.stairRough, tree.group, H.veil]);
   return H;
 }
