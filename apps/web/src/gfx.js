@@ -1,12 +1,13 @@
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 // ───────── GLSL dùng chung ─────────
+// Băm không dùng sin: kiểu fract(sin(x)·43758) nhân sai số lên hàng vạn lần, trình biên dịch D3D (ANGLE trên Windows) tính
+// hash(i + (1,0)) khác hash của ô kề nên nhiễu đứt thành mảng tam giác trên biển mây. Bản fract đa thức này giữ giá trị nhỏ.
 export const NOISE = `
-float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
-float noise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
-  return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x), mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x), f.y); }
-float fbm(vec2 p){ float a=.5, s=0.; for(int i=0;i<5;i++){ s+=a*noise(p); p=p*2.03+17.; a*=.5; } return s; }`;
+float hash(vec2 p){vec3 q=fract(p.xyx*.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}
+float fbm(vec2 p){float a=.5,s=0.;for(int i=0;i<5;i++){s+=a*noise(p);p=p*2.03+17.;a*=.5;}return s;}`;
 // Màu trong shader viết theo sRGB hiển thị; đổi sang tuyến tính rồi để three.js lo tone mapping và không gian màu.
 export const OUT = `gl_FragColor = vec4(pow(max(col, 0.), vec3(2.2)), a);
 #include <tonemapping_fragment>
@@ -51,7 +52,7 @@ export const MOOD = [
 ];
 // Uniform dùng chung cho mọi shader tự viết (trời, biển mây, nước, tia sáng…): một nguồn màu duy nhất nên chuyển tâm trạng luôn mượt
 const v3 = () => ({ value: new THREE.Vector3() });
-export const UNI = { uTime: { value: 0 }, uNight: { value: 0 }, uZen: v3(), uHz: v3(), uSunC: v3(), uCl: v3(), uSh: v3(), uSun: { value: new THREE.Vector3(-60, 108, -190).normalize() } };
+export const UNI = { uTime: { value: 0 }, uNight: { value: 0 }, uZen: v3(), uHz: v3(), uSunC: v3(), uCl: v3(), uSh: v3(), uSun: { value: new THREE.Vector3(-60, 108, -190).normalize() }, uPx: { value: 400 } };   // uPx: nửa chiều cao bộ đệm vẽ (điểm ảnh) cho kích thước hạt theo đơn vị thế giới
 const moodNow = new Float32Array(18);
 /** Trộn bốn tâm trạng theo trọng số w (tổng = 1), ghi màu vào UNI và trả mảng 18 số (3 số cuối: nắng, ánh nền, phơi sáng). */
 export function moodMix(w) {
@@ -153,183 +154,104 @@ export function hue(g, c) {
   g.setAttribute('color', new THREE.BufferAttribute(a, 3)); return g;
 }
 
-// Bốn dáng mây tích: đáy phẳng, đỉnh cuộn, mặt dưới ngả lam xám
+// Bốn dáng mây tích (ô 512²), dựng từng điểm ảnh. Thân mây là hợp mềm của các khối cầu: hàng chân rộng, tầng giữa, chỏm cuộn
+// kiểu súp lơ. Mép bị nhiễu gặm thành tơ, đáy phẳng tan dần. Ghi thẳng vào DataTexture (qua canvas thì mép mờ mất màu):
+// r, g = pháp tuyến x, y của mặt mây trong hệ tấm (0,5 là 0); b = độ dày (0 ở mép → 1 ở lõi); a = mật độ.
+// world.js chiếu sáng theo hướng mặt trời trong hệ máy quay: đỉnh sáng, đáy ngả lam, mép rực viền bạc khi nhìn ngược nắng.
 export function puffAtlas() {
-  // 4 ô mây 512²: thân mây là nhiều cụm nhỏ alpha thấp chồng lên nhau, rìa có tơ mây, mép tan dần về 0
-  return canvasTex(1024, 1024, (g) => {
-    const r = rng(11), C = 512;
-    for (let c = 0; c < 4; c++) {
-      const ox = (c % 2) * C, oy = Math.floor(c / 2) * C, mx = ox + C / 2;
-      g.save(); g.beginPath(); g.rect(ox, oy, C, C); g.clip();
-      const blob = (x, y, rad, a) => { const gr = g.createRadialGradient(x, y, 0, x, y, rad); gr.addColorStop(0, `rgba(255,255,255,${a})`); gr.addColorStop(0.3, `rgba(255,255,255,${a * 0.66})`); gr.addColorStop(0.65, `rgba(255,255,255,${a * 0.2})`); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(ox, oy, C, C); };
-      const lobes = 5 + c;
-      for (let l = 0; l < lobes; l++) {
-        const dx = (r() - 0.5) * 220, lx = mx + dx, ly = oy + 322 - r() * 96 - (1 - Math.abs(dx) / 110) * 44, lr = 42 + r() * 40;
-        for (let i = 0; i < 30; i++) { const a = r() * 6.28, d = Math.pow(r(), 0.7) * lr; blob(lx + Math.cos(a) * d, ly + Math.sin(a) * d * 0.72, 22 + r() * 34, 0.17); }
-      }
-      for (let i = 0; i < 90; i++) { const a = r() * 6.28, d = 100 + r() * 78; blob(mx + Math.cos(a) * d * 1.1, oy + 296 + Math.sin(a) * d * 0.52, 14 + r() * 26, 0.05); }
-      g.globalCompositeOperation = 'source-atop';
-      const sh = g.createLinearGradient(0, oy + 200, 0, oy + 430); sh.addColorStop(0, 'rgba(255,255,255,0)'); sh.addColorStop(1, 'rgba(150,158,196,0.5)');
-      g.fillStyle = sh; g.fillRect(ox, oy, C, C);
-      g.globalCompositeOperation = 'destination-in';
-      const mk = g.createRadialGradient(mx, oy + 280, 120, mx, oy + 280, 252); mk.addColorStop(0, 'rgba(0,0,0,1)'); mk.addColorStop(1, 'rgba(0,0,0,0)');
-      g.fillStyle = mk; g.fillRect(ox, oy, C, C);
-      g.globalCompositeOperation = 'destination-out';
-      const cut = g.createLinearGradient(0, oy + 340, 0, oy + 452); cut.addColorStop(0, 'rgba(0,0,0,0)'); cut.addColorStop(1, 'rgba(0,0,0,1)');
-      g.fillStyle = cut; g.fillRect(ox, oy, C, C);
-      g.restore(); g.globalCompositeOperation = 'source-over';
+  const S = 1024, C = 512, D = new Uint8Array(S * S * 4), r = rng(11), lat = Float32Array.from({ length: 4096 }, r);
+  const vn = (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), u = x - xi, v = y - yi, su = u * u * (3 - 2 * u), sv = v * v * (3 - 2 * v), A = (i, j) => lat[((j & 63) << 6) | (i & 63)];
+    const a = A(xi, yi), b = A(xi + 1, yi), c = A(xi, yi + 1), d = A(xi + 1, yi + 1); return a + (b - a) * su + (c - a) * sv + (a - b - c + d) * su * sv; };
+  const fb = (x, y) => vn(x, y) * 0.5 + vn(x * 2.1 + 5, y * 2.1 + 9) * 0.3 + vn(x * 4.3 + 17, y * 4.3 + 3) * 0.2;
+  for (let c = 0; c < 4; c++) {
+    const ox = (c % 2) * C, oy = (c >> 1) * C, B = [], base = 138 + r() * 22, nb = 5 + c, nm = 3 + (c & 1);
+    for (let i = 0; i < nb; i++) { const t = (i / (nb - 1)) * 2 - 1, rad = (62 + r() * 26) * (1 - 0.3 * t * t); B.push([256 + t * (150 + c * 12) + (r() - 0.5) * 24, base + rad * 0.45, rad]); }
+    for (let i = 0; i < nm; i++) { const t = (i / (nm - 1)) * 2 - 1; B.push([256 + t * (88 + c * 10) + (r() - 0.5) * 30, base + 70 + r() * 46 + (1 - Math.abs(t)) * 40, 58 + r() * 30]); }
+    const big = B.length;
+    for (let i = 0; i < 16; i++) { const o = B[Math.floor(r() * big)], a = 0.3 + r() * 2.54; B.push([o[0] + Math.cos(a) * o[2] * 0.78, o[1] + Math.sin(a) * o[2] * 0.78, 22 + r() * 22]); }
+    for (let py = 0; py < C; py++) { const row = B.filter((b) => Math.abs(py - b[1]) < b[2] + 40); for (let px = 0; px < C; px++) {
+      let m = -1e9, nx = 0, ny = 0, nz = 0, th = 0;
+      for (let j = 0; j < row.length; j++) { const bx = row[j][0], br = row[j][2], dx = px - bx, dy = py - row[j][1]; if (dx > br + 40 || dx < -br - 40) continue;
+        const d = Math.sqrt(dx * dx + dy * dy), s = br - d; if (s < -40) continue;
+        const h = Math.max(0, Math.min(1, 0.5 + (s - m) / 28)), k = Math.min(1, d / br);   // cực đại mềm đa thức (độ mềm 14 px), pháp tuyến trộn theo cùng tỉ lệ
+        m += (s - m) * h + 14 * h * (1 - h); nx += (dx / br - nx) * h; ny += (dy / br - ny) * h; nz += (Math.sqrt(1 - k * k) - nz) * h; if (s > 0) th = Math.max(th, Math.sqrt(br * br - d * d)); }
+      const i = ((oy + py) * S + ox + px) * 4;
+      if (m < -40) { const L = Math.sqrt((px - 256) ** 2 + (py - 290) ** 2) || 1; D[i] = 128 + (127 * (px - 256)) / L; D[i + 1] = 128 + (127 * (py - 290)) / L; continue; }
+      const q = fb(px / 38 + c * 7, py / 38), gx = fb(px / 38 + c * 7 + 0.06, py / 38) - q, gy = fb(px / 38 + c * 7, py / 38 + 0.06) - q;
+      let a = Math.min(1, Math.max(0, (m + (q - 0.55) * 36) / 22)); a = a * a * (3 - 2 * a);
+      const fl = Math.min(1, Math.max(0, (py - base + 14 + (vn(px / 24, 3 + c) - 0.5) * 18) / 36)), edge = Math.min(1, Math.min(px, C - 1 - px, py, C - 1 - py) / 24);
+      a *= fl * fl * (3 - 2 * fl) * edge;
+      let Nx = nx - gx * 4, Ny = ny - gy * 4; const Nz = nz + 0.15, L = Math.sqrt(Nx * Nx + Ny * Ny + Nz * Nz); Nx /= L; Ny /= L;
+      D[i] = 128 + 127 * Nx; D[i + 1] = 128 + 127 * Ny; D[i + 2] = 255 * Math.min(1, th / 105) * (0.75 + 0.25 * q); D[i + 3] = 255 * a;
+    } }
+  }
+  const t = new THREE.DataTexture(D, S, S); t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter; t.generateMipmaps = true; t.needsUpdate = true; return t;
+}
+
+// Tôn tượng: tranh vẽ nhiều lớp, đặt rất xa nên chỉ cần khối sáng và nét chính
+// st: { open: mắt mở nhìn xuống, mouth: 0..1 độ mở miệng, hand: tay phải giơ ấn thuyết pháp }
+export function buddhaTex(st = {}) {
+  return canvasTex(1024, 1280, (g) => {
+    const cx = 512, E = (x, y, rx, ry, rot = 0) => { g.beginPath(); g.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2); };
+    const body = g.createLinearGradient(0, 200, 0, 1240); body.addColorStop(0, '#fff6dc'); body.addColorStop(0.45, '#f4d9a0'); body.addColorStop(1, '#dcb06a');
+    g.fillStyle = body; g.shadowColor = 'rgba(150,98,30,0.85)'; g.shadowBlur = 7;
+    // đài sen hai lớp cánh
+    for (let row = 0; row < 2; row++) for (let i = -5; i <= 5; i++) {
+      const x = cx + i * (82 - row * 6) + (row ? 40 : 0), y = 1150 - row * 46;
+      g.beginPath(); g.moveTo(x - 50, y + 60); g.quadraticCurveTo(x - 62, y - 10, x, y - 62); g.quadraticCurveTo(x + 62, y - 10, x + 50, y + 60); g.closePath(); g.fill();
     }
+    E(cx, 1196, 440, 52); g.fill();
+    // chân kiết già
+    E(cx, 1020, 372, 112); g.fill();
+    E(cx - 190, 1040, 190, 78, 0.08); g.fill(); E(cx + 190, 1040, 190, 78, -0.08); g.fill();
+    // thân
+    g.beginPath(); g.moveTo(cx - 236, 640); g.bezierCurveTo(cx - 300, 800, cx - 250, 940, cx - 196, 1000); g.lineTo(cx + 196, 1000);
+    g.bezierCurveTo(cx + 250, 940, cx + 300, 800, cx + 236, 640); g.bezierCurveTo(cx + 150, 560, cx - 150, 560, cx - 236, 640); g.fill();
+    // tay
+    E(cx - 262, 810, 66, 196, 0.06); g.fill(); E(cx + 262, 810, 66, 196, -0.06); g.fill();
+    E(cx - 150, 968, 150, 44, -0.18); g.fill(); E(cx + 150, 968, 150, 44, 0.18); g.fill(); E(cx, 978, 96, 34); g.fill();
+    if (st.hand) { g.save(); g.strokeStyle = 'rgba(120,84,36,0.55)'; g.lineWidth = 4; const hx = cx - 176, hy = 742;
+      E(hx - 26, hy + 118, 44, 104, -0.2); g.fill(); g.stroke();
+      [[-36, -62, 11, 34, -0.1], [-12, -74, 12, 40, -0.03], [13, -70, 12, 38, 0.05], [36, -52, 11, 30, 0.14]].forEach(([dx, dy, rx, ry, ro]) => { E(hx + dx, hy + dy, rx, ry, ro); g.fill(); g.stroke(); });
+      E(hx, hy, 52, 58); g.fill(); g.stroke(); E(hx + 46, hy - 6, 13, 30, 0.75); g.fill(); g.stroke();
+      g.strokeStyle = 'rgba(120,84,36,0.35)'; g.lineWidth = 3; g.beginPath(); g.arc(hx, hy + 6, 24, 0, Math.PI * 2); g.stroke(); g.restore(); }
+    // cổ, tai, đầu, nhục kế
+    g.fillRect(cx - 54, 500, 108, 96);
+    E(cx - 124, 440, 20, 70); g.fill(); E(cx + 124, 440, 20, 70); g.fill();
+    E(cx, 416, 116, 140); g.fill(); E(cx, 330, 122, 84); g.fill(); E(cx, 262, 62, 50); g.fill(); E(cx, 222, 20, 18); g.fill();
+    g.shadowBlur = 0; g.globalCompositeOperation = 'source-atop';
+    // khối sáng tối: sáng từ trên trước, tối dần hai bên
+    const side = g.createLinearGradient(160, 0, 864, 0); side.addColorStop(0, 'rgba(160,104,36,0.60)'); side.addColorStop(0.3, 'rgba(255,255,255,0)'); side.addColorStop(0.7, 'rgba(255,255,255,0)'); side.addColorStop(1, 'rgba(160,104,36,0.60)');
+    g.fillStyle = side; g.fillRect(0, 0, 1024, 1280);
+    const hi = g.createRadialGradient(cx, 520, 20, cx, 620, 520); hi.addColorStop(0, 'rgba(255,255,255,0.42)'); hi.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = hi; g.fillRect(0, 0, 1024, 1280);
+    // tóc xoắn ốc
+    g.fillStyle = 'rgba(150,108,48,0.34)';
+    for (let y = 232; y < 408; y += 17) for (let x = cx - 124; x <= cx + 124; x += 17) {
+      const inHair = ((x - cx) / 122) ** 2 + ((y - 330) / 86) ** 2 < 1 || ((x - cx) / 62) ** 2 + ((y - 262) / 50) ** 2 < 1;
+      const inFace = ((x - cx) / 100) ** 2 + ((y - 440) / 112) ** 2 < 1;
+      if (inHair && !inFace) { E(x + ((y / 17) % 2) * 8, y, 6.5, 6.5); g.fill(); }
+    }
+    // nét y: đường vắt chéo vai trái và các nếp gấp
+    g.strokeStyle = 'rgba(150,104,40,0.42)'; g.lineWidth = 5; g.lineCap = 'round';
+    const L = (pts) => { g.beginPath(); g.moveTo(pts[0], pts[1]); g.bezierCurveTo(pts[2], pts[3], pts[4], pts[5], pts[6], pts[7]); g.stroke(); };
+    L([cx - 150, 596, cx - 40, 700, cx + 120, 820, cx + 214, 900]);
+    L([cx - 210, 660, cx - 120, 780, cx + 40, 880, cx + 150, 950]); L([cx - 236, 740, cx - 150, 850, cx - 20, 930, cx + 80, 968]);
+    L([cx - 250, 830, cx - 190, 900, cx - 110, 950, cx - 40, 972]); L([cx + 236, 660, cx + 250, 760, cx + 232, 860, cx + 196, 940]);
+    L([cx - 330, 1030, cx - 180, 1080, cx + 180, 1080, cx + 330, 1030]); L([cx - 290, 1064, cx - 140, 1110, cx + 140, 1110, cx + 290, 1064]);
+    // gương mặt: mày, mắt khép, mũi, môi, bạch hào
+    g.strokeStyle = 'rgba(120,84,36,0.60)'; g.lineWidth = 4.5;
+    g.beginPath(); g.arc(cx - 46, 430, 34, 1.18 * Math.PI, 1.82 * Math.PI); g.stroke(); g.beginPath(); g.arc(cx + 46, 430, 34, 1.18 * Math.PI, 1.82 * Math.PI); g.stroke();
+    if (st.open) { [cx - 46, cx + 46].forEach((ex) => { g.save(); g.beginPath(); g.moveTo(ex - 27, 450); g.quadraticCurveTo(ex, 434, ex + 27, 450); g.quadraticCurveTo(ex, 461, ex - 27, 450); g.closePath(); g.fillStyle = 'rgba(255,250,236,0.95)'; g.fill(); g.clip();
+        g.fillStyle = 'rgba(64,40,20,0.95)'; E(ex, 453, 10.5, 10.5); g.fill(); g.fillStyle = 'rgba(255,255,255,0.9)'; E(ex + 3, 449, 2.6, 2.6); g.fill(); g.restore();
+        g.beginPath(); g.moveTo(ex - 28, 450); g.quadraticCurveTo(ex, 433, ex + 28, 450); g.stroke(); }); }
+    else { g.beginPath(); g.arc(cx - 46, 430, 26, 0.16 * Math.PI, 0.84 * Math.PI); g.stroke(); g.beginPath(); g.arc(cx + 46, 430, 26, 0.16 * Math.PI, 0.84 * Math.PI); g.stroke(); }
+    g.lineWidth = 3.5; g.beginPath(); g.moveTo(cx - 4, 452); g.quadraticCurveTo(cx - 12, 486, cx, 492); g.quadraticCurveTo(cx + 12, 486, cx + 6, 478); g.stroke();
+    if (st.mouth > 0) { g.save(); g.fillStyle = 'rgba(112,48,30,0.82)'; E(cx, 519, 17 + 3 * st.mouth, 2.5 + 9 * st.mouth); g.fill(); g.stroke(); g.restore(); }
+    else { g.beginPath(); g.arc(cx, 500, 26, 0.2 * Math.PI, 0.8 * Math.PI); g.stroke(); }
+    g.fillStyle = 'rgba(255,255,255,0.9)'; E(cx, 398, 6, 6); g.fill();
+    g.globalCompositeOperation = 'source-over';
   });
-}
-
-// ───────── Tôn tượng: tượng tạc khối (thay tranh vẽ phẳng) ─────────
-// Ngồi kiết già trên tòa sen hai lớp cánh, tay ấn thiền định, tăng y vắt vai trái (vai phải để trần), cổ ba ngấn, tai dài,
-// tóc xoắn ốc, nhục kế, bạch hào. Đơn vị cục bộ (world.js phóng BS = 1,5): mặt tòa sen ≈ 25, vai ≈ 150, mắt ≈ 196, đỉnh ≈ 257.
-// Một hình gộp, một lệnh vẽ. Màu ở đỉnh (da vàng đánh bóng, y vàng satin, tóc đồng sẫm, sen vàng hồng); aK = [độ bóng, cờ cẳng
-// tay phải]. Nét mắt, mày, môi vẽ trên tấm `buddhaFace`, chiếu thẳng lên mặt theo tọa độ mặt cầu đơn vị của đầu.
-const S3 = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-const HC = [0, 199, 2], HR = [26, 31, 27], ELBOW = [-62, 100, 6], WRIST = [-22, 70, 30];
-// Dáng đầu theo hướng (x, y, z) trên mặt cầu đơn vị: cằm thon, má đầy; f = 1 thì nặn sống mũi, cánh mũi, gờ mày, hốc và mí mắt, môi, cằm
-function headAt(x, y, z, f) {
-  const lo = Math.max(0, -y) ** 2, F = S3(0.2, 0.8, z) * f, au = Math.abs(x), e = (a) => Math.exp(-a);
-  let d = 0;
-  if (F > 0) { const tn = Math.min(1, Math.max(0, (0.02 - y) / 0.44));
-    d = 0.2 * tn ** 1.3 * e((x * x) / (0.004 + 0.008 * tn)) * (y > -0.42 ? 1 : e((y + 0.42) ** 2 / 0.0015))
-      + 0.035 * e((au - 0.09) ** 2 / 0.0025 + (y + 0.4) ** 2 / 0.002)
-      + 0.03 * e((y - 0.07 + 0.5 * (au - 0.3) ** 2) ** 2 / 0.004) * S3(0.7, 0.15, au)
-      - 0.04 * e((au - 0.36) ** 2 / 0.03 + (y + 0.08) ** 2 / 0.012) + 0.025 * e((au - 0.36) ** 2 / 0.012 + (y + 0.11) ** 2 / 0.0025)
-      + 0.03 * e((au - 0.42) ** 2 / 0.03 + (y + 0.38) ** 2 / 0.03)
-      + 0.04 * e((x * x) / 0.03 + (y + 0.565) ** 2 / 0.0014) + 0.045 * e((x * x) / 0.022 + (y + 0.64) ** 2 / 0.0018)
-      + 0.045 * e((x * x) / 0.04 + (y + 0.82) ** 2 / 0.006); }
-  return [HC[0] + x * HR[0] * (1 - 0.27 * lo), HC[1] + y * HR[1], HC[2] + z * HR[2] * (1 - 0.12 * lo) + d * HR[2] * F];
-}
-export function buddhaGeo() {
-  const V3 = THREE.Vector3, P = [], SKIN = [0.95, 0.6, 0.2, 1], ROBE = [0.76, 0.43, 0.11, 0], HAIR = [0.26, 0.15, 0.06, 0.4], GOLD = [1.5, 1.05, 0.45, 1];
-  const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
-  // gắn màu + độ bóng (hằng hoặc hàm theo vị trí), cờ tay, uv (mặc định góc trắng của tấm mặt)
-  const put = (g, c, arm = 0, uvf = null) => {
-    Object.keys(g.attributes).forEach((k) => { if (k !== 'position' && k !== 'normal') g.deleteAttribute(k); });
-    const p = g.attributes.position, n = p.count, C = new Float32Array(n * 3), K = new Float32Array(n * 2), U = new Float32Array(n * 2);
-    for (let i = 0; i < n; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i), q = typeof c === 'function' ? c(x, y, z, i) : c; C.set(q.slice(0, 3), i * 3); K[i * 2] = q[3]; K[i * 2 + 1] = arm; if (uvf) uvf(i, U); }
-    g.setAttribute('color', new THREE.BufferAttribute(C, 3)); g.setAttribute('aK', new THREE.BufferAttribute(K, 2)); g.setAttribute('uv', new THREE.BufferAttribute(U, 2)); P.push(g);
-  };
-  const ell = (rx, ry, rz, x, y, z, w = 16, h = 12, ry2 = 0) => { const g = new THREE.SphereGeometry(1, w, h); g.rotateY(-Math.PI / 2); g.scale(rx, ry, rz); g.rotateY(ry2); g.translate(x, y, z); return g; };
-  const tube = (pts, r, n = 12, s = 10) => sweep(pts, n, s, typeof r === 'function' ? r : () => r);
-  // mặt tròn xoay theo từng hàng (đi ngược chiều kim đồng hồ trên mặt cắt thì mặt ngoài quay ra ngoài); đường nối nằm sau lưng
-  const loft = (rows, seg, f) => { const V = [], I = [];
-    rows.forEach((r) => { for (let j = 0; j < seg; j++) V.push(...f(r, Math.PI + (j / seg) * 2 * Math.PI)); });
-    for (let i = 0; i < rows.length - 1; i++) for (let j = 0; j < seg; j++) { const a = i * seg + j, b = i * seg + ((j + 1) % seg), c = a + seg, d = b + seg; I.push(a, b, c, b, d, c); }
-    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(V, 3)); g.setIndex(I); g.computeVertexNormals(); return g; };
-  const rows = (pts, n) => { const c = new THREE.CatmullRomCurve3(pts.map(([y, rx, rz]) => new V3(rx, y, rz))); return Array.from({ length: n + 1 }, (_, i) => c.getPoint(i / n)); };
-  const round = (pts) => loft(pts, 64, ([y, r], a) => [r * Math.sin(a), y, r * Math.cos(a)]);
-
-  // ── tòa sen: đế tròn có gờ, đệm ngồi, hai lớp 18 cánh khum (mặt trong riêng để nhìn từ trên không thủng)
-  put(round([[-8, 0.1], [-8, 104], [-3, 106], [1, 101], [5, 97], [10, 99], [14, 95], [20, 90], [24, 72], [25.5, 0.1]]), [0.88, 0.58, 0.28, 0.5]);
-  // mỗi cánh: gốc hẹp, giữa rộng, chóp nhọn hơi cong ra; hồng đậm ở gốc nhạt dần lên chóp, gân giữa sáng, mép viền vàng
-  const petals = (R, y0, H, W, tilt, off, back) => { const V = [], I = [], C = [], S = back ? 4 : 8, T = back ? 6 : 9;
-    for (let k = 0; k < 18; k++) { const a0 = ((k + off) / 18) * Math.PI * 2, ca = Math.cos(a0), sa = Math.sin(a0), o0 = V.length / 3;
-      for (let i = 0; i <= T; i++) { const t = i / T, hw = W * Math.sin(Math.PI * (0.1 + 0.9 * t)) ** 0.7, rho = R + H * (Math.sin(tilt) * t + 0.15 * t * t), y = y0 + H * Math.cos(tilt) * t;
-        for (let j = 0; j <= S; j++) { const s = (j / S) * 2 - 1, o = rho + 0.28 * hw * (1 - s * s) - (back ? 0.9 : 0), w = s * hw; V.push(o * sa + w * ca, y, o * ca - w * sa);
-          C.push(mix(mix([0.7, 0.3, 0.2, 0.6], [1, 0.64, 0.48, 0.8], S3(0, 0.9, t)), [1.1, 0.74, 0.3, 1], Math.max(S3(0.7, 1, Math.abs(s)), 0.45 * t * S3(0.15, 0, Math.abs(s))))); } }
-      for (let i = 0; i < T; i++) for (let j = 0; j < S; j++) { const a = o0 + i * (S + 1) + j, b = a + 1, c = a + S + 1, d = c + 1; I.push(...(back ? [a, c, b, b, c, d] : [a, b, c, b, d, c])); } }
-    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(V, 3)); g.setIndex(I); g.computeVertexNormals(); put(g, (x, y, z, i) => C[i]); };
-  [[96, -2, 30, 17, 0.75, 0], [84, 8, 34, 16, 0.45, 0.5]].forEach((p) => [0, 1].forEach((b) => petals(...p, b)));
-
-  // ── chân kiết già: khối đùi phủ y, hai gối, hai cẳng chân bắt chéo, lòng bàn chân ngửa, gấu y quanh lòng
-  put(loft(rows([[16, 70, 36], [24, 92, 45], [36, 96, 48], [48, 90, 45], [57, 74, 37], [63, 46, 26], [66, 4, 4]], 16), 48, (p, a) => [p.x * Math.sin(a), p.y, 12 + p.z * Math.cos(a)]), ROBE);
-  [-1, 1].forEach((s) => put(ell(26, 12.5, 21, 77 * s, 33, 30), ROBE));
-  const shin = (t, d) => 10 * (1 - 0.3 * Math.abs(d.y));
-  put(tube([[-80, 42, 34], [-40, 50, 50], [8, 55, 47], [36, 57, 33]], shin, 14), ROBE);
-  put(tube([[80, 34, 36], [40, 40, 52], [-8, 44, 50], [-36, 46, 38]], (t, d) => 0.95 * shin(t, d), 14), ROBE);
-  put(ell(10, 7, 9.5, 36, 57, 33, 12, 8), ROBE); put(ell(9.5, 6.6, 9, -36, 46, 38, 12, 8), ROBE);   // bịt đầu ống cẳng chân
-  put(ell(15, 4.4, 8, 46, 60.5, 28), SKIN); put(ell(13, 4, 7, -46, 55, 34), SKIN);
-  put(tube(Array.from({ length: 11 }, (_, i) => { const t = -1.3 + (i / 10) * 2.6; return [94.5 * Math.sin(t), 26.5, 12 + 47 * Math.cos(t)]; }), 2, 30, 6), ROBE);
-
-  // ── thân: tiết diện elip, ngực và bụng nhô trước, vai xuôi vào cổ. Y phủ trái, vai và ngực phải để trần (mép y vắt chéo)
-  const TS = rows([[50, 50, 31], [70, 52, 30], [92, 53, 29], [112, 54, 29], [130, 55, 28], [143, 54, 26], [151, 49, 23], [158, 38, 19], [163, 24, 15], [167, 14, 12.5]], 30);
-  const bulge = (y) => 5 * Math.exp(-(((y - 128) / 18) ** 2)) + 3 * Math.exp(-(((y - 75) / 14) ** 2));
-  const surf = (a, y, out = 0) => { let i = 0; while (i < TS.length - 2 && TS[i + 1].y < y) i++; const A = TS[i], B = TS[i + 1], t = Math.min(1, Math.max(0, (y - A.y) / (B.y - A.y))), rx = A.x + (B.x - A.x) * t + out, rz = A.z + (B.z - A.z) * t + out;
-    return [rx * Math.sin(a), y, rz * Math.cos(a) + bulge(y) * Math.max(0, Math.cos(a)) ** 2 - 2]; };
-  const hem = (A) => 118 + 47 * Math.abs((A + Math.PI / 2) / 1.92) ** 2.4;
-  const bare = (x, y, z) => { let A = Math.atan2(x, z); if (A > 1.6) A -= 2 * Math.PI; return y > 165 || (A < 0.35 && A > -Math.PI - 0.35 && y > hem(A)); };
-  put(loft(TS, 48, (p, a) => surf(a, p.y)), (x, y, z) => (bare(x, y, z) ? SKIN : ROBE));
-  put(tube(Array.from({ length: 29 }, (_, i) => { const A = 0.35 - (i / 28) * (Math.PI + 0.7); return surf(A, hem(A), 0.8); }), 2.2, 56, 6), ROBE);
-  [16, 31, 46].forEach((k) => put(tube(Array.from({ length: 9 }, (_, i) => { const A = 0.35 - (i / 8) * 1.6; return surf(A, hem(A) - k, 0.4); }), 1.4, 20, 5), ROBE));
-
-  // ── tay: vai phải trần, tay trái trong ống y; hai bàn tay ngửa chồng trong lòng (phải trên trái), hai đầu ngón cái chạm nhau.
-  // Cẳng tay, bàn tay phải mang cờ aK.y = 1 để vertex shader xoay quanh khuỷu khi giơ ấn thuyết pháp.
-  put(ell(13, 10, 13, -45, 146, -1), SKIN); put(ell(15, 11, 15, 45, 146, -1), ROBE);
-  put(tube([[-48, 148, -2], [-58, 124, 0], ELBOW], (t) => 11.5 - 2.9 * t), SKIN); put(ell(8.6, 8.6, 8.6, ...ELBOW), SKIN);
-  put(tube([[48, 150, -2], [60, 124, 0], [64, 100, 6]], (t) => 13.5 - 2 * t), ROBE); put(ell(11, 11, 11, 64, 100, 6), ROBE);
-  put(tube([[64, 100, 6], [52, 80, 22], [24, 67, 30]], (t) => 11 - 3 * t), ROBE);
-  put(tube([[26, 67.5, 30], [18, 66.5, 30]], 6, 3, 10), SKIN); put(ell(12, 3.2, 7.5, 6, 66.5, 30.5), SKIN);
-  put(tube([[12, 68, 37], [5, 73, 38], [0, 74, 36]], 1.8, 8, 6), SKIN);
-  put(tube([ELBOW, [-50, 82, 20], WRIST], (t) => 8.4 - 1.9 * t), SKIN, 1);
-  put(ell(12, 3.4, 7.5, -10, 70.5, 31), SKIN, 1); [-4.6, -1.5, 1.6, 4.6].forEach((dz, i) => { put(tube([[-6, 72.6, 31 + dz], [5 - Math.abs(dz) * 0.5, 72.9, 31 + dz * 1.05]], 1.35, 4, 6), SKIN, 1); put(tube([[10, 68.6, 30.5 + dz], [-1 + Math.abs(dz) * 0.5, 68.8, 30.5 + dz * 1.05]], 1.3, 4, 6), SKIN); }); put(tube([[-12, 71.5, 37], [-5, 74.5, 38], [0, 74, 36]], 1.8, 8, 6), SKIN, 1);
-
-  // ── cổ ba ngấn, tai dài, đầu, tóc xoắn ốc, nhục kế, bạch hào
-  put(round([[158, 14.5], [168, 12.8], [186, 12]]), SKIN);
-  [170, 175].forEach((y) => { const g = new THREE.TorusGeometry(1, 0.045, 4, 40); g.rotateX(Math.PI / 2); g.scale(12.9, 12.9, 12.5); g.translate(0, y, 0.3); put(g, SKIN); });
-  [-1, 1].forEach((s) => { put(ell(2.8, 17, 7, 27.5 * s, 192, -2, 10, 12, 0.5 * s), SKIN); put(ell(3.8, 7, 5.6, 28 * s, 179, -0.5, 10, 8, 0.5 * s), SKIN); });
-  const hl = (z) => 0.36 - 0.38 * (1 - z), hd = new THREE.SphereGeometry(1, 64, 52), hp = hd.attributes.position, huv = [], hcol = [];
-  hd.rotateY(-Math.PI / 2);
-  for (let i = 0; i < hp.count; i++) { const r = Math.hypot(hp.getX(i), hp.getZ(i)), y = hp.getY(i), f = Math.atan2(hp.getX(i), hp.getZ(i)), f2 = f - 0.5 * Math.sin(f), x = r * Math.sin(f2), z = r * Math.cos(f2);
-    const w = S3(hl(z) - 0.04, hl(z) + 0.04, y), q = headAt(x, y, z, 1 - w), k = 1 + 0.035 * w;
-    hp.setXYZ(i, HC[0] + (q[0] - HC[0]) * k, HC[1] + (q[1] - HC[1]) * k, HC[2] + (q[2] - HC[2]) * k); huv.push(z > 0 ? [0.5 + 0.5 * x, 0.5 + 0.5 * y] : [0, 0]); hcol.push(mix(SKIN, HAIR, w)); }
-  hd.computeVertexNormals(); put(hd, (x, y, z, i) => hcol[i], 0, (i, U) => U.set(huv[i], i * 2));
-  const cb = new THREE.SphereGeometry(1, 8, 2, 0, Math.PI * 2, 0, Math.PI / 2), curls = [], qq = new THREE.Quaternion(), up = new V3(0, 1, 0), nn = new V3();
-  cb.scale(2.4, 1.7, 2.4);
-  const fib = (N, keep, at) => { for (let i = 0; i < N; i++) { const y = 1 - (2 * (i + 0.5)) / N, r = Math.sqrt(1 - y * y), t = i * 2.39996, x = r * Math.cos(t), z = r * Math.sin(t);
-    if (!keep(x, y, z)) continue; const [p, n] = at(x, y, z), g = cb.clone(); g.applyQuaternion(qq.setFromUnitVectors(up, n)); g.translate(...p); curls.push(g); } };
-  fib(330, (x, y, z) => y > hl(z) + 0.04, (x, y, z) => { const q = headAt(x, y, z, 0); return [q.map((v, i) => HC[i] + (v - HC[i]) * 1.03), nn.set(x / HR[0], y / HR[1], z / HR[2]).normalize()]; });
-  put(ell(13, 12.5, 13, 0, 238.5, -1, 20, 14), HAIR);
-  fib(120, (x, y) => y > -0.35, (x, y, z) => [[x * 13.4, 238.5 + y * 12.9, -1 + z * 13.4], nn.set(x, y, z)]);
-  put(mergeGeometries(curls), HAIR);
-  put(ell(3.6, 3.6, 3.6, 0, 253.5, -1, 12, 8), GOLD); put(ell(1.7, 1.7, 1.1, 0, 203, 29.3, 8, 6), [2.6, 2, 1.2, 1]);
-  return mergeGeometries(P);
-}
-
-// Nét mặt Tôn tượng (512², nền trắng = giữ màu vàng): mày cong dài, mắt khép nhìn xuống, cánh mũi, môi mỉm.
-// Tọa độ ảnh = (0,5 + x/2, 0,5 − y/2) trên mặt cầu đơn vị của đầu, khớp khối nặn trong headAt. st: { open: mở mắt, mouth: 0..1 }
-export function buddhaFace(st = {}) {
-  return canvasTex(512, 512, (g) => {
-    g.fillStyle = '#fff'; g.fillRect(0, 0, 512, 512); g.scale(2, 2); g.lineCap = 'round';
-    const L = (w, a, f) => { g.lineWidth = w; g.strokeStyle = `rgba(92,54,20,${a})`; g.beginPath(); f(); g.stroke(); };
-    [-1, 1].forEach((s) => { const cx = 128 + 46 * s, Q = (x0, y0, xc, yc, x1, y1) => { g.moveTo(cx + x0 * s, y0); g.quadraticCurveTo(cx + xc * s, yc, cx + x1 * s, y1); };
-      L(1.6, 0.42, () => Q(-21, 122, 0, 112, 22, 121));
-      if (st.open) { g.save(); g.beginPath(); Q(-15, 140, 0, 130, 16, 137); g.quadraticCurveTo(cx, 148, cx - 15 * s, 140); g.fillStyle = 'rgba(255,246,226,.55)'; g.fill(); g.clip();
-        g.fillStyle = 'rgba(78,46,18,.75)'; g.beginPath(); g.arc(cx + s, 140.5, 5.2, 0, 7); g.fill(); g.restore();
-        L(1.8, 0.75, () => Q(-15, 140, 0, 130, 16, 137)); L(1, 0.35, () => Q(-15, 140, 0, 148, 16, 137)); }
-      else { L(1.8, 0.78, () => Q(-15, 139, 0, 147, 16, 137)); L(1, 0.25, () => Q(-14, 133, 0, 128, 15, 131)); }
-      L(1.2, 0.35, () => Q(-4, 179, 2, 184, 6, 181)); });
-    L(1.8, 0.6, () => { g.moveTo(112, 204); g.quadraticCurveTo(128, 209, 144, 204); });
-    L(1, 0.2, () => { g.moveTo(115, 200); g.quadraticCurveTo(128, 197, 141, 200); });
-    L(1.2, 0.25, () => { g.moveTo(120, 213); g.quadraticCurveTo(128, 216, 136, 213); });
-    if (st.mouth > 0) { g.fillStyle = 'rgba(92,44,20,.6)'; g.beginPath(); g.ellipse(128, 205.5, 8 + 2.5 * st.mouth, 1 + 3.5 * st.mouth, 0, 0, 7); g.fill(); }
-  });
-}
-
-// Tượng hoàn chỉnh: vàng PBR (ánh môi trường lấy từ bầu trời), da bóng hơn y; tự sáng nhẹ và viền sáng Fresnel vượt 1 trong HDR nên
-// bloom tỏa quầng theo dáng tượng. arm(k): k = 0 tay ấn thiền định → 1 tay phải giơ ấn thuyết pháp (xoay cẳng tay quanh khuỷu trên GPU).
-// cheap (trình vẽ phần mềm): CPU tô từng điểm ảnh và tượng choán nhiều màn hình, PBR làm khung hình chậm ~15 % → dùng vật liệu không
-// chiếu sáng của three, tự tô khối bằng một đèn theo máy quay cộng viền sáng (không kéo thêm shader chiếu sáng nào vào gói).
-export function buildBuddha(cheap = false) {
-  const U = { uArm: { value: new THREE.Matrix3() }, uArmP: { value: new THREE.Vector3(...ELBOW) } }, o = { vertexColors: true, map: buddhaFace(), fog: false };
-  const m = cheap ? new THREE.MeshBasicMaterial(o) : new THREE.MeshStandardMaterial({ ...o, metalness: 0.55, roughness: 0.4 });
-  m.onBeforeCompile = (sh) => { Object.assign(sh.uniforms, U);
-    sh.vertexShader = 'attribute vec2 aK; uniform mat3 uArm; uniform vec3 uArmP; varying float vPol; varying vec3 vN;\n' + sh.vertexShader
-      .replace('#include <beginnormal_vertex>', '#include <beginnormal_vertex>\n if (aK.y > .5) objectNormal = uArm*objectNormal;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\n vPol = aK.x; vN = normalMatrix*(aK.y > .5 ? uArm*normal : normal); if (aK.y > .5) transformed = uArm*(transformed - uArmP) + uArmP;');
-    sh.fragmentShader = 'varying float vPol; varying vec3 vN;\n' + sh.fragmentShader
-      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = mix(.52, .3, vPol);')
-      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n { float f = 1. - abs(dot(normalize(vViewPosition), normal)); totalEmissiveRadiance += diffuseColor.rgb*(.15 + 1.2*f*f*f); }');
-    if (cheap) sh.fragmentShader = sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n { vec3 n = normalize(vN); diffuseColor.rgb *= .45 + .75*max(dot(n, vec3(.3, .55, .78)), 0.) + .9*pow(1. - abs(n.z), 3.); }'); };
-  const mesh = new THREE.Mesh(buddhaGeo(), m), E = U.uArmP.value, V = (...a) => new THREE.Vector3(...a);
-  // khung cẳng tay [hướng, pháp tuyến lòng bàn tay]: trong lòng (ngửa) → giơ trước ngực phải, lòng bàn tay hướng ra trước
-  const frame = (d, n) => { n.sub(d.clone().multiplyScalar(n.dot(d))).normalize(); return new THREE.Matrix4().makeBasis(d, n, d.clone().cross(n)); };
-  const qR = new THREE.Quaternion().setFromRotationMatrix(frame(V(12, 36, 24).normalize(), V(0, -0.2, 1)).multiply(frame(V(...WRIST).sub(E).normalize(), V(0, 1, 0)).transpose()));
-  const q = new THREE.Quaternion(), I = new THREE.Quaternion(), M = new THREE.Matrix4();
-  return { mesh, arm: (k) => { q.slerpQuaternions(I, qR, k); U.uArm.value.setFromMatrix4(M.makeRotationFromQuaternion(q)); } };
 }
 
 // Chùm lá (128², nền trong suốt): 'bodhi' lá hình tim đuôi nhọn có gân, 'gold' cùng dáng màu vàng, 'blossom' hoa anh đào

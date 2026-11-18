@@ -5,7 +5,7 @@ import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { buildRealm } from './realm.js';
 import { buildBirds } from './birds.js';
-import { NOISE, OUT, rng, puffAtlas, buildBuddha, buddhaFace, lodPair, UNI, moodMix, gfxBackend, tierOf, governor, hue } from './gfx.js';
+import { NOISE, OUT, rng, puffAtlas, buddhaTex, lodPair, UNI, moodMix, gfxBackend, tierOf, governor, hue } from './gfx.js';
 import { buildHome, buildNeighbor, bakeLocal, groundH, floorH, pvFloor, DECKS, STAIR, P, SX, SZ, HILL, POND } from './island.js';
 import { buildFigure, makeCrowd, defaultLook, suggestNames } from './people.js';
 
@@ -141,26 +141,36 @@ void main(){ vec3 d = normalize(vDir); float h = max(d.y,0.), mu = max(dot(d,uSu
   _clouds() {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(11000, 11000), new THREE.ShaderMaterial({ fog: false, uniforms: this.u,
       vertexShader: 'varying vec3 vW; void main(){ vec4 w = modelMatrix*vec4(position,1.); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }',
-      fragmentShader: `uniform float uTime,uJade,uCalm; uniform vec3 uCam,uSun,uCl,uSh,uHz,uSunC; varying vec3 vW; ${NOISE}
-float hgt(vec2 p){ p += .3*sin(p.yx*1.9+1.3); return fbm(p)*.55 + noise(p*2.7+31.)*.2 + noise(p*.33+7.)*.35; }
-void main(){ vec3 v = vW - uCam; float ds = length(v.xz); v = normalize(v);
- vec2 p = vW.xz*.0055 + vec2(uTime*.012*(1.-.75*uCalm), uTime*.0045);
- p += v.xz/max(-v.y,.16)*(hgt(p)-.5)*.06;
- float n = hgt(p), lit = clamp(.5 + (n - hgt(p + uSun.xz*.3))*3.2, 0., 1.), mu = max(dot(v,uSun),0.), thin = 1.-smoothstep(.35,.75,n), crest = smoothstep(.42,.72,n);
- vec3 col = mix(uSh*.92, uCl, smoothstep(.2,.9, lit*.42 + crest*.58));
- col = mix(col, uSunC, .2*lit);
- col = mix(col, col*uSunC*1.15, (1.-lit)*thin*.5);
- col += uSunC*pow(mu,5.)*(.1+.45*thin);
- col = mix(col, vec3(.78,.97,.93), uJade*.2);
- col = mix(col*1.16, uHz, 1.-exp(-ds*ds*1.4e-6)); float a = 1.; ${OUT} }` }));
+      fragmentShader: `uniform float uTime,uJade,uCalm;uniform vec3 uCam,uSun,uCl,uSh,uHz,uSunC;varying vec3 vW;${NOISE}
+float hgt(vec2 p){p+=.3*sin(p.yx*1.9+1.3);float s=0.,k=.5;vec2 q=p*1.3;
+for(int i=0;i<4;i++){s+=k*abs(noise(q)*2.-1.);q=q*2.05+17.;k*=.5;}
+return s*.62+noise(p*.33+7.)*.5-.1;}
+void main(){vec3 v=vW-uCam;float ds=length(v.xz);v=normalize(v);
+vec2 p=vW.xz*.0055+vec2(uTime*.012*(1.-.75*uCalm),uTime*.0045);
+p+=v.xz/max(-v.y,.16)*(hgt(p)-.5)*.07;
+float n=hgt(p),lit=clamp(.55+(n-hgt(p+uSun.xz*.08))*5.,0.,1.),mu=max(dot(v,uSun),0.),thin=1.-smoothstep(.3,.7,n),ao=smoothstep(.12,.7,n);
+float shade=smoothstep(1.3,.85,length((vW.xz+uSun.xz/max(uSun.y,.2)*18.)/vec2(34.,24.)));
+vec3 col=mix(uSh*.8,mix(uCl,uCl*uSunC*1.2,.3),clamp(lit*.7+ao*.45-.12,0.,1.)*(1.-.45*shade));
+col*=.8+.2*ao;
+col=mix(col,col*uSunC*1.15,(1.-lit)*thin*.4);
+col+=uSunC*pow(mu,5.)*(.1+.45*thin);
+col=mix(col,vec3(.78,.97,.93),uJade*.2);
+col=mix(col*1.08,uHz,1.-exp(-ds*ds*1.4e-6));float a=1.;${OUT}}` }));
     m.rotation.x = -Math.PI / 2; m.position.y = -6; m.renderOrder = 9; m.frustumCulled = false; this.scene.add(m);
   }
 
   _buddha() {
     const g = (this.budGroup = new THREE.Group()); g.position.set(BUD.x, BL, BUD.z); g.scale.setScalar(BS); this.scene.add(g);
-    // Tôn tượng tạc khối bằng vàng (gfx.buildBuddha): quay mặt về Đại Thiền Đường và Vân Đảo; nhìn từ các tầng hai bên thấy dáng nghiêng,
-    // từ cụm Vân Tọa sau lưng thấy lưng và nhục kế. Tay phải giơ ấn thuyết pháp bằng phép xoay trên GPU (budArm), không dựng lại hình.
-    const B = buildBuddha(this.soft); this.budFig = B.mesh; this.budArm = B.arm; this.budK = 0; g.add(this.budFig);
+    // Tôn tượng: tranh vẽ được nhuộm lại thành đồng cổ ấm (tối → nâu đồng, sáng → vàng đánh bóng) và viền sáng vàng ở mép hình
+    // (xấp xỉ Fresnel cho hình phẳng: càng sát mép, alpha láng giềng càng thiếu)
+    const bm = new THREE.MeshBasicMaterial({ map: buddhaTex(), alphaTest: 0.5, fog: false });
+    bm.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+{vec2 e=vec2(.014,.011);float rim=1.-.25*(texture2D(map,vMapUv+vec2(e.x,0.)).a+texture2D(map,vMapUv-vec2(e.x,0.)).a+texture2D(map,vMapUv+vec2(0.,e.y)).a+texture2D(map,vMapUv-vec2(0.,e.y)).a);
+float lum=dot(sampledDiffuseColor.rgb,vec3(.34));
+diffuseColor.rgb*=mix(vec3(.46,.25,.1),vec3(1.,.77,.42),smoothstep(.12,.85,lum));
+diffuseColor.rgb+=vec3(2.1,1.5,.62)*rim*rim*(.5+.5*vMapUv.y);}`); };
+    this.budFig = new THREE.Mesh(new THREE.PlaneGeometry(262, 328), bm);
+    this.budFig.position.set(0, 148, 0); g.add(this.budFig);
     const halo = new THREE.Mesh(new THREE.PlaneGeometry(1100, 1100), new THREE.ShaderMaterial({ transparent: true, depthWrite: false, fog: false, uniforms: this.u,
       vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }',
       fragmentShader: `uniform float uTime,uHalo,uRainbow,uHaloWhite; varying vec2 vUv;
@@ -173,7 +183,30 @@ void main(){ vec2 p = vUv*2.-1.; float r = length(p); float ang = atan(p.y,p.x);
  col = mix(col, c6*1.12, clamp(rays*uRainbow*0.9,0.,0.85));
  col = mix(col, vec3(1.0,1.04,1.16)*(0.62+0.55*glow), uHaloWhite*0.8);
  float a = clamp((glow*0.85 + rings*0.30)*min(uHalo,1.6) + rays*(0.16+0.26*uRainbow)*uHalo, 0., 1.)*smoothstep(1.0,0.8,r); ${OUT} }` }));
-    halo.position.set(0, 199, -40); halo.scale.setScalar(0.8); halo.renderOrder = -1; g.add(halo); this.halo = halo;
+    halo.position.set(0, 196, -14); halo.scale.setScalar(0.8); halo.renderOrder = -1; g.add(halo); this.halo = halo;
+    // Quanh Tôn tượng: mưa hoa (cánh hoa hồng nhạt xoay nhẹ, rơi chậm trước tượng; dày lên khi thuyết giảng) và hạt sáng vàng bay lên
+    // quanh thân tượng. Một hệ Points cộng sáng trên GPU (hoa luôn là đốm sáng, kể cả trước hào quang), cỡ hạt theo đơn vị thế giới (uPx);
+    // không chạm tới khuôn mặt tranh vẽ.
+    { const n = 300, p = new Float32Array(n * 3), sd = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) { const pet = i < 180, a = this.rnd() * 6.28, rr = pet ? 90 + this.rnd() * 290 : 60 + this.rnd() * 170;
+        p.set([BUD.x + Math.cos(a) * rr, 0, BUD.z + 70 + Math.sin(a) * rr * 0.55], i * 3); sd.set([this.rnd(), pet ? 0 : 1, this.rnd()], i * 3); }
+      const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(p, 3)); pg.setAttribute('aS', new THREE.BufferAttribute(sd, 3));
+      this.budFx = new THREE.Points(pg, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending, uniforms: { ...this.u, uRain: { value: 0.45 } },
+        vertexShader: `attribute vec3 aS;uniform float uTime,uPx,uRain;varying float vA,vK,vR;
+void main(){vec3 q=position;float pet=1.-aS.y,f;
+if(pet>.5){f=fract(uTime*.011*(.7+.6*aS.z)+aS.x*7.);q.y=${BL + 470}.-f*500.;q.x+=sin(uTime*.4+aS.z*30.)*16.*f;q.z+=cos(uTime*.31+aS.x*20.)*10.*f;
+vA=smoothstep(0.,.08,f)*smoothstep(1.,.85,f)*step(aS.x,uRain);}
+else{f=fract(uTime*.018*(.6+.8*aS.z)+aS.x);float an=uTime*.03+aS.x*6.283;q.xz=vec2(${BUD.x}.,${BUD.z}.)+(q.xz-vec2(${BUD.x}.,${BUD.z}.))*mat2(cos(an),sin(an),-sin(an),cos(an));
+q.y=${BL + 10}.+f*360.;vA=sin(f*3.1416)*(.55+.45*sin(uTime*2.3+aS.z*40.));}
+vec4 mv=viewMatrix*vec4(q,1.);gl_Position=projectionMatrix*mv;vK=pet;vR=aS.z*6.283+uTime*(.6+aS.z)*pet;
+gl_PointSize=mix(3.6,8.,pet)*projectionMatrix[1][1]*uPx/max(-mv.z,1.);}`,
+        fragmentShader: `uniform float uNight;varying float vA,vK,vR;
+void main(){vec2 c=gl_PointCoord-.5,q=mat2(cos(vR),sin(vR),-sin(vR),cos(vR))*c;float d;
+vec3 col;float a;
+if(vK>.5){d=length(q*vec2(1.,2.1))*2.;a=smoothstep(1.,.7,d)*(1.-.35*smoothstep(.05,.0,abs(q.x))*step(0.,q.y));col=mix(vec3(1.,.66,.76),vec3(1.,.9,.7),smoothstep(-.3,.3,q.y))*(.75-.3*uNight);}
+else{d=length(c)*2.;a=exp(-d*d*5.);col=vec3(1.9,1.5,.8);}
+a*=vA;${OUT}}` }));
+      this.budFx.frustumCulled = false; this.budFx.renderOrder = 6; this.scene.add(this.budFx); }
     this.waves = [];
     for (let i = 0; i < 4; i++) { const m = new THREE.Mesh(new THREE.RingGeometry(0.975, 1, 160), ADD(RGB(1.7, 1.4, 0.8), { opacity: 0, side: THREE.DoubleSide })); m.rotation.x = -Math.PI / 2; m.position.set(BUD.x, 7, BUD.z); m.renderOrder = 6; this.scene.add(m); this.waves.push(m); }
   }
@@ -289,30 +322,35 @@ void main(){ float k = clamp(uP*1.7 - aSeed*0.7, 0., 1.); k = k*k*(3.-2.*k); vec
     const ip = new Float32Array(n * 3), im = new Float32Array(n * 4);
     items.forEach((it, i) => { ip.set(it.slice(0, 3), i * 3); im.set(it.slice(3, 7), i * 4); });
     g.setAttribute('iPos', new THREE.InstancedBufferAttribute(ip, 3)); g.setAttribute('iMeta', new THREE.InstancedBufferAttribute(im, 4)); g.instanceCount = n;
-    // Mây tích dựng theo lô: thân mây lấy màu tâm trạng, mép mỏng hứng nắng thì rực viền bạc (tán xạ thuận), xa thì tan vào chân trời
+    // Mây tích dựng theo lô. Tấm mây mang pháp tuyến (gfx.puffAtlas) nên được chiếu sáng thật theo hướng mặt trời trong hệ máy quay:
+    // đỉnh hứng nắng ấm, đáy và mặt khuất ngả lam theo màu bóng của tâm trạng, mép mỏng rực viền bạc khi nhìn ngược nắng (tán xạ thuận).
+    // Chỗ tấm mây cắm xuống biển mây (y = −6) mờ dần theo độ cao nên không còn đường cắt thẳng; xa thì tan vào chân trời.
     const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, fog: false, uniforms: { ...this.u, uTex: { value: puffAtlas() } },
-      vertexShader: `attribute vec3 iPos; attribute vec4 iMeta; uniform float uTime,uMist; varying vec2 vUv; varying float vA; varying float vD; varying float vG; varying vec3 vC;
-void main(){ vec3 c = iPos; float g = iMeta.z, sd = iMeta.y; vG = g; vC = c;
- vec2 cell = vec2(mod(iMeta.w,2.), floor(iMeta.w/2.)); vUv = (vec2(sd > 0.5 ? uv.x : 1.-uv.x, uv.y) + cell)*0.5;
- float edge = 1.0;
- if (g < 0.5) { c.x = mod(c.x + uTime*0.9 + 1100., 2200.) - 1100.; edge = smoothstep(1100., 860., abs(c.x)); }
- else if (g > 6.5) { c.x = mod(c.x + uTime*(1.1 + sd*1.4) + 1300., 2600.) - 1300.; edge = smoothstep(1300., 1000., abs(c.x)); if (c.z < 300.) edge *= smoothstep(260., 560., abs(c.x)); }
- else c.x += sin(uTime*0.03+sd*6.28)*(g>3.5&&g<4.5?12.:0.6);
- c.y += sin(uTime*0.07+sd*12.)*(g<0.5 ? 1.3 : (g>6.5 ? 2.4 : (g>2.5&&g<4.5 ? 1.6 : 0.5)));
- vec4 mv = viewMatrix*vec4(c,1.);
- vec2 q = g<0.5 ? vec2(position.x*2.3, (position.y+0.40)*0.30) : (g>6.5 ? vec2(position.x*1.9, position.y*0.62) : (g>3.5&&g<4.5 ? vec2(position.x*1.5, position.y*0.62) : position.xy*1.12));
- mv.xy += q*iMeta.x*(1.+0.08*sin(uTime*0.11+sd*20.));
- gl_Position = projectionMatrix*mv; vD = -mv.z;
- vA = g<0.5 ? 0.72 : (g<1.5 ? uMist*0.42 : (g<2.5 ? 0.5 : (g<3.5 ? 0.82 : (g<4.5 ? 0.9 : (g<5.5 ? 0.75 : (g<6.5 ? 0.42 : 0.36)))))) * edge; }`,
-      fragmentShader: `uniform sampler2D uTex; uniform float uAmber,uNight; uniform vec3 uCam,uSun,uBud,uCl,uSh,uHz,uSunC; varying vec2 vUv; varying float vA; varying float vD; varying float vG; varying vec3 vC;
-void main(){ vec4 t = texture2D(uTex, vUv); vec3 dir = normalize(vC-uCam); float g = max(dot(dir, uBud), 0.), mu = max(dot(dir, uSun), 0.);
- vec3 col = mix(uSh, uCl, smoothstep(0.6,1.0,t.r))*1.14;
- col = mix(col, uSunC, 0.08 + 0.2*pow(g,4.));
- col += uSunC*(pow(g,8.)*0.3 + pow(mu,6.)*0.55)*(1.-t.a);
- col = mix(col, vec3(1.0,0.84,0.60), uAmber*0.2);
- bool lum5 = vG > 4.5 && vG < 6.5; if (lum5) col = mix(col, vec3(1.9,1.7,1.25)*(1.-.5*uNight), 0.85);
- float f = smoothstep(300., 2600., vD); col = mix(col, uHz, f*(lum5 ? 0.2 : 0.8));
- float a = t.a*t.a*(3.-2.*t.a)*vA*(1.-f*0.5)*smoothstep(1.,8.,vD)*(vG > 6.5 ? smoothstep(14.,90.,vD) : 1.); ${OUT} }` });
+      vertexShader: `attribute vec3 iPos;attribute vec4 iMeta;uniform float uTime,uMist;uniform vec3 uSun;varying vec2 vUv;varying float vA,vD,vG,vF,vY,vS,vB;varying vec3 vC,vL;
+void main(){vec3 c=iPos;float g=iMeta.z,sd=iMeta.y;vG=g;vC=c;
+vec2 cell=vec2(mod(iMeta.w,2.),floor(iMeta.w/2.));vUv=(vec2(sd>0.5?uv.x:1.-uv.x,uv.y)+cell)*0.5;vF=sd>0.5?1.:-1.;vL=normalize(mat3(viewMatrix)*uSun);vB=g>.5&&g<3.5?2.2:g>4.5&&g<5.5?1.:0.;
+float edge=1.0;
+if(g<0.5){c.x=mod(c.x+uTime*0.9+1100.,2200.)- 1100.;edge=smoothstep(1100.,860.,abs(c.x));}
+else if(g>6.5){c.x=mod(c.x+uTime*(1.1+sd*1.4)+1300.,2600.)- 1300.;edge=smoothstep(1300.,1000.,abs(c.x));if(c.z<300.)edge*=smoothstep(260.,560.,abs(c.x));}
+else c.x+=sin(uTime*0.03+sd*6.28)*(g>3.5&&g<4.5?12.:0.6);
+c.y+=sin(uTime*0.07+sd*12.)*(g<0.5?1.3:(g>6.5?2.4:(g>2.5&&g<4.5?1.6:0.5)));
+vec4 mv=viewMatrix*vec4(c,1.);
+vec2 q=g<0.5?vec2(position.x*2.3,(position.y+0.40)*0.30):(g>2.5&&g<3.5?vec2(position.x*1.9,position.y*0.5):g>6.5?vec2(position.x*1.9,position.y*0.62):(g>3.5&&g<4.5?vec2(position.x*1.5,position.y*0.62):position.xy*1.12));
+vec2 o=q*iMeta.x*(1.+0.08*sin(uTime*0.11+sd*20.));mv.xy+=o;vY=c.y+viewMatrix[1][0]*o.x+viewMatrix[1][1]*o.y;vS=iMeta.x*.16;
+gl_Position=projectionMatrix*mv;vD=-mv.z;
+vA=g<0.5?0.72:(g<1.5?uMist*0.42:(g<2.5?0.5:(g<3.5?0.82:(g<4.5?0.9:(g<5.5?0.75:(g<6.5?0.42:0.36))))))*edge;}`,
+      fragmentShader: `uniform sampler2D uTex;uniform float uAmber,uNight;uniform vec3 uCam,uSun,uBud,uCl,uSh,uHz,uSunC;varying vec2 vUv;varying float vA,vD,vG,vF,vY,vS,vB;varying vec3 vC,vL;
+void main(){vec4 t=texture2D(uTex,vUv,vB);vec3 dir=normalize(vC-uCam),n=vec3((t.rg*2.-1.)*vec2(vF,1.),0.);n.z=sqrt(max(1.-dot(n.xy,n.xy),0.));
+n=normalize(mix(n,vec3(0.,0.,1.),vB*.3));
+float g=max(dot(dir,uBud),0.),mu=max(dot(dir,uSun),0.),dif=clamp(dot(n,vL)*.5+.5,0.,1.),e=1.-t.b;
+vec3 col=mix(uSh*.96,mix(uCl,uCl*uSunC,.25)*1.12,clamp(.44+.5*dif+.14*n.y,0.,1.));
+col*=.9+.1*t.b;
+col=mix(col,uSunC,0.04+0.2*pow(g,4.));
+col+=uSunC*(pow(g,8.)*0.3+pow(mu,6.)*1.1+mu*mu*.2)*e*e;
+col=mix(col,vec3(1.0,0.84,0.60),uAmber*0.2);
+bool lum5=vG>4.5&&vG<6.5;if(lum5)col=mix(col,vec3(1.9,1.7,1.25)*(1.-.5*uNight),0.85);
+float f=smoothstep(300.,2600.,vD);col=mix(col,uHz,f*(lum5?0.2:0.8));
+float a=t.a*t.a*(3.-2.*t.a)*vA*(1.-f*0.5)*smoothstep(1.,8.,vD)*(vG>6.5?smoothstep(14.,90.,vD):1.)*smoothstep(0.,vS,vY+6.);${OUT}}` });
     this.puffs = new THREE.Mesh(g, mat); this.puffs.frustumCulled = false; this.puffs.renderOrder = 5; this.scene.add(this.puffs);
   }
 
@@ -322,6 +360,11 @@ void main(){ vec4 t = texture2D(uTex, vUv); vec3 dir = normalize(vC-uCam); float
     this.burstPts = new THREE.Points(g, new THREE.PointsMaterial({ color: RGB(2, 1.6, 0.9), size: 0.6, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false })); this.burstPts.frustumCulled = false; this.burstPts.visible = false; this.scene.add(this.burstPts);
     this.ride = new THREE.Mesh(new THREE.SphereGeometry(1.7, 14, 10), new THREE.MeshStandardMaterial({ color: '#fff', roughness: 1, emissive: '#fff4e0', emissiveIntensity: 0.6 })); this.ride.scale.y = 0.4; this.ride.visible = false; this.scene.add(this.ride);
     this.ring = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.62, 28), new THREE.MeshBasicMaterial({ color: RGB(1.8, 1.5, 0.8), transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide })); this.ring.rotation.x = -Math.PI / 2; this.scene.add(this.ring);
+    // Vầng sáng ấm dưới chỗ ngồi khi nhân vật tọa thiền, sáng lên và dịu xuống theo nhịp thở của thời thiền
+    this.aura = new THREE.Mesh(new THREE.CircleGeometry(1.8, 40), new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uK: { value: 0 } },
+      vertexShader: 'varying vec2 v; void main(){ v = position.xy/1.8; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }',
+      fragmentShader: `uniform float uK;varying vec2 v;void main(){float r=length(v);vec3 col=vec3(1.,.82,.5);float a=uK*exp(-r*r*5.)*(1.-r);${OUT}}` }));
+    this.aura.rotation.x = -Math.PI / 2; this.aura.renderOrder = 5; this.aura.visible = false; this.scene.add(this.aura);
     // Màn mây trước ống kính cho đoạn lướt vào cảnh (reveal): phủ kín rồi tan dần; ẩn hẳn khi uVeil về 0
     this.veil = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ transparent: true, depthTest: false, depthWrite: false, fog: false, uniforms: this.u,
       vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }',
@@ -356,14 +399,21 @@ void main(){ float n = fbm(vUv*vec2(3.,1.8) + vec2(uTime*.05, uVeil*.6)); vec3 c
       if (this.mobile) { b.nMips = 3; b.compositeMaterial.uniforms.bloomFactors.value = [1, 0.8, 0.6, 0, 0]; }
       // Lượt cuối có làm nét thích ứng độ tương phản (kiểu AMD CAS, 5 điểm lấy mẫu): nét mảnh như lá, viền áo, tóc xoắn rõ lại sau MSAA
       // và bloom; chỗ tương phản cao hoặc vượt 1 trong HDR (hào quang, mặt trời) thì tự giảm về 0 nên không có viền sáng giả.
+      // Sau tone mapping: chỉnh màu kiểu điện ảnh (đường cong chữ S nhẹ, vùng sáng ngả ấm, vùng tối ngả lạnh, tối góc khung) và nhiễu
+      // hạt ±0,5/255 (interleaved gradient noise) để dải màu trời và biển mây không bị phân bậc.
       this.out = new FullScreenQuad(new THREE.ShaderMaterial({ uniforms: { t: { value: this.rt.texture }, px: { value: new THREE.Vector2(1, 1) }, sh: { value: 0.16 } }, depthTest: false, depthWrite: false,
         vertexShader: 'varying vec2 v; void main(){ v = uv; gl_Position = vec4(position.xy, 0., 1.); }',
-        fragmentShader: `uniform sampler2D t; uniform vec2 px; uniform float sh; varying vec2 v;
-void main(){ vec3 c = texture2D(t, v).rgb, a = texture2D(t, v + vec2(0., px.y)).rgb, b = texture2D(t, v - vec2(0., px.y)).rgb, d = texture2D(t, v + vec2(px.x, 0.)).rgb, e = texture2D(t, v - vec2(px.x, 0.)).rgb;
- vec3 mn = min(c, min(min(a, b), min(d, e))), mx = max(c, max(max(a, b), max(d, e))), w = -sh*sqrt(clamp(min(mn, 1. - mx)/max(mx, 1e-4), 0., 1.));
- gl_FragColor = vec4(max((c + (a + b + d + e)*w)/(1. + 4.*w), 0.), 1.);
+        fragmentShader: `uniform sampler2D t;uniform vec2 px;uniform float sh;varying vec2 v;
+void main(){vec3 c=texture2D(t,v).rgb,a=texture2D(t,v+vec2(0.,px.y)).rgb,b=texture2D(t,v-vec2(0.,px.y)).rgb,d=texture2D(t,v+vec2(px.x,0.)).rgb,e=texture2D(t,v-vec2(px.x,0.)).rgb;
+vec3 mn=min(c,min(min(a,b),min(d,e))),mx=max(c,max(max(a,b),max(d,e))),w=-sh*sqrt(clamp(min(mn,1.-mx)/max(mx,1e-4),0.,1.));
+gl_FragColor=vec4(max((c+(a+b+d+e)*w)/(1.+4.*w),0.),1.);
 #include <tonemapping_fragment>
 #include <colorspace_fragment>
+{vec3 g=gl_FragColor.rgb;float l=dot(g,vec3(.2126,.7152,.0722));vec2 e=v-.5;
+g=mix(g,g*g*(3.-2.*g),.2);
+g+=vec3(.014,.005,-.012)*smoothstep(.5,1.,l)- vec3(.01,.002,-.012)*(1.-smoothstep(0.,.4,l));
+g*=1.-.34*dot(e,e);
+gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))))- .5)/255.;}
 }` }));
     } catch (e) { this.rt = null; }
   }
@@ -374,6 +424,7 @@ void main(){ vec3 c = texture2D(t, v).rgb, a = texture2D(t, v + vec2(0., px.y)).
     if (this.puff) { this.puff.geometry = this.puffGeos[q === 0 ? 0 : 1]; this.rays.count = q ? 10 : 5; this.home.grass.count = this.soft ? 600 : q ? 3000 : 1800; }   // trình vẽ phần mềm: CPU tô từng lá cỏ, chỉ giữ 600 bụi
     // §12.3 mục 5: đích hậu kỳ theo đúng độ phân giải động; bloom nửa độ phân giải trên điện thoại (ánh hào quang vốn mờ, khác biệt khó thấy)
     if (this.rt) { this.rt.setSize(w, h); this.bloom.setSize(Math.round(w * T.bloom), Math.round(h * T.bloom)); this.out.material.uniforms.px.value.set(1 / w, 1 / h); }
+    this.u.uPx.value = h / 2;
   }
   // Biên dịch trước shader của biến thể `q` (bóng đổ bật/tắt; qua bloom thì vẽ vào render target nên không tone mapping)
   _warm(q = this.quality) {
@@ -589,9 +640,9 @@ void main(){ vec3 c = texture2D(t, v).rgb, a = texture2D(t, v + vec2(0., px.y)).
     this._avatarStep(dt, s); this.realm.update(this.time, v.night);
     // Thuyết giảng: Tôn tượng mở mắt, cử động miệng, giơ ấn thuyết pháp; hội chúng chắp tay và đảnh lễ
     { const sm = s.sermon || { on: false, speak: 0, bow: 0, anjali: false };
-      if (sm.on && !this.budFrames) this.budFrames = [this.budFig.material.map, buddhaFace({ open: true }), buddhaFace({ open: true, mouth: 0.5 }), buddhaFace({ open: true, mouth: 1 })];
+      if (sm.on && !this.budFrames) this.budFrames = [this.budFig.material.map, buddhaTex({ open: true, hand: true }), buddhaTex({ open: true, hand: true, mouth: 0.5 }), buddhaTex({ open: true, hand: true, mouth: 1 })];
       if (this.budFrames) { const f = sm.on ? 1 + (sm.speak > 0.62 ? 2 : sm.speak > 0.22 ? 1 : 0) : 0; if (this.budFig.material.map !== this.budFrames[f]) this.budFig.material.map = this.budFrames[f]; }
-      { const k = this.budK + ((sm.on ? 1 : 0) - this.budK) * Math.min(1, dt * 1.6); if (Math.abs(k - this.budK) > 1e-4) { this.budK = k; this.budArm(k * k * (3 - 2 * k)); } }
+      { const R = this.budFx.material.uniforms.uRain; R.value += ((sm.on ? 1 : 0.45) - R.value) * Math.min(1, dt * 0.5); }   // mưa hoa dày dần khi thuyết giảng
       this.sBow = (this.sBow || 0) + ((sm.bow || 0) - (this.sBow || 0)) * Math.min(1, dt * 7);
       [this.hallCrowd, this.tierCrowd].forEach((c) => { if (c && c.userData.bow) { c.userData.bow.value = this.sBow; c.userData.setAnjali(!!sm.anjali); } });
       [this.hallFig, ...this.friends.map((f) => f.fig)].forEach((f) => f.bow(this.sBow)); }   // chỗ ngồi của mình và bạn đồng tu cúi lạy cùng hội chúng
@@ -603,6 +654,7 @@ void main(){ vec3 c = texture2D(t, v).rgb, a = texture2D(t, v + vec2(0., px.y)).
     // Nhân vật chi tiết ở xa chỉ còn vài điểm ảnh: bạn đồng tu quá 150/200/260 (theo mức) thì không vẽ; mức 0 cũng bỏ nhân vật của mình ở Đại Thiền Đường khi đứng xa
     this.friends.forEach((f) => { f.fig.group.visible = cam.distanceTo(f.pos) < [150, 200, 260][q]; }); this.hallFig.group.visible = q > 0 || cam.distanceTo(SEAT) < 300;
     u.uBud.value.set(BUD.x - cam.x, BUD_EYE - cam.y, BUD.z - cam.z).normalize();
+    this.budFig.lookAt(cam.x, BL + 148 * BS, cam.z);
     u.uNight.value = v.night; u.uAmber.value = v.amber; u.uJade.value = v.jade; u.uCalm.value = v.calm;
     // Tâm trạng ánh sáng: Trăng Thiền theo đêm của thời thiền, Hoàng Hôn Tím theo sắc hổ phách, Sương Sớm theo mốc «Niệm hơi thở mây»
     // (và phảng phất trong màn sương những ngày đầu hành trình), còn lại là Ngày Vàng
@@ -711,6 +763,7 @@ void main(){ vec3 c = texture2D(t, v).rgb, a = texture2D(t, v + vec2(0., px.y)).
     const base = this.look.height ? 1.9 * this.look.height : 1.9, bob = A.state === 'walk' ? 0.045 * Math.abs(Math.sin(A.phase)) : 0;
     g.position.set(A.pos.x, A.pos.y + bob + (A.where === 'home' ? io : 0), A.pos.z); g.rotation.y = A.rot; g.rotation.z = A.state === 'walk' ? 0.018 * Math.sin(A.phase) : 0;
     g.scale.set(base, base * (1 + 0.012 * s.breath * (this.fig.pose === 'sit' ? 1 : 0.5)), base);
+    { const K = this.aura.material.uniforms.uK, k = A.state === 'sit' && A.where === 'home' ? 0.5 + 0.35 * s.breath : 0; K.value += (k - K.value) * Math.min(1, dt * 2); this.aura.visible = K.value > 0.01; this.aura.position.set(A.pos.x, A.pos.y + 0.04, A.pos.z); }
     this.fig.walk(A.phase, A.state === 'walk' ? Math.min(1, A.speed / 3.3) : 0);   // kinh hành: gấu áo đưa theo từng bước
     if (this.mode === 'creator' && !this.tween) { const t = V(A.pos.x, g.position.y + (this.fig.pose === 'sit' ? 1.4 : 2.5), A.pos.z); this.controls.target.lerp(t, Math.min(1, dt * 4)); }
   }

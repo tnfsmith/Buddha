@@ -26,7 +26,7 @@ export const pathDist = (x, z) => Math.min(...PATH.map((s) => segD(x, z, s[0], s
 
 const U = UNI;   // uniform dùng chung với world.js (thời gian, màu tâm trạng)
 export const islandUniforms = U;
-const C = (h) => new THREE.Color(h);
+const C = (h) => new THREE.Color(h), TEA_SPOUT = new THREE.Vector3(0.3, 0.88, 0);
 
 // Địa hình một hòn đảo nổi: mặt trên theo hàm cao độ, vách đá lởm chởm thu nhỏ dần xuống dưới
 export function terrain({ sx, sz, M = 96, NT = 20, NS = 14, depth = 46, seed = 1, height, paint, phases }) {
@@ -294,7 +294,7 @@ export function buildHome() {
   stones.count = sn; stones.receiveShadow = true;
   // đá rải: hình tĩnh, gộp chung một lệnh vẽ với mọi khối đá rêu khác
   const rock = (geo, x, y, z, sx, sy, sz, ry = 0, rx = 0, rz = 0, p = G) => { const m = add(M(geo, MOSS, 0, x, y, z), p); m.scale.set(sx, sy, sz); m.rotation.set(rx, ry, rz); return m; };
-  ROCK1.forEach((geo) => scatter(18, 0.6, (x, z) => { const f = T.frac(x, z), s = 0.35 + r() * (f > 0.6 ? 1.3 : 0.6); rock(geo, x, groundH(x, z) + s * 0.2, z, s, s * 0.7, s, r() * 6, r(), r()); }));
+  ROCK.forEach((geo) => scatter(18, 0.6, (x, z) => { const f = T.frac(x, z), s = 0.35 + r() * (f > 0.6 ? 1.3 : 0.6); rock(geo, x, groundH(x, z) + s * 0.2, z, s, s * 0.7, s, r() * 6, r(), r()); }));
 
   // Đài Thiền: phiến đá phủ rêu vươn ra biển mây
   rock(ROCK[0], 26.5, 10.5, 2, 7.4, 1.5, 5.2);
@@ -319,9 +319,20 @@ export function buildHome() {
     add(M(BLOB[i % 2], MATTE, '#4f8a45', bx, 0.12, bz, 0), pu.flowers).scale.set(0.42, 0.3, 0.42);
     for (let k = 0; k < 3; k++) add(M(new THREE.SphereGeometry(0.1, 5, 4), MATTE, '#f3a9c2', bx + (k - 1) * 0.17, 0.4 + (k % 2) * 0.06, bz + (k % 2) * 0.14, 0), pu.flowers); }
   H.padPos = new THREE.Vector3(26.5, deckBase(DECKS[0]) + 0.62, 2);
+  // Lư hương: bát đồng ba chân, ba nén hương đầu đỏ cháy âm ỉ. Trả về đầu nén hương (tọa độ của nhóm cha) để đặt nguồn khói.
+  const burner = (p, x, y, z) => {
+    add(M(new THREE.LatheGeometry([[0.001, 0], [0.17, 0], [0.22, 0.05], [0.27, 0.14], [0.28, 0.25], [0.24, 0.3], [0.27, 0.33], [0.2, 0.33], [0.19, 0.28]].map(([a, b]) => new THREE.Vector2(a, b)), 18), MATTE, '#7c5c34', x, y + 0.08, z, 1), p);
+    for (let i = 0; i < 3; i++) { const a = i * 2.094; add(M(new THREE.CylinderGeometry(0.025, 0.035, 0.12, 5), MATTE, '#6a4c2a', x + Math.cos(a) * 0.17, y + 0.05, z + Math.sin(a) * 0.17, 0), p); }
+    for (let i = -1; i <= 1; i++) { const rz = i * 0.09; add(M(new THREE.CylinderGeometry(0.008, 0.008, 0.5, 4), MATTE, '#8a3b2a', x + i * 0.06, y + 0.55, z, 0), p).rotation.z = rz;
+      add(M(new THREE.SphereGeometry(0.016, 6, 4), LAMP, 0, x + i * 0.06 - Math.sin(rz) * 0.25, y + 0.55 + Math.cos(rz) * 0.25, z, 0), p); }
+    return new THREE.Vector3(x, y + 0.8, z);
+  };
+  pu.incense = add(new THREE.Group(), padDeck); const padTip = burner(pu.incense, 0, 0.6, -1.75).add(padDeck.position);   // trước chỗ ngồi, hướng về Tôn tượng
 
   // Tịnh Thất
   const pv = (H.pv = pavilion()); pv.group.position.set(HILL.x, groundH(HILL.x, HILL.z) - 0.35, HILL.z); pv.group.scale.setScalar(1.2); add(pv.group);
+  const altarG = add(new THREE.Group(), pv.group); altarG.position.set(0, 1.7, -1.62); altarG.scale.setScalar(0.7);   // trên bàn thờ, trước bài vị sáng
+  const altarTip = burner(altarG, 0, 0, 0).multiplyScalar(0.7).add(altarG.position).multiplyScalar(1.2).add(pv.group.position);
   { const fy = pvFloor(), list = [], posts = [], rough = [];
     for (let k = 0; k < 26; k++) { const z = STAIR.z0 + (k + 0.5) * STAIR.run, top = fy - (k + 1) * STAIR.rise, gy = groundH(STAIR.x, z); if (top < gy + 0.05) break;
       const hgt = top - gy + 0.9, bx = new THREE.BoxGeometry(STAIR.hw * 2, hgt, STAIR.run + 0.02); bx.translate(STAIR.x, top - hgt / 2, z); list.push(bx);
@@ -391,7 +402,21 @@ void main(){ vec3 p = position; float ph = aS.x*6.283, a, sz;
  vec4 mv = modelViewMatrix*vec4(p,1.); gl_PointSize = clamp(sz*60./-mv.z, 2.2, 14.); gl_Position = projectionMatrix*mv; vA = a; }`,
       fragmentShader: `varying float vA; void main(){ vec2 q = gl_PointCoord*2.-1.; vec3 col = vec3(1.75,1.45,.85); float a = exp(-dot(q,q)*4.5)*vA; ${OUT} }` }))); H.motes.frustumCulled = false; }
   H.fall = add(waterfall(2.0, 30)); H.fall.position.set(-8, groundH(-8, 17) - 0.9, 20.2); H.fall.rotation.y = 0.15;
-
+  // Khói hương (lư hương Đài Thiền, bàn thờ Tịnh Thất) và hơi trà bốc từ vòi ấm: một hệ Points trên GPU. Mỗi hạt bay lên, uốn lượn,
+  // nở dần rồi tan; màu theo mây của tâm trạng nên đêm tự tối lại. uOn = (hương Đài Thiền, hương bàn thờ, hơi trà) do evolve bật/tắt.
+  { const src = [[padTip, 0, 40], [altarTip, 1, 30], [padTip, 2, 18]], pos = [], sd = [];
+    src.forEach(([p, ty, n]) => { for (let i = 0; i < n; i++) { pos.push(p.x, p.y, p.z); sd.push(i / n, ty, r()); } });
+    const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); sg.setAttribute('aS', new THREE.Float32BufferAttribute(sd, 3));
+    H.smokeU = { uTime: U.uTime, uPx: U.uPx, uCl: U.uCl, uOn: { value: new THREE.Vector3(0, 1, 0) }, uTea: { value: new THREE.Vector3() } };
+    H.smoke = add(new THREE.Points(sg, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: H.smokeU,
+      vertexShader: `attribute vec3 aS;uniform float uTime,uPx;uniform vec3 uOn,uTea;varying float vA,vT;
+void main(){float ty=aS.y,tea=step(1.5,ty),f=fract(uTime*mix(.09,.28,tea)*(.85+.3*aS.z)+aS.x),sw=f*f*mix(.8,.28,tea);
+vec3 p=tea>.5?uTea:position;p.y+=f*mix(4.6,1.3,tea);p.x+=sin(uTime*.9+aS.z*20.+f*5.)*sw;p.z+=cos(uTime*.7+aS.z*13.+f*4.)*sw;
+vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;
+gl_PointSize=mix(.08+1.1*f,.14+.7*f,tea)*projectionMatrix[1][1]*uPx/max(-mv.z,.1);
+vA=smoothstep(0.,.08,f)*(1.-f)*(ty<.5?uOn.x:ty<1.5?uOn.y:uOn.z)*mix(.55,.5,tea);vT=tea;}`,
+      fragmentShader: `uniform vec3 uCl;varying float vA,vT;void main(){float d=length(gl_PointCoord-.5)*2.;vec3 col=uCl*mix(.88,1.02,vT);float a=(1.-smoothstep(.15,1.,d))*vA;${OUT}}` })));
+    H.smoke.frustumCulled = false; H.smoke.renderOrder = 4; }
   // Trà Đạo Tỉnh Thức
   const Tea = (H.tea = add(new THREE.Group())); Tea.position.set(7, deckBase(DECKS[1]) + 0.6, -8.5);
   { const dk = (H.teaDeck = deck(DECKS[1])); dk.position.set(0, -0.6, 0); Tea.add(dk); dk.userData.seat.visible = false; }
@@ -440,10 +465,11 @@ void main(){ float sp = 0.5 + 1.1*uFlow; float n = fbm(vec2(vUv.x*3.0, vUv.y*9.0
   H.evolve = (L, isl, time) => {
     const st = L < 0.14 ? 0 : L < 0.43 ? 1 : L < 0.71 ? 2 : L < 0.9 ? 3 : 4;
     DECKS[0].lv = st === 0 ? 0 : st === 1 ? 1 : 2; DECKS[0].seat = st === 0 ? 0.17 : st === 1 ? 0.22 : 0.16;
-    pu.lo.visible = st >= 1; pu.hi.visible = st >= 2; pu.seat.visible = st < 2; pu.seat.position.y = st === 0 ? 0.12 : 0.36; pu.zafu.visible = st >= 2; pu.rings.visible = pu.lamps.visible = st >= 3; pu.flowers.visible = st >= 2; pu.flowers.scale.setScalar(st >= 3 ? 1 : 0.6);
+    pu.lo.visible = st >= 1; pu.hi.visible = st >= 2; pu.seat.visible = st < 2; pu.seat.position.y = st === 0 ? 0.12 : 0.36; pu.zafu.visible = pu.incense.visible = st >= 2; pu.rings.visible = pu.lamps.visible = st >= 3; pu.flowers.visible = st >= 2; pu.flowers.scale.setScalar(st >= 3 ? 1 : 0.6);
     pu.glow.visible = st >= 4; pu.glowMat.opacity = 0.45 + 0.3 * Math.sin(time * 1.3);
     const tu = H.teaDeck.userData, ts = L < 0.5 ? 1 : L < 0.75 ? 2 : L < 0.9 ? 3 : 4; DECKS[1].lv = ts >= 2 ? 2 : 1; tu.hi.visible = ts >= 2; tu.rings.visible = ts >= 3; tu.glow.visible = ts >= 4; H.tea.position.y = deckBase(DECKS[1]) + (ts >= 2 ? 0.6 : 0.3); H.teaDeck.position.y = ts >= 2 ? -0.6 : -0.3;
     H.grow.value = L; H.stairRough.visible = L < 0.3; H.stairs.visible = L >= 0.3; H.stairPosts.visible = L >= 0.6;
+    H.smokeU.uOn.value.set(pu.incense.visible ? 1 : 0, 1, H.tea.visible ? 1 : 0); H.smokeU.uTea.value.copy(H.tea.position).add(TEA_SPOUT);
     LAMP.emissiveIntensity = 2 + 0.35 * Math.sin(time * 2.3) * Math.sin(time * 0.71);   // lõi đèn đá thở nhẹ
     const flow = Math.min(1, isl.water) * (0.25 + 0.75 * L); H.brook.material.uniforms.uFlow.value = flow; H.brook.visible = flow > 0.03; H.fall.visible = flow > 0.1; H.fall.scale.x = 0.25 + 0.75 * flow;
     return st;
@@ -453,7 +479,7 @@ void main(){ float sp = 0.5 + 1.1*uFlow; float n = fbm(vec2(vUv.x*3.0, vUv.y*9.0
   bakeLocal(tree.group, [tree.leaves]);
   bakeLocal(H.veil, [], [], { transparent: true }); bakeLocal(Gt, [H.veil], [], { transparent: true });
   bakeLocal(pv.group, [], [pv.mats.roof, pv.mats.wood, pv.altar.material]);
-  bakeLocal(pu.lamps); bakeLocal(pu.flowers); bakeLocal(Tea, [H.teaDeck]);
+  bakeLocal(pu.lamps); bakeLocal(pu.flowers); bakeLocal(pu.incense); bakeLocal(Tea, [H.teaDeck]);
   bakeLocal(G, [land, pv.group, padDeck, Tea, H.stairs, H.stairPosts, H.stairRough, tree.group, H.veil]);
   return H;
 }
