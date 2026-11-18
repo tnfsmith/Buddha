@@ -187,6 +187,7 @@ export class Voice {
 // ───────── Hiệu ứng âm của cảnh (không phải nhạc) ─────────
 // chime: chuông gió leng keng, lá reo và một làn ấm dâng khi hạt công đức chụp xuống ngọn Bồ-đề (k: độ lớn 0..1)
 // gift: ba tiếng ngân đi lên khi hạt Tùy Hỷ rời đôi tay · cloud: gió mây suốt chặng du vân (o.dur giây), ngân nhẹ lúc đi và lúc tới
+// summon: vân mây từ trời hạ xuống trước Vân Môn, gió lắng dần, hai tiếng ngân khi mây đậu · step: tiếng phồng nhẹ khi bước lên/xuống vân mây
 // Mọi đường bao về đúng 0; nhiễu lấy từ một bộ đệm cố định nên kiểm ngoại tuyến được (probeSfx).
 const NOISE = new WeakMap(), WIND = [1174.66, 1318.51, 1479.98, 1760, 1975.53, 2349.32, 2637.02];   // chuông gió: ngũ cung Rê, hai quãng tám
 const sfxNoise = (c) => NOISE.get(c) || NOISE.set(c, noiseBuf(c, 9)).get(c);
@@ -212,6 +213,11 @@ export function sfxVoice(ctx, dest, kind, t, o = {}) {
   } else if (kind === 'gift') {
     [0, 2, 4].forEach((d, i) => strike(ctx, dest, t + i * 0.13, WIND[d], 0.035, 1.5, pan + (i - 1) * 0.15));
     airy(ctx, panTo(ctx, dest, pan), t, t + 1.6, 'highpass', [[t, 2500]], 0.5, [[t + 0.25, 0.08], [t + 1.5, 0]], [0.5, 0.1]);
+  } else if (kind === 'summon') {
+    airy(ctx, panTo(ctx, dest, pan), t, t + 2.4, 'lowpass', [[t, 1400], [t + 1.7, 380]], 0.7, [[t + 0.5, 0.2], [t + 1.5, 0.12], [t + 2.3, 0]], [0.6, 0.2]);
+    strike(ctx, dest, t + 1.55, WIND[2], 0.03, 2, pan); strike(ctx, dest, t + 1.72, WIND[4], 0.028, 2.2, pan + 0.1);
+  } else if (kind === 'step') {
+    airy(ctx, panTo(ctx, dest, pan), t, t + 0.7, 'lowpass', [[t, 900], [t + 0.35, 280]], 0.6, [[t + 0.05, 0.16], [t + 0.6, 0]], [0, 0]); strike(ctx, dest, t + 0.04, WIND[0], 0.018, 1.2, pan);
   } else if (kind === 'cloud') {
     const dur = Math.max(3, o.dur || 8), end = t + dur, pn = ctx.createStereoPanner ? ctx.createStereoPanner() : null, out = pn || dest, at = (x) => t + dur * x;
     if (pn) { pn.pan.setValueAtTime(-0.35, t); pn.pan.linearRampToValueAtTime(0.35, end); pn.connect(dest); }

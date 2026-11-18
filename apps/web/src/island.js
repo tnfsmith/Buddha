@@ -498,17 +498,22 @@ void main(){ float sp = 0.5 + 1.1*uFlow; float n = fbm(vec2(vUv.x*3.0, vUv.y*9.0
 // ───────── Đảo láng giềng và đảo ở các tầng trên (world.js gộp tất cả bằng bakeLocal) ─────────
 const GLOW = (r, g, b, o) => new THREE.MeshBasicMaterial({ color: new THREE.Color(r, g, b), transparent: true, opacity: o, blending: o < 0.7 ? THREE.AdditiveBlending : THREE.NormalBlending, depthWrite: o > 0.7 });
 const NB_RING = GLOW(0.45, 1.5, 1.35, 0.5), NB_JADE = GLOW(0.35, 1.05, 0.85, 0.75), NB_LUX = new THREE.MeshStandardMaterial({ color: '#eef5ff', emissive: '#9fc8f0', emissiveIntensity: 0.9, roughness: 0.15, transparent: true, opacity: 0.9, side: THREE.DoubleSide });
-export function buildNeighbor(tier, seed, size, lv = -1) {
+export function buildNeighbor(tier, seed, size, lv = -1, gd = null) {
   // ba đảo đầu (seed ≤ 3) là đảo bạn đồng tu, có thể tới thăm nên giữ chi tiết; các đảo còn lại chỉ nhìn từ xa.
-  // lv ≥ 0: đảo bạn đồng tu, lv = tiến trình 0..1 trong hành trình 49 ngày của bạn ấy (#95): đảo lớn dần như Vân Đảo của mình
+  // lv ≥ 0: đảo bạn đồng tu, lv = tiến trình 0..1 trong hành trình 49 ngày của bạn ấy (#95): đảo lớn dần như Vân Đảo của mình.
+  // gd: hướng (hệ của đảo) về phía vân lộ tới: Vân Môn đón khách ở đó, bãi đáp vân mây giữa cổng và mép đảo
   const near = seed <= 3, fr = lv >= 0, S = size / 13, G = new THREE.Group(), r = rng(seed * 31 + tier), N = makeNoise(seed + 50), hf = (x, z) => 0.9 * N.fbm(x * 0.12, 1, z * 0.12, 2) * size * 0.18 + size * 0.06 * Math.exp(-(x * x + z * z) / (size * size * 0.25));
   const T = terrain({ sx: size, sz: size * (0.72 + r() * 0.2), M: near ? 32 : 28, NT: near ? 7 : 6, NS: near ? 6 : 5, depth: size * (1.3 + r() * 0.5), seed: seed + 3, height: hf });
   G.add(M(T.geo, terrainMat(), 0, 0, 0, 0, 0));
   const spot = (fmax) => { for (let k = 0; k < 40; k++) { const a = r() * 6.28, dd = Math.sqrt(r()) * fmax, x = size * dd * Math.cos(a), z = size * 0.8 * dd * Math.sin(a); if (T.frac(x, z) < fmax) return [x, hf(x, z), z]; } return [0, hf(0, 0), 0]; };
   const fc = fr ? spot(0.3) : null, used = fc ? [[fc[0], fc[2], 4]] : [], away = (fmax, rad = 1) => { let p; for (let k = 0; k < 16; k++) { p = spot(fmax); if (used.every(([x, z, q]) => Math.hypot(p[0] - x, p[2] - z) > (q + rad) * S)) break; } used.push([p[0], p[2], rad]); return p; };   // đồ vật tránh chỗ ngồi và tránh nhau
+  let gate = null, pad = null; if (fr && gd) { const at = (q) => { let d = 0; while (d < size * 1.3 && T.frac(gd[0] * d, gd[1] * d) < q) d += 0.25; return [gd[0] * d, gd[1] * d]; }, [gx, gz] = at(0.55), [px, pz] = at(0.84), Gt = new THREE.Group();
+    Gt.position.set(gx, hf(gx, gz), gz); Gt.rotation.y = Math.atan2(gd[0], gd[1]); G.add(Gt); gate = [gx, hf(gx, gz), gz]; pad = [px, hf(px, pz), pz]; used.push([gx, gz, 3], [px, pz, 2.2]);
+    [-1.9, 1.9].forEach((x) => Gt.add(M(new THREE.CylinderGeometry(0.4 * S, 0.55 * S, 2.6 * S, 7), MOSS, '#8f887c', x * S, 1.3 * S, 0, 1)));   // Vân Môn: hai trụ đá, vòm mây (ít mặt: ngân sách tam giác điện thoại)
+    for (let i = 0; i <= 4; i++) { const a = (i / 4) * Math.PI, m = M(new THREE.IcosahedronGeometry(1, 1), MATTE, '#f6f3ee', Math.cos(a) * 1.9 * S, (2.6 + Math.sin(a) * 1.5) * S, 0, 0); m.scale.setScalar((0.62 + 0.12 * Math.sin(i * 2)) * S); Gt.add(m); } }
   const nT = 2 + (seed % 2), kinds = tier === 2 ? ['gold'] : tier === 3 ? ['blossom'] : tier === 1 ? ['blossom', 'bodhi', 'pine'] : ['bodhi', 'pine', 'bodhi'];
-  for (let i = 0; i < nT; i++) { const b = fr && !i, [x, y, z] = spot(0.5), k = (0.75 + r() * 0.5) * S * (b ? 0.55 + 0.8 * lv : 1), kind = b ? 'bodhi' : kinds[(seed + i) % kinds.length];   // bạn đồng tu: cây Bồ-đề lớn dần theo tiến trình
-    const t = leafTree({ count: near ? (b ? 110 + Math.round(150 * lv) : 170) : 120, kind, radius: (kind === 'pine' ? 2.3 : 3.3) * k, trunkH: (kind === 'pine' ? 4.6 : 3.4) * k, seed: seed * 7 + i, far: true }); t.group.position.set(x, y - 0.2, z); G.add(t.group); if (fr) used.push([x, z, 1.5]); }
+  for (let i = 0; i < nT; i++) { const b = fr && !i, [x, y, z] = fr ? away(0.5, 1.5) : spot(0.5), k = (0.75 + r() * 0.5) * S * (b ? 0.55 + 0.8 * lv : 1), kind = b ? 'bodhi' : kinds[(seed + i) % kinds.length];   // bạn đồng tu: cây Bồ-đề lớn dần theo tiến trình
+    const t = leafTree({ count: near ? (b ? 110 + Math.round(150 * lv) : 170) : 120, kind, radius: (kind === 'pine' ? 2.3 : 3.3) * k, trunkH: (kind === 'pine' ? 4.6 : 3.4) * k, seed: seed * 7 + i, far: true }); t.group.position.set(x, y - 0.2, z); G.add(t.group); }
   for (let i = 0; i < 9; i++) { const [x, y, z] = spot(0.85), s = (0.35 + r() * 0.9) * S, m = M((near ? ROCK1 : ROCK0)[i % 3], MOSS, 0, x, y + s * 0.2, z, 0); m.scale.set(s, s * 0.7, s); m.rotation.y = r() * 6; G.add(m); }
   // Đảo bạn đồng tu mở dần theo ngày, cùng mốc với Vân Đảo của mình: ao ngọc có sen (ngày 8), bàn trà đá (15), đèn đá (22), lối đá bước (29), Bia nhỏ chữ sáng (40); am nhỏ từ ngày 30
   if (fr) { const d = lv * 49, cyl = (a, b, h, n) => new THREE.CylinderGeometry(a * S, b * S, h * S, n);
@@ -535,5 +540,5 @@ export function buildNeighbor(tier, seed, size, lv = -1) {
   const seats = []; const ns = 4 + Math.floor(r() * 4), [cx, , cz] = fc || spot(0.3), a0 = r() * 6.28;
   for (let i = 0; i < ns; i++) { const ring = i < 5 ? 0 : 1, a = a0 + i * 2.4, d = (2.6 + ring * 2.4 + r() * 0.8) * size / 13, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d * 0.9;
     if (T.frac(x, z) < 0.78) seats.push({ x, y: hf(x, z) + 0.02, z }); else { const [sx, sy, sz] = spot(0.6); seats.push({ x: sx, y: sy + 0.02, z: sz }); } }
-  return { group: G, seats, size, outline: T.outline, top: hf(0, 0) };
+  return { group: G, seats, size, outline: T.outline, top: hf(0, 0), hf, gate, pad };
 }
