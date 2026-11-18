@@ -386,9 +386,13 @@ float a=t.a*t.a*(3.-2.*t.a)*vA*(1.-f*0.5)*smoothstep(1.,8.,vD)*(vG>6.5?smoothste
   }
 
   _fx() {
-    const N = 90; this.burstPos = new Float32Array(N * 3).fill(-9999); this.burstList = [];
-    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(this.burstPos, 3));
-    this.burstPts = new THREE.Points(g, new THREE.PointsMaterial({ color: RGB(2, 1.6, 0.9), size: 0.6, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false })); this.burstPts.frustumCulled = false; this.burstPts.visible = false; this.scene.add(this.burstPts);
+    // Hạt công đức mềm: quầng sáng mềm có lõi, nhấp nháy nhẹ; vị trí tính trên CPU theo hành trình của từng đợt (_meritStep)
+    const N = 180, g = new THREE.BufferGeometry(); this.burstList = [];
+    [['position', 3], ['aC', 3], ['aA', 2]].forEach(([k, n]) => g.setAttribute(k, new THREE.BufferAttribute(new Float32Array(N * n), n)));
+    this.burstPts = new THREE.Points(g, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uPx: this.u.uPx },
+      vertexShader: 'attribute vec3 aC;attribute vec2 aA;uniform float uPx;varying vec3 vC;varying float vA;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;gl_PointSize=aA.y*projectionMatrix[1][1]*uPx/max(-mv.z,.1);vC=aC;vA=aA.x;}',
+      fragmentShader: `varying vec3 vC;varying float vA;void main(){float d=length(gl_PointCoord-.5)*2.;vec3 col=vC*2.2;float a=(exp(-d*d*9.)+.4*exp(-d*d*2.2))*max(1.-d*d,0.)*vA;${OUT}}` }));
+    this.burstPts.frustumCulled = false; this.burstPts.visible = false; this.scene.add(this.burstPts);
     this.ride = new THREE.Mesh(new THREE.SphereGeometry(1.7, 14, 10), new THREE.MeshStandardMaterial({ color: '#fff', roughness: 1, emissive: '#fff4e0', emissiveIntensity: 0.6 })); this.ride.scale.y = 0.4; this.ride.visible = false; this.scene.add(this.ride);
     this.ring = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.62, 28), new THREE.MeshBasicMaterial({ color: RGB(1.8, 1.5, 0.8), transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide })); this.ring.rotation.x = -Math.PI / 2; this.scene.add(this.ring);
     // Vầng sáng ấm dưới chỗ ngồi khi nhân vật tọa thiền, sáng lên và dịu xuống theo nhịp thở của thời thiền
@@ -501,13 +505,62 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     this.flyTo(p, t, this.portrait ? 64 : 58, 3.5); this.tween.glide = 1;
   }
 
-  // Hạt sáng: từ Bia Tích Lũy vào thân rồi thấm vào cây Bồ-đề, hoặc từ mình sang đảo bạn
-  burst(color = 0xffd98a, to = null) {
-    this.burstPts.material.color.set(color).multiplyScalar(2);
-    const io = this.home.group.position, from = to ? this.headPos() : this.home.stele.position.clone().add(V(0, 2.4, 0)).add(io), mid = to ? from.clone().lerp(to, 0.5).add(V(0, 14, 0)) : this.headPos(), end = to || this.home.tree.group.position.clone().add(V(0, 9, 0)).add(io);
-    this.burstList = []; for (let i = 0; i < 90; i++) this.burstList.push({ from, mid, to: end, t0: this.time + i * 0.018, j: V(this.rnd() - 0.5, this.rnd() - 0.5, this.rnd() - 0.5).multiplyScalar(2.4) });
+  // Tích lũy công đức (chủ dự án yêu cầu 18/11/2026). Hạt sáng bay vòng cung từ Bia Tích Lũy, chậm dần rồi đáp nhẹ xuống đầu
+  // nhân vật, lượn quanh vai rồi thấm vào; nhân vật ấm sáng lên (không hào quang sau đầu, AGENTS.md 1.6) và mỉm cười; hạt bay tiếp
+  // tới tán Bồ-đề, lượn quanh tán rồi tan: lá reo, lung linh, cây sáng và vươn lên một chút. k = tỉ lệ công đức (E / 22,5).
+  // Lần lớn (k ≥ 0,6, cách lần trước ≥ 15 giây, đang ở Vân Đảo) thì máy quay dõi theo vừa phải rồi quay nhanh về Bia Tích Lũy;
+  // các lần khác, hoặc lần đến khi đang có đợt lớn, chỉ có hạt sáng (gom vào đợt đang chạy, máy quay đứng yên).
+  burst(color = 0xffd98a, to = null, k = 0.5) {
+    const big = k >= 0.6 && this.time - (this.mcAt || -99) > 15 && (this.mode === 'island' || this.mode === 'zone') && !this.tween && (to || this.av.where === 'home'), n = Math.round(30 + 46 * Math.min(1, k));
+    const T = big ? [1.9, 0.75, 2.2] : [1.2, 0.35, 1.5], ev = { t0: this.time, c: new THREE.Color(color), to, T, n, sp: big ? 1.4 : 0.6, big };   // hạt tới rải rác, không dồn một chỗ
+    this.burstList.push(ev); this.burstList = this.burstList.slice(-3);
+    if (big) { this.mcAt = this.time; this._cine(ev); }
   }
-
+  // Tùy Hỷ: đứng thì quay về phía bạn, chắp tay; đang ngồi thiền thì giữ nguyên tư thế
+  rejoice(i) { const f = this.friends[i], A = this.av; if (!/walk|travel|sit/.test(A.state)) { A.rotTo = Math.atan2(f.pos.x - A.pos.x, f.pos.z - A.pos.z); this.fig.setPose('anjali'); A.hold = 2.8; A.state = 'idle'; } this.burst(0xbfeee4, f, 0.7); }
+  // Máy quay cho đợt lớn: khung nhìn vừa đủ thấy đường bay, dịch chậm theo hạt; không bay xa (nhiều lần tích lũy liên tiếp).
+  // Tùy Hỷ: bạn ở gần (đang thăm đảo bạn) thì khung cả hai rồi tới bạn; bạn ở đảo khác thì máy quay ở lại bên mình, nhìn hạt bay về phía đảo bạn
+  _cine(ev) {
+    const io = this.home.group.position, H = this.headPos(), st = this.home.stele.position.clone().add(io).add(V(0, 2, 0)), tr = this.home.tree.group.position.clone().add(io).add(V(0, 7, 0)), cam = this.camera.position;
+    // Khung ngang: nhìn ngang đường bay. Khung dọc (điện thoại) hẹp ngang nên đứng sau đầu bắt đầu, nhìn dọc theo đường bay: đầu gần ở dưới, đích ở trên
+    const side = (a, b, d, up = 3.5) => { const m = a.clone().lerp(b, 0.5), q = cam.clone().sub(m), L = a.distanceTo(b);
+      if (this.portrait && L > 1) { const k = a.clone().sub(b).setY(0).normalize(); return [a.clone().addScaledVector(k, 7).add(V(0, up + 2, 0)), a.clone().lerp(b, 0.6)]; }
+      q.y = 0; q.setLength(Math.max(d, L * 0.95)); return [m.clone().add(q).add(V(0, up, 0)), m]; };
+    const to = ev.to, F = to ? to.pos.clone().add(V(0, 2.6, 0)) : null, back = [[cam.clone(), this.controls.target.clone()], this.baseFov], c = ANCHORS.stele.cam;
+    let shots;
+    if (to) { const dir = F.clone().sub(H).setY(0).normalize(), fa = V(Math.sin(to.fig.group.rotation.y), 0, Math.cos(to.fig.group.rotation.y)), m = H.clone().lerp(F, 0.5);
+      let pp = V(dir.z, 0, -dir.x); if (pp.dot(cam.clone().sub(H)) < 0) pp.negate();
+      shots = H.distanceTo(F) < 25 ? [[0, [m.clone().addScaledVector(fa, 9).add(V(0, 3, 0)), m], 50], [2.0, [F.clone().addScaledVector(fa, 6.5).add(V(0, 1.5, 0)), F], 46], [4.2, ...back]]   // trước mặt bạn (hướng về Tôn tượng, thường trống)
+        : [[0, [H.clone().addScaledVector(pp, this.portrait ? 9.5 : 8).addScaledVector(dir, 3.5).add(V(0, 1.4, 0)), H.clone().addScaledVector(dir, this.portrait ? 0.6 : 3).add(V(0, -0.6, 0))], 48], [3.2, ...back]]; }   // bạn ở đảo khác: nhìn chéo trước mặt, thấy nụ cười và hạt rời tay bay đi
+    else shots = [[0, side(st, H, 9, 3), 50], [1.9, side(H, H, 6.5, 1.2), 46], [3.2, side(H, tr, 11, 4), 50], [5.1, side(tr, tr, 12, 2), 50], [7.3, [V(c[0][0], c[0][1] + io.y, c[0][2]), V(c[1][0], c[1][1] + io.y, c[1][2])], 48]];
+    ev.shots = shots.map(([t, [pp, tt], f], i) => ({ t, p: pp, q: tt, f, d: i ? (i === shots.length - 1 ? 0.8 : 1.1) : 0.9 }));
+  }
+  // Mỗi khung: vị trí từng hạt theo thời gian, độ sáng nhân vật/cây/bạn đồng tu, các cảnh máy quay
+  _meritStep() {
+    const io = this.home.group.position, P = this.burstPts.geometry.attributes, pos = P.position.array, col = P.aC.array, aa = P.aA.array, H = this.headPos(), t = this.time;
+    const st = this.home.stele.position.clone().add(io).add(V(0, 2.4, 0)), tr = this.home.tree.group.position.clone().add(io).add(V(0, 7.5, 0)), B = (a, b, c, e) => a.clone().lerp(b, e).lerp(b.clone().lerp(c, e), e);
+    const ez = (x) => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }, out = (x) => 1 - (1 - Math.max(0, Math.min(1, x))) ** 3, bump = (x, a, b, c) => ez((x - a) / (b - a)) * (1 - ez((x - b) / c));
+    let k = 0, glow = 0, joy = 0, fr = null, frG = 0;
+    this.burstList = this.burstList.filter((ev) => t - ev.t0 < Math.max(ev.sp + ev.T[0] + ev.T[1] + ev.T[2] + 1.2, ev.shots ? ev.shots[ev.shots.length - 1].t + 0.2 : 0));   // giữ tới cảnh quay cuối
+    this.burstList.forEach((ev, ei) => { const [a, b, c] = ev.T, el = t - ev.t0, half = ev.sp * 0.5, Fh = ev.to ? ev.to.pos.clone().add(V(0, 2.6, 0)) : null;
+      if (ev.to) { fr = ev.to; frG = Math.max(frG, bump(el, half + a - 0.2, half + a + 0.5, 1.8)); glow = Math.max(glow, 0.6 * bump(el, 0, 0.5, 1.3)); }   // Tùy Hỷ: mình ấm lên lúc gửi, bạn sáng lúc nhận
+      else { glow = Math.max(glow, (ev.big ? 1 : 0.55) * bump(el, half + a - 0.3, half + a + 0.4, 1.6)); joy = Math.max(joy, (ev.big ? 1 : 0.5) * bump(el, half + a + b + c - 0.4, half + a + b + c + 0.4, 2.2)); }
+      const G = ev.to ? Fh : H, sit = ev.to || this.fig.pose === 'sit', y0 = sit ? 0.25 : 0.35, dy = sit ? 0.75 : 1.15, far = ev.to && H.distanceTo(Fh) > 25;   // đáp quanh đỉnh đầu, rơi nhẹ xuống vai/ngực
+      for (let i = 0; i < ev.n && k < 180; i++, k++) { const s = ((i * 0.618034) % 1), ph = i * 2.39996 + ei, tau = el - s * ev.sp, j = V(Math.cos(ph), Math.sin(ph * 1.7) * 0.6, Math.sin(ph)); let q = null, al = 1, sz = 1;
+        const land = (u) => { const r = 0.7 + 0.1 * u, w = ph + u * 2.2; return G.clone().add(V(Math.cos(w) * r, y0 + 0.2 * j.y - dy * u, Math.sin(w) * r)); };
+        if (tau > 0 && tau < a) { const e = far ? ez(tau / a) ** 2 : out(tau / a), from = ev.to ? H.clone().add(V(0, this.fig.pose === 'sit' ? -0.8 : -1.2, 0)).addScaledVector(j, 0.3) : st.clone().addScaledVector(j, 0.7), end = land(0);   // bạn ở xa: hạt rời đôi tay chắp chậm rãi rồi mới bay đi
+          q = B(from, from.clone().lerp(end, 0.5).add(V(0, 3.5 + (ev.to ? from.distanceTo(end) * 0.12 : 0), 0)).addScaledVector(j, 1.2), end, e); al = ez(tau / 0.25) * (1 - 0.6 * ez((e - 0.5) / 0.5)); sz = 1 - 0.4 * e; }
+        else if (tau >= a && tau < a + b) { const u = (tau - a) / b; q = land(u); al = 0.4 * (1 - u) + (ev.to ? 0 : 0.15 * u); sz = 0.6 - 0.2 * u; }   // tỏa quanh vai rồi thấm vào người (không tụ thành vầng sau đầu)
+        else if (!ev.to && tau >= a + b && tau < a + b + c + 0.8) { const u = (tau - a - b) / c, from = land(1), end = tr.clone().addScaledVector(j, 3.2);
+          if (u < 1) { q = B(from, from.clone().lerp(end, 0.5).add(V(0, 3, 0)).addScaledVector(j, 1.5), end, ez(u)); al = 0.15 + 0.85 * ez(u * 2.5); sz = 0.45 + 0.55 * ez(u * 2); }
+          else { const v = (u - 1) * c / 0.8, w = ph + v * 4; q = tr.clone().add(V(Math.cos(w) * 3.2 * (1 - 0.5 * v), j.y * 2 + v, Math.sin(w) * 3.2 * (1 - 0.5 * v))); al = 1 - v; } }
+        if (q) { pos.set([q.x, q.y, q.z], k * 3); ev.c.toArray(col, k * 3); aa[k * 2] = al * (0.75 + 0.25 * Math.sin(t * 9 + ph)); aa[k * 2 + 1] = (ev.big ? 0.62 : 0.46) * (0.7 + 0.6 * s) * sz; } else aa[k * 2] = 0; }
+      if (ev.shots && !this.dir) { const sh = ev.shots.find((x) => !x.done && el >= x.t); if (sh) { sh.done = 1; if (this.touch < 1e17) this.flyTo(sh.p, sh.q, sh.f, sh.d); } } });
+    for (let i = k; i < 180; i++) aa[i * 2] = 0;
+    P.position.needsUpdate = P.aC.needsUpdate = P.aA.needsUpdate = true; this.burstPts.geometry.setDrawRange(0, k); this.burstPts.visible = k > 0;
+    this.fig.glow(glow); this.fig.smile(glow > 0.25); this.friends.forEach((f) => { f.fig.glow(f === fr ? frG : 0); f.fig.smile(f === fr && frG > 0.25); });
+    this.joy = (this.joy || 0) + (joy - (this.joy || 0)) * 0.2; UNI.uJoy.value = this.joy;
+  }
   // ───────── Đi lại ─────────
   // Chỗ không bước vào được: hồ, khối đồi Tịnh Thất (chỉ lên xuống theo bậc đá), mép đảo
   _blocked(px, pz) { const a = (px - POND.x) / (POND.rx + 0.5), b = (pz - POND.z) / (POND.rz + 0.5); return a * a + b * b < 1 || (Math.abs(px - HILL.x) < 8.4 && Math.abs(pz - HILL.z) < 6.4) || this.home.frac(px, pz) > 0.88; }
@@ -617,7 +670,6 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     const hit = this.ray.intersectObject(this.home.land, false)[0]; return hit && hit.face.normal.y > 0.6 ? hit.point : null;
   }
   greet(i) { const f = this.friends[i]; this.av.rotTo = Math.atan2(f.pos.x - this.av.pos.x, f.pos.z - this.av.pos.z); if (this.av.state !== 'walk' && this.av.state !== 'travel') { this.fig.setPose('anjali'); this.av.hold = 2.8; this.av.state = 'idle'; } f.fig.setPose('anjali'); f.fig.eyes(false); f.until = this.time + 3; }
-  rejoice(i) { const f = this.friends[i]; this.burst(0xbfeee4, f.pos.clone().add(V(0, 3, 0))); }
   visit(i, done) {
     if (this.av.state === 'travel') return; const f = this.friends[i], from = this.av.pos.clone();
     const pts = this.av.where === 'home' ? [from, V(22, groundH(17, 17) + 1, 22), ...this.bridges[i].getPoints(8)] : [from, ...this.bridges[this.av.where].getPoints(8).reverse(), V(22, groundH(17, 17) + 1, 22), P(13.5, 13.5)];
@@ -748,9 +800,9 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     const t4 = isl.tier >= 4 ? 1 : 0, kk = Math.min(1, dt * 2);
     u.uMist.value += ((t4 ? 1 : isl.mist) - u.uMist.value) * kk;
     H.group.position.y += ((t4 ? -7 : 0) - H.group.position.y) * Math.min(1, dt * 1.5);
-    const bs = 0.26 + 0.74 * isl.bodhi, tg = H.tree.group; tg.scale.setScalar(tg.scale.x + (bs - tg.scale.x) * kk); H.tree.leaves.count = Math.max(30, Math.floor(H.tree.count * Math.min(1, 0.12 + isl.bodhi)));
+    const bs = 0.26 + 0.74 * isl.bodhi, tg = H.tree.group, jy = this.joy || 0; this.treeS = (this.treeS || tg.scale.x) + (bs - (this.treeS || tg.scale.x)) * kk; tg.scale.setScalar(this.treeS * (1 + 0.06 * jy)); H.tree.leaves.count = Math.max(30, Math.floor(H.tree.count * Math.min(1, 0.12 + isl.bodhi + 0.12 * jy)));   // công đức vừa thấm: cây vươn lên, lá sum xuê hơn
     // hạt công đức vàng bay lên khắp đảo (nhiều dần theo tiến trình, rộ lên lúc hồi hướng), ánh lấp lánh tán Bồ-đề và mặt hồ: một hệ Points
-    H.motes.material.uniforms.uK.value.set((0.3 + 0.7 * isl.bodhi) * (1 + v.merit), (isl.tier >= 2 ? 1 : 0.6 * isl.gold) * (0.6 + 0.4 * Math.sin(this.time * 2)), isl.water > 0.3 ? isl.water * (1 - 0.3 * v.night) : 0, tg.scale.x);
+    H.motes.material.uniforms.uK.value.set((0.3 + 0.7 * isl.bodhi) * (1 + v.merit), (isl.tier >= 2 ? 1 : 0.6 * isl.gold) * (0.6 + 0.4 * Math.sin(this.time * 2)) + 1.3 * jy, isl.water > 0.3 ? isl.water * (1 - 0.3 * v.night) : 0, tg.scale.x);
     H.setLotus(isl.lotus, isl.goldCount);
     H.water.uniforms.uClar.value = isl.clarity; H.water.uniforms.uWater.value = isl.water; H.evolve(isl.lv === undefined ? 1 : isl.lv, isl, this.time); this._birds(dt);
     H.tea.visible = isl.tea; DECKS[1].on = !!isl.tea; H.veil.scale.setScalar(Math.max(0.001, 1 - isl.gate * (isl.open ? 1 : 0.35)));
@@ -762,12 +814,7 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     this.ring.material.opacity = Math.max(0, this.ring.material.opacity - dt * 0.7); this.ring.scale.setScalar(1 + (0.9 - this.ring.material.opacity) * 1.2);
     this.friends.forEach((f) => { if (f.until && this.time > f.until) { f.until = 0; f.fig.setPose('sit'); } f.fig.group.scale.y = f.fig.group.scale.x * (1 + 0.012 * s.breath); });
 
-    if (this.burstList.length) { let alive = false;
-      this.burstList.forEach((b, i) => { const k = (this.time - b.t0) / 2.6; let p = null;
-        if (k >= 0 && k <= 1) { const a = k < 0.5 ? b.from : b.mid, c = k < 0.5 ? b.mid : b.to, q2 = (k < 0.5 ? k : k - 0.5) * 2, e = ease(q2); p = a.clone().lerp(c, e).addScaledVector(b.j, Math.sin(q2 * Math.PI)); p.y += Math.sin(q2 * Math.PI) * 2.5; }
-        if (k <= 1) alive = true; this.burstPos.set(p ? [p.x, p.y, p.z] : [0, -9999, 0], i * 3); });
-      this.burstPts.geometry.attributes.position.needsUpdate = true; if (!alive) this.burstList = []; }
-    this.burstPts.visible = this.burstList.length > 0;
+    this._meritStep();
     // vật liệu cộng sáng đang tắt (độ mờ 0) thì bỏ hẳn lượt vẽ: các cột sáng tốn tô điểm ảnh dù không thấy
     [this.pillarMat, this.filaMat, this.homeLbMat, this.ring.material].forEach((m) => { m.visible = m.opacity > 0.003; });
     if (document.hidden || this.hold) return;   // tab ẩn, hoặc đang chờ shader của mức chất lượng mới: không vẽ

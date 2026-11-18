@@ -476,7 +476,7 @@ panel.addEventListener('click', (e) => {
   if (act !== 'reset') U.resetArm = false;
   if (act.startsWith('acct-')) return accountAct(act.slice(5), b);   // T2.3: Giữ hành trình, Tài khoản (ui/account.js)
   if (act === 'nv-jump') { const t = panel.querySelector('#' + b.dataset.to); if (t) t.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
-  if (act.startsWith('nv-')) { const msg = soNhapAct(act, b, S, today()); save(); if (msg) { toast(msg); if (world && /cánh sen|Đã giữ|thọ trì|giữ nguyện/.test(msg)) world.burst(0xf3d27a); } render(); return; }   // đợt C (#91): ui/so-nhap.js
+  if (act.startsWith('nv-')) { const msg = soNhapAct(act, b, S, today()); save(); if (msg) { toast(msg); if (world && /cánh sen|Đã giữ|thọ trì|giữ nguyện/.test(msg)) world.burst(0xf3d27a, null, 0.7); } render(); return; }   // đợt C (#91): ui/so-nhap.js
   if (['board', 'sit', 'visit'].includes(act) && meditating()) return move(() => { const again = panel.querySelector('[data-act="' + act + '"]'); if (again) again.click(); });
   if (act === 'kuti-sit') { const sat = () => { world.setFace(S.kface || 0); savePos(); U.sit = { at: Date.now(), zone: 'kuti' }; toast('Đã an tọa tại Tịnh Thất.'); render(); };
     if (world) { if (world.av.state === 'sit' && world.av.id === 'kuti') sat(); else world.goZone('kuti', sat); } return; }
@@ -507,14 +507,14 @@ panel.addEventListener('click', (e) => {
   else if (act === 'visit') { const i = U.friend; world.setMode('island'); world.visit(i, () => { toast('Đã đến đảo của ' + world.friends[i].name + '.'); world.greet(i); render(); }); toast('Du vân theo vân lộ…'); }
   else if (act === 'gohome') { world.goHome(() => { toast('Đã về Vân Đảo của mình.'); U.view = 'home'; world.setMode('island'); render(); }); toast('Du vân trở về…'); }
   else if (act === 'sitwith') { world.fig.setPose('sit'); world.av.state = 'sit'; world.av.rotTo = Math.atan2(-world.av.pos.x, -760 - world.av.pos.z); if (!player.playing) togglePlay(); U.sit = { at: Date.now(), zone: null }; toast('Hai người cùng an tọa, hướng về Tôn tượng.'); }
-  else if (act === 'sacca') { S.sacca++; save(); record('sacca.add'); if (world) world.burst(0xbfeee4); toast('Thành thật nhận lỗi và nguyện phòng hộ ngày mai: mặt hồ trong trở lại.'); }
+  else if (act === 'sacca') { S.sacca++; save(); record('sacca.add'); if (world) world.burst(0xbfeee4, null, 0.5); toast('Thành thật nhận lỗi và nguyện phòng hộ ngày mai: mặt hồ trong trở lại.'); }
   else if (act === 'reset') { if (U.resetArm) { const keep = { name: S.name, look: S.look }; resetState(keep); save(); record('journey.reset_cycle'); U.resetArm = false; toast('Đã trở về ngày 1.'); } else U.resetArm = true; }
   else if (act === 'confirm') {
     const card = b.closest('.task'), key = card.dataset.p, c = readCard(card), E = kusala(c);
     S.done[S.day] = S.done[S.day] || {}; S.done[S.day][key] = { E, ...c, at: Date.now() };
     S.totals[key] = Math.round((S.totals[key] + E) * 100) / 100; S.lastDate = today(); if (S.day === 49 && allDone(49)) S.completed = true; save();
     record('kusala.confirm', { day: S.day, pillar: key, pre: c.pre, during: c.during, post: c.post, wise: c.wise, self: c.self });   // ghi chú quán chiếu không gửi lên
-    const p = PILLARS.find((x) => x.key === key); if (world) world.burst(new THREE.Color(p.color).lerp(new THREE.Color('#ffe7a8'), 0.5).getHex());
+    const p = PILLARS.find((x) => x.key === key); if (world) world.burst(new THREE.Color(p.color).lerp(new THREE.Color('#ffe7a8'), 0.5).getHex(), null, E / 22.5);   // tỉ lệ so với mức Kusala tối đa: lớn thì có máy quay dõi theo
     toast(`+${E.toFixed(2)} ${p.name}: hạt sáng thấm vào cội Bồ-đề`);
   }
   render();

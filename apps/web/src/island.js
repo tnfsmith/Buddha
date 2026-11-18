@@ -185,10 +185,13 @@ const QUAD = new THREE.PlaneGeometry(1.5, 1.5), LEAF = {};
 function leafMat(kind) {
   if (LEAF[kind]) return LEAF[kind];
   const tex = leafTex(kind), m = new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.85 });
-  m.onBeforeCompile = (sh) => { sh.uniforms.uTime = U.uTime;
-    sh.vertexShader = 'attribute vec3 aC; uniform float uTime;\n' + sh.vertexShader
+  const J = kind === 'bodhi';   // cây Bồ-đề: lá reo và lung linh khi công đức thấm vào (UNI.uJoy)
+  m.onBeforeCompile = (sh) => { sh.uniforms.uTime = U.uTime; sh.uniforms.uJoy = U.uJoy;
+    if (J) sh.fragmentShader = 'uniform float uJoy;\n' + sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance+=diffuseColor.rgb*uJoy*(.35+.4*sin(vViewPosition.x*3.+vViewPosition.y*2.));');
+    sh.vertexShader = 'attribute vec3 aC; uniform float uTime, uJoy;\n' + sh.vertexShader
       .replace('#include <defaultnormal_vertex>', 'vec3 ic = (instanceMatrix * vec4(0.,0.,0.,1.)).xyz; vec3 transformedNormal = normalMatrix * normalize(ic - aC + vec3(0.,1.2,0.));')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\n float gust = .5 + .5*sin(uTime*.4 + ic.x*.12 + ic.z*.08); transformed.x += sin(uTime*1.3 + ic.x*.6 + ic.y*.4)*(.05 + .11*gust); transformed.y += cos(uTime*.95 + ic.z*.7)*(.03 + .05*gust);'); };
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\n float gust = .5 + .5*sin(uTime*.4 + ic.x*.12 + ic.z*.08); transformed.x += sin(uTime*1.3 + ic.x*.6 + ic.y*.4)*(.05 + .11*gust)' + (J ? '*(1.+2.*uJoy) + sin(uTime*7. + ic.y*3.)*.06*uJoy' : '') + '; transformed.y += cos(uTime*.95 + ic.z*.7)*(.03 + .05*gust);');
+  m.customProgramCacheKey = () => kind; };
   m.userData.depth = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: tex, alphaTest: 0.5 });
   return (LEAF[kind] = m);
 }
