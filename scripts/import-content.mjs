@@ -3,16 +3,23 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
-import { readContentRows, contentSql } from './content-data.mjs';
+import { readContentRows, contentSql, checkVariantCoverage } from './content-data.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 try {
-  const { values } = parseArgs({ options: { env: { type: 'string' }, remote: { type: 'boolean' }, local: { type: 'boolean' }, check: { type: 'boolean' } } });
-  const { remote, local, env: target, check } = values;
-  if ((remote && local) || (check && (remote || local)) || (target && !['staging', 'production'].includes(target)) || ((remote || local) && !target)) throw new Error('Dùng --check hoặc --env staging|production --local|--remote');
+  const { values } = parseArgs({ options: {
+    env: { type: 'string' }, remote: { type: 'boolean' }, local: { type: 'boolean' },
+    check: { type: 'boolean' }, 'check-variants-ready': { type: 'boolean' },
+  } });
+  const { remote, local, env: target, check, 'check-variants-ready': variantsReady } = values;
+  if ((remote && local) || ((check || variantsReady) && (remote || local)) || (target && !['staging', 'production'].includes(target)) || ((remote || local) && !target)) {
+    throw new Error('Dùng --check, --check-variants-ready hoặc --env staging|production --local|--remote');
+  }
   const rows = readContentRows(join(root, 'content'));
+  if (variantsReady) checkVariantCoverage(rows);
   const approved = rows.filter(x => x.status === 'da_duyet');
-  console.log(`content: ${approved.length} mục da_duyet (${approved.filter(x => x.kind === 'bai_giang').length} bài giảng, ${approved.filter(x => x.kind === 'nhiem_vu').length} nhiệm vụ), ${rows.length - approved.length} phiên bản ngung.`);
+  console.log(`content: ${approved.length} mục da_duyet (${approved.filter(x => x.kind === 'bai_giang').length} bài giảng, ${approved.filter(x => x.kind === 'nhiem_vu').length} nhiệm vụ, ${approved.filter(x => x.kind === 'chuong_trinh').length} biến thể), ${rows.length - approved.length} phiên bản ngung.`);
+  if (variantsReady) console.log('Đủ biến thể công khai để nghiệm thu bộ chọn.');
   if ((remote || local) && rows.length) {
     const scratch = join(root, '.wrangler');
     await mkdir(scratch, { recursive: true });
