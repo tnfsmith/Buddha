@@ -443,7 +443,7 @@ vA=smoothstep(0.,.08,f)*(1.-f)*(ty<.5?uOn.x:ty<1.5?uOn.y:uOn.z)*mix(.55,.5,tea);
     [[0.5, 4.3, 0, 1.7], [-0.9, 3.3, 0.5, 1.2], [1.4, 3.0, -0.3, 1.1], [0.1, 5.0, -0.5, 1.0]].forEach(([x, y, z, k], i) => add(M(BLOB[i % 2], MATTE, '#3d6b45', 5.2 + x, y - 0.7, z - 2.4, 1), Tea).scale.set(k, k * 0.32, k)); }
 
   // Cổng Vân Môn
-  const Gt = (H.gate = add(new THREE.Group())); Gt.position.copy(P(15.5, 15.5)); Gt.rotation.y = -Math.PI / 4;
+  const Gt = (H.gate = add(new THREE.Group())); Gt.position.copy(P(15.5, 15.5)); Gt.rotation.y = Math.PI / 4;   // mặt cổng hướng ra ngoài (về phía vân lộ), hai trụ hai bên lối đi
   [-2.3, 2.3].forEach((x, i) => rock(ROCK[i + 1], x, 1.6, 0, 0.75, 2.5, 0.75, 0, 0, 0, Gt));
   H.cloudMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, transparent: true, opacity: 0.94, emissive: '#fff4e0', emissiveIntensity: 0.55 });
   for (let i = 0; i <= 8; i++) { const a = (i / 8) * Math.PI; add(M(BLOB[i % 2], H.cloudMat, 0, Math.cos(a) * 2.3, 2.5 + Math.sin(a) * 2.2, 0, 0), Gt).scale.setScalar(0.62 + 0.2 * Math.sin(i * 2)); }
