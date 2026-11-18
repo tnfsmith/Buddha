@@ -34,19 +34,27 @@ test('hạt công đức: chuông gió đúng lúc chạm ngọn cây, lần nh�
   expect(r.land).toHaveLength(1); expect(r.land[0]).toBeGreaterThan(3.9); expect(r.land[0]).toBeLessThan(4.2);
 });
 
-test('du vân sang đảo bạn: gió mây cả chặng, máy quay bám gần theo nhân vật, tới nơi khung cả hai', async ({ page }) => {
+test('du vân sang đảo bạn: gió mây, máy quay bám gần và cao; bạn đứng dậy đón, mỉm cười, quay về phía khách; khách về thì chắp tay tiễn rồi ngồi lại', async ({ page }) => {
   test.setTimeout(240_000);
   await page.goto(url('q=0&snap=1')); await ready(page);
   const r = await page.evaluate(() => {
-    const W = window.__app.world, A = W.av, log = [], dist = []; W.onSfx = (kind, o) => log.push([kind, o.dur]); W.setMode('island'); W.touch = 0;
-    const d0 = +W.camera.position.distanceTo(W.headPos()).toFixed(1); W.visit(0, () => {});
-    for (let i = 0; i < 400 && A.state === 'travel'; i++) { W._avatarStep(0.05, { breath: 0 }); W.controls.update(); if (i % 20 === 19 && A.state === 'travel') dist.push(+W.camera.position.distanceTo(W.ride.position).toFixed(1)); }
-    return { log, d0, dist, where: A.where, tween: !!W.tween };
+    const W = window.__app.world, A = W.av, f = W.friends[0], log = [], dist = [], up = []; W.onSfx = (kind, o) => log.push([kind, o.dur]); W.setMode('island'); W.touch = 0;
+    const step = () => { W._avatarStep(0.05, { breath: 0 }); W._friendStep(0.05); W.time += 0.05; W._meritStep(0.05); W.controls.update(); };
+    W.visit(0, () => W.greet(0)); let stood = null;
+    for (let i = 0; i < 400 && A.state === 'travel'; i++) { step(); if (stood === null && f.host) stood = +A.k.toFixed(2); if (i % 20 === 19 && A.state === 'travel' && A.k < 0.8) { dist.push(+W.camera.position.distanceTo(W.ride.position).toFixed(1)); up.push(+(W.camera.position.y - W.ride.position.y).toFixed(1)); } }
+    const tween = !!W.tween; for (let i = 0; i < 80; i++) step();   // chào xong, đứng chờ
+    const face = Math.atan2(A.pos.x - f.pos.x, A.pos.z - f.pos.z) - f.fig.group.rotation.y, meet = { host: f.host, pose: f.fig.pose, smile: !!f.fig.joy, turn: +Math.abs(Math.atan2(Math.sin(face), Math.cos(face))).toFixed(2) };
+    W.goHome(() => {}); step(); const bye = f.fig.pose; for (let i = 0; i < 60; i++) step();
+    return { log, dist, up, where: 0, stood, tween, meet, bye, after: f.fig.pose, others: W.friends.slice(1).map((x) => x.fig.pose) };
   });
-  expect(r.log).toEqual([['cloud', 8.5]]);
-  expect(r.where).toBe(0);
-  // sau 2 giây đầu (máy quay sà lại từ toàn cảnh), máy quay luôn trong khoảng 10–32 đơn vị quanh nhân vật
-  const mid = r.dist.slice(2); expect(mid.length).toBeGreaterThan(4);
-  for (const d of mid) { expect(d).toBeGreaterThan(10); expect(d).toBeLessThan(32); }
-  expect(r.tween, 'tới nơi: bay tới khung cả hai').toBe(true);
+  expect(r.log[0]).toEqual(['cloud', 8.5]);
+  expect(r.stood, 'bạn đứng dậy trước khi khách tới').toBeGreaterThan(0.7); expect(r.stood).toBeLessThan(0.8);
+  // sau 2 giây đầu (máy quay sà lại từ toàn cảnh): gần (≤ 22) và cao hơn nhân vật để không bị đảo khác che
+  const mid = r.dist.slice(2); expect(mid.length).toBeGreaterThan(3);
+  for (const d of mid) { expect(d).toBeGreaterThan(8); expect(d).toBeLessThan(22); }
+  for (const h of r.up.slice(2)) expect(h).toBeGreaterThan(5);
+  expect(r.tween, 'tới nơi: góc qua vai nhìn bạn').toBe(true);
+  expect(r.meet).toEqual({ host: true, pose: 'stand', smile: true, turn: expect.any(Number) }); expect(r.meet.turn, 'bạn quay về phía khách').toBeLessThan(0.3);
+  expect(r.bye, 'khách về: bạn chắp tay tiễn').toBe('anjali'); expect(r.after, 'rồi ngồi lại thiền').toBe('sit');
+  expect(r.others).toEqual(['sit', 'sit']);
 });

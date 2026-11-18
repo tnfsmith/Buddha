@@ -59,6 +59,7 @@ const bezier = (x1, y1, x2, y2) => (x) => { let t = x; for (let i = 0; i < 6; i+
 const GLIDE = bezier(0.2, 0.7, 0.2, 1);
 const ADD = (color, o = {}) => new THREE.MeshBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, ...o });
 const RGB = (r, g, b) => new THREE.Color(r, g, b);
+const FRIEND_DAY = [6, 24, 44];   // ngày trong hành trình 49 ngày của ba bạn đồng tu: đảo của mỗi bạn lớn dần theo đó (#95)
 const TRAVEL = 8.5;   // giây du vân giữa hai đảo: đủ chậm để thấy trọn hành trình qua biển mây
 
 export const ANCHORS = {
@@ -247,12 +248,12 @@ a*=vA;${OUT}}` }));
     this.isles = []; const crowd = []; this.glowSeats = []; this.friends = [];
     const names = suggestNames(12, rng(99)), root = (this.isleBake = new THREE.Group()); let seed = 1; this.scene.add(root);
     TIER_ISLES.forEach((T, tier) => T.list.forEach(([x, z, size], k) => {
-      const nb = buildNeighbor(tier, seed++, size), y = T.y[0] + (T.y[1] - T.y[0]) * this.rnd();
+      const nb = buildNeighbor(tier, seed++, size, tier === 0 && k < 3 ? FRIEND_DAY[k] / 49 : -1), y = T.y[0] + (T.y[1] - T.y[0]) * this.rnd();
       nb.group.position.set(x, y - nb.top, z); nb.group.rotation.y = this.rnd() * 6.28; root.add(nb.group); nb.group.updateMatrixWorld(true);
       const isle = { tier, x, y, z, size, nb, seats: nb.seats.map((s) => V(s.x, s.y, s.z).applyMatrix4(nb.group.matrixWorld)) };
       this.isles.push(isle);
       isle.seats.forEach((p, i) => {
-        if (tier === 0 && k < 3 && i === 0) return this.friends.push({ isle, pos: p, name: names[k] });
+        if (tier === 0 && k < 3 && i === 0) return this.friends.push({ isle, pos: p, name: names[k], day: FRIEND_DAY[k] });
         crowd.push({ x: p.x, y: p.y, z: p.z, rot: faceBud(p.x, p.z) }); if (tier >= 2) this.glowSeats.push({ p, tier });
       });
     }));
@@ -275,7 +276,7 @@ a*=vA;${OUT}}` }));
     const fr = rng(21);
     this.friends.forEach((f, i) => {
       const look = { skin: Math.floor(fr() * 5), robe: [2, 3, 4][i], trim: i, hair: ['buithap', 'cao', 'buicao'][i], hairColor: [0, 0, 2][i], age: ['tre', 'trung', 'cao'][i], mood: ['hoa', 'nghiem', 'tuoi'][i], acc: ['hat', 'khong', 'khan'][i] };
-      f.fig = buildFigure(look); f.fig.setPose('sit'); f.fig.group.position.copy(f.pos); f.fig.group.rotation.y = faceBud(f.pos.x, f.pos.z); this.scene.add(f.fig.group);
+      f.fig = buildFigure(look); f.fig.setPose('sit'); f.fig.group.position.copy(f.pos); f.rot0 = f.fig.group.rotation.y = faceBud(f.pos.x, f.pos.z); this.scene.add(f.fig.group);
       f.head = f.pos.clone().add(V(0, 2.6, 0)); f.until = 0;
       f.arrive = f.pos.clone().add(V(Math.sin(f.fig.group.rotation.y + 1.2) * 3.2, 0, Math.cos(f.fig.group.rotation.y + 1.2) * 3.2));
     });
@@ -584,7 +585,7 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
         this.camera.position.lerp(want, 1 - Math.exp(-dt * 2.6)); this.controls.target.lerp(look, 1 - Math.exp(-dt * 3.5)); } });
     for (let i = k; i < 180; i++) aa[i * 2] = 0;
     P.position.needsUpdate = P.aC.needsUpdate = P.aA.needsUpdate = true; this.burstPts.geometry.setDrawRange(0, k); this.burstPts.visible = k > 0;
-    this.fig.glow(glow); this.fig.smile(glow > 0.25 || me); this.friends.forEach((f) => { f.fig.glow(f === fr ? frG : 0); f.fig.smile(f === fr && frG > 0.25); });
+    this.fig.glow(glow); this.fig.smile(glow > 0.25 || me); this.friends.forEach((f) => { f.fig.glow(f === fr ? frG : 0); f.fig.smile((f === fr && frG > 0.25) || (f.host && f.fig.pose !== 'sit')); });
     this.joy = (this.joy || 0) + (joy - (this.joy || 0)) * 0.2; UNI.uJoy.value = this.joy;
   }
   // ───────── Đi lại ─────────
@@ -707,6 +708,18 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     if (this.mode === 'island' || this.mode === 'zone') this.tween = null;
     this._sfx('cloud', null, { dur: TRAVEL });
   }
+  // Bạn đồng tu đón khách (#95): khách sắp tới thì đứng dậy, quay về phía khách, mỉm cười; ở cùng thì đứng chờ (mời cùng tọa thiền thì ngồi cùng, quay về Tôn tượng);
+  // khách về thì chắp tay tiễn rồi ngồi lại thiền
+  _friendStep(dt, breath = 0) {
+    const Av = this.av; this.friends.forEach((f, i) => { const g = f.fig.group, host = (Av.where === i && Av.state !== 'travel') || (Av.state === 'travel' && Av.dest === i && Av.k > 0.72);
+    if (f.until && this.time > f.until) { f.until = 0; if (!host) f.fig.setPose('sit'); }
+    if (host !== !!f.host) { f.host = host; if (host) f.fig.setPose('stand'); else if (Av.state === 'travel' && Av.where === i) { f.fig.setPose('anjali'); f.until = this.time + 2.4; } else f.fig.setPose('sit'); }
+    if (host) { const want = Av.state === 'sit' ? 'sit' : f.until ? 'anjali' : 'stand'; if (f.fig.pose !== want) f.fig.setPose(want); }
+    const yaw = (host || (f.until && Av.where === i)) && Av.state !== 'sit' ? Math.atan2(Av.pos.x - f.pos.x, Av.pos.z - f.pos.z) : f.rot0; g.rotation.y += Math.atan2(Math.sin(yaw - g.rotation.y), Math.cos(yaw - g.rotation.y)) * Math.min(1, dt * 4);
+    f.fig.group.scale.y = f.fig.group.scale.x * (1 + 0.012 * breath); });
+  }
+  // góc gặp bạn đồng tu: gần như ở Vân Đảo của mình, qua vai nhân vật nhìn bạn đang đứng đón
+  _meet(i, side) { const f = this.friends[i], u = f.pos.clone().sub(f.arrive).setY(0).normalize(), sv = V(u.z, 0, -u.x).multiplyScalar(side); return [f.arrive.clone().addScaledVector(u, -5.5).addScaledVector(sv, 3).add(V(0, 4.2, 0)), f.arrive.clone().lerp(f.pos, 0.65).add(V(0, 2.6, 0))]; }
   goHome(done) { if (this.av.where === 'home') return; const w = this.av.where; this.visit(w, done); this.av.dest = 'home'; }
 
   // ───────── Camera ─────────
@@ -844,7 +857,7 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     this.homeLbMat.opacity = lux ? 0.5 + 0.2 * Math.sin(this.time) : 0; this.lbMat.opacity = 0.45 + 0.15 * Math.sin(this.time * 0.7);
     H.steleMat.opacity = 0.7 + 0.3 * Math.sin(this.time * 1.5); H.pv.altar.material.emissiveIntensity = 1.6 + 0.5 * Math.sin(this.time * 1.1);
     this.ring.material.opacity = Math.max(0, this.ring.material.opacity - dt * 0.7); this.ring.scale.setScalar(1 + (0.9 - this.ring.material.opacity) * 1.2);
-    this.friends.forEach((f) => { if (f.until && this.time > f.until) { f.until = 0; f.fig.setPose('sit'); } f.fig.group.scale.y = f.fig.group.scale.x * (1 + 0.012 * s.breath); });
+    this._friendStep(dt, s.breath);
 
     this._meritStep(dt);
     // vật liệu cộng sáng đang tắt (độ mờ 0) thì bỏ hẳn lượt vẽ: các cột sáng tốn tô điểm ảnh dù không thấy
@@ -901,13 +914,14 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
         const wp = this.ride.position.clone().add(V(0, 0.35, 0)), d1 = A.curve.getPoint(Math.min(1, e + 0.06)).sub(p).setY(0), d2 = A.curve.getPoint(1).sub(p).setY(0);
         if (d1.lengthSq() > 1e-4) d1.normalize(); if (d2.lengthSq() > 1e-4) d2.normalize(); const want = d1.multiplyScalar(0.6).addScaledVector(d2, 0.4);
         if (want.lengthSq() > 1e-4) this.tcDir.lerp(want.normalize(), 1 - Math.exp(-dt * 1.8)).normalize();
-        const D = this.tcDir, sd = V(D.z, 0, -D.x).multiplyScalar(A.side), pt = this.portrait;
-        this.camera.position.lerp(wp.clone().addScaledVector(D, pt ? -15 : -12).addScaledVector(sd, pt ? 5 : 8.5).add(V(0, pt ? 7.5 : 6.5, 0)), 1 - Math.exp(-dt * 3.2));
-        this.controls.target.lerp(wp.clone().addScaledVector(D, pt ? 6 : 9).add(V(0, 1.2, 0)), 1 - Math.exp(-dt * 3)); }
+        const D = this.tcDir, sd = V(D.z, 0, -D.x).multiplyScalar(A.side), pt = this.portrait, cp = wp.clone().addScaledVector(D, pt ? -9 : -7.5).addScaledVector(sd, pt ? 2 : 3).add(V(0, pt ? 10 : 9, 0)), tp = wp.clone().addScaledVector(D, pt ? 9 : 12).add(V(0, 2, 0));
+        const fe = typeof A.dest === 'number' && this._meet(A.dest, A.side), b = fe ? ease(Math.max(0, (A.k - 0.8) / 0.2)) : 0; if (b) { cp.lerp(fe[0], b); tp.lerp(fe[1], b); }   // đoạn cuối: hòa dần sang góc qua vai lúc tới nơi (không chui qua tán cây mép đảo)
+        this.camera.position.lerp(cp, 1 - Math.exp(-dt * Math.min(5.5, 2 + A.k * 25)));   // gần, cao trên các đảo, bám chặt
+        this.controls.target.lerp(tp, 1 - Math.exp(-dt * 4)); }
       else if (cam) { const delta = p.clone().add(V(0, 3, 0)).sub(this.controls.target).multiplyScalar(Math.min(1, dt * 2)); this.controls.target.add(delta); this.camera.position.add(delta); }   // người dùng đã tự xoay: giữ góc họ chọn
       if (A.k >= 1) { A.state = 'idle'; this.ride.visible = false; A.where = A.dest;
         if (A.dest === 'home') { A.pos.copy(P(13.5, 13.5)); } else { const f = this.friends[A.dest]; A.pos.copy(f.arrive); A.rotTo = Math.atan2(f.pos.x - A.pos.x, f.pos.z - A.pos.z);
-          if (cam && free) { const fa = V(Math.sin(f.fig.group.rotation.y), 0, Math.cos(f.fig.group.rotation.y)), m = f.pos.clone().lerp(f.arrive, 0.5).add(V(0, 2.4, 0)); this.flyTo(m.clone().addScaledVector(fa, 10).add(V(0, 3.5, 0)), m, 50, 1.6); } }   // tới nơi: khung cả hai từ phía trước bạn
+          if (cam && free) { const [mp, mt] = this._meet(A.dest, A.side); this.flyTo(mp, mt, 50, 0.8); } }   // tới nơi: gần như ở Vân Đảo của mình, qua vai nhân vật nhìn bạn đang đứng đón
         if (A.done) { const f = A.done; A.done = null; f(A.dest); } }
     } else {
       if (A.restoreSit) { A.restoreSit = false; this.fig.setPose('sit'); }
