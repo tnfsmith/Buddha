@@ -1,5 +1,7 @@
 # VÂN ĐẠO — LỘ TRÌNH KỸ THUẬT & THIẾT KẾ PRODUCTION (bản 3)
 
+> **Tiến độ xác minh 18/11/2026:** v0.17.1 đã phát hành ở `4e84324`; GĐ3 **chưa hoàn tất**, GĐ4 mới có nền vé HMAC. Trạng thái từng T3/T4 và phần còn thiếu xem §19; phân công/quyền tệp/luân chuyển credits xem `docs/COORDINATION.md` §19. Các số đo và nhận định ngày 13/11 dưới đây là lịch sử thiết kế, không phải tình trạng live hiện tại.
+
 > **Quyết định nội dung hiện hành 14/11/2026 của chủ dự án (#55):** không bắt buộc Hội đồng cố vấn Pháp học phê duyệt. Nội dung tham khảo có nguồn được biên tập và chọn phát hành theo PR thông thường; tư vấn chuyên gia tùy chọn. Quyết định này thay yêu cầu cũ trong bản 3 và hợp đồng đang đề xuất; xem ADR 0003, `AGENTS.md` mục 1.6 và §16.
 
 > **Ngày lập:** 13/11/2026 · **Thay thế:** bản 2 (12/11/2026). Bản 3 bổ sung: Tầng 0 chuẩn Pháp hành – Ba-la-mật theo hoàn cảnh từng người; theo dõi – nhắc nhở – tích lũy; không gian cộng đồng Hộ Trì & thiện nguyện; khu **Đại Công Đức** (affiliate Shopee/TikTok Shop/WooCommerce, Gieo Duyên, chiến dịch thiện nguyện, Sổ Minh Bạch); đánh giá có số đo và lộ trình hiện đại hóa 3D; chạy trên gói Workers Free rồi nâng Paid khi cần; Node.js 26 LTS; làn việc thứ ba cho **Hermes**; tách dev/staging/production không cần GitHub Pro.
@@ -1443,25 +1445,30 @@ Ký hiệu: **[C]** Claude · **[AG]** Antigravity · **[H]** Hermes · **[O]** 
 | T2.4 | Theo dõi hạn mức Free hằng ngày, cảnh báo ở 70 % | H | Báo cáo đúng số so với dashboard Cloudflare |
 
 ### GĐ3 — Tầng 0 chuẩn Pháp hành, theo dõi, nhắc nhở (≈ 3 tuần)
+**Kiểm toán 18/11/2026 — chưa hoàn tất GĐ3.** Base main `4e84324`, v0.17.1 đã deploy production; CI [44002540504](https://github.com/tnfsmith/Buddha/actions/runs/44002540504), staging [44004041369](https://github.com/tnfsmith/Buddha/actions/runs/44004041369), production [44005737082](https://github.com/tnfsmith/Buddha/actions/runs/44005737082) xanh. API staging/production đã đối chiếu: 42 bài giảng/nghi thức + 73 nhiệm vụ. Phân biệt mã đã có với tiêu chí chưa nghiệm thu; không lấy thư viện TTS hoặc việc đóng PR làm bằng chứng xong cả pha.
+
 | ID | Việc | Làn | Nghiệm thu |
 |---|---|---|---|
-| T3.1 | Nội dung biến thể 7 tuần × 3 trục × 3–6 biến thể; ánh xạ §8.2; lời nhắc | O + H (biên tập/phát hành; tư vấn tùy chọn) | Có nguồn, trạng thái phát hành `da_duyet`; không đòi Hội đồng |
-| T3.2 | `variant.js`, "Duyên khởi hành trình", Bia Tích Lũy mới (hoa sen 10 cánh, lịch tu, nhịp thiền, phản tỉnh), chứng thực tuần (UI) | C | Cùng đầu vào → cùng nhiệm vụ trên máy và máy chủ |
-| T3.3 | Migration mới kế tiếp; API practice/deeds/attest/reminders/push; `ReminderClock` DO + Web Push | AG (DO: C) | Nhắc đúng giờ ±1 phút ở múi +7; 410 xóa subscription |
-| T3.4 | Điều kiện Tầng 0 → 1, `tier_progress` | AG + C | Không câu chữ khẳng định chứng đắc |
-| T3.5 | Thiết kế hai loạt và hợp đồng nội dung/giọng đọc R2 (ADR 0002, #47/#52) | C | Đã merge 14/11; mốc mới theo lệnh cập nhật lần 2 ở #33/#49 |
-| T3.6 | 7 Lời Phật dạy v2/96k đã phát hành v0.15.0; Đường Xưa B10/#76, C11/#77, D12/#78 có cả chữ/tiếng (#48) | H + O | Đủ 33 bài/498 cue/ID3, audit 132 object hai bucket; chủ dự án đã chọn phát hành cả 33 bài (15/11, #48), cập nhật da_duyet/CI mới; #76/B đã merge, staging đủ 19 mục; kiểm #77/C→#78/D và staging trước v0.16.0 |
-| T3.7 | Google Chirp 3 HD Sadaltager 0,85 cho Lời Phật dạy/Đường Xưa; ngoại lệ nghi thức kết P1/Puck 1,00 đã được chủ dự án duyệt (#49/#80) | H + AG | LINEAR16→MP3 96k mono 24k, −16 LUFS/−1,5 dBTP, cues/ID3; khóa/giọng/tốc độ ràng buộc theo mục, giữ khóa cũ ≥30 ngày; không đổi giọng chung khi sửa nghi thức |
-| T3.8 | Nạp D1, API body_r2_key/meta, /media Range; guard preview/migration 0008 | AG | #69/#71/#73 đã merge 15/11; main sau #76 có 8 migration và 19 mục đã chọn, không lộ nháp/khóa môi trường khác. Sau C/D merge: 42 mục, giữ 9 mục cũ |
-| T3.9 | Client menu/cues/mobile/nghe lần lượt; đảnh lễ chữ trước giọng Việt; theo dõi kiểm live #83 | C | #82 / #81 đã merge, P1 Puck 1,00/7,01s đúng bytes chủ dự án duyệt. Staging sau #76 có 19 mục; đã gửi Claude nghiệm thu ngay ở #83/#33, tiếp tục kiểm sau #77→#78. Sửa assertion nhãn AI cũ, Claude nghiệm thu và chủ dự án kiểm điện thoại trước tag v0.16.0 |
+| T3.1 | Nội dung biến thể 7 tuần × 3 trục × 3–6 biến thể; ánh xạ §8.2; lời nhắc | O + H | **Một phần:** 73 mục #87/#90 đã duyệt/phát hành (25/40/7/1); chưa có tối thiểu 63 biến thể ba trục. [#103](https://github.com/tnfsmith/Buddha/issues/103), chốt hợp đồng trước mở rộng; bản nháp chờ chủ dự án chọn, không đòi Hội đồng |
+| T3.2 | `variant.js`, Duyên khởi, Bia (hoa sen/lịch/nhịp thiền/phản tỉnh), chứng thực tuần | C | **Một phần:** A/C #89/#92 và đồng bộ #96 đã merge; thiếu onboarding/biến thể/phản tỉnh/chứng thực tuần/E phản chiếu. [#104](https://github.com/tnfsmith/Buddha/issues/104); #101 là cảnh 3D, chưa thay phần chức năng này |
+| T3.3 | Schema; API practice/deeds/attest/reminders/push; ReminderClock/Web Push | AG (DO: C) | **Một phần:** 0009 + practice.event/#97/#100 đã phát hành; chưa có endpoint phần mở rộng/DO/push. Codex làm nền 0010/hợp đồng [#102](https://github.com/tnfsmith/Buddha/issues/102), rồi API [#105](https://github.com/tnfsmith/Buddha/issues/105); Claude DO [#106](https://github.com/tnfsmith/Buddha/issues/106). Còn cửa ±1 phút, tối đa 2/ngày, opt-in/quiet/Tịnh khẩu và 404/410 |
+| T3.4 | Điều kiện Tầng 0 → 1, `tier_progress` | AG + C | **Mới có bảng:** chưa có cổng máy chủ/UI theo tiêu chí đã chốt; S.completed hiện chưa thay tier_progress. [#107](https://github.com/tnfsmith/Buddha/issues/107), chốt đề xuất §8.6/§16 trước; không nói chứng đắc |
+| T3.5 | Thiết kế hai loạt và hợp đồng nội dung/giọng đọc R2 (ADR 0002, #47/#52) | C | **Đã merge/phát hành:** #52/#72 và điều chỉnh nghi thức đã vào main, hợp đồng áp dụng cho 42 mục hiện hành |
+| T3.6 | 7 Lời Phật dạy v2/96k; 33 Đường Xưa B10/#76, C11/#77, D12/#78 | H + O | **Đã phát hành:** #76–78 đã merge, v0.16.0 có đủ 33/498 cue; hiện v0.17.1 API thật 7+33 bài và 2 nghi thức. Chủ dự án đã chọn cả 33 bài; giữ nguồn/chương/thứ tự và sáu cờ ASR gốc |
+| T3.7 | Google Chirp 3 HD Sadaltager 0,85 cho Lời Phật dạy/Đường Xưa; ngoại lệ nghi thức kết P1/Puck 1,00 đã duyệt (#49/#80) | H + AG | **Đạt bản phát hành:** LINEAR16→MP3 96k mono 24k, −16 LUFS/−1,5 dBTP, cues/ID3; khóa/giọng/tốc độ theo mục. Khóa cũ ≥30 ngày còn theo dõi ở #49, không đổi giọng chung |
+| T3.8 | Nạp D1, API body_r2_key/meta, /media Range; guard schema | AG | **Một phần:** nạp/phục vụ đúng môi trường đã phát hành, 9 migration/115 mục; còn rút phát hành bằng phiên bản mới ngung ở [#46](https://github.com/tnfsmith/Buddha/issues/46). Bộ nạp chỉ chọn da_duyet, chưa khép cửa phiên bản mới nhất cho API/media; không tự ẩn bài thật khi chưa có PR/test |
+| T3.9 | Menu/cues/mobile/nghe lần lượt, nghi thức/đảnh lễ, kiểm live | C | **Đã phát hành:** #81/#82/#84 đã merge, #83 đóng; v0.16.0 đã được Claude/chủ dự án nghiệm thu ([#33](https://github.com/tnfsmith/Buddha/issues/33#issuecomment-6893229532)). #101 chưa merge, thay máy quay cần nghiệm thu riêng; không dùng số của PR đó cho main |
+
+T3.7 đã đạt bộ audio phát hành (Sadaltager/Puck đúng ngoại lệ); #49 còn quản lý khóa cũ sau ≥30 ngày, là việc vận hành tiếp diễn. #3 là tư vấn tùy chọn, không là cửa chặn. #85 giữ mở cho các phần chưa xong; #93 chờ Claude ghi chốt nghiệm thu hai thiết bị thật.
 
 ### GĐ4 — Đại Thiền Đường thời gian thực (≈ 2–3 tuần)
+**Chưa hoàn tất/chưa chuyển pha thay cho GĐ3.** Checklist [#108](https://github.com/tnfsmith/Buddha/issues/108). Có thể chuẩn bị hợp đồng độc lập theo song song hóa cuối §19; đợt này Codex ưu tiên phần GĐ3 còn thiếu. Quyền tệp/luân chuyển theo COORDINATION §19.
 | ID | Việc | Làn | Nghiệm thu |
 |---|---|---|---|
-| T4.1 | `workers/realtime`: Lobby, HallRoom, codec 16 byte, hibernation, giới hạn gói Free (§7.7) | C | §7.6 |
-| T4.2 | Đám đông thật bằng `InstancedMesh`, nội suy, nối lại, dự phòng mô phỏng | C | ≥ 30 fps với 150 hình người trên máy tầm trung |
-| T4.3 | `/rt/ticket`, chặn/báo cáo, số liệu shard | AG | Người bị chặn không thấy nhau |
-| T4.4 | Kịch bản k6 vào staging | H | Báo cáo p95, lỗi, thời lượng DO |
+| T4.1 | `workers/realtime`: Lobby, HallRoom, codec 16 byte, hibernation, Free budget | C | **Chưa có worker trên main**; duyệt/merge hợp đồng ticket/room/codec trước, rồi kiểm §7.6 |
+| T4.2 | Đám đông thật, nội suy, reconnect, fallback | C | **Mới mô phỏng cảnh**; chưa nối người thật; cần ≥30 fps/150 người trên máy tầm trung |
+| T4.3 | `/rt/ticket`, chặn/báo cáo, số liệu shard | AG | **Có vé HMAC nền**, chưa khép quyền phòng/kiểm tầng/block/report/shard metrics; cần T4.1/T3.4 và kiểm người bị chặn không thấy nhau |
+| T4.4 | Kịch bản k6 vào staging | H | **Chưa có báo cáo tải**; chỉ chạy staging sau worker, nêu budget/giới hạn trước, ghi p95/lỗi/thời lượng DO |
 
 ### GĐ5 — Cộng đồng Hộ Trì và xã hội tu tập (≈ 3 tuần)
 | ID | Việc | Làn | Nghiệm thu |
@@ -1501,7 +1508,7 @@ iOS (Capacitor), sự kiện hồi hướng chung ngày rằm, gian hàng thành
 
 **Song song hóa:** GĐ0 (tuần tự) → (GĐ1 ∥ GĐ2) → (GĐ3 ∥ GĐ4 ∥ GĐ8) → (GĐ5 ∥ GĐ7) → GĐ6 → GĐ9. Việc pháp lý của [O] chạy song song từ ngày đầu vì GĐ6 phụ thuộc vào nó.
 
-**Đánh số migration thực tế (14/11/2026):** `0006_better_auth_passkey.sql` và `0007_recovery_code.sql` đã dùng. Tệp mới tiếp theo là `0008_…`, kiểm lại `origin/main` trước khi tạo. Số cũ trong thiết kế §4 không phải quyền tái dùng hoặc sửa migration đã merge.
+**Đánh số migration thực tế (18/11/2026):** main `4e84324` đã dùng 0001–0009; #102 chuẩn bị 0010_practice_foundation.sql (chỉ thêm, chưa là schema live trước merge). Số 0006/0007 trong ví dụ §4.6 đã dùng cho auth/recovery; luôn kiểm origin/main trước tạo, không tái dùng/sửa migration đã merge.
 
 ---
 
