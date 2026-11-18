@@ -26,6 +26,18 @@ test('mọi khúc Vân Nhạc: không tiếng tạch, không vỡ tiếng, âm l
   }
 });
 
+test('hiệu ứng âm của cảnh (chuông gió, Tùy Hỷ, gió mây): không tiếng tạch, không vỡ tiếng, tắt về 0', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.goto(url('q=0&snap=1')); await ready(page);
+  for (const kind of ['chime', 'gift', 'cloud']) {
+    const r = await page.evaluate((k) => window.__app.probeSfx(k, 7), kind);
+    expect(r.clicks, kind + ' tiếng tạch').toBe(0);
+    expect(r.peak, kind + ' đỉnh').toBeLessThan(0.5);
+    expect(r.rms, kind + ' RMS').toBeGreaterThan(0.002);
+    expect(r.tail, kind + ' đuôi').toBeLessThan(0.003);
+  }
+});
+
 test('thanh nhạc: mở rộng, thu gọn; thời lượng 30 phút; phát 1 lần thì dừng, lặp lại thì phát lại, ngẫu nhiên trong thể loại', async ({ page }) => {
   test.setTimeout(300_000);
   await page.goto(url('q=0&snap=1')); await ready(page);

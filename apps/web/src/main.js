@@ -3,7 +3,7 @@ import { World, ANCHORS, TIER_LABEL, groundH } from './world.js';
 import { Player, TR, EV, offlineProbe } from './audio.js';
 import { DUR, STAGES, TIERS, ZONES, WEEKS, PILLARS, valueAt, breathEnv, stageAt, kusala } from './data.js';
 import { Sermon, library, loadSermons, LOAT, LOAT0, loatTabs, aiVoiceLabel, providerOf } from './sermon.js';
-import { Ambient, SONGS, SONG, MOODS, GROUPS, songsOf, pickSong, probeSong } from './music.js';
+import { Ambient, SONGS, SONG, MOODS, GROUPS, songsOf, pickSong, probeSong, probeSfx } from './music.js';
 import { OPTIONS, PRESETS, checkName, suggestNames } from './people.js';
 import { S, mem, save, allDone, today, resetState, stateReady, fixMusic } from './state.js';
 import { PASSIVE, MIN_VANDU, heardEnough, listenCode, logPassive, lotus, weakest, calendar, weekSitMinutes, heardIds } from '@vandao/shared/missions.js';
@@ -85,7 +85,7 @@ setInterval(() => { if (!amb.on || amb.ducked) return; const M = fixMusic(S.musi
   const el = dock.querySelector('[data-left]'); if (el) el.textContent = leftTxt(); }, 5000);
 window.addEventListener('pointerdown', () => { if (S.music.on && !amb.on) musicStart(); }, { once: true });
 let world = null;
-try { world = new World($('#gl'), S.look, hash.q !== undefined ? +hash.q : undefined, S.pos); world.onChirp = (pan, n, seed) => amb.chirp(pan, n, seed, S.birds.vol); world.birdOpts = S.birds; if (hash.snap) world.snap = true; } catch (e) {
+try { world = new World($('#gl'), S.look, hash.q !== undefined ? +hash.q : undefined, S.pos); world.onChirp = (pan, n, seed) => amb.chirp(pan, n, seed, S.birds.vol); world.onSfx = (kind, o) => amb.sfx(kind, o, S.music.vol); world.birdOpts = S.birds; if (hash.snap) world.snap = true; } catch (e) {
   $('#err').style.display = 'block'; $('#err').textContent = 'Trình duyệt này không mở được WebGL nên chưa dựng được cảnh 3D. Âm thanh và bảng 49 ngày vẫn dùng được. (' + e.message + ')'; console.error(e);
 }
 
@@ -666,7 +666,7 @@ if (hash.view === 'creator') openCreator();
 if (hash.at && world && World.NODES[hash.at]) { const n = World.NODES[hash.at]; world.av.pos.set(n[0], 0, n[1]); world.av.pos.y = World.floorH(n[0], n[1]); world.snap = true; }
 if (hash.zone) goZone(hash.zone);
 if (world && world.tween && hash.snap !== undefined) world.tween.k = 0.999;
-window.__app = { player, world, offlineProbe, amb, probeSong, SONGS, state: () => S, U, stateReady, sermon, library, voiceLabel: (j) => aiVoiceLabel(providerOf(j)) };
+window.__app = { player, world, offlineProbe, amb, probeSong, probeSfx, SONGS, state: () => S, U, stateReady, sermon, library, voiceLabel: (j) => aiVoiceLabel(providerOf(j)) };
 registerPWA();
 startMetrics();   // T1.3 (#8): số liệu ẩn danh, chỉ khi chạy qua http(s) và không bật Do Not Track
 if (S.name) persistStorage();
