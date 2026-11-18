@@ -1,6 +1,6 @@
 # VÂN ĐẠO — LỘ TRÌNH KỸ THUẬT & THIẾT KẾ PRODUCTION (bản 3)
 
-> **Tiến độ xác minh 18/11/2026:** production v0.17.1 ở `4e84324`. Main `c9edcaa` có #109, #101 và #110. GĐ3 **chưa hoàn tất**, GĐ4 mới có nền vé HMAC. Trạng thái từng T3/T4 xem §19. Phân công, quyền tệp và bàn giao credits xem `docs/COORDINATION.md` §19–21. Các số đo và nhận định ngày 13/11 dưới đây là lịch sử thiết kế.
+> **Tiến độ xác minh 18/11/2026:** production v0.17.1 ở `4e84324`. Main `05e1ea3` có #111–#115 và đã qua kiểm khói staging. GĐ3 **chưa hoàn tất**, GĐ4 mới có nền vé HMAC. Trạng thái từng T3/T4 xem §19. Phân công, quyền tệp và bàn giao credits xem `docs/COORDINATION.md` §19–22. Các số đo và nhận định ngày 13/11 dưới đây là lịch sử thiết kế.
 
 > **Quyết định nội dung hiện hành 14/11/2026 của chủ dự án (#55):** không bắt buộc Hội đồng cố vấn Pháp học phê duyệt. Nội dung tham khảo có nguồn được biên tập và chọn phát hành theo PR thông thường; tư vấn chuyên gia tùy chọn. Quyết định này thay yêu cầu cũ trong bản 3 và hợp đồng đang đề xuất; xem ADR 0003, `AGENTS.md` mục 1.6 và §16.
 
@@ -1449,9 +1449,9 @@ Ký hiệu: **[C]** Claude · **[AG]** Antigravity · **[H]** Hermes · **[O]** 
 
 | ID | Việc | Làn | Nghiệm thu |
 |---|---|---|---|
-| T3.1 | Nội dung biến thể 7 tuần × 3 trục × 3–6 biến thể; ánh xạ §8.2; lời nhắc | O + H | **Một phần:** 73 mục #87/#90 đã duyệt/phát hành (25/40/7/1); chưa có tối thiểu 63 biến thể ba trục. [#103](https://github.com/tnfsmith/Buddha/issues/103), chốt hợp đồng trước mở rộng; bản nháp chờ chủ dự án chọn, không đòi Hội đồng |
+| T3.1 | Nội dung biến thể 7 tuần × 3 trục × 3–6 biến thể; ánh xạ §8.2; lời nhắc | O + H | **Một phần:** 73 mục #87/#90 đã duyệt/phát hành (25/40/7/1). Hợp đồng [#112](https://github.com/tnfsmith/Buddha/pull/112) đã merge, tiếp theo là bộ nạp và tối thiểu 63 biến thể ở [#103](https://github.com/tnfsmith/Buddha/issues/103). Chủ dự án chọn phát hành nội dung |
 | T3.2 | `variant.js`, Duyên khởi, Bia (hoa sen/lịch/nhịp thiền/phản tỉnh), chứng thực tuần | C | **Một phần:** A/C #89/#92 và đồng bộ #96 đã merge; thiếu onboarding/biến thể/phản tỉnh/chứng thực tuần/E phản chiếu. [#104](https://github.com/tnfsmith/Buddha/issues/104); #101 là cảnh 3D, chưa thay phần chức năng này |
-| T3.3 | Schema; API practice/deeds/attest/reminders/push; ReminderClock/Web Push | AG (DO: C) | **Một phần:** 0009 + practice.event/#97/#100 đã phát hành. Nền 0010 ở staging qua [#109](https://github.com/tnfsmith/Buddha/pull/109). [#105](https://github.com/tnfsmith/Buddha/issues/105) bắt đầu bằng hợp đồng GET/PUT hồ sơ tu tập trước khi mở API. Claude làm DO [#106](https://github.com/tnfsmith/Buddha/issues/106). Còn nghiệm thu ±1 phút, tối đa 2/ngày, opt-in/quiet/Tịnh khẩu và 404/410 |
+| T3.3 | Schema; API practice/deeds/attest/reminders/push; ReminderClock/Web Push | AG (DO: C) | **Một phần:** 0009 + practice.event/#97/#100 đã phát hành. Nền 0010 ở staging qua #109. Hợp đồng #111 đã merge, Codex triển khai GET/PUT hồ sơ và vòng đời ở [#105](https://github.com/tnfsmith/Buddha/issues/105). Còn today/swap/summary, deed, chứng thực, nhắc giờ và push. Claude làm DO [#106](https://github.com/tnfsmith/Buddha/issues/106) |
 | T3.4 | Điều kiện Tầng 0 → 1, `tier_progress` | AG + C | **Mới có bảng:** chưa có cổng máy chủ/UI theo tiêu chí đã chốt; S.completed hiện chưa thay tier_progress. [#107](https://github.com/tnfsmith/Buddha/issues/107), chốt đề xuất §8.6/§16 trước; không nói chứng đắc |
 | T3.5 | Thiết kế hai loạt và hợp đồng nội dung/giọng đọc R2 (ADR 0002, #47/#52) | C | **Đã merge/phát hành:** #52/#72 và điều chỉnh nghi thức đã vào main, hợp đồng áp dụng cho 42 mục hiện hành |
 | T3.6 | 7 Lời Phật dạy v2/96k; 33 Đường Xưa B10/#76, C11/#77, D12/#78 | H + O | **Đã phát hành:** #76–78 đã merge, v0.16.0 có đủ 33/498 cue; hiện v0.17.1 API thật 7+33 bài và 2 nghi thức. Chủ dự án đã chọn cả 33 bài; giữ nguồn/chương/thứ tự và sáu cờ ASR gốc |

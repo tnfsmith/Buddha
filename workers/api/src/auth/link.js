@@ -22,6 +22,9 @@ export async function linkGuest(db, guest, target) {
   if (!guest?.id || !target?.id || guest.id === target.id) return { moved: 'none' };
   const g = guest.id, t = target.id, now = Date.now();
   const moveAll = MOVE.map((tb) => db.prepare(`UPDATE ${tb} SET user_id = ? WHERE user_id = ?`).bind(t, g));
+  // Hồ sơ Duyên khởi theo tài khoản và không phụ thuộc chế độ gộp hành trình.
+  moveAll.push(db.prepare(`UPDATE practice_profile SET user_id = ?1 WHERE user_id = ?2
+    AND NOT EXISTS (SELECT 1 FROM practice_profile WHERE user_id = ?1)`).bind(t, g));
   let mode;
   if (!(await hasProgress(db, t))) {
     mode = 'guest';

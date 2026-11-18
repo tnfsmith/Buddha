@@ -4,6 +4,7 @@ import { Hono } from 'hono';
 import authApp from './routes/auth.js';
 import meApp from './routes/me.js';
 import profileApp from './routes/profile.js';
+import practiceProfileApp from './routes/practice-profile.js';
 import syncApp from './routes/sync.js';
 import exportApp from './routes/export.js';
 import accountApp from './routes/account.js';
@@ -53,6 +54,7 @@ app.get('/api/health', (c) => {
 app.route('/api/auth', authApp);
 app.route('/api/v1/me', meApp);
 app.route('/api/v1/profile', profileApp);
+app.route('/api/v1/practice/profile', practiceProfileApp);
 app.route('/api/v1/sync', syncApp);
 app.route('/api/v1/export', exportApp);
 app.route('/api/v1/account', accountApp);
