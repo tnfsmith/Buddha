@@ -4,7 +4,7 @@ Ngày cập nhật: 18/11/2026. Người tổng hợp duy nhất: **Codex**. Quy
 
 **Quyết định nội dung mới của chủ dự án (#55):** bỏ điều kiện Hội đồng bắt buộc. Nội dung tham khảo có nguồn, phát hành theo quy trình biên tập/PR; Hội đồng/chuyên gia chỉ tư vấn tùy chọn. ADR 0003 thay các yêu cầu cũ còn xuất hiện trong bằng chứng lịch sử dưới đây. Quyết định đã ghi không có nghĩa mã UI đang chạy đã thay đổi.
 
-**Hiện hành 18/11:** production v0.17.1 ở `4e84324`. Main `c9edcaa` có #109, #101 và #110. Codex nhận hợp đồng hồ sơ tu tập #105. Xem §21 và Issue/PR mới nhất để biết khóa tệp và trạng thái GĐ3.
+**Hiện hành 18/11:** production v0.17.1 ở `4e84324`. Main `05e1ea3` đã có #111–#115. Codex triển khai API hồ sơ tu tập #105. Xem §22 và Issue/PR mới nhất để biết khóa tệp và trạng thái GĐ3.
 
 Đọc tệp này khi bắt đầu phiên; sau đó kiểm Issue/PR và `origin/main` hiện tại. Tệp là bản bàn giao có thời điểm, không thay bảng việc GitHub. Claude gửi cập nhật trong Issue/PR; Codex tổng hợp để tránh hai agent cùng sửa tệp này.
 
@@ -261,3 +261,10 @@ PR81 chưa merge/deploy; #82 phải cập nhật máy quay hướng chúng sanh 
 - Codex giữ bốn tệp `docs/contracts/{practice-profile,practice-gd3}.md`, `docs/COORDINATION.md` và `PROJECT_ROADMAP.md` trong [#105](https://github.com/tnfsmith/Buddha/issues/105), nhánh `ag/105-practice-profile-contract`, worktree riêng cùng mục đích. Phạm vi là hợp đồng và tiêu chí nghiệm thu. Trả quyền khi PR merge/đóng hoặc bàn giao trên Issue.
 - [Hợp đồng hồ sơ](contracts/practice-profile.md) nêu tám trường được đồng bộ, rev riêng cho hai thiết bị, export, gộp khách, đổi chu kỳ và xóa. Sau khi hợp đồng merge, Codex làm Worker/D1 và Claude nối Duyên khởi #104. Phản tỉnh lưu trên máy có thể triển khai riêng sau khi Claude ghi tệp giữ trên #104.
 - Codex/Hermes #103 phối hợp với Claude #104 về lược đồ danh mục và bộ chọn trước khi thêm biến thể. #105 today/swap theo sau hợp đồng đó. #106 giữ phần DO/nhắc giờ và có hợp đồng riêng. #107 vẫn chờ quyết định về tiêu chí mở Tầng 1.
+
+## 22. Triển khai hồ sơ tu tập #105 — 18/11/2026
+
+- #111–#115 đã merge. [CI main](https://github.com/tnfsmith/Buddha/actions/runs/44281413600) và [deploy staging](https://github.com/tnfsmith/Buddha/actions/runs/44285296615) đạt ở `05e1ea3`. #114 đã bổ sung mã báo cáo Hermes, vẫn chờ homelab, Telegram và ba ngày đối chiếu thật ở #13. #115 đã đưa bản vá đồng bộ biên nửa đêm vào staging.
+- Codex giữ tệp Worker/API hồ sơ, export và gộp khách, bài kiểm và hai tệp bàn giao theo [#105](https://github.com/tnfsmith/Buddha/issues/105#issuecomment-6977288948), trên worktree `gd3-105-profile-api`. Gói này triển khai GET/PUT theo hợp đồng #111, kiểm hai thiết bị lưu cùng rev, gửi lại, export, gộp khách, đổi chu kỳ và xóa. Không có migration mới. Chỉ dùng trên staging sau khi PR triển khai được merge.
+- Claude giữ `apps/web/build.mjs` và `apps/web/src/main.js` cho nhánh `claude/95-du-van-dong-tu` theo [#95](https://github.com/tnfsmith/Buddha/issues/95#issuecomment-6977180623). Duyên khởi và bộ chọn #104 có thể dùng fixture của hai hợp đồng đã merge. Ghi claim tệp #104 trước khi chạm vùng dùng chung.
+- #112 đã chốt hợp đồng biến thể. Codex/Hermes tiếp tục danh mục #103 theo đó. Today/swap theo sau bộ nạp và bộ chọn, ReminderClock thuộc #106. #107 vẫn chờ chốt tiêu chí, GĐ3 chưa hoàn tất.

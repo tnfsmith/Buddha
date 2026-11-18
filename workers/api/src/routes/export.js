@@ -3,6 +3,7 @@
 import { perDay } from '../guard.js';
 import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
+import { getPracticeProfile } from '../practice-profile.js';
 
 const exportApp = new Hono();
 
@@ -43,6 +44,7 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
   const events = await db.prepare(
     'SELECT id, program, cycle, local_date AS date, kind, slot, value_json, at, server_at FROM practice_event WHERE user_id = ? ORDER BY at, id',
   ).bind(user.id).all();
+  const practice = await getPracticeProfile(db, user.id);
 
   return c.json({
     exported_at: now,
@@ -53,6 +55,7 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
       settings: JSON.parse(profileRow.settings_json || '{}'),
       island: JSON.parse(profileRow.island_json || '{}')
     } : null,
+    practice_profile: practice.profile ? { ...practice.profile, updated_at: practice.rev } : null,
     journeys: journeys?.results || [],
     kusala_entries: kusalaEntries?.results || [],
     practice_sessions: sessions?.results || [],
