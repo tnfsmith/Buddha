@@ -182,17 +182,20 @@ export function bakeWorld(groups) { const out = new THREE.Group(); groups.forEac
 // Mỗi loại lá một vật liệu chung; tâm tán là thuộc tính instance `aC` nên nhiều cây gộp được vào một lệnh vẽ.
 // Gió trong vertex shader: từng chùm lá rung, biên độ dồn theo đợt gió chạy ngang đảo.
 const QUAD = new THREE.PlaneGeometry(1.5, 1.5), LEAF = {};
-function leafMat(kind) {
-  if (LEAF[kind]) return LEAF[kind];
-  const tex = leafTex(kind), m = new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.85 });
-  m.onBeforeCompile = (sh) => { sh.uniforms.uTime = U.uTime;
-    sh.vertexShader = 'attribute vec3 aC; uniform float uTime;\n' + sh.vertexShader
+function leafMat(kind, J = false) {   // J: cây Bồ-đề Vườn Tâm Thức của mình — lá reo và lung linh khi công đức thấm vào (UNI.uJoy)
+  const key = kind + (J ? '+' : '');
+  if (LEAF[key]) return LEAF[key];
+  const tex = (LEAF[kind] || LEAF[kind + '+'])?.map || leafTex(kind), m = new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.85 });   // hai vật liệu cùng loại lá dùng chung texture
+  m.onBeforeCompile = (sh) => { sh.uniforms.uTime = U.uTime; sh.uniforms.uJoy = U.uJoy;
+    if (J) sh.fragmentShader = 'uniform float uJoy;\n' + sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance+=diffuseColor.rgb*uJoy*(.35+.4*sin(vViewPosition.x*3.+vViewPosition.y*2.));');
+    sh.vertexShader = 'attribute vec3 aC; uniform float uTime, uJoy;\n' + sh.vertexShader
       .replace('#include <defaultnormal_vertex>', 'vec3 ic = (instanceMatrix * vec4(0.,0.,0.,1.)).xyz; vec3 transformedNormal = normalMatrix * normalize(ic - aC + vec3(0.,1.2,0.));')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\n float gust = .5 + .5*sin(uTime*.4 + ic.x*.12 + ic.z*.08); transformed.x += sin(uTime*1.3 + ic.x*.6 + ic.y*.4)*(.05 + .11*gust); transformed.y += cos(uTime*.95 + ic.z*.7)*(.03 + .05*gust);'); };
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\n float gust = .5 + .5*sin(uTime*.4 + ic.x*.12 + ic.z*.08); transformed.x += sin(uTime*1.3 + ic.x*.6 + ic.y*.4)*(.05 + .11*gust)' + (J ? '*(1.+2.*uJoy) + sin(uTime*7. + ic.y*3.)*.06*uJoy' : '') + '; transformed.y += cos(uTime*.95 + ic.z*.7)*(.03 + .05*gust);'); };
+  m.customProgramCacheKey = () => (J ? 'leafJ' : 'leaf');   // hai chương trình: lá thường dùng chung, lá Bồ-đề nhà có uJoy
   m.userData.depth = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: tex, alphaTest: 0.5 });
-  return (LEAF[kind] = m);
+  return (LEAF[key] = m);
 }
-export function leafTree({ count = 700, kind = 'bodhi', radius = 5, trunkH = 6.5, seed = 2, far = false }) {
+export function leafTree({ count = 700, kind = 'bodhi', radius = 5, trunkH = 6.5, seed = 2, far = false, joy = false }) {
   const G = new THREE.Group(), r = rng(seed), sh = far ? 0 : 1, BARK = '#6b4b34';
   // thân cong nhẹ, gốc loe thành rễ bám đất, vỏ có gờ dọc; cành cong vồng lên tới từng chùm tán, cây gần có thêm cành con
   const lx = (r() - 0.5) * radius * 0.16, lz = (r() - 0.5) * radius * 0.16, ang = (d) => Math.atan2(d.x, d.z);
@@ -206,7 +209,7 @@ export function leafTree({ count = 700, kind = 'bodhi', radius = 5, trunkH = 6.5
   const center = new THREE.Vector3(0, trunkH + radius * 0.25, 0), geo = QUAD.clone(), aC = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) center.toArray(aC, i * 3);
   geo.setAttribute('aC', new THREE.InstancedBufferAttribute(aC, 3));
-  const leaves = new THREE.InstancedMesh(geo, leafMat(kind), count), d = new THREE.Object3D(), c = new THREE.Color();
+  const leaves = new THREE.InstancedMesh(geo, leafMat(kind, joy), count), d = new THREE.Object3D(), c = new THREE.Color();
   for (let i = 0; i < count; i++) {
     const b = blobs[Math.floor(r() * blobs.length)], u = r() * 2 - 1, a = r() * 6.28, s = Math.sqrt(1 - u * u), rr = b[3] * (0.55 + 0.45 * Math.cbrt(r()));
     d.position.set(b[0] + rr * s * Math.cos(a), b[1] + rr * u * 0.72, b[2] + rr * s * Math.sin(a)); d.rotation.set(r() * 3, r() * 6, r() * 3); d.scale.setScalar((0.75 + r() * 0.6) * radius * 0.2); d.updateMatrix();
@@ -345,7 +348,7 @@ export function buildHome() {
     add(M(new THREE.SphereGeometry(0.6, 16, 10), MATTE, '#7d4a2e', HILL.x, y + 0.33, z)).scale.y = 0.22; }
 
   // Vườn Tâm Thức: cây Bồ-đề và Hồ Sen
-  const tree = (H.tree = leafTree({ count: 900, kind: 'bodhi', radius: 5.4, trunkH: 6.6, seed: 5 })); tree.group.position.copy(P(-22, 5, -0.15)); add(tree.group);
+  const tree = (H.tree = leafTree({ count: 900, kind: 'bodhi', radius: 5.4, trunkH: 6.6, seed: 5, joy: true })); tree.group.position.copy(P(-22, 5, -0.15)); add(tree.group);
   { const GM = '#bdb6a8', mg = add(new THREE.Group()); mg.position.copy(P(-15.6, 7.0)); mg.rotation.y = Math.atan2(-6.4, -2.0);
     add(M(new THREE.TorusGeometry(2.05, 0.3, 10, 40), STONE, GM, 0, 2.0, 0, 1), mg);
     [-2.8, 2.8].forEach((x) => { add(M(new THREE.BoxGeometry(1.5, 2.6, 0.5), STONE, GM, x, 1.2, 0), mg); add(M(new THREE.BoxGeometry(1.9, 0.18, 0.8), MATTE, '#55606b', x, 2.58, 0, 1), mg); });

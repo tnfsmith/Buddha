@@ -184,6 +184,51 @@ export class Voice {
     if (this.ctx.constructor.name !== 'OfflineAudioContext') setTimeout(() => { try { this.out.disconnect(); } catch (e) { /* bỏ qua */ } }, (fade + 13) * 1000); }
 }
 
+// ───────── Hiệu ứng âm của cảnh (không phải nhạc) ─────────
+// chime: chuông gió leng keng, lá reo và một làn ấm dâng khi hạt công đức chụp xuống ngọn Bồ-đề (k: độ lớn 0..1)
+// gift: ba tiếng ngân đi lên khi hạt Tùy Hỷ rời đôi tay · cloud: gió mây suốt chặng du vân (o.dur giây), ngân nhẹ lúc đi và lúc tới
+// Mọi đường bao về đúng 0; nhiễu lấy từ một bộ đệm cố định nên kiểm ngoại tuyến được (probeSfx).
+const NOISE = new WeakMap(), WIND = [1174.66, 1318.51, 1479.98, 1760, 1975.53, 2349.32, 2637.02];   // chuông gió: ngũ cung Rê, hai quãng tám
+const sfxNoise = (c) => NOISE.get(c) || NOISE.set(c, noiseBuf(c, 9)).get(c);
+const panTo = (ctx, dest, p) => { if (!ctx.createStereoPanner) return dest; const n = ctx.createStereoPanner(); n.pan.value = Math.max(-1, Math.min(1, p)); n.connect(dest); return n; };
+// một tiếng chuông gió: nốt gốc và hai bồi âm kim loại tắt nhanh hơn
+function strike(ctx, dest, t, f, lv, dec, pan) { const e = ctx.createGain(); e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(lv, t + 0.004); e.gain.setTargetAtTime(0, t + 0.004, dec / 5); e.connect(panTo(ctx, dest, pan));
+  [[1, 1], [2.76, 0.22], [5.4, 0.05]].forEach(([m, g], i) => { if (f * m > 12000) return; const o = ctx.createOscillator(), og = ctx.createGain(); o.frequency.value = f * m; og.gain.setValueAtTime(g, t); if (i) og.gain.setTargetAtTime(0, t, dec / (8 + 6 * i)); o.connect(og); og.connect(e); o.start(t); o.stop(t + dec + 0.25); }); }
+// nhiễu lặp qua bộ lọc, đường bao (thời điểm, mức) tuyến tính; trem: rung biên độ (Hz, độ sâu) như lá lay, gió thổi từng đợt
+function airy(ctx, dest, t, end, type, fq, q, env, trem) { const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), tr = ctx.createGain(), g = ctx.createGain(), l = ctx.createOscillator(), lg = ctx.createGain();
+  s.buffer = sfxNoise(ctx); s.loop = true; f.type = type; f.Q.value = q; fq.forEach(([at, v], i) => (i ? f.frequency.linearRampToValueAtTime(v, at) : f.frequency.setValueAtTime(v, at)));
+  g.gain.setValueAtTime(0, t); env.forEach(([at, v]) => g.gain.linearRampToValueAtTime(v, at)); tr.gain.value = 1 - trem[1]; l.frequency.value = trem[0]; lg.gain.value = trem[1];
+  l.connect(lg); lg.connect(tr.gain); s.connect(f); f.connect(tr); tr.connect(g); g.connect(dest); l.start(t); s.start(t, Math.random() * 3); l.stop(end + 0.05); s.stop(end + 0.05); }
+// làn ấm: vài sin trầm nở rồi lắng
+function pad(ctx, dest, t, end, fs, lv, att, rel) { const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(lv, t + att); g.gain.setValueAtTime(lv, Math.max(t + att, end - rel)); g.gain.linearRampToValueAtTime(0, end); g.connect(dest);
+  fs.forEach((f) => { const o = ctx.createOscillator(); o.frequency.value = f; o.connect(g); o.start(t); o.stop(end + 0.05); }); }
+export function sfxVoice(ctx, dest, kind, t, o = {}) {
+  const k = Math.max(0, Math.min(1, o.k ?? 1)), pan = o.pan || 0; let sd = o.seed || 1 + Math.floor(t * 977) % 9973; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  if (kind === 'chime') {
+    const n = 4 + Math.round(5 * k); let tt = t;
+    for (let i = 0; i < n; i++) { strike(ctx, dest, tt, WIND[Math.floor(rnd() * WIND.length)], (i ? 0.045 : 0.06) * (0.6 + 0.4 * rnd()), 2.2 + rnd() * 1.6, pan + (rnd() - 0.5) * 0.7); tt += 0.07 + rnd() * 0.24; }
+    airy(ctx, panTo(ctx, dest, pan), t, t + 3.2, 'bandpass', [[t, 3600]], 0.7, [[t + 0.35, 0.16 * (0.5 + 0.5 * k)], [t + 1.2, 0.06], [t + 3.1, 0]], [11, 0.35]);   // lá reo
+    pad(ctx, panTo(ctx, dest, pan * 0.5), t, t + 4, [293.66, 440, 587.33], 0.012 * (0.4 + 0.6 * k), 0.5, 3);   // ấm dâng: công đức thấm vào cây
+  } else if (kind === 'gift') {
+    [0, 2, 4].forEach((d, i) => strike(ctx, dest, t + i * 0.13, WIND[d], 0.035, 1.5, pan + (i - 1) * 0.15));
+    airy(ctx, panTo(ctx, dest, pan), t, t + 1.6, 'highpass', [[t, 2500]], 0.5, [[t + 0.25, 0.08], [t + 1.5, 0]], [0.5, 0.1]);
+  } else if (kind === 'cloud') {
+    const dur = Math.max(3, o.dur || 8), end = t + dur, pn = ctx.createStereoPanner ? ctx.createStereoPanner() : null, out = pn || dest, at = (x) => t + dur * x;
+    if (pn) { pn.pan.setValueAtTime(-0.35, t); pn.pan.linearRampToValueAtTime(0.35, end); pn.connect(dest); }
+    // gió thổi từng đợt, đổi hướng chậm (lọc trầm mở ra rồi khép lại) và hơi mây mỏng; nền lơ lửng
+    airy(ctx, out, t, end, 'lowpass', [[t, 280], [at(0.2), 700], [at(0.4), 1000], [at(0.55), 620], [at(0.75), 820], [end, 300]], 0.6, [[t + 1.4, 0.2], [end - 1.8, 0.2], [end, 0]], [0.21, 0.3]);
+    airy(ctx, out, t, end, 'bandpass', [[t, 1700]], 1.1, [[t + 1.6, 0.1], [end - 1.8, 0.09], [end, 0]], [0.33, 0.4]);
+    pad(ctx, out, t, end, [196, 293.66, 392.6], 0.011, 2, 1.8);
+    strike(ctx, dest, t + 0.1, WIND[1], 0.03, 2, -0.3); strike(ctx, dest, t + 0.28, WIND[3], 0.03, 2, -0.2);   // lên mây
+    [4, 2, 5].forEach((d, i) => strike(ctx, dest, end - 1.2 + i * 0.2, WIND[d], 0.035, 2.2, 0.3));   // tới nơi
+  }
+}
+// Đo ngoại tuyến một hiệu ứng âm (cùng thước đo với probeSong)
+export async function probeSfx(kind, secs = 7, sr = 44100) {
+  const ctx = new OfflineAudioContext(2, sr * secs, sr); sfxVoice(ctx, ctx.destination, kind, 0.05, { k: 1, dur: secs - 1.5, seed: 5 });
+  return { kind, ...stats(await ctx.startRendering()) };
+}
+
 // Trình phát nhạc nền: bật/tắt, đổi khúc hòa tan, phát liên tục / lần lượt / ngẫu nhiên, nhường thời thiền
 export class Ambient {
   constructor() { this.ctx = null; this.bus = null; this.voice = null; this.on = false; this.ducked = false; this.volume = 0.6; this.cur = null; this.since = 0; this.onchange = null; this._timer = null; }
@@ -196,16 +241,22 @@ export class Ambient {
     if (!same) { if (this.voice) this.voice.stop(t, 5); this.voice = new Voice(this.bus, SONG[id], Math.floor(Math.random() * 1e6) + 1); this.voice.len = (opt.len || 0) * 60; this.voice.start(t, this.on ? 5 : 0.5); this.voice.scheduleUntil(t + 2.5); this.cur = id; this.since = performance.now(); }
     else if (opt.len !== undefined) this.voice.len = opt.len * 60;
     this.on = true; if (!this.ducked) this._level(this.volume, 3); if (this.onchange) this.onchange(id); }
-  stop() { if (!this.ctx || !this.on) return; this.on = false; this._level(0, 1.6); this._sus = setTimeout(() => { if (!this.on) this.ctx.suspend(); }, 2000); if (this.onchange) this.onchange(null); }
+  stop() { if (!this.ctx || !this.on) return; this.on = false; this._level(0, 1.6); this._idle(2); if (this.onchange) this.onchange(null); }
+  // tạm ngưng AudioContext khi nhạc đã tắt và không còn hiệu ứng âm nào đang ngân (_busy: mốc performance.now())
+  _idle(secs) { clearTimeout(this._sus); this._sus = setTimeout(() => { if (this.on || !this.ctx) return; const left = (this._busy || 0) - performance.now(); if (left > 0) this._idle(left / 1000 + 0.2); else this.ctx.suspend(); }, secs * 1000); }
+  // hiệu ứng âm của cảnh (sfxVoice), theo âm lượng nhạc; như tiếng chim, phát cả khi nhạc đang tắt
+  sfx(kind, o = {}, vol = 0.6) { if (vol <= 0.001) return; try { this.ensure(); const ctx = this.ctx, dur = kind === 'cloud' ? Math.max(3, o.dur || 8) : 4.5;
+      this._busy = Math.max(this._busy || 0, performance.now() + dur * 1000); if (ctx.state !== 'running') ctx.resume(); if (!this.on) this._idle(dur + 0.5);
+      if (!this.sfxG) { this.sfxG = ctx.createGain(); this.sfxG.connect(ctx.destination); } this.sfxG.gain.value = Math.min(1, vol * 1.1); sfxVoice(ctx, this.sfxG, kind, ctx.currentTime + 0.04, o); } catch (e) { /* chưa có tương tác: trình duyệt chưa cho phát */ } }
   // Kết một khúc "phát 1 lần": ba tiếng chuông bát cách nhau 4,5 giây, nền lắng dần trong 10 giây rồi im
   end() { if (!this.ctx || !this.on || !this.voice) return this.stop(); const v = this.voice, t = this.ctx.currentTime + 0.3, f = v.f(0) > 250 ? v.f(0) / 2 : v.f(0);
-    [0, 4.5, 9].forEach((d) => v.bowl(t + d, f, 0.16, 0)); v.stop(t + 10, 10); this.on = false; clearTimeout(this._sus); this._sus = setTimeout(() => { if (!this.on) this.ctx.suspend(); }, 23000); if (this.onchange) this.onchange(null); }
+    [0, 4.5, 9].forEach((d) => v.bowl(t + d, f, 0.16, 0)); v.stop(t + 10, 10); this.on = false; this._idle(23); if (this.onchange) this.onchange(null); }
   // nhường thời thiền: hạ dần rồi tạm ngưng; hết thời thiền thì dâng trở lại
   duck(yes) { if (this.ducked === yes) return; this.ducked = yes; if (!this.ctx || !this.on) return;
     if (yes) { this._level(0, 2.5); this._sus = setTimeout(() => { if (this.ducked) this.ctx.suspend(); }, 2800); }
     else { clearTimeout(this._sus); this.ctx.resume().then(() => { if (this.voice) this.voice.scheduleUntil(this.ctx.currentTime + 2.5); this._level(this.volume, 4); }); } }
   // tiếng chim: vài tiếng huýt ngắn quét tần số, đi thẳng ra loa (không phụ thuộc nhạc đang bật hay tắt)
-  chirp(pan = 0, n = 3, seed = 1, vol = 0.6) { if (vol <= 0.001) return; try { this.ensure(); const ctx = this.ctx; if (ctx.state !== 'running') { ctx.resume(); if (!this.on) { clearTimeout(this._sus); this._sus = setTimeout(() => { if (!this.on) ctx.suspend(); }, 2600); } }
+  chirp(pan = 0, n = 3, seed = 1, vol = 0.6) { if (vol <= 0.001) return; try { this.ensure(); const ctx = this.ctx; if (ctx.state !== 'running') { ctx.resume(); if (!this.on) this._idle(2.6); }
       if (!this.fx) { this.fx = ctx.createGain(); this.fx.connect(ctx.destination); } this.fx.gain.value = 0.085 * vol;
       let t = ctx.currentTime + 0.06; const base = 2600 + (Math.abs(Math.sin(seed)) * 1700), cv = swellCurve(0.3, 0.45);
       for (let i = 0; i < n; i++) { const d = 0.06 + Math.random() * 0.07, f0 = base * (0.9 + Math.random() * 0.4), f1 = f0 * (Math.random() < 0.5 ? 1.35 : 0.72), o = ctx.createOscillator(), e = ctx.createGain(); e.gain.value = 0; e.gain.setValueCurveAtTime(cv, t, d);
@@ -220,9 +271,11 @@ export class Ambient {
 export async function probeSong(id, secs = 60, sr = 44100) {
   const ctx = new OfflineAudioContext(2, sr * secs, sr), bus = makeBus(ctx, 7); bus.master.gain.value = 0.6;
   const v = new Voice(bus, SONG[id], 42); v.start(0.05, 0.5); v.scheduleUntil(secs - 6); v.out.gain.setValueAtTime(SONG[id].gain || 1, secs - 5); v.out.gain.linearRampToValueAtTime(0, secs - 1);   // tắt dần ở cuối (không gọi stop(): ngoại tuyến không đọc được giá trị tức thời)
-  const buf = await ctx.startRendering(); let peak = 0, sum = 0, clicks = 0, maxd2 = 0;
-  // tiếng tạch = bước nhảy cô lập: sai phân bậc hai vọt lên gấp nhiều lần mức trung bình ngay trước đó (âm cao liên tục không bị tính nhầm)
+  return { id, ...stats(await ctx.startRendering()) };
+}
+// đỉnh, RMS, đuôi và số tiếng tạch = bước nhảy cô lập: sai phân bậc hai vọt lên gấp nhiều lần mức trung bình ngay trước đó (âm cao liên tục không bị tính nhầm)
+function stats(buf) { let peak = 0, sum = 0, clicks = 0, maxd2 = 0;
   for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); let run = 0; for (let i = 2; i < d.length; i++) { const a = Math.abs(d[i]); if (a > peak) peak = a; sum += d[i] * d[i]; const d2 = Math.abs(d[i] - 2 * d[i - 1] + d[i - 2]); if (d2 > maxd2) maxd2 = d2; if (d2 > 0.012 && d2 > 8 * run) clicks++; run += (d2 - run) / 64; } }
   const tail = buf.getChannelData(0).slice(-2000).reduce((m, x) => Math.max(m, Math.abs(x)), 0);
-  return { id, peak: +peak.toFixed(3), rms: +Math.sqrt(sum / (2 * buf.length)).toFixed(4), clicks, maxd2: +maxd2.toFixed(4), tail: +tail.toFixed(5) };
+  return { peak: +peak.toFixed(3), rms: +Math.sqrt(sum / (2 * buf.length)).toFixed(4), clicks, maxd2: +maxd2.toFixed(4), tail: +tail.toFixed(5) };
 }

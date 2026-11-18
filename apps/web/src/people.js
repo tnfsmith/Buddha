@@ -139,10 +139,10 @@ function figMat(m, U, kind) {
  transformed.x += sin(uT*1.9 + position.y*7. + ph)*.012*wd + aK.x*uWalkA*.022*sin(uWalk);
  transformed.z += cos(uT*1.3 + position.x*6. + ph)*.009*wd + aK.x*uWalkA*.05*max(0., sin(uWalk + step(0., position.x)*3.1416));
  if (transformed.y > uHinge) { float cb = cos(uBow), sb = sin(uBow); vec3 q = transformed - vec3(0., uHinge, .04); transformed = vec3(q.x, q.y*cb - q.z*sb, q.y*sb + q.z*cb) + vec3(0., uHinge, .04); }`);
-    sh.fragmentShader = 'varying vec3 vOp;\n' + sh.fragmentShader
+    sh.fragmentShader = 'varying vec3 vOp; uniform float uGlow;\n' + sh.fragmentShader
       .replace('#include <color_fragment>', '#include <color_fragment>\n' + (kind === 1 ? ' float wv = sin(vOp.x*700. + vOp.z*700.)*sin(vOp.y*700.); diffuseColor.rgb *= 1. + .06*wv*clamp(1. - fwidth(vOp.y)*900., 0., 1.);' : ''))
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
- float rimF = 1. - abs(dot(normalize(vViewPosition), normal)); totalEmissiveRadiance += vec3(1., .85, .62)*${kind === 2 ? '.16' : '.22'}*rimF*rimF*rimF;` + (kind === 2 ? ' totalEmissiveRadiance += diffuseColor.rgb*vec3(.13,.045,.03);' : ''));
+ float rimF = 1. - abs(dot(normalize(vViewPosition), normal)); totalEmissiveRadiance += vec3(1., .85, .62)*${kind === 2 ? '.16' : '.22'}*rimF*rimF*rimF + vec3(1., .78, .45)*uGlow*(.06 + .75*rimF*rimF);` + (kind === 2 ? ' totalEmissiveRadiance += diffuseColor.rgb*vec3(.13,.045,.03);' : ''));
   };
   m.customProgramCacheKey = () => 'fig' + kind;
   return m;
@@ -151,7 +151,7 @@ function figMat(m, U, kind) {
 // Nhân vật của người dùng: ba tư thế dựng sẵn; áo, viền, tóc, phụ kiện gộp một lần vẽ (màu ở đỉnh), da một lần vẽ (gương mặt vẽ)
 export function buildFigure(look) {
   const L = { ...defaultLook(), ...look }, fem = L.gender === 'nu', bw = (BW[L.build] || 1) * (fem ? 1 : 1.04), robeHex = OPTIONS.robe[L.robe][1], trimHex = OPTIONS.trim[L.trim][1], trimC = trimHex ? new THREE.Color(trimHex) : shade(robeHex, 0.62);
-  const U = { uBow: { value: 0 }, uHinge: { value: 1 }, uWalk: { value: 0 }, uWalkA: { value: 0 } };
+  const U = { uBow: { value: 0 }, uHinge: { value: 1 }, uWalk: { value: 0 }, uWalkA: { value: 0 }, uGlow: { value: 0 } };
   const mats = { cloth: figMat(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.88, side: THREE.DoubleSide }), U, 1), skin: figMat(new THREE.MeshStandardMaterial({ color: OPTIONS.skin[L.skin][1], roughness: 0.62 }), U, 2) };
   const fOpt = { mood: L.mood, age: L.age, shaved: L.hair === 'cao', fem }, faces = { open: faceTex({ ...fOpt, closed: false }), closed: faceTex({ ...fOpt, closed: true }) };
   mats.skin.map = faces.open;
@@ -167,12 +167,15 @@ export function buildFigure(look) {
   return {
     group, poses, mats, pose: 'stand',
     setPose(p) { this.pose = p; U.uHinge.value = p === 'sit' ? 0.2 : 1; Object.keys(poses).forEach((k) => (poses[k].visible = k === p)); this.eyes(p === 'sit'); },
-    eyes(closed) { mats.skin.map = closed ? faces.closed : faces.open; },
+    eyes(closed) { this.closed = closed; if (!this.joy) mats.skin.map = closed ? faces.closed : faces.open; },
+    // vừa nhận công đức: thân ấm sáng lên (viền sáng vàng, không vầng sau đầu) và mỉm cười mắt cong
+    glow(v) { U.uGlow.value = v; },
+    smile(on) { if (on === !!this.joy) return; this.joy = on; if (on && !faces.joy) faces.joy = faceTex({ ...fOpt, joy: true }); mats.skin.map = on ? faces.joy : this.closed ? faces.closed : faces.open; },
     // kinh hành: pha bước (theo nhịp nhún của world.js) và biên độ 0..1 → gấu áo đưa trước theo từng chân
     walk(phase, amt) { U.uWalk.value = phase; U.uWalkA.value = amt; },
     // cúi lạy (radian) quanh hông, như hội chúng
     bow(v) { U.uBow.value = v; },
-    dispose() { group.traverse((o) => o.geometry && o.geometry.dispose()); Object.values(mats).forEach((m) => m.dispose()); faces.open.dispose(); faces.closed.dispose(); },
+    dispose() { group.traverse((o) => o.geometry && o.geometry.dispose()); Object.values(mats).forEach((m) => m.dispose()); faces.open.dispose(); faces.closed.dispose(); if (faces.joy) faces.joy.dispose(); },
   };
 }
 
