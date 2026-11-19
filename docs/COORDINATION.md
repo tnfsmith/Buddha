@@ -4,7 +4,7 @@ Ngày cập nhật: 19/11/2026. Người tổng hợp duy nhất: **Codex**. Quy
 
 **Quyết định nội dung mới của chủ dự án (#55):** bỏ điều kiện Hội đồng bắt buộc. Nội dung tham khảo có nguồn, phát hành theo quy trình biên tập/PR; Hội đồng/chuyên gia chỉ tư vấn tùy chọn. ADR 0003 thay các yêu cầu cũ còn xuất hiện trong bằng chứng lịch sử dưới đây. Quyết định đã ghi không có nghĩa mã UI đang chạy đã thay đổi.
 
-**Mốc bàn giao 19/11:** main và staging tại `6fca294` đã có API hồ sơ #117 và bộ nạp biến thể #118. Xem §23 và Issue/PR mới nhất để biết quyền sửa tệp và việc đang chờ.
+**Mốc bàn giao 19/11.** #119/#120 đã đưa đủ 63 biến thể lên staging. #116 đã merge, hợp đồng #126 là điều kiện cho đợt Bạn đồng tu. Xem §24 và Issue/PR mới nhất để biết quyền sửa tệp và việc đang chờ.
 
 Đọc tệp này khi bắt đầu phiên; sau đó kiểm Issue/PR và `origin/main` hiện tại. Tệp là bản bàn giao có thời điểm, không thay bảng việc GitHub. Claude gửi cập nhật trong Issue/PR; Codex tổng hợp để tránh hai agent cùng sửa tệp này.
 
@@ -275,3 +275,10 @@ PR81 chưa merge/deploy; #82 phải cập nhật máy quay hướng chúng sanh 
 - Claude giữ `main.js`, `build.mjs` và phần Du vân theo #95. [#116](https://github.com/tnfsmith/Buddha/pull/116#issuecomment-6995342004) còn lỗi đổi diện mạo giữa chuyến đi. [#104](https://github.com/tnfsmith/Buddha/issues/104#issuecomment-6995343363) dùng dữ liệu kiểm thử theo #112; Codex làm `today/swap/summary` #105 sau khi bộ chọn dùng chung merge. ReminderClock giữ ở #106 và tiêu chí mở tầng chờ quyết định #107.
 - Claude giữ các mục Bạn đồng tu trong roadmap theo [bàn giao #105](https://github.com/tnfsmith/Buddha/issues/105#issuecomment-6995341576). [#126](https://github.com/tnfsmith/Buddha/pull/126#issuecomment-6995342456) đang chỉnh hợp đồng. Codex triển khai #122/#123 sau khi hợp đồng merge, theo phụ thuộc ở từng Issue.
 - Codex giữ `.github/workflows/preview.yml`, `docs/infra.md` và tệp bàn giao này theo [claim #35](https://github.com/tnfsmith/Buddha/issues/35#issuecomment-6995851566). Nhánh `ag/35-preview-no-staging-deploy` bỏ đường deploy staging từ PR và yêu cầu đúng URL alias. Trả quyền khi PR merge/đóng hoặc bàn giao rõ. #35 vẫn mở cho phần cách ly D1/KV từng PR và nghiệm thu hai preview độc lập.
+
+## 24. Bàn giao sau #120 và #116, chuẩn bị Bạn đồng tu — 19/11/2026
+
+- #119/#120 đã lên staging. API staging trả đủ đúng 63 biến thể cho 21 ô, 73 nhiệm vụ và 42 bài/nghi thức. [#104 đã nhận danh mục thật](https://github.com/tnfsmith/Buddha/issues/104#issuecomment-6998061834). #105 tiếp tục sau khi có bộ chọn dùng chung theo kế hoạch hiện hành.
+- #116 đã merge vào `c7da7d0` và [CI main](https://github.com/tnfsmith/Buddha/actions/runs/44458559530) đạt. Mốc Du vân và số đo dựng cảnh đã cập nhật trong `CLAUDE.md`. Kết quả staging theo [lần triển khai #116](https://github.com/tnfsmith/Buddha/actions/runs/44459879916). Quyền giữ tệp theo phạm vi #116 đã được trả khi merge.
+- #126 `e569abd` ghép sạch trên `c7da7d0` và trùng cây đã qua kiểm thử tích hợp. Sau khi hợp đồng vào main, Codex nhận #122/#123 và Claude nhận #124/#125 theo [phân công #121](https://github.com/tnfsmith/Buddha/issues/121#issuecomment-6997614717). Claude giữ roadmap theo phạm vi #126 tới mốc bàn giao đã ghi.
+- Theo [phạm vi soạn trước #122](https://github.com/tnfsmith/Buddha/issues/122#issuecomment-6999731620), Codex chuẩn bị migration 0011, bản xuất dữ liệu che thông tin người nhận và dọn dữ liệu hết hạn trên nhánh `ag/122-ban-dong-tu`. Kiểm bằng Worker/D1 cục bộ. Phần route kết nối, hiện diện, mời gặp và cờ hỗ trợ trong `/me` thuộc các bước tiếp theo của #122. Quyền sử dụng hai tệp bàn giao này trả khi PR merge/đóng hoặc bàn giao rõ trên Issue.
