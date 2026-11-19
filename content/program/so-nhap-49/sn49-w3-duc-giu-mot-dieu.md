@@ -6,7 +6,7 @@ tier: 0
 lang: vi
 title: "Giữ một điều nhỏ"
 source_ref: "Vân Đạo tự biên soạn; tham khảo AN 8.39 (https://www.dhammatalks.org/suttas/AN/AN8_39.html) theo chủ đề §8.2."
-status: cho_duyet
+status: da_duyet
 meta: { program: so-nhap-49, schema: 1, week: 3, pillar: duc, level: nhe, minutes: 4, money: false, at_home: true, outdoors: false, needs_others: false, punna: sila, parami: [sila, nekkhamma], scope: doi_thuc }
 ---
 Nhìn lại một giới nguyện hôm nay và chọn một điều nhỏ để giữ đến tối.
