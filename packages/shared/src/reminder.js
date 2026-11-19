@@ -25,7 +25,9 @@ export const isKind = (k) => typeof k === 'string' && REMINDER_KINDS.includes(k)
 export const inQuiet = (hm) => hm >= QUIET_FROM || hm < QUIET_TO;
 /** Shard 0–15 theo user_id; tên DO: `rc-${shardOf(uid)}` */
 export const shardOf = (userId) => hash32('rc:' + String(userId)) % SHARDS;
-/** Khóa chống gửi trùng của một lần nhắc cho một đăng ký push */
+/** Khóa của một lượt nhắc (một nhắc trong một ngày địa phương); giới hạn 2 lượt/ngày đếm theo khóa này */
+export const occKey = (reminderId, localDate) => `${reminderId}:${localDate}`;
+/** Khóa chống gửi trùng của một lượt nhắc tới một đăng ký push */
 export const sendKey = (reminderId, localDate, subId) => `${reminderId}:${localDate}:${subId}`;
 
 /**
@@ -117,6 +119,22 @@ export function nextReminderAt(rem, { tz, now, uposatha = 'vn_4' } = {}) {
     return t;
   }
   return null;
+}
+
+/**
+ * Lượt đang thử lại còn hiệu lực theo cấu hình mới nhất không (hợp đồng §4 bước 4).
+ * rem: dòng `reminder` mới đọc từ D1 (hoặc null); occ: { kind, local_hm, local_date, due_at } lúc mở lượt.
+ * Sai khi: nhắc không còn/tắt/khác kênh push, đổi loại hay giờ, Tịnh khẩu tại due_at, ngày không còn hợp
+ * days_mask hay ngày trai, đổi múi giờ (giờ gốc không còn khớp), hoặc đã quá due_at + LATE_MS.
+ */
+export function occurrenceValid(rem, occ, { tz, uposatha = 'vn_4', now } = {}) {
+  if (!rem || !occ || (rem.active !== true && rem.active !== 1) || (rem.channel !== undefined && rem.channel !== PUSH_CHANNEL)) return false;
+  if (rem.kind !== occ.kind || rem.local_hm !== occ.local_hm || !isTz(tz) || !Number.isFinite(now) || !Number.isFinite(occ.due_at)) return false;
+  if (now > occ.due_at + LATE_MS || (Number(rem.paused_until) || 0) > occ.due_at || inQuiet(occ.local_hm)) return false;
+  if (zonedToUtc(occ.local_date, occ.local_hm, tz) !== occ.due_at) return false;
+  if (occ.kind === 'uposatha') return isTraiDate(occ.local_date, uposatha);
+  const mask = Number(rem.days_mask);
+  return Number.isInteger(mask) && !!(mask & (1 << localParts(occ.due_at, tz).dow));
 }
 
 /** Dữ liệu push (không chứa chữ riêng tư; service worker hiện câu đã biên tập theo `kind`). */

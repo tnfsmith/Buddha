@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { solarToLunar } from '../src/amlich.js';
 import {
-  MAX_ACTIVE, SHARDS, checkReminder, checkReminders, inQuiet, isTraiDate, localParts, nextReminderAt, pauseUntil, pushPayload, sendKey, shardOf, zonedToUtc,
+  LATE_MS, MAX_ACTIVE, SHARDS, checkReminder, checkReminders, inQuiet, isTraiDate, localParts, nextReminderAt, occKey, occurrenceValid, pauseUntil, pushPayload, sendKey, shardOf, zonedToUtc,
 } from '../src/reminder.js';
 
 const VN = 'Asia/Ho_Chi_Minh';
@@ -120,7 +120,40 @@ describe('shard, khóa gửi, dữ liệu push', () => {
     expect(used.size).toBe(16);
   });
   it('khóa chống trùng và payload không có chữ riêng tư', () => {
+    expect(occKey('r1', '2026-11-20')).toBe('r1:2026-11-20');
     expect(sendKey('r1', '2026-11-20', 's1')).toBe('r1:2026-11-20:s1');
     expect(JSON.parse(pushPayload('thien', 1))).toEqual({ v: 1, kind: 'thien', at: 1 });
+  });
+});
+
+describe('occurrenceValid (lượt đang thử lại)', () => {
+  // Nhắc 06:00 thứ Sáu 20/11 giờ Việt Nam gặp 429; lượt thử lại lúc 06:05 dùng giờ gốc
+  const due = at('2026-11-19T23:00:00Z');
+  const occ = { kind: 'thien', local_hm: '06:00', local_date: '2026-11-20', due_at: due };
+  const rem = R({ local_hm: '06:00', channel: 'push' });
+  const ctx = { tz: VN, now: due + 5 * 60000 };
+  it('còn hiệu lực khi cấu hình không đổi, kể cả next_at đã sang ngày mai', () => {
+    expect(nextReminderAt(rem, { tz: VN, now: due })).toBe(due + 86400000);
+    expect(occurrenceValid({ ...rem, next_at: due + 86400000 }, occ, ctx)).toBe(true);
+  });
+  it('tắt, đổi giờ, đổi loại, khác kênh, xóa nhắc → hủy', () => {
+    for (const r of [{ ...rem, active: false }, { ...rem, local_hm: '07:00' }, { ...rem, kind: 'nhiem_vu' }, { ...rem, channel: 'local' }, null]) expect(occurrenceValid(r, occ, ctx)).toBe(false);
+  });
+  it('Tịnh khẩu phủ giờ gốc → hủy; Tịnh khẩu bắt đầu sau giờ gốc → vẫn thử', () => {
+    expect(occurrenceValid({ ...rem, paused_until: due + 86400000 }, occ, ctx)).toBe(false);
+    expect(occurrenceValid({ ...rem, paused_until: due - 60000 }, occ, ctx)).toBe(true);
+  });
+  it('đổi múi giờ, ngày không còn trong days_mask, quá due_at + 30 phút → hủy', () => {
+    expect(occurrenceValid(rem, occ, { ...ctx, tz: 'Asia/Tokyo' })).toBe(false);
+    expect(occurrenceValid({ ...rem, days_mask: 1 }, occ, ctx)).toBe(false);   // 20/11 là thứ Sáu
+    expect(occurrenceValid(rem, occ, { ...ctx, now: due + LATE_MS + 1 })).toBe(false);
+    expect(occurrenceValid(rem, occ, { ...ctx, now: due + LATE_MS })).toBe(true);
+  });
+  it('ngày trai: đổi lựa chọn sang khong → hủy', () => {
+    const t = nextReminderAt(R({ kind: 'uposatha', local_hm: '06:00' }), { tz: VN, now: due, uposatha: 'vn_4' });
+    const o = { kind: 'uposatha', local_hm: '06:00', local_date: localParts(t, VN).date, due_at: t };
+    const r = R({ kind: 'uposatha', local_hm: '06:00' });
+    expect(occurrenceValid(r, o, { tz: VN, now: t + 60000, uposatha: 'vn_4' })).toBe(true);
+    expect(occurrenceValid(r, o, { tz: VN, now: t + 60000, uposatha: 'khong' })).toBe(false);
   });
 });
