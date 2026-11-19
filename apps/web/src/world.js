@@ -426,7 +426,9 @@ void main(){ float n = fbm(vUv*vec2(3.,1.8) + vec2(uTime*.05, uVeil*.6)); vec3 c
     // Đổi diện mạo giữa lúc đang đi/ngồi (ví dụ bản từ thiết bị khác vừa về, #93): giữ nguyên đường đi và chỗ ngồi, không để
     // trạng thái 'walk' với đường rỗng (lỗi «reading 'x'» trong _avatarStep)
     const A0 = this.av, keep = A0 ? { p: A0.pos.clone(), rot: A0.rot, pose: this.fig.pose, st: A0.state, where: A0.where,
-      go: { path: A0.path || [], speed: A0.speed || 0, done: A0.done, sit: A0.sit, id: A0.id, an: A0.an, track: A0.track, steer: A0.steer, after: A0.after, restoreSit: A0.restoreSit, dest: A0.dest, curve: A0.curve, k: A0.k } } : null;
+      go: { path: A0.path || [], speed: A0.speed || 0, done: A0.done, sit: A0.sit, id: A0.id, an: A0.an, track: A0.track, steer: A0.steer, after: A0.after, restoreSit: A0.restoreSit, dest: A0.dest, curve: A0.curve, k: A0.k,
+        // chuyến du vân qua Vân Môn (#116): thiếu `trip` thì 'travel' kẹt và _tripStep ném lỗi khi đổi diện mạo giữa chặng
+        trip: A0.trip, side: A0.side, wall: A0.wall, hold: A0.hold || 0, phase: A0.phase || 0 } } : null;
     if (this.fig) { this.scene.remove(this.fig.group); this.fig.dispose(); this.scene.remove(this.hallFig.group); this.hallFig.dispose(); }
     this.fig = buildFigure(this.look); this.scene.add(this.fig.group);
     // thú cưng đồng hành (people.buildPet): dựng lại theo diện mạo mới, xuất hiện ngay cạnh chủ

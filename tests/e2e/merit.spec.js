@@ -68,3 +68,28 @@ test('du vân qua Vân Môn: ra cổng, mây hạ xuống, bước lên, bay (m�
   expect(r.st2).toEqual(STAGES); expect(r.gate2, 'về: đi ra qua Vân Môn đảo bạn').toBeLessThan(1);
   expect(r.home).toEqual(['home', 12.5, 12.5]);
 });
+
+test('đổi diện mạo giữa chặng du vân (bản từ thiết bị khác về): chuyến đi vẫn tới nơi, không lỗi', async ({ page }) => {
+  test.setTimeout(300_000);
+  const errs = []; page.on('pageerror', (e) => errs.push(e.message));
+  await page.goto(url('q=0&snap=1')); await ready(page);
+  const r = await page.evaluate(() => {
+    const W = window.__app.world, out = {};   // setLook dựng lại W.av: luôn đọc W.av mới
+    W.setMode('island'); W.touch = 0;
+    const step = () => { W._avatarStep(0.05, { breath: 0 }); W._friendStep(0.05); W.time += 0.05; W.controls.update(); };
+    for (const at of ['walk', 'fly']) {
+      W.visit(0, () => {});
+      let changed = false, st = [], err = null;
+      for (let i = 0; i < 1600 && W.av.state === 'travel'; i++) {
+        try { step(); } catch (e) { err = e.message; break; }
+        const T = W.av.trip; if (T && st.at(-1) !== T.st) st.push(T.st);
+        if (!changed && T && T.st === at && (at !== 'fly' || T.t > 1)) { W.setLook({ ...W.look, robe: (W.look.robe + 1) % 5 }); changed = true; }
+      }
+      out[at] = { changed, err, where: W.av.where, state: W.av.state, last: st.at(-1) };
+      W.goHome(() => {}); for (let i = 0; i < 1600 && W.av.state === 'travel'; i++) step();
+    }
+    return out;
+  });
+  for (const at of ['walk', 'fly']) expect(r[at], `đổi diện mạo lúc ${at}`).toEqual({ changed: true, err: null, where: 0, state: expect.not.stringMatching(/^travel$/), last: 'in' });
+  expect(errs).toEqual([]);
+});
