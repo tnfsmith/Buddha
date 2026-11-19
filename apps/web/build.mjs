@@ -1,4 +1,4 @@
-import { build } from 'esbuild';
+import { build, transformSync } from 'esbuild';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { createHash } from 'node:crypto';
@@ -25,7 +25,9 @@ const face = (family, pkg, sub, w) => `@font-face{font-family:"${family}";font-s
 const fonts = [['Be Vietnam Pro', 'be-vietnam-pro', 'vietnamese', 400], ['Be Vietnam Pro', 'be-vietnam-pro', 'vietnamese', 600], ['Be Vietnam Pro', 'be-vietnam-pro', 'latin', 400], ['Be Vietnam Pro', 'be-vietnam-pro', 'latin', 600], ['Be Vietnam Pro', 'be-vietnam-pro', 'latin-ext', 400], ['Noto Serif', 'noto-serif', 'vietnamese', 600], ['Noto Serif', 'noto-serif', 'latin', 600]].map((a) => face(...a)).join('\n');
 // Chuẩn hóa NFC: chữ có dấu luôn là một ký tự dựng sẵn, không bị rời dấu khi phông thiếu dấu tổ hợp
 // Mã JS chèn SAU khi chuẩn hóa: chuỗi trong mã giữ đúng như nguồn (trước đây chúng là \uXXXX nên NFC cũng không đụng tới)
-const html = readFileSync('src/index.template.html', 'utf8').replace('/*__FONTS__*/', () => fonts).normalize('NFC').replace('/*__BUNDLE__*/', () => js);
+// CSS trong <style> thu gọn bằng esbuild (#104: bớt ~1,8 KB để giữ trần kích thước); chạy sau khi chèn phông, trước khi chèn mã JS
+const minCss = (h) => h.replace(/(<style[^>]*>)([\s\S]*?)(<\/style>)/g, (m, a, css, b) => a + transformSync(css, { loader: 'css', minify: true, charset: 'utf8' }).code.trim() + b);
+const html = minCss(readFileSync('src/index.template.html', 'utf8').replace('/*__FONTS__*/', () => fonts).normalize('NFC')).replace('/*__BUNDLE__*/', () => js);
 
 // 1. Ghi vào dist/van-dao.html
 mkdirSync('dist', { recursive: true });
