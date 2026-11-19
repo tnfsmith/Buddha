@@ -1,6 +1,7 @@
-import { MAX_COMPANIONS, closenessOf, meetPhase, presenceOf, seenBucket } from '@vandao/shared/dong-tu.js';
+import { INVITE_TTL_MS, MAX_COMPANIONS, closenessOf, meetPhase, presenceOf, seenBucket } from '@vandao/shared/dong-tu.js';
 import { clientIp } from './guard.js';
-import { bad } from './lib.js';
+import { currentJourney, bad } from './lib.js';
+import { getLocalDate } from './utils/time.js';
 
 export const blocked = (a, b) => `EXISTS (
   SELECT 1 FROM user_block WHERE (blocker_id = ${a} AND blocked_id = ${b}) OR (blocker_id = ${b} AND blocked_id = ${a})
@@ -8,16 +9,51 @@ export const blocked = (a, b) => `EXISTS (
 export const pair = (a, b) => `a = min(${a}, ${b}) AND b = max(${a}, ${b})`;
 export const accepted = (a, b) => `EXISTS (SELECT 1 FROM companion WHERE ${pair(a, b)} AND status = 'dong_y')`;
 export const underCap = (uid) => `(SELECT COUNT(*) FROM companion WHERE status = 'dong_y' AND (a = ${uid} OR b = ${uid})) < ${MAX_COMPANIONS}`;
+export const openIsland = (column) => `json_type(${column}, '$.open') = 'true'`;
 export const userIdOk = (id) => typeof id === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(id);
 export const inviteRow = "id, from_id AS 'from', to_id AS 'to', kind, place, status, created_at, responded_at, start_at";
 export const cancelPending = `UPDATE meet_invite SET status = 'huy'
   WHERE status IN ('cho','dong_y') AND ((from_id = ?1 AND to_id = ?2) OR (from_id = ?2 AND to_id = ?1))`;
+
+export async function relationship(db, me, them) {
+  const row = await db.prepare(`SELECT
+    EXISTS (SELECT 1 FROM user_block WHERE blocker_id = ?1 AND blocked_id = ?2) AS blocked,
+    (SELECT json_object('a',c.a,'than_a',than_a,'than_b',than_b,'away_a',away_a,'away_b',away_b)
+     FROM companion c WHERE ${pair('?1', '?2')} AND status = 'dong_y') AS link`)
+    .bind(me, them).first();
+  const link = row.link ? JSON.parse(row.link) : null;
+  return {
+    accepted: Boolean(link), blocked: Boolean(row.blocked),
+    closeness: closenessOf(link?.than_a, link?.than_b),
+    allowAway: Boolean(link && (link.a === me ? link.away_b : link.away_a)),
+  };
+}
 
 function prefs(row) {
   const s = JSON.parse(row.settings_json || '{}').dong_tu;
   return { showPresence: row.visibility !== 'an' && s?.hien_trang_thai !== false, showDay: s?.hien_ngay !== false };
 }
 
+export async function participant(db, uid, now) {
+  const row = await db.prepare(`SELECT p.tz, p.island_json, p.visibility, p.settings_json, n.state, n.updated_at
+    FROM profile p LEFT JOIN presence n USING (user_id) WHERE p.user_id = ?`).bind(uid).first();
+  if (!row) return null;
+  const date = getLocalDate(now, row.tz);
+  const journey = await currentJourney(db, uid, date, now);
+  return {
+    date, day: journey?.day ?? 1, completed: Boolean(journey?.completed_at),
+    open: JSON.parse(row.island_json || '{}').open === true,
+    presence: prefs(row).showPresence ? presenceOf(row, now) : 'online',
+  };
+}
+
+export async function socialCounts(db, uid, now) {
+  const r = await db.prepare(`SELECT
+    (SELECT COUNT(*) FROM companion_request WHERE to_id = ?1 AND declined_at IS NULL AND expires_at > ?2) AS requests,
+    (SELECT COUNT(*) FROM meet_invite WHERE to_id = ?1 AND status = 'cho' AND created_at >= ?3) AS invites`)
+    .bind(uid, now, now - INVITE_TTL_MS).first();
+  return { requests: r.requests, invites: r.invites };
+}
 // Phép chiếu phía người gửi dùng cùng dạng với GET /companions.outgoing (§4, §6.8).
 export const companionOutgoing = (db, uid, now) => db.prepare(
   `SELECT id, tinh_danh, tag, created_at AS at, expires_at FROM companion_request

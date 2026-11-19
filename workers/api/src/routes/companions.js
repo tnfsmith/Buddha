@@ -9,6 +9,7 @@ import { bad, readJson } from '../lib.js';
 import {
   accepted, blocked, cancelPending, listCompanions, pair, socialQuota, underCap, userIdOk,
 } from '../companions-data.js';
+import { mountCompanionMeet } from './companions-meet.js';
 
 const app = new Hono();
 const MINUTE = 60_000, HOUR = 60 * MINUTE, DAY = 24 * HOUR;
@@ -202,4 +203,5 @@ app.post('/reports', ...quota('report', 10, DAY), async (c) => {
   return out.meta.changes ? c.json({ id }, 201) : missing(c);
 });
 
+mountCompanionMeet(app, { quota, fail, who, missing, empty });
 export default app;
