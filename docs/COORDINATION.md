@@ -1,10 +1,10 @@
 # Vân Đạo — phối hợp Codex và Claude
 
-Ngày cập nhật: 18/11/2026. Người tổng hợp duy nhất: **Codex**. Quyết định chủ dự án: Codex nhận việc Antigravity + Hermes; Claude tiếp tục độc lập phần của Claude.
+Ngày cập nhật: 19/11/2026. Người tổng hợp duy nhất: **Codex**. Quyết định chủ dự án: Codex nhận việc Antigravity + Hermes; Claude tiếp tục độc lập phần của Claude.
 
 **Quyết định nội dung mới của chủ dự án (#55):** bỏ điều kiện Hội đồng bắt buộc. Nội dung tham khảo có nguồn, phát hành theo quy trình biên tập/PR; Hội đồng/chuyên gia chỉ tư vấn tùy chọn. ADR 0003 thay các yêu cầu cũ còn xuất hiện trong bằng chứng lịch sử dưới đây. Quyết định đã ghi không có nghĩa mã UI đang chạy đã thay đổi.
 
-**Hiện hành 18/11:** production v0.17.1 ở `4e84324`. Main `05e1ea3` đã có #111–#115. Codex triển khai API hồ sơ tu tập #105. Xem §22 và Issue/PR mới nhất để biết khóa tệp và trạng thái GĐ3.
+**Mốc bàn giao 19/11:** main và staging tại `6fca294` đã có API hồ sơ #117 và bộ nạp biến thể #118. Xem §23 và Issue/PR mới nhất để biết quyền sửa tệp và việc đang chờ.
 
 Đọc tệp này khi bắt đầu phiên; sau đó kiểm Issue/PR và `origin/main` hiện tại. Tệp là bản bàn giao có thời điểm, không thay bảng việc GitHub. Claude gửi cập nhật trong Issue/PR; Codex tổng hợp để tránh hai agent cùng sửa tệp này.
 
@@ -268,3 +268,10 @@ PR81 chưa merge/deploy; #82 phải cập nhật máy quay hướng chúng sanh 
 - Codex giữ tệp Worker/API hồ sơ, export và gộp khách, bài kiểm và hai tệp bàn giao theo [#105](https://github.com/tnfsmith/Buddha/issues/105#issuecomment-6977288948), trên worktree `gd3-105-profile-api`. Gói này triển khai GET/PUT theo hợp đồng #111, kiểm hai thiết bị lưu cùng rev, gửi lại, export, gộp khách, đổi chu kỳ và xóa. Không có migration mới. Chỉ dùng trên staging sau khi PR triển khai được merge.
 - Claude giữ `apps/web/build.mjs` và `apps/web/src/main.js` cho nhánh `claude/95-du-van-dong-tu` theo [#95](https://github.com/tnfsmith/Buddha/issues/95#issuecomment-6977180623). Duyên khởi và bộ chọn #104 có thể dùng fixture của hai hợp đồng đã merge. Ghi claim tệp #104 trước khi chạm vùng dùng chung.
 - #112 đã chốt hợp đồng biến thể. Codex/Hermes tiếp tục danh mục #103 theo đó. Today/swap theo sau bộ nạp và bộ chọn, ReminderClock thuộc #106. #107 vẫn chờ chốt tiêu chí, GĐ3 chưa hoàn tất.
+
+## 23. Bàn giao sau #118 và bảo vệ preview #35 — 19/11/2026
+
+- #117 và #118 đã merge, [staging đã kiểm khói](https://github.com/tnfsmith/Buddha/actions/runs/44326879933). Danh mục staging có 42 bài/nghi thức, 73 nhiệm vụ và 0 biến thể công khai. #119 (33 mục) và #120 (30 mục) chờ chủ dự án duyệt nội dung. Xem [bàn giao #103](https://github.com/tnfsmith/Buddha/issues/103#issuecomment-6995342934).
+- Claude giữ `main.js`, `build.mjs` và phần Du vân theo #95. [#116](https://github.com/tnfsmith/Buddha/pull/116#issuecomment-6995342004) còn lỗi đổi diện mạo giữa chuyến đi. [#104](https://github.com/tnfsmith/Buddha/issues/104#issuecomment-6995343363) dùng dữ liệu kiểm thử theo #112; Codex làm `today/swap/summary` #105 sau khi bộ chọn dùng chung merge. ReminderClock giữ ở #106 và tiêu chí mở tầng chờ quyết định #107.
+- Claude giữ các mục Bạn đồng tu trong roadmap theo [bàn giao #105](https://github.com/tnfsmith/Buddha/issues/105#issuecomment-6995341576). [#126](https://github.com/tnfsmith/Buddha/pull/126#issuecomment-6995342456) đang chỉnh hợp đồng. Codex triển khai #122/#123 sau khi hợp đồng merge, theo phụ thuộc ở từng Issue.
+- Codex giữ `.github/workflows/preview.yml`, `docs/infra.md` và tệp bàn giao này theo [claim #35](https://github.com/tnfsmith/Buddha/issues/35#issuecomment-6995851566). Nhánh `ag/35-preview-no-staging-deploy` bỏ đường deploy staging từ PR và yêu cầu đúng URL alias. Trả quyền khi PR merge/đóng hoặc bàn giao rõ. #35 vẫn mở cho phần cách ly D1/KV từng PR và nghiệm thu hai preview độc lập.
