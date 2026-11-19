@@ -10,6 +10,7 @@ import { PASSIVE, MIN_VANDU, heardEnough, listenCode, logPassive, lotus, weakest
 import { PARAMI } from '@vandao/shared/parami.js';
 import { nv, loadMissions, soNhapView, soNhapAct, todayBox, todayLeft, missionsStale } from './ui/so-nhap.js';
 import { ct, loadVariants, variantsStale, variantHtml, dkCard, dkView, dkAct, dkPull } from './ui/duyen-khoi.js';
+import { ptCard, ptLine, ptView, ptAct } from './ui/phan-tinh.js';
 import { registerPWA, persistStorage } from './boot.js';
 import { startMetrics } from './net/metrics.js';
 import { $, fmt, esc } from './ui/dom.js';
@@ -295,7 +296,7 @@ function tichLuy() {
   return `<h3>Tích lũy tu học</h3><div class="tlhoc">${lotusSvg(L)}<div><p>${L.total ? `Cánh sáng rõ: ${esc(top.join(', '))}.` : 'Hoa sen sẽ sáng dần theo từng việc bạn thực hành.'}</p>` +
     (weak ? `<p class="muted">Cánh còn nhạt: ${esc(PARAMI[weak])}. Tuần này thử thêm một việc nhỏ của hạnh này.</p>` : '') + `</div></div>` +
     `<div class="cal" aria-label="Lịch tu 49 ngày">${cal.map((c) => `<i class="${c.any ? 'on' : ''}${c.sit ? ' s' : ''}${c.listen ? ' l' : ''}${c.gioi ? ' g' : ''}" title="${c.date}${c.sit ? ' · thiền' : ''}${c.listen ? ' · nghe Pháp' : ''}${c.gioi ? ' · giữ đủ năm giới' : ''}${c.confirm ? ' · ghi nhận' : ''}"></i>`).join('')}</div>` +
-    `<p class="muted">49 ngày qua: ${days} ngày có thực hành · nhịp thiền 7 ngày: ${mins} phút · đã nghe trọn: Lời Phật dạy ${hd['loi-phat-day'].size}${nL ? '/' + nL : ''}, Đường Xưa ${hd['duong-xua'].size}${nD ? '/' + nD : ''}</p>`;
+    `<p class="muted">49 ngày qua: ${days} ngày có thực hành · nhịp thiền 7 ngày: ${mins} phút · đã nghe trọn: Lời Phật dạy ${hd['loi-phat-day'].size}${nL ? '/' + nL : ''}, Đường Xưa ${hd['duong-xua'].size}${nD ? '/' + nD : ''}</p>` + ptLine(S);
 }
 function render() {
   const d = S.day, wk = Math.ceil(d / 7), W = WEEKS[wk - 1], keep = panel.scrollTop;
@@ -335,6 +336,8 @@ function render() {
     h = accountView();
   } else if (U.view === 'duyen') {
     h = dkView();
+  } else if (U.view === 'phantinh') {
+    h = ptView(S);
   } else if (U.view === 'creator') {
     const D = U.draft, k = D.look, nb = nameBlock(D.name);
     h = `<h2>Nhân vật của bạn</h2>${S.name ? '' : '<div class="row"><button class="ghost" data-act="acct-open" data-v="have">Tôi đã có hành trình</button></div>'}
@@ -377,7 +380,7 @@ function render() {
   } else if (U.view === 'board') {
     h = `<h2>Bia Tích Lũy</h2><p class="pali">Ngày ${d}/49 · Tuần ${wk}: ${esc(W.title)}</p>${bars()}`;
     // #93: việc còn lại hôm nay và trạng thái đồng bộ giữa các thiết bị
-    h += todayBox(S, today(), S.completed || allDone(d) ? 0 : 3 - Object.keys(S.done[d] || {}).length) + '<span id="nv-chinh"></span>' + dkCard();
+    h += todayBox(S, today(), S.completed || allDone(d) ? 0 : 3 - Object.keys(S.done[d] || {}).length) + '<span id="nv-chinh"></span>' + dkCard() + ptCard(S, today());
     if (ct.state === 'idle') loadVariants().then(render);
     const tdy = S.tu[today()] || {}, ev = passiveLines(tdy);
     if (library.state === 'idle') loadSermons().then(render);
@@ -483,6 +486,7 @@ panel.addEventListener('click', (e) => {
   if (act !== 'reset') U.resetArm = false;
   if (act.startsWith('acct-')) return accountAct(act.slice(5), b);   // T2.3: Giữ hành trình, Tài khoản (ui/account.js)
   if (act === 'nv-jump') { const t = panel.querySelector('#' + b.dataset.to); if (t) t.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
+  if (act.startsWith('pt-')) { const r = ptAct(act, b, S, today()); if (r.view) U.view = r.view; if (r.msg) toast(r.msg); render(); return; }   // #104: ui/phan-tinh.js, chỉ trên máy
   if (act.startsWith('dk-')) { const end = (r) => { if (r.view) U.view = r.view; if (r.msg) toast(r.msg); save(); render(); }, r = dkAct(act, b, S, today()); if (r && r.then) r.then(end); else end(r); return; }   // #104: ui/duyen-khoi.js
   if (act.startsWith('nv-')) { const msg = soNhapAct(act, b, S, today()); save(); if (msg) { toast(msg); if (world && /cánh sen|Đã giữ|thọ trì|giữ nguyện/.test(msg)) world.burst(0xf3d27a, null, 0.7); } render(); return; }   // đợt C (#91): ui/so-nhap.js
   if (['board', 'sit', 'visit'].includes(act) && meditating()) return move(() => { const again = panel.querySelector('[data-act="' + act + '"]'); if (again) again.click(); });
