@@ -46,14 +46,14 @@ function fakeServer() {
   return sv;
 }
 
-async function device(browser, sv, { account = true, viewport = { width: 390, height: 760 } } = {}) {
+async function device(browser, sv, { account = true, viewport = { width: 390, height: 760 }, seed = 1 } = {}) {
   const ctx = await browser.newContext({ viewport, serviceWorkers: 'block' });
   await ctx.route('**/api/**', (r) => sv.handle(r));
-  await ctx.addInitScript(({ LOOK, account }) => {
+  await ctx.addInitScript(({ LOOK, account, seed }) => {
     if (localStorage.getItem('vandao.seeded')) return; localStorage.setItem('vandao.seeded', '1');
-    localStorage.setItem('vandao.v1', JSON.stringify({ v: 1, day: 1, lastDate: null, done: {}, totals: { duc: 0, thien: 0, tue: 0 }, sacca: 0, sessions: 0, completed: false, open: false, name: 'Tuệ Thái', look: LOOK }));
+    localStorage.setItem('vandao.v1', JSON.stringify({ v: 1, day: 1, lastDate: null, done: {}, totals: { duc: 0, thien: 0, tue: 0 }, sacca: 0, sessions: 0, completed: false, open: false, name: 'Tuệ Thái', look: LOOK, seed }));
     if (account) localStorage.setItem('vandao.acct', JSON.stringify({ uid: 'u-tue-thai', guest: false, cycle: 1 }));
-  }, { LOOK, account });
+  }, { LOOK, account, seed });
   const page = await ctx.newPage();
   page.errs = []; page.on('pageerror', (e) => page.errs.push(e.message));
   await page.goto(BASE + '#q=0&snap=1');
@@ -101,6 +101,20 @@ test('chưa giữ hành trình: Duyên khởi lọc gợi ý theo hồ sơ, đ�
   expect(t[0]).toMatch(/^Việc duc [ab]\.$/);
   await expect(P(A).locator('[data-act="dk-swap"][data-p="duc"]')).toHaveCount(0);
   await expect(P(A).locator('[data-act="dk-swap"]')).toHaveCount(2);
+  // hồi quy #129: mở Duyên khởi rồi Lưu (không đổi gì) trong cùng ngày không cấp lại lượt đổi, không đổi gợi ý
+  await P(A).locator('[data-act="dk-open"]').first().click();
+  await P(A).locator('[data-act="dk-save"]').click();
+  await slow(P(A)).toContainText('Gợi ý hôm nay theo Duyên khởi');
+  expect(await texts(A)).toEqual(t);
+  await expect(P(A).locator('[data-act="dk-swap"][data-p="duc"]')).toHaveCount(0);
+  await expect(P(A).locator('[data-act="dk-swap"]')).toHaveCount(2);
+  // đổi hồ sơ (bỏ cờ miễn phí, nâng thời lượng): gợi ý cũ vẫn hợp thì giữ; trục Đức vẫn hết lượt đổi
+  await P(A).locator('[data-act="dk-open"]').first().click();
+  await P(A).locator('[data-act="dk-set"][data-k="minutes"][data-v="30"]').click();
+  await P(A).locator('[data-act="dk-save"]').click();
+  await slow(P(A)).toContainText('Gợi ý hôm nay theo Duyên khởi');
+  expect(await texts(A)).toEqual(t);
+  await expect(P(A).locator('[data-act="dk-swap"][data-p="duc"]')).toHaveCount(0);
   const s = await A.evaluate(() => window.__app.state());
   expect(s.uposatha).toBe('vn_2');
   expect(s.totals).toEqual(before.totals);   // gợi ý và đổi gợi ý không cộng Kusala
@@ -192,4 +206,37 @@ test('hai tài khoản cùng trình duyệt và hồ sơ trên máy: không ché
   expect(book['u-b']?.prof ?? null).toBeNull();   // B chưa lưu gì: không có sổ hoặc sổ rỗng
   expect(sv.puts.filter((x) => x.uid === 'u-a')).toHaveLength(1);
   expect(P0.errs).toEqual([]);
+});
+
+test('đổi Duyên khởi trong ngày (#132 mục 2): lựa chọn còn hợp thì giữ, không còn hợp thì về gợi ý tuần, lượt đổi giữ nguyên', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const sv = fakeServer();
+  // seed 2024 với hồ sơ rộng (45 phút, sâu hơn): Đức chọn mục c (vừa, 15 phút, ngoài trời), Thiện và Tuệ chọn mục a (nhẹ, tại nhà)
+  const A = await device(browser, sv, { account: false, seed: 2024 });
+  await openBia(A);
+  await P(A).locator('[data-act="dk-open"]').first().click();
+  await P(A).locator('[data-act="dk-set"][data-k="minutes"][data-v="45"]').click();
+  await expect(P(A).locator('[data-act="dk-set"][data-k="level"][data-v="sau"]')).toHaveClass(/on/);
+  await P(A).locator('[data-act="dk-save"]').click();
+  await slow(P(A)).toContainText('Gợi ý hôm nay theo Duyên khởi');
+  expect(await texts(A)).toEqual(['Việc duc c.', 'Việc thien a.', 'Việc tue a.']);
+  // đổi trục Tuệ một lần
+  await P(A).locator('[data-act="dk-swap"][data-p="tue"]').click();
+  const tue = (await texts(A))[2];
+  expect(tue).toMatch(/^Việc tue [bcd]\.$/);
+  // thu hẹp hồ sơ: nhẹ, 10 phút, tại nhà, miễn phí
+  await P(A).locator('[data-act="dk-open"]').first().click();
+  await P(A).locator('[data-act="dk-set"][data-k="minutes"][data-v="10"]').click();
+  await P(A).locator('[data-act="dk-set"][data-k="level"][data-v="nhe"]').click();
+  await P(A).locator('[data-act="dk-lim"][data-v="no_money"]').click();
+  await P(A).locator('[data-act="dk-lim"][data-v="at_home"]').click();
+  await P(A).locator('[data-act="dk-save"]').click();
+  await slow(P(A)).toContainText('Gợi ý hôm nay theo Duyên khởi');
+  const t = await texts(A);
+  expect(t[0]).not.toMatch(/^Việc duc/);   // Đức: mục c không còn hợp → thẻ gợi ý chung của tuần, không tự chọn lại
+  expect(t[1]).toBe('Việc thien a.');      // Thiện: mục a còn hợp → giữ nguyên
+  if (/^Việc tue [b]\.$/.test(tue)) expect(t[2]).toBe(tue); else expect(t[2]).not.toMatch(/^Việc tue/);
+  await expect(P(A).locator('[data-act="dk-swap"][data-p="tue"]')).toHaveCount(0);   // lượt đổi Tuệ đã dùng vẫn giữ
+  await expect(P(A).locator('[data-act="dk-swap"][data-p="duc"]')).toHaveCount(0);   // thẻ tuần không có nút đổi
+  expect(A.errs).toEqual([]);
 });
