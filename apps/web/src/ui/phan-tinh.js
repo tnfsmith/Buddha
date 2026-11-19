@@ -14,8 +14,10 @@ const LV = [['it', 'Hiếm khi'], ['vua', 'Đôi lúc'], ['nhieu', 'Thường']]
 
 let all = {}; try { all = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { all = {}; }
 // Sổ theo tài khoản (hoặc máy chưa giữ hành trình) và chu kỳ: chu kỳ mới không kế thừa phản tỉnh của chu kỳ cũ
-const book = (S) => { const k = (acct.on && acct.uid ? acct.uid : 'local') + '|' + (acct.on && acct.cycle ? 'c' + acct.cycle : 's' + (S.seed || 0));
-  return (all[k] = all[k] || { w: {}, skip: null }); };
+const accOf = () => (acct.on && acct.uid ? acct.uid : 'local');
+const keyOf = (S) => accOf() + '|' + (acct.on && acct.cycle ? 'c' + acct.cycle : 's' + (S.seed || 0));
+const bookAt = (k) => (all[k] = all[k] || { w: {}, skip: null });
+const book = (S) => bookAt(keyOf(S));
 const keep = () => { try { localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) { /* chỉ giữ trong bộ nhớ */ } };
 
 /** Tuần mới nhất đã tới lượt phản tỉnh: ngày 7 → tuần 1, … ngày 49 hay đã hoàn thành → tuần 7; chưa tới thì 0 */
@@ -35,7 +37,9 @@ export function ptLine(S) {
   return done.length ? `<p class="muted">Phản tỉnh tuần (chỉ trên máy này): ${done.map((w) => `<button class="link" data-act="pt-open" data-w="${w}">tuần ${w} ✓</button>`).join(' · ')}</p>` : '';
 }
 
-let W = 0, draft = { x: {} };   // tuần đang mở và bản đang sửa (mức đã chọn, chữ đã gõ)
+// Tuần đang mở, bản đang sửa (mức đã chọn, chữ đã gõ) và phạm vi gắn lúc mở: tài khoản + chu kỳ (`K`), để chữ của
+// chu kỳ/tài khoản này không lọt sang sổ khác nếu đồng bộ đổi chu kỳ hay đổi tài khoản trong lúc biểu mẫu đang mở.
+let W = 0, draft = { x: {} }, K = null;
 export function ptView(S) {
   const r = draft;
   return `<h2>Phản tỉnh tuần ${W}</h2><p class="muted">Nhìn lại không để tự trách. Chỉ cần nhận ra tâm đã khởi lên thế nào. Câu trả lời chỉ lưu trên máy này: không gửi đi, không tính điểm.</p>` +
@@ -51,15 +55,19 @@ const grab = () => { const x = {}; for (const k of ['t', 's', 'si', 'giu']) { co
 /** Nút pt-*: trả { view, msg } */
 export function ptAct(act, el, S, date) {
   const b = book(S);
-  if (act === 'pt-open') { W = Math.min(7, Math.max(1, +el.dataset.w || dueWeek(S) || 1)); const r = b.w[W]; draft = r ? { t: r.t, s: r.s, si: r.si, x: { ...r.x } } : { x: {} }; return { view: 'phantinh' }; }
+  if (act === 'pt-open') { W = Math.min(7, Math.max(1, +el.dataset.w || dueWeek(S) || 1)); K = { acc: accOf(), key: keyOf(S) }; const r = b.w[W]; draft = r ? { t: r.t, s: r.s, si: r.si, x: { ...r.x } } : { x: {} }; return { view: 'phantinh' }; }
   if (act === 'pt-skip') { b.skip = date; keep(); return {}; }
-  if (act === 'pt-back') { draft = { x: {} }; return { view: 'board' }; }
+  if (act === 'pt-back') { draft = { x: {} }; K = null; return { view: 'board' }; }
   if (act === 'pt-lv') { draft.x = grab(); draft[el.dataset.k] = draft[el.dataset.k] === el.dataset.v ? null : el.dataset.v; return {}; }
-  if (act === 'pt-save') {
-    const x = grab();
-    b.w[W] = { t: draft.t || null, s: draft.s || null, si: draft.si || null, x: Object.fromEntries(Object.entries(x).filter(([, v]) => v)), at: date };
-    draft = { x: {} }; keep(); return { view: 'board', msg: `Đã lưu phản tỉnh tuần ${W} trên máy này.` };
+  if (act === 'pt-save' || act === 'pt-del') {
+    // Phạm vi đã đổi trong lúc mở: khác tài khoản thì không ghi gì; cùng tài khoản mà khác chu kỳ thì ghi/xóa đúng sổ
+    // của chu kỳ lúc mở (không bao giờ vào sổ chu kỳ mới).
+    if (!K || K.acc !== accOf()) { draft = { x: {} }; K = null; return { view: 'board', msg: 'Tài khoản đã đổi trong lúc mở phản tỉnh. Bản này chưa được lưu.' }; }
+    const tb = bookAt(K.key), moved = K.key !== keyOf(S);
+    if (act === 'pt-save') { const x = grab(); tb.w[W] = { t: draft.t || null, s: draft.s || null, si: draft.si || null, x: Object.fromEntries(Object.entries(x).filter(([, v]) => v)), at: date }; }
+    else delete tb.w[W];
+    draft = { x: {} }; K = null; keep();
+    return { view: 'board', msg: `Đã ${act === 'pt-save' ? 'lưu' : 'xóa'} phản tỉnh tuần ${W}${moved ? ' của chu kỳ trước' : ''} trên máy này.` };
   }
-  if (act === 'pt-del') { delete b.w[W]; draft = { x: {} }; keep(); return { view: 'board', msg: `Đã xóa phản tỉnh tuần ${W} trên máy này.` }; }
   return {};
 }
