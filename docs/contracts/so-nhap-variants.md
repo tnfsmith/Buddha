@@ -33,3 +33,21 @@ Mỗi ô tuần × trục có 3–6 lựa chọn khác nhau, tối thiểu 63 m�
 - Bộ nạp kiểm đủ 21 ô và ít nhất ba biến thể mỗi ô trong danh mục biên tập, kiểu/meta, nguồn, id/version, cờ hoàn cảnh và đường lui miễn phí. PR phát hành kiểm độ phủ của tập `da_duyet` trước khi bật bộ chọn. `cho_duyet` và bản đã rút không xuất hiện trong danh mục công khai.
 - Kiểm bộ chọn với cùng dữ liệu đảo thứ tự, biên ngày 7/8 và 49, bộ lọc tại nhà/miễn phí/mức/phút, một ô chỉ có một lựa chọn hợp lệ, không có hồ sơ, và khác phiên bản danh mục. Cho các ca cùng dữ liệu chạy trên cả Worker và client. Kiểm danh mục nhiệm vụ cũ giữ 73 mục.
 - Sau merge hợp đồng: Codex/Hermes giữ nội dung, Codex/Antigravity giữ bộ nạp và API, Claude giữ tệp bộ chọn/UI theo claim #104. Claude có thể làm bộ chọn với fixture, Codex có thể soạn các mục song song. Chủ dự án duyệt nội dung trước khi nạp tập phát hành lên staging.
+
+## Bộ chọn đã triển khai: `@vandao/shared/variant.js` (#104)
+
+Worker #105 và client import cùng một mô-đun. Mô-đun không đọc giờ, mạng hay bộ nhớ và không ném lỗi với dữ liệu hỏng.
+
+| Hàm | Đầu vào → đầu ra |
+|---|---|
+| `variantCatalog(rows)` | Các hàng `GET /api/v1/content?kind=chuong_trinh&tier=0`, `meta` là chuỗi hoặc đối tượng. Trả `{ cells: { '1-duc': [...] … 21 ô }, snap, n }`. Mỗi id lấy phiên bản cao nhất; hàng sai hợp đồng bị bỏ. `snap` = `id@version` sắp theo id, nối bằng dấu phẩy |
+| `rankVariants(cat, profile, { userId, cycle, day, pillar })` | Danh sách hợp lệ theo thứ tự tất định; mục đầu là gợi ý. Rỗng khi chưa có hồ sơ, đầu vào sai hoặc không còn mục hợp |
+| `pickVariant(…)` | Mục đầu của `rankVariants`, hoặc `null` (app giữ gợi ý tuần và cho bỏ qua) |
+| `swapVariant(cat, profile, input, currentId)` | `{ variant, same }`: mục kế tiếp khác `currentId`, vòng lại đầu. Chỉ một lựa chọn thì `same: true`. `currentId` không còn trong danh sách thì trả mục đầu. Không kiểm giới hạn một lần/ngày, không lưu |
+| `fitsProfile(v, profile)`, `variantCoverage(cat)`, `variantSeed(input)`, `weekOfDay(day)`, `snapHash(cat)` | Bộ lọc hồ sơ #111; độ phủ 21 ô (≥ 3, có phương án nhẹ); seed; tuần 1–7; dấu ngắn của `snap` |
+
+- `userId` là `user.id` của phiên. `cycle` là số nguyên ≥ 1 của `journey`. `day` là ngày 1–49. `pillar` thuộc `duc | thien | tue`.
+- Worker nên lưu `{ id, version }` của mục đã chọn kèm `snapHash` lúc chọn. Danh mục cập nhật thì không thay lặng lẽ việc đã ghi (mục 4 ở trên).
+- Nghiệm thu chéo:
+  - `packages/shared/test/variant.test.js` chạy trên đúng các hàng mà `readContentRows` của bộ nạp tạo ra từ 63 tệp `da_duyet`. Đạt 21 ô và hồ sơ chặt nhất (nhẹ, 5 phút, miễn phí, tại nhà) vẫn có gợi ý cho mọi ngày, mọi trục.
+  - Ca Worker #105 so `rankVariants` trên hàng D1 trả về với kết quả trên `readContentRows`; hai kết quả phải trùng.
