@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LINK_USES } from '@vandao/shared/dong-tu.js';
+import { INVITE_TTL_MS, LINK_USES, MEET_LEAD_MS } from '@vandao/shared/dong-tu.js';
 import { call, env, guest, json } from './helpers.js';
 
 const base = '/api/v1';
@@ -12,6 +12,13 @@ async function api(person, path, method = 'GET', body, headers) {
   return json(await callAsync(person, path, method, body, headers));
 }
 
+async function link(from, to) {
+  const created = await api(from, '/companions/link', 'POST', {});
+  expect(created.status).toBe(200);
+  const result = await api(to, '/companions/link/' + created.data.code + '/accept', 'POST');
+  expect(result.status).toBe(201);
+  return created.data.code;
+}
 async function named(name, tag) {
   const actor = await guest(name);
   if (tag) await db.prepare('UPDATE profile SET tag = ? WHERE user_id = ?').bind(tag, actor.user.id).run();
@@ -23,6 +30,9 @@ const prefs = (p, changes, open) => api(p, '/profile', 'PATCH', {
   settings: { dong_tu: { hien_trang_thai: true, cho_tim: true, hien_ngay: true, ...changes } },
   ...(open === undefined ? {} : { island: { open } }),
 });
+const day = (p, value) => db.prepare('UPDATE journey SET day = ? WHERE user_id = ? AND is_current = 1').bind(value, id(p)).run();
+const setPresence = (p, state) => api(p, '/presence', 'POST', { state });
+const setCompanion = (p, other, body) => api(p, '/companions/' + id(other), 'PATCH', body);
 const ask = (p, query) => api(p, '/companions/request', 'POST', { query });
 const code = (r) => r.data?.error?.code;
 
@@ -86,6 +96,8 @@ describe('Bạn đồng tu trên Worker/D1 #122', () => {
     }
     expect((await list(sender)).outgoing).toEqual(expect.arrayContaining(outgoing));
     for (const rejected of [disabled, hidden, denied]) expect((await list(rejected)).incoming).toEqual([]);
+    const me = await api(real, '/me');
+    expect(me.data).toMatchObject({ dong_tu: 1, social: { requests: 1, invites: 0 } });
     const incoming = (await list(real)).incoming;
     expect(incoming.map((r) => r.id)).toEqual([outgoing[0].id]);
     expect((await api(real, '/companions/requests/' + incoming[0].id + '/respond', 'POST', { accept: false })).status).toBe(204);
@@ -106,5 +118,132 @@ describe('Bạn đồng tu trên Worker/D1 #122', () => {
     const other = (await ask(a, 'Tuệ Tâm · 9999')).data.request;
     expect((await api(a, '/companions/requests/' + other.id, 'DELETE')).status).toBe(204);
     expect((await list(a)).outgoing).toEqual([]);
+  });
+
+  it('thân thiết hai chiều và chỉ ghé khi cổng vẫn mở ở thời điểm ghé', async () => {
+    const host = await guest(), visitor = await guest();
+    await link(host, visitor);
+    await day(visitor, 29);
+    await prefs(host, {}, true);
+    await setCompanion(host, visitor, { than: true, away: true });
+    expect((await list(visitor)).companions[0].closeness).toBe('quen');
+    const visit = () => api(visitor, '/visits/away', 'POST', { host: id(host) });
+    expect(code(await visit())).toBe('not_than');
+    await setCompanion(visitor, host, { than: true });
+    expect((await list(visitor)).companions[0].closeness).toBe('than');
+    expect((await visit()).data).toEqual({ ok: true });
+    expect((await visit()).status).toBe(200);
+    expect((await list(host)).visits).toHaveLength(1);
+    await prefs(host, {}, false);
+    expect(code(await visit())).toBe('host_doc_cu');
+    expect((await list(host)).visits).toHaveLength(1);
+  });
+
+  it('mời gặp dùng ngày, cổng và hiện diện ở máy chủ; nhận lời sau một phút hoặc ngay khi ghé', async () => {
+    const host = await guest(), visitor = await guest();
+    await link(host, visitor);
+    await day(host, 12);
+    await day(visitor, 10);
+    await prefs(host, {}, true);
+    const meet = (kind, place) => api(host, '/meet', 'POST', { to: id(visitor), kind, place });
+    expect(code(await meet('thien'))).toBe('friend_away');
+    await setPresence(visitor, 'online');
+    expect(code(await meet('tham'))).toBe('guest_gate_closed');
+    const meditation = await meet('thien');
+    expect(meditation.data.invite.place).toBe('dtd');
+    const accept = (inv) => api(visitor, '/meet/' + inv.id + '/respond', 'POST', { accept: true });
+    const held = (await accept(meditation.data.invite)).data.invite;
+    expect(held.start_at - held.responded_at).toBe(MEET_LEAD_MS);
+    await day(visitor, 29);
+    expect(code(await meet('tra'))).toBe('tea_closed');
+    await prefs(host, {}, false);
+    expect(code(await meet('tham'))).toBe('host_doc_cu');
+    await prefs(host, {}, true);
+    const visit = (await meet('tham')).data.invite;
+    const started = (await accept(visit)).data.invite;
+    expect(started.start_at).toBe(started.responded_at);
+    const older = (await meet('tham')).data.invite, newer = (await meet('tham')).data.invite;
+    expect(code(await accept(older))).toBe('invite_not_pending');
+    await db.prepare('UPDATE meet_invite SET created_at=? WHERE id=?').bind(Date.now() - INVITE_TTL_MS - 10_000, newer.id).run();
+    expect(code(await accept(newer))).toBe('invite_expired');
+    await db.prepare('DELETE FROM presence WHERE user_id=?').bind(id(visitor)).run();
+    await prefs(visitor, { hien_trang_thai: false });
+    expect((await meet('thien', 'dtd')).status).toBe(201);
+    expect((await list(host)).companions[0].presence).toBeNull();
+  });
+
+  it('hiện diện cùng trạng thái không ghi thêm trước một phút và quá ba phút thì vắng', async () => {
+    const viewer = await guest(), actor = await guest();
+    await link(viewer, actor);
+    expect((await setPresence(actor, 'thien')).status).toBe(204);
+    const first = await db.prepare('SELECT updated_at FROM presence WHERE user_id=?').bind(id(actor)).first();
+    await setPresence(actor, 'thien');
+    expect(await db.prepare('SELECT updated_at FROM presence WHERE user_id=?').bind(id(actor)).first()).toEqual(first);
+    await db.prepare('UPDATE presence SET updated_at=? WHERE user_id=?').bind(Date.now() - 181_000, id(actor)).run();
+    expect((await list(viewer)).companions[0].presence).toBe('vang');
+    await setPresence(actor, 'thien');
+    expect((await list(viewer)).companions[0].presence).toBe('thien');
+  });
+
+  it.each([true,false])('chặn khi đang có lời kết nối chỉ vô hiệu phía nhận (%s)', async (senderBlocks) => {
+    const tag = senderBlocks ? '4100' : '4101';
+    const sender = await guest(), target = await named('Tuệ Thái', tag);
+    const req = (await ask(sender, 'Tuệ Thái · ' + tag)).data.request;
+    expect((await list(target)).incoming).toHaveLength(1);
+    const [blocker, blocked] = senderBlocks ? [sender, target] : [target, sender];
+    const linkCode = (await api(blocker, '/companions/link','POST',{})).data.code;
+    await api(blocker, '/blocks', 'POST', { user: id(blocked) });
+    expect((await list(sender)).outgoing).toEqual([req]);
+    expect((await list(target)).incoming).toEqual([]);
+    expect((await api(target, '/companions/requests/' + req.id + '/respond', 'POST', { accept: true })).status).toBe(404);
+    expect(code(await api(blocked, '/companions/link/' + linkCode))).toBe('link_invalid');
+    expect(code(await api(blocked, '/companions/link/' + linkCode + '/accept', 'POST'))).toBe('link_invalid');
+    expect(code(await api(blocked, '/meet', 'POST', { to: id(blocker), kind: 'thien' }))).toBe('not_companion');
+    expect(code(await api(blocked, '/visits/away', 'POST', { host: id(blocker) }))).toBe('not_companion');
+    await api(blocker, '/blocks/' + id(blocked), 'DELETE');
+    expect((await list(target)).incoming).toEqual([]);
+  });
+
+  it('chặn bỏ cặp đã kết nối và hủy lời mời, báo cáo riêng, kiểm phiên và dữ liệu hỏng', async () => {
+    const a = await guest(), b = await guest();
+    await link(a, b);
+    await setPresence(b, 'online');
+    const invite = (await api(a, '/meet', 'POST', { to: id(b), kind: 'thien' })).data.invite;
+    expect((await api(b, '/me')).data.social.invites).toBe(1);
+    await api(a, '/blocks', 'POST', { user: id(b) });
+    expect((await list(b)).companions).toEqual([]);
+    expect((await list(b)).invites).toEqual([]);
+    expect((await db.prepare('SELECT status FROM meet_invite WHERE id=?').bind(invite.id).first()).status).toBe('huy');
+    expect((await api(b, '/reports', 'POST', { target: id(a), context: 'island', reason: 'Kiểm chính sách' })).status).toBe(201);
+    for (const [path, method] of [['/companions','GET'], ['/companions/link','POST'], ['/presence','POST'], ['/meet','POST'],
+      ['/visits/away','POST'], ['/blocks','GET'], ['/reports','POST']]) expect((await api(null, path, method)).status).toBe(401);
+    expect((await api(null, '/companions/link/%E0%A4%A')).status).toBe(400);
+    expect(code(await api(a, '/meet', 'POST', { to: id(b), kind: 'toString' }))).toBe('invalid_kind');
+    const badJson = await call(base + '/companions/request', { method: 'POST', body: '{' }, a.token);
+    expect(badJson.status).toBe(400);
+    expect(badJson.headers.get('Cache-Control')).toBe('no-store');
+  });
+
+  it('nhận lời vào đảo phải kiểm cổng lại, nhận ở Đại Thiền Đường và từ chối vẫn dùng được', async () => {
+    const host = await guest(), visitor = await guest();
+    await link(host, visitor);
+    await day(visitor, 29);
+    await setPresence(host, 'online');
+    await setPresence(visitor, 'online');
+    const meet = (from, to, kind, place) => api(from, '/meet', 'POST', { to: id(to), kind, place });
+    const respond = (to, invite, accept) => api(to, '/meet/' + invite.id + '/respond', 'POST', { accept });
+    for (const [from, to, kind] of [[host, visitor, 'tham'], [visitor, host, 'xin_tham']]) {
+      await prefs(host, {}, true);
+      const issued = await meet(from, to, kind);
+      expect(issued.status).toBe(201);
+      await prefs(host, {}, false);
+      const held = issued.data.invite;
+      expect(await respond(to, held, true)).toMatchObject({ status: 409, data: { error: { code: 'host_doc_cu' } } });
+      expect(await db.prepare('SELECT status, start_at FROM meet_invite WHERE id = ?').bind(held.id).first())
+        .toEqual({ status: 'cho', start_at: null });
+      expect((await respond(to, held, false)).data.invite.status).toBe('tu_choi');
+    }
+    const meditation = await meet(host, visitor, 'thien', 'dtd');
+    expect((await respond(visitor, meditation.data.invite, true)).data.invite.status).toBe('dong_y');
   });
 });
