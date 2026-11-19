@@ -104,10 +104,17 @@ app.post('/companions/link/:code/accept', ...quota('link_accept', 20, DAY), asyn
 });
 
 const requestFields = 'id, tinh_danh, tag, created_at AS at, expires_at';
-app.post('/companions/request', ...quota('request', REQUESTS_PER_DAY, DAY), async (c) => {
+async function readFriendQuery(c, next) {
   const body = await readJson(c);
-  const q = typeof body?.query === 'string' && body.query.length <= 80 ? parseFriendQuery(body.query) : null;
-  if (!q) return fail(c, 'invalid_payload');
+  const query = typeof body?.query === 'string' && body.query.length <= 80 ? parseFriendQuery(body.query) : null;
+  if (!query) return fail(c, 'invalid_payload');
+  c.set('friendQuery', query);
+  await next();
+}
+
+app.post('/companions/request', noStore, authMiddleware, byUser('RL_API'),
+  readFriendQuery, socialQuota('request', REQUESTS_PER_DAY, DAY), async (c) => {
+  const q = c.get('friendQuery');
   const db = c.env.DB, uid = who(c), now = Date.now();
   const request = await db.prepare(`INSERT INTO companion_request (id, from_id, tinh_danh, tag, to_id, created_at, expires_at)
     VALUES (?1, ?2, ?3, ?4, (SELECT p.user_id FROM profile p WHERE p.tinh_danh_key = ?5 AND p.tag = ?4
