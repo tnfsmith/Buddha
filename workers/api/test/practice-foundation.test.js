@@ -9,13 +9,16 @@ const profile = (uid, col = 'minutes', value = 15) => env.DB.prepare(`INSERT INT
 describe('0010 practice foundation', () => {
   it('nâng DB chín migration giữ nguyên hành trình và sự kiện đã có', async () => {
     const db = env.OTHER_DB;
-    await applyD1Migrations(db, env.TEST_MIGRATIONS.slice(0, -1));
+    const beforeFoundation = env.TEST_MIGRATIONS.filter(({ name }) => name < '0010_practice_foundation.sql');
+    const foundation = env.TEST_MIGRATIONS.filter(({ name }) => name === '0010_practice_foundation.sql');
+    expect(foundation).toHaveLength(1);
+    await applyD1Migrations(db, beforeFoundation);
     await db.batch([
       db.prepare("INSERT INTO user (id,name,email,emailVerified,createdAt,updatedAt,isAnonymous) VALUES ('legacy','Khách','legacy@example.invalid',0,1,1,1)"),
       db.prepare("INSERT INTO journey (user_id,started_on,updated_at) VALUES ('legacy','2026-11-18',1)"),
       db.prepare("INSERT INTO practice_event (user_id,id,program,cycle,local_date,kind,slot,value_json,at,server_at) VALUES ('legacy','old','so-nhap-49',1,'2026-11-18','viec','hanh',NULL,1,1)"),
     ]);
-    await applyD1Migrations(db, env.TEST_MIGRATIONS);
+    await applyD1Migrations(db, foundation);
     expect(await db.prepare("SELECT day,rev FROM journey WHERE user_id='legacy'").first()).toEqual({ day: 1, rev: 1 });
     expect(await db.prepare("SELECT id,value_json FROM practice_event WHERE user_id='legacy'").first()).toEqual({ id: 'old', value_json: null });
     expect(await db.prepare('SELECT COUNT(*) AS n FROM reminder').first()).toEqual({ n: 0 });
