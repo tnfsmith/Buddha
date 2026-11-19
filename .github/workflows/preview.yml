@@ -30,8 +30,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CF_STAGING_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_STAGING_ACCOUNT_ID }}
       PR: ${{ github.event.pull_request.number }}
     steps:
       - uses: actions/checkout@v5
@@ -39,18 +37,26 @@ jobs:
         with: { node-version: 26, cache: npm }
       - run: npm ci
       - run: npm run build
-      - name: Tạo Worker staging nếu chưa có
-        working-directory: workers/api
-        run: npx wrangler deployments list --env staging >/dev/null 2>&1 || npx wrangler deploy --env staging
       - name: Tải phiên bản preview (không đổi bản staging đang chạy)
         id: up
         working-directory: workers/api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_STAGING_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_STAGING_ACCOUNT_ID }}
         run: |
-          set -o pipefail   # wrangler lỗi thì bước này phải đỏ (không bị `tee` che mất mã thoát)
-          npx wrangler versions upload --env staging --preview-alias "pr-$PR" --message "PR #$PR ${GITHUB_SHA::7}" | tee /tmp/up.txt
-          url=$(grep -oE 'https://pr-[^ ]+\.workers\.dev' /tmp/up.txt | head -1)
-          [ -n "$url" ] || url=$(grep -oE 'https://[^ ]+\.workers\.dev' /tmp/up.txt | head -1)
-          echo "url=$url" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          if ! npx wrangler deployments list --env staging >/dev/null; then
+            echo "::error::Không đọc được Worker staging. Kiểm tra tài nguyên và quyền token staging."
+            exit 1
+          fi
+          upload_log="$RUNNER_TEMP/wrangler-preview.txt"
+          npx wrangler versions upload --env staging --preview-alias "pr-$PR" --message "PR #$PR ${GITHUB_SHA::7}" | tee "$upload_log"
+          url="https://pr-$PR-vandao-staging.vandao-staging.workers.dev"
+          if ! grep -oE 'https://[[:alnum:].-]+' "$upload_log" | grep -Fx -- "$url" >/dev/null; then
+            echo "::error::Wrangler không trả đúng URL preview của PR #$PR."
+            exit 1
+          fi
+          printf 'url=%s\n' "$url" >> "$GITHUB_OUTPUT"
       - name: Lighthouse trên bản preview (điện thoại và máy tính, T1.3)
         if: steps.up.outputs.url != ''
         continue-on-error: true

@@ -36,6 +36,8 @@ Migration D1 production chạy trong job `production` của `deploy.yml`, trư�
 
 Version URL hiện tại vẫn dùng D1/KV staging. Cổng chuyển tiếp trong `preview.yml` so toàn bộ nhánh PR với `origin/main`: nếu có migration chưa merge thì **không chạy job có Cloudflare**, không upload mã/schema đó vào binding staging. CI vẫn chạy migration trên D1 cục bộ, kiểm API và account Worker thật. PR phụ thuộc có chứa migration chưa merge cũng bị chặn; không dùng nhánh base khác để bỏ qua cổng.
 
+Job preview cần đọc được Worker staging hiện có. Nếu kiểm tra thất bại, job dừng. Wrangler chỉ tải version cho alias `pr-N`; Lighthouse, kiểm khói và bình luận PR chỉ dùng URL đúng alias này. Token và ID tài khoản Cloudflare chỉ truyền vào bước kiểm tra Worker và tải version. Việc khởi tạo hoặc thay deployment staging đi theo quy trình deploy staging.
+
 Chủ dự án merge từng PR schema sau CI đạt; `deploy.yml` tuần tự hóa mỗi môi trường (`cancel-in-progress: false`), kiểm SHA main, chạy migration → nạp nội dung → deploy. Cột mới phải tương thích Worker cũ trong khoảng giữa migration và deploy; không sửa/xóa migration đã merge. Production vẫn chỉ khi chủ dự án gắn tag. Khi migration đã vào main, PR sau không còn migration mới thì preview lại được phép.
 
 Đây là phương án tuần tự hóa cho 0008 theo #33 cập nhật lần 2, **chưa hoàn thành cô lập dữ liệu #35**: preview không có migration vẫn dùng D1/KV staging. Không thử tài khoản/người dùng thật trên preview. Chưa cấp phát hay cleanup tài nguyên Cloudflare riêng; tác vụ đó giữ mở. Không dùng kết quả cổng này để tuyên bố hai preview đã có DB/KV độc lập.
