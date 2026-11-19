@@ -245,6 +245,27 @@ body.hall.barmin #panel{bottom:14px}
 #sub{pointer-events:none}
 /* #139: máy tính cũng có nút Thu gọn; bảng thu gọn thì phụ đề căn giữa toàn màn hình */
 @media (min-width:821px){body.pmin #sub{left:50%;width:min(760px,calc(100vw - 40px))}}
+/* #124: Bạn đồng tu. Nút trên thanh chính: chấm số là lời kết nối và lời mời đang chờ, không phải số bạn */
+#dt[hidden],#dtm[hidden]{display:none}
+#dt .s{display:none}@media (max-width:400px){#dt .l{display:none}#dt .s{display:inline}}
+#dt .n:empty{display:none}#dt .n{display:inline-block;min-width:17px;height:17px;margin-left:5px;padding:0 4px;border-radius:9px;background:#b07a1f;color:#fff;font-size:11px;line-height:17px;text-align:center;font-weight:700;vertical-align:1px}
+.dtf{border:1px solid var(--line);background:rgba(255,255,255,.55);border-radius:12px;padding:8px 11px;margin:7px 0}.dtf .row{margin-top:6px}.dtf p{margin:4px 0 0}
+.dtn{display:block;width:100%;text-align:left;background:none;border:0;padding:0;font:inherit;color:inherit}button.dtn{cursor:pointer;min-height:44px}
+.dtn b{font-family:var(--serif);font-size:16px}.dtn span{display:block;font-size:12.5px;color:var(--soft)}
+.dtd{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px;vertical-align:1px;background:#bcb5aa;border:1px solid rgba(0,0,0,.12)}
+.dtd.online{background:#4d9c8f}.dtd.thien,.dtd.tra{background:#d9a640}.dtd.tham{background:linear-gradient(90deg,#4d9c8f 50%,#bcb5aa 50%)}.dtd.an{background:none;border-style:dashed}
+.dtq{text-align:center}.dtq .qr{margin:8px auto}.dtc{font-family:var(--serif);font-size:30px;font-weight:600;letter-spacing:.08em}
+#dtFind{width:100%;font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.8)}
+/* Thẻ lời mời: máy tính đứng cạnh trái bảng; Đại Thiền Đường thì nằm trên thanh phát */
+#dtm{position:absolute;right:428px;bottom:14px;width:min(340px,calc(100vw - 28px));padding:12px 14px;z-index:6;background:rgba(255,251,243,.92);font-size:14px}
+#dtm b{font-family:var(--serif);font-size:16.5px}#dtm p{margin:4px 0 0}#dtm .row{margin-top:8px}
+body.hall:not(.sermon) #dtm{bottom:122px}
+@media (min-width:1500px){#dtm{right:458px}}
+@media (max-width:820px){
+  #dt{padding:6px 9px;font-size:13.5px}
+  /* #139: lớp phủ trên bảng đặt theo mép trên đo được của bảng (--subb), không giả định vh hay bottom cố định */
+  #dtm{left:8px;right:8px;width:auto;bottom:var(--subb,calc(44vh + 72px))}
+}
 </style>
 </head>
 <body>
@@ -255,7 +276,7 @@ body.hall.barmin #panel{bottom:14px}
     <nav id="tabs" class="glass" aria-label="Không gian">
       <button data-m="island" class="on">Vân Đảo</button><button data-m="hall">Đại Thiền Đường</button><button data-m="journey">Hành trình</button>
     </nav>
-    <button id="mus" class="ghost" title="Nhạc nền Vân Đảo">Nhạc</button><button id="who" class="ghost">Nhân vật</button><button id="hide" class="ghost" title="Phím H">Ẩn giao diện</button>
+    <button id="mus" class="ghost" title="Nhạc nền Vân Đảo">Nhạc</button><button id="dt" class="ghost" hidden><span class="l">Bạn đồng tu</span><span class="s">Đồng tu</span><span class="n" aria-hidden="true"></span></button><button id="who" class="ghost">Nhân vật</button><button id="hide" class="ghost" title="Phím H">Ẩn giao diện</button>
   </div>
   <div id="labels"></div>
   <section id="hud" class="glass" aria-label="Radar âm thanh">
@@ -287,6 +308,7 @@ body.hall.barmin #panel{bottom:14px}
   <div id="cam" class="glass" aria-label="Máy quay"><button data-cam="in" title="Phóng to" aria-label="Phóng to">+</button><button data-cam="out" title="Thu nhỏ" aria-label="Thu nhỏ">−</button><button data-cam="me" title="Về bên nhân vật" aria-label="Về bên nhân vật">◎</button></div>
   <div id="vd" class="glass" hidden></div>
   <div id="wake" class="glass" role="alertdialog" aria-live="assertive" hidden><span></span><div class="row"><button class="btn" data-wake="yes">Xả thiền</button><button class="btn alt" data-wake="no">Ngồi tiếp</button></div></div>
+  <div id="dtm" class="glass" role="dialog" aria-label="Lời mời của bạn đồng tu" aria-live="polite" hidden></div>
   <div id="toast" class="glass"></div>
   <div id="err" class="glass"></div>
 </div>
