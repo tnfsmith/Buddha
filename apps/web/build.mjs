@@ -8,8 +8,15 @@ const require = createRequire(import.meta.url);
 // npm workspaces đưa gói lên node_modules gốc, nên tìm thư mục phông theo cơ chế resolve của Node
 const pkgDir = (pkg) => dirname(require.resolve(`@fontsource/${pkg}/package.json`));
 
+// Thu gọn mã GLSL có sẵn của three.js (#95, tiết kiệm ~12 KB): chỉ các dòng `var|const tên = "…";` mang mã shader trong three.module.js.
+// Chuỗi được giải mã/mã lại bằng JSON (không lệch ký tự); mỗi dòng GLSL bỏ chú thích //, thụt lề, khoảng trắng thừa; bỏ dòng trống;
+// dòng mã (không phải chỉ thị #) bỏ thêm khoảng trắng quanh , ; ( ) { } = < > ? : — không đụng + - * / để không sinh ra ++ -- // /*.
+// Giữ xuống dòng (chỉ thị # cần dòng riêng, regex #include/unroll_loop của three cần) và nguyên dòng chỉ thị (vd. "#include <…>").
+const shrink = (s) => s.split('\n').map((l) => l.replace(/(^|[^:])\/\/.*$/, '$1').trim().replace(/[ \t]+/g, ' ')).filter(Boolean).map((l) => (l[0] === '#' ? l : l.replace(/ ?([,;(){}=<>?:]) ?/g, '$1'))).join('\n');
+const glsl = { name: 'glsl', setup(b) { b.onLoad({ filter: /three[\\/]build[\\/]three\.module\.js$/ }, (a) => ({ loader: 'js', contents: readFileSync(a.path, 'utf8').replace(/^((?:var|const) [\w$]+ = )("(?:[^"\\\n]|\\.)*");$/gm, (m, h, q) => {
+  try { const s = JSON.parse(q); return s.includes('\n') && /gl_|vec[234]|uniform |#ifdef|#include|void main/.test(s) ? h + JSON.stringify(shrink(s)) + ';' : m; } catch { return m; } }) })); } };
 // charset utf8: chữ tiếng Việt trong mã giữ nguyên UTF-8 (2–3 byte) thay vì \uXXXX (6 byte) — bản HTML đơn nhỏ hơn đáng kể (#93)
-const r = await build({ entryPoints: ['src/main.js'], bundle: true, minify: true, format: 'iife', target: 'es2020', write: false, legalComments: 'none', charset: 'utf8' });
+const r = await build({ entryPoints: ['src/main.js'], bundle: true, minify: true, format: 'iife', target: 'es2020', write: false, legalComments: 'none', charset: 'utf8', plugins: [glsl] });
 const js = r.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 // Phông nhúng sẵn (đủ dấu tiếng Việt, chạy không cần mạng)
 const F = (pkg, file) => readFileSync(join(pkgDir(pkg), 'files', file)).toString('base64');
