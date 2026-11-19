@@ -13,6 +13,8 @@ import { checkPracticeEvent, MAX_EVENTS_PER_DAY, PRACTICE_V } from '@vandao/shar
 import { computeUnlockedZones, profileView } from './me.js';
 import { getLocalDate } from '../utils/time.js';
 import { readJson, bad, jsonCapped, dayPillars, stepJourney, isComplete, journeyUpdate, currentJourney, kusalaTotals } from '../lib.js';
+import { practiceDay } from '../practice-choices.js';
+import { changePracticeChoice } from '../practice-swap.js';
 
 // Gói Free cho 50 truy vấn D1 mỗi lần gọi Worker: ~9 truy vấn cố định + tối đa 5 cho mỗi thao tác → 8 thao tác/lần.
 // Client (net/sync.js) tự chia outbox thành từng lô 8.
@@ -48,13 +50,36 @@ syncApp.post('/', authMiddleware, byUser('RL_SYNC'), async (c) => {
   const reject = (op, code, retry = false) => rejected.push({ id: op.id, code, retry });
   const sorted = ops.filter((op) => op && typeof op.id === 'string' && op.id.length <= 64 && typeof op.type === 'string')
     .sort((a, b) => (Number(a.at) || 0) - (Number(b.at) || 0));
+  let swapContext;
 
   for (const op of sorted) {
+    if (op.type === 'practice.swap') {
+      const at = Number(op.at);
+      const timingError = !Number.isFinite(at) || at < now - PAST_MS || at > now + FUTURE_MS
+        ? 'invalid_timestamp' : getLocalDate(at, tz) > today ? 'day_locked' : null;
+      try {
+        const result = await changePracticeChoice(db, user.id, { ...op.payload, op_id: op.id }, now, async () => {
+          swapContext ??= await practiceDay(db, user.id, now);
+          J = swapContext.journey ?? J;
+          return swapContext;
+        }, timingError);
+        if (result.ok) applied.push(op.id);
+        else reject(op, result.code, result.code === 'day_locked');
+      } catch {
+        reject(op, 'db_error', true);
+      }
+      continue;
+    }
+    swapContext = null;
     // practice_event giữ chống trùng cả khi cron đã dọn sync_op sau 30 ngày (đặc biệt imp.*).
-    const seen = op.type === 'practice.event'
-      ? db.prepare('SELECT 1 FROM sync_op WHERE user_id = ?1 AND op_id = ?2 UNION ALL SELECT 1 FROM practice_event WHERE user_id = ?1 AND id = ?2 LIMIT 1')
-      : db.prepare('SELECT 1 FROM sync_op WHERE user_id = ?1 AND op_id = ?2');
-    if (await seen.bind(user.id, op.id).first()) { applied.push(op.id); continue; }
+    const eventStamp = op.type === 'practice.event' ? 'UNION ALL SELECT 0 FROM practice_event WHERE user_id = ?1 AND id = ?2' : '';
+    const seen = await db.prepare(`SELECT 1 AS swapped FROM practice_choice WHERE user_id = ?1 AND swap_op_id = ?2
+      UNION ALL SELECT 0 FROM sync_op WHERE user_id = ?1 AND op_id = ?2 ${eventStamp} LIMIT 1`).bind(user.id, op.id).first();
+    if (seen) {
+      if (seen.swapped) reject(op, 'practice_swap_id_conflict');
+      else applied.push(op.id);
+      continue;
+    }
     const at = Number(op.at);
     if (!Number.isFinite(at) || at < now - PAST_MS || at > now + FUTURE_MS) { reject(op, 'invalid_timestamp'); continue; }
     const date = getLocalDate(at, tz), p = op.payload && typeof op.payload === 'object' ? op.payload : {};

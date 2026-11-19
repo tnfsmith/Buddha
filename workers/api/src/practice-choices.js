@@ -34,7 +34,7 @@ export const stillCurrent = `EXISTS (
   ) AND EXISTS (SELECT 1 FROM practice_profile WHERE user_id = ?1 AND updated_at = ?6)`;
 
 export function listedChoice(variants, row, profile, day, pillar) {
-  const variant = row && variants.versions.get(`${row.variant_id}@${row.version}`);
+  const variant = row?.day === day && variants.versions.get(`${row.variant_id}@${row.version}`);
   return variant && variant.week === weekOfDay(day) && variant.pillar === pillar && fitsProfile(variant, profile)
     ? variant : null;
 }
@@ -47,7 +47,7 @@ export async function getToday(db, userId, now, dayContext) {
     getPracticeProfile(db, userId), loadChoicesCatalog(db), dayPillars(db, userId, journey),
   ]);
   const scope = choiceScope(userId, journey, date);
-  const read = db.prepare(`SELECT pillar, variant_id, version, swapped_at
+  const read = db.prepare(`SELECT day, pillar, variant_id, version, swapped_at
     FROM practice_choice WHERE user_id = ?1 AND program = ?2 AND cycle = ?3 AND local_date = ?4`).bind(...scope);
   const seeds = [];
   if (profile && variants.ready && !journey.completed_at) {

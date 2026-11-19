@@ -6,7 +6,7 @@
 //   đánh số tiếp sau chu kỳ lớn nhất của đích. Không mất dữ liệu. (T2.3 có thể hỏi người dùng muốn giữ bản nào.)
 // Mọi câu lệnh chạy trong một db.batch (giao dịch D1).
 
-const MOVE = ['practice_session', 'device', 'sync_op'];   // dữ liệu đi theo người, không trùng khóa giữa hai tài khoản
+const MOVE = ['practice_session', 'device'];
 
 /** Có tiến trình: đã đặt Tịnh danh, đã xác nhận Kusala, đã ngồi thiền hoặc đã qua ngày 1 / chu kỳ 1 */
 export async function hasProgress(db, uid) {
@@ -22,6 +22,9 @@ export async function linkGuest(db, guest, target) {
   if (!guest?.id || !target?.id || guest.id === target.id) return { moved: 'none' };
   const g = guest.id, t = target.id, now = Date.now();
   const moveAll = MOVE.map((tb) => db.prepare(`UPDATE ${tb} SET user_id = ? WHERE user_id = ?`).bind(t, g));
+  // ID do thiết bị đặt. Khi hai sổ có cùng ID, giữ dấu của đích và dọn dấu còn lại của khách.
+  moveAll.push(db.prepare('UPDATE OR IGNORE sync_op SET user_id = ? WHERE user_id = ?').bind(t, g),
+    db.prepare('DELETE FROM sync_op WHERE user_id = ?').bind(g));
   // Hồ sơ Duyên khởi theo tài khoản và không phụ thuộc chế độ gộp hành trình.
   moveAll.push(db.prepare(`UPDATE practice_profile SET user_id = ?1 WHERE user_id = ?2
     AND NOT EXISTS (SELECT 1 FROM practice_profile WHERE user_id = ?1)`).bind(t, g));
