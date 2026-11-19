@@ -3,7 +3,7 @@
 //  1. Thực thi yêu cầu xóa tài khoản đã qua 7 ngày ân hạn (xóa user → CASCADE mọi bảng; dọn bảng không có khóa ngoại).
 //  2. Xóa tài khoản KHÁCH (isAnonymous = 1, chưa gắn passkey/mã khôi phục/Google) không hoạt động quá 90 ngày.
 //     /api/v1/me trả `guest_purge_after` để app báo trước (§6.3).
-//  3. Dọn sync_op quá 30 ngày, phiên hết hạn, mã dùng một lần (verification) hết hạn.
+//  3. Dọn sync_op quá 30 ngày, phiên hết hạn, mã dùng một lần (verification) hết hạn và dữ liệu Bạn đồng tu tới hạn.
 // Mỗi lần chạy xử lý tối đa BATCH tài khoản để giữ trong giới hạn CPU/ghi D1 của gói Free; phần còn lại chạy đêm sau.
 // Log chỉ ghi số lượng, không ghi định danh (AGENTS.md §5).
 
@@ -38,12 +38,18 @@ export async function runCron(env, now = Date.now()) {
   ).bind(now - GUEST_IDLE_DAYS * DAY, BATCH).all()).results || [];
   out.deleted_idle_guests = await deleteUsers(db, idle.map((r) => r.id));
 
-  const [ops, sess, ver] = await db.batch([
+  const [ops, sess, ver, requests, meets, visits] = await db.batch([
     db.prepare('DELETE FROM sync_op WHERE applied_at < ?').bind(now - SYNC_OP_DAYS * DAY),
     db.prepare('DELETE FROM session WHERE expiresAt < ?').bind(now),
     db.prepare('DELETE FROM verification WHERE expiresAt < ?').bind(now),
+    db.prepare('DELETE FROM companion_request WHERE expires_at <= ?').bind(now),
+    db.prepare('DELETE FROM meet_invite WHERE created_at < ?').bind(now - 7 * DAY),
+    db.prepare('DELETE FROM island_visit WHERE at < ?').bind(now - 30 * DAY),
   ]);
   out.sync_ops = ops.meta?.changes ?? 0; out.sessions = sess.meta?.changes ?? 0; out.verifications = ver.meta?.changes ?? 0;
+  out.companion_requests = requests.meta?.changes ?? 0;
+  out.meet_invites = meets.meta?.changes ?? 0;
+  out.island_visits = visits.meta?.changes ?? 0;
   console.log('[cron]', JSON.stringify(out));
   return out;
 }
