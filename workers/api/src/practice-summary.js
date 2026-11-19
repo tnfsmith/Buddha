@@ -1,4 +1,4 @@
-import { lotus, PASSIVE } from '@vandao/shared/missions.js';
+import { actParami, lotus, PASSIVE } from '@vandao/shared/missions.js';
 import { isPunna } from '@vandao/shared/parami.js';
 import { foldPractice } from '@vandao/shared/practice.js';
 import { publicContent } from './content-public.js';
@@ -34,12 +34,14 @@ export async function practiceSummary(db, userId, range, now) {
   const weekStart = shift(to, -6);
   const from = range === 'week' && weekStart > started_on ? weekStart : started_on;
   const scope = [userId, program, cycle, from, to];
-  const [entries, events] = await db.batch([
+  const [entries, events, deeds] = await db.batch([
     db.prepare(`SELECT day, pillar, e_score, punna, variant_id FROM kusala_entry
       WHERE user_id = ? AND program = ? AND cycle = ? AND local_date BETWEEN ? AND ?`).bind(...scope),
     db.prepare(`SELECT id, local_date AS date, kind, slot, value_json, at FROM practice_event
       WHERE user_id = ? AND program = ? AND cycle = ? AND local_date BETWEEN ? AND ?
         AND (value_json IS NULL OR json_valid(value_json))`).bind(...scope),
+    db.prepare('SELECT local_date AS date, punna, parami_json FROM deed_log WHERE user_id = ? AND local_date BETWEEN ? AND ?')
+      .bind(userId, from, to),
   ]);
   const { tu, viec } = foldPractice(events.results.map(({ value_json, ...event }) => ({
     ...event, value: value_json === null ? null : JSON.parse(value_json),
@@ -67,7 +69,20 @@ export async function practiceSummary(db, userId, range, now) {
     for (const [code, record] of Object.entries(day)) addPunna(PASSIVE[code]?.punna, record.n);
   }
   // Sám hối cũ chỉ có tổng theo chu kỳ; không gán tổng đó cho một tuần cắt giữa chu kỳ.
-  const { counts, norm } = lotus(tu, done, from === started_on && from <= to ? sacca_count : 0, viec);
+  const { counts } = lotus(tu, done, from === started_on && from <= to ? sacca_count : 0, viec);
+  const byDay = new Map();
+  for (const deed of deeds.results) {
+    addPunna(deed.punna, 1);
+    if (!byDay.has(deed.date)) byDay.set(deed.date, actParami(viec[deed.date]));
+    const seen = byDay.get(deed.date);
+    for (const code of JSON.parse(deed.parami_json)) {
+      if (typeof code !== 'string' || !Object.hasOwn(counts, code) || seen.has(code)) continue;
+      counts[code]++;
+      seen.add(code);
+    }
+  }
+  const top = Math.max(...Object.values(counts));
+  const norm = Object.fromEntries(Object.entries(counts).map(([code, n]) => [code, top ? n / top : 0]));
   for (const key of Object.keys(pillars)) pillars[key] = round(pillars[key]);
   return { program, cycle, range, from, to, pillars, lotus: { counts, norm }, punna, meditation_minutes: round(minutes) };
 }

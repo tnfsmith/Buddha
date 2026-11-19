@@ -32,6 +32,12 @@ Mọi timestamp là UTC milliseconds; ngày nghiệp vụ theo profile.tz. Khôn
 
 Nhắc: mặc định tắt, tối đa hai/ngày, quiet 21:30–05:00, Tịnh khẩu 1–30 ngày; đúng ±1 phút theo tz, không lặp khi retry, 404/410 xóa subscription. Email chờ hạ tầng/quyền người dùng; thiếu VAPID/binding thì chưa bật push. Schema không chứng nhận các cửa kiểm này đã đạt.
 
+## Ghi việc thiện thêm (#105)
+
+- `POST /api/v1/deeds` dùng phiên tài khoản hoặc khách. Gửi `{ op_id, punna, parami, scope, shared? }`. Client tạo một UUID v4 trước lần gửi đầu và giữ cùng mã khi gửi lại. `punna` và từng mục `parami` lấy mã Phụ lục H, `parami` là mảng không lặp, `scope` là `doi_thuc` hoặc `dong_tu`. `shared` mặc định `false` và chỉ lưu lựa chọn cho phép chia sẻ sau này. API chỉ ghi sổ riêng.
+- Máy chủ lấy ngày theo múi giờ của hồ sơ và giới hạn nguyên tử năm lượt ghi mới mỗi ngày. Trả 201 `{ deed: { id, date, punna, parami, scope, shared, at } }`. Gửi lại cùng dữ liệu trả 200 và dòng cũ. `400 invalid_deed` cho đầu vào sai, `409 deed_id_conflict` cho mã đã dùng khác dữ liệu và `429 deed_daily_limit` khi hết lượt. Không nhận ngày tự khai, số tiền, điểm hay ghi chú.
+- Export trả `deeds` của người gọi. Gộp khách giữ dữ liệu lịch sử của hai bên, kể cả khi tổng số việc đã ghi trong ngày vượt năm sau gộp. Khi đã đủ lượt, từ chối ghi mới trong ngày. Xóa tài khoản xóa sổ. Tổng kết đếm mã Phước nghiệp sự và Ba-la-mật trong khoảng ngày, giữ điểm Kusala theo sổ xác nhận hiện hành.
+
 ## Phối hợp và GĐ4
 
 #101 đã merge vào `8fd09d4`. Claude giữ triển khai Duyên khởi/#104 và `workers/realtime/`/ReminderClock #106 theo quyền tệp ghi trên từng Issue. Codex giữ API/migration. GĐ4 theo #108, chưa có Lobby/HallRoom/codec/client thật hoặc báo cáo k6; vé HMAC hiện tại chỉ là nền T4.3.

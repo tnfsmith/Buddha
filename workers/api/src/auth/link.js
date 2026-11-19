@@ -6,7 +6,7 @@
 //   đánh số tiếp sau chu kỳ lớn nhất của đích. Không mất dữ liệu. (T2.3 có thể hỏi người dùng muốn giữ bản nào.)
 // Mọi câu lệnh chạy trong một db.batch (giao dịch D1).
 
-const MOVE = ['practice_session', 'device'];
+const MOVE = ['practice_session', 'device', 'deed_log'];
 
 /** Có tiến trình: đã đặt Tịnh danh, đã xác nhận Kusala, đã ngồi thiền hoặc đã qua ngày 1 / chu kỳ 1 */
 export async function hasProgress(db, uid) {
