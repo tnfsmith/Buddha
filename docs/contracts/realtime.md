@@ -19,7 +19,9 @@ Hợp đồng ranh giới giữa API (Codex: `/rt/ticket`, binding, chặn/báo 
 | `encodeState`, `decodeState`, `validRec(r, kind)` | Bản ghi 16 byte client → máy chủ và kiểm giới hạn |
 | `encodeBatch`, `decodeBatch` | Khung gộp máy chủ → client |
 | `signTicket(secret, p)`, `verifyTicket(secret, t, { now, room })`, `checkTicketPayload`, `nonce` | Vé HMAC v1 |
-| Hằng số | `HALL_CAP` 200, `ISLAND_CAP` 12, `FREE_HALL_SHARDS` 3, `SEND_HZ` 5, `BATCH_HZ` 4 (Free: 2), `TICKET_TTL_MS` 60 000, `BLK_MAX` 64, `CLOSE`, `BOUNDS`, `STATES` |
+| `bloomMake(uids)`, `bloomHas(f, uid)`, `hiddenPair(a, b)` | Bộ lọc chặn trong vé, không âm tính giả |
+| `checkRoomReport(p)` | Thân báo cáo trong phòng `{ context: 'room', room, slot, sid, reason? }` |
+| Hằng số | `HALL_CAP` 200, `ISLAND_CAP` 12, `FREE_HALL_SHARDS` 3, `SEND_HZ` 5, `BATCH_HZ` 4 (Free: 2), `TICKET_TTL_MS` 60 000, `BLF_MAX_N` 800, `PERMS`, `CLOSE`, `BOUNDS`, `STATES` |
 
 **Bản ghi 16 byte (little-endian, §7.3):**
 
@@ -46,10 +48,19 @@ Hợp đồng ranh giới giữa API (Codex: `/rt/ticket`, binding, chặn/báo 
 
 **Thân vé v1** (`checkTicketPayload`):
 ```
-{ v: 1, uid, room: "hall:t0:s2" | "island:{host}", tinh_danh, tag, look, blk: [user_id…], exp, n }
+{ v: 1, uid, room: "hall:t0:s2" | "island:{host}", tinh_danh, tag, look, blf: { m, b }, exp, n }
+  + chỉ với đảo: { perm: "host" | "open" | "away", open: bool }
 ```
 - `look` là diện mạo đã kiểm ở `/profile`, hoặc `null`.
-- `blk` gồm tối đa 64 người hai bên đã chặn nhau (cả hai chiều). Nếu nhiều hơn 64 thì lấy 64 người gần đây nhất; người ngoài danh sách bị lọc ở lần vào sau (§6).
+- `blf` là bộ lọc Bloom (`bloomMake`) của **toàn bộ** danh sách chặn hai chiều: người mình chặn và người chặn mình.
+  - Bộ lọc không có âm tính giả. DO ẩn một cặp khi bộ lọc của một trong hai người chứa người kia (`hiddenPair`), nên mọi cặp đã chặn đều bị lọc, bất kể ai vào trước.
+  - Dương tính giả dưới 1 % chỉ làm hai người không chặn nhau cũng không thấy nhau, vô hại.
+  - Danh sách vượt `BLF_MAX_N` (800) thì API không cấp vé và trả `503 rt_unavailable`; client dùng đám đông mô phỏng. Không bao giờ cấp vé với danh sách chặn thiếu.
+- `perm` và `open` chỉ có ở vé đảo, do API xác thực lúc cấp:
+  - `host`: chủ đảo, bất kể cổng mở hay đóng;
+  - `open`: chủ đang Nghênh khách;
+  - `away`: ghé khi vắng, theo `canVisitAway`.
+  - `open` là cổng đảo lúc cấp vé. Độc cư thì chỉ chủ có vé.
 - `exp` = `now + 60 giây`.
 - `n` là nonce ngẫu nhiên 16 byte.
 
@@ -77,9 +88,9 @@ Hợp đồng ranh giới giữa API (Codex: `/rt/ticket`, binding, chặn/báo 
 | Phương thức | Đối số → kết quả |
 |---|---|
 | `assign({ tier, uid, friends })` | `friends` là tối đa 50 user_id bạn đồng tu, do API lấy từ D1. Ưu tiên shard có bạn và còn chỗ, rồi shard số nhỏ nhất còn chỗ, rồi mở shard mới. Gói Free tối đa 3 shard. Trả `{ shard }`, `{ error: 'full' }` hoặc `{ error: 'busy' }` (vượt `RT_DAILY_IN`) |
-| `report({ room, count, uids, inbound })` | HallRoom báo khi có người vào/ra và mỗi 30 giây khi có thay đổi. `uids` dùng cho ưu tiên bạn và `hideNow` |
+| `report({ room, count, uids, inbound })` | HallRoom và IslandRoom báo khi có người vào/ra và mỗi 30 giây khi có thay đổi. `uids` dùng cho ưu tiên bạn và `hideNow`; chỉ giữ trong bộ nhớ SQLite của Lobby, không ghi D1 |
 | `total({ tier })` | Tổng người đang ngồi cả tầng, cho dòng «đang có N người cùng ngồi» |
-| `hideNow({ a, b })` | API gọi khi có người chặn: chuyển tới phòng đang có một trong hai người |
+| `hideNow({ a, b })` | API gọi khi có người chặn: chuyển tới mọi phòng (Đại Thiền Đường và đảo) đang có một trong hai người |
 
 **HallRoom / IslandRoom:**
 - **Khi nâng cấp WebSocket:**
@@ -88,14 +99,14 @@ Hợp đồng ranh giới giữa API (Codex: `/rt/ticket`, binding, chặn/báo 
   - `?v` khác 1 → `4400`;
   - phòng đầy → `4503`.
 - **Mỗi người một kết nối.** Cùng `uid` vào lại thì kết nối cũ bị đóng `4409`.
-- **Cấp `slot`** là số nhỏ nhất còn trống, giữ trong attachment cùng `uid`, `tinh_danh`, `tag`, `look` và `blk`.
-- **Gửi JSON `welcome`:** `{ type: 'welcome', v: 1, slot, room, server_now, batch_hz, peers: [{ slot, tinh_danh, tag, look }], total }`. Danh sách `peers` không có người hai bên đã chặn nhau.
+- **Cấp `slot` và `sid`.** `slot` là số nhỏ nhất còn trống. `sid` là dấu phiên kết nối ngẫu nhiên (`nonce()`): mỗi lần vào một `sid` mới, nên slot dùng lại cho người khác vẫn phân biệt được. Attachment giữ `uid`, `sid`, `tinh_danh`, `tag`, `look`, `blf` và với đảo thêm `perm`.
+- **Gửi JSON `welcome`:** `{ type: 'welcome', v: 1, slot, sid, room, server_now, batch_hz, peers: [{ slot, sid, tinh_danh, tag, look }], total }`. Danh sách `peers` không có cặp `hiddenPair`.
 - **Tin JSON hiếm:**
-  - `{ type: 'join', slot, tinh_danh, tag, look }` và `{ type: 'leave', slot }`;
+  - `{ type: 'join', slot, sid, tinh_danh, tag, look }` và `{ type: 'leave', slot, sid }`;
   - `{ type: 'count', total }` mỗi 30 giây khi tổng đổi;
   - `{ type: 'hide', slot }` khi `hideNow`.
 
-  Join/leave của người hai bên đã chặn nhau không gửi cho nhau.
+  Join/leave của cặp `hiddenPair` không gửi cho nhau.
 - **Tin client → DO:**
   - chỉ nhận khung nhị phân đúng 16 byte;
   - `slot` trong khung bị ghi đè bằng slot của kết nối;
@@ -108,13 +119,29 @@ Hợp đồng ranh giới giữa API (Codex: `/rt/ticket`, binding, chặn/báo 
   - Không thay đổi thì không đặt alarm, để DO ngủ.
   - `batch_hz` = 2 khi `RT_FREE = "1"`, còn lại 4.
 - **Đếm tin đến:** mỗi phòng cộng số tin trong ngày UTC và báo Lobby. Lobby dùng tổng này cho `busy`.
-- **IslandRoom:**
-  - 12 chỗ.
-  - Chủ rời đảo và không còn quyền «ghé khi vắng» cho ai thì khách nhận `{ type: 'leave', slot: chủ }` rồi `{ type: 'closed' }`; client đưa khách về đảo mình.
-  - Không có Lobby.
+- **IslandRoom — quyền ở lại do máy chủ xác thực:**
+  - 12 chỗ, không qua Lobby. Trạng thái cổng `open` của DO lấy theo vé hoặc RPC mới nhất (so theo thời điểm cấp).
+  - **Vào phòng:**
+    - vé `host` luôn vào được;
+    - vé `open` cần cổng đang mở và chủ đang có mặt (hoặc trong 60 giây chờ chủ nối lại);
+    - vé `away` cần cổng đang mở.
+    - Không đủ điều kiện → `4403`.
+  - **Chủ chuyển Độc cư.** API gọi `setOpen({ open: false, at })` trên `island:{chủ}` ngay khi ghi `island_json.open = false`. DO gửi `{ type: 'closed' }` rồi đóng mọi kết nối không phải chủ bằng `4410`, kể cả khách `away`, vì Độc cư luôn thắng. Mở lại cổng thì gọi `setOpen({ open: true, at })`.
+  - **Chủ rời đảo.** Chờ 60 giây cho chủ nối lại. Hết thời gian thì khách `open` nhận `{ type: 'closed' }` và đóng `4410`; khách `away` được ở lại vì đó là quyền ghé khi vắng.
+  - **Thu quyền.** Khi chủ tắt «ghé khi vắng», hủy kết nối hay chặn một người, API gọi `revoke({ guest })` trên `island:{chủ}`; DO đóng đúng khách đó bằng `4403`. Khi chặn, API cũng gọi `Lobby.hideNow` (§6).
+  - **Báo thành viên cho Lobby.** IslandRoom báo Lobby khi có người vào/ra (`report` với `room = island:{chủ}`), để `hideNow` tới được cả phòng đảo.
+  - **Client:** nhận `closed` thì đưa người dùng về đảo mình, báo «Chủ đảo đã khép cổng» hoặc «Chủ đảo đã rời đi».
 
-**RPC phục vụ báo cáo (T4.3, Codex gọi):** `whois({ slot })` trên đúng phòng → `{ uid }` hoặc `null`.
-- Client báo cáo bằng REST `POST /api/v1/reports { room, slot, reason }`; API hỏi DO để biết người bị báo cáo.
+**RPC phục vụ báo cáo (T4.3, Codex gọi):** `whois({ reporter, slot, sid })` trên đúng phòng → `{ uid }` hoặc `null`.
+- DO trả `uid` chỉ khi đủ cả bốn điều kiện:
+  1. người báo (`reporter`) đang ở trong phòng, hoặc rời chưa quá 10 phút;
+  2. cặp `slot` + `sid` đúng là một phiên kết nối đang có, hoặc đã kết thúc chưa quá 10 phút;
+  3. hai người không phải cặp `hiddenPair`, tức người báo đã thấy được đối tượng;
+  4. người báo khác đối tượng.
+- DO giữ bảng SQLite `recent(sid PK, uid, slot, left_at)` cho các phiên đã rời trong 10 phút để tra cứu, rồi dọn. Không ghi D1.
+- Client báo cáo bằng REST `POST /api/v1/reports` với thân `checkRoomReport`: `{ context: 'room', room, slot, sid, reason? }`.
+  - API hỏi `whois`. Kết quả `null` thì trả `404 not_found`; có `uid` thì ghi bảng `report` với `context = 'room'`.
+  - Cùng route này vẫn nhận thân báo cáo đảo của #122: `{ context: 'island', target, reason? }`.
 - Client không bao giờ thấy `user_id` của người khác.
 
 ## 5. Client (Claude, T4.2)
@@ -134,8 +161,9 @@ Hợp đồng ranh giới giữa API (Codex: `/rt/ticket`, binding, chặn/báo 
 ## 6. Chặn và báo cáo (Codex, T4.3)
 
 - **Chặn có hiệu lực:**
-  - **khi vào phòng**, qua `blk` trong vé;
-  - **ngay khi chặn**, qua `Lobby.hideNow`; cả hai bên nhận `hide` cho slot người kia, và khung gộp sau đó lọc hai người.
+  - **khi vào phòng**, qua bộ lọc `blf` của toàn bộ danh sách chặn trong vé;
+  - **ngay khi chặn**, qua `Lobby.hideNow`. Lobby biết thành viên của cả phòng Đại Thiền Đường lẫn phòng đảo. Cả hai bên nhận `hide` cho slot người kia, và khung gộp sau đó lọc hai người.
+  - Nếu hai người cùng ở một đảo, API gọi thêm `revoke` trên đảo đó cho người không phải chủ (§4).
 - **Báo cáo:** REST, không qua WebSocket; ghi D1 theo bảng `report` hiện có.
 - **Số liệu shard cho vận hành:** `Lobby.total` và `stats()` gồm số phòng, số người, tin đến trong ngày. Không có định danh.
 
@@ -153,11 +181,25 @@ Hợp đồng ranh giới giữa API (Codex: `/rt/ticket`, binding, chặn/báo 
 - người đi 5 bản ghi/giây, người khác nhận khung gộp ≤ `batch_hz`;
 - mọi người ngồi yên → không còn alarm, DO được ngủ;
 - quá tốc → `4429`;
-- hai người chặn nhau không nhận `join` hay bản ghi của nhau; `hideNow` ẩn ngay;
+- hai người chặn nhau không nhận `join` hay bản ghi của nhau dù ai vào trước, kể cả khi danh sách chặn có 800 người; `hideNow` ẩn ngay ở cả Đại Thiền Đường lẫn đảo;
+- **đảo:**
+  - khách `open` không vào được khi chủ vắng quá 60 giây;
+  - `setOpen(false)` đóng mọi khách `4410`, kể cả `away`;
+  - chủ rời đi thì khách `open` bị đóng, khách `away` ở lại;
+  - `revoke` đóng đúng một khách;
+- **`whois`:**
+  - trả `null` khi người báo chưa từng ở phòng, khi `sid` không khớp slot (slot đã cấp lại cho người khác), khi hai người là cặp ẩn, hoặc khi đã quá 10 phút;
+  - trả đúng `uid` cho phiên vừa rời dưới 10 phút;
 - Lobby ưu tiên shard có bạn; đầy → `full`; vượt `RT_DAILY_IN` → `busy`;
 - log không có `uid`, vé hay IP.
 
-**API** (Codex): mỗi mã lỗi ở §3; vé đúng dạng v1; `blk` đúng hai chiều; đảo đóng hay bị chặn dùng cùng mã.
+**API** (Codex):
+- mỗi mã lỗi ở §3; vé đúng dạng v1;
+- `blf` chứa đủ danh sách chặn hai chiều; vượt 800 → `rt_unavailable`;
+- đảo đóng hay bị chặn dùng cùng mã;
+- `perm` đúng theo Nghênh khách và `canVisitAway`;
+- gọi `setOpen` và `revoke` đúng lúc;
+- báo cáo `room` qua `whois` và báo cáo `island` của #122 trên cùng route.
 
 **Tải** (Hermes, T4.4, chỉ staging, sau khi có worker): 200 kết nối/shard ổn định 30 phút; p95 < 250 ms; không mất khung; DO ngủ khi mọi người ngồi yên.
 
@@ -165,7 +207,7 @@ Hợp đồng ranh giới giữa API (Codex: `/rt/ticket`, binding, chặn/báo 
 
 | Phần | Người làm | Tệp |
 |---|---|---|
-| `/rt/ticket` vé v1, kiểm tầng/đảo/chặn, `GET /ws/:room`, binding/migration tag, biến, `reports` qua `whois`, gọi `hideNow` | Codex (T4.3) | `workers/api/**` |
+| `/rt/ticket` vé v1 (gồm `blf`, `perm`, `open`), kiểm tầng/đảo/chặn, `GET /ws/:room`, binding/migration tag, biến, `reports` qua `whois`, gọi `hideNow`/`setOpen`/`revoke` | Codex (T4.3) | `workers/api/**` |
 | `Lobby`, `HallRoom`, `IslandRoom`, ca kiểm DO | Claude (T4.1) | `workers/realtime/src/**`, `workers/realtime/test/**` (chạy trong pool của API) |
 | Client: kết nối, nội suy, pool người thật, nối lại, mô phỏng khi lỗi | Claude (T4.2) | `apps/web/src/rt/**`, `people.js`, `world.js` |
 | k6 staging | Hermes (T4.4) | `ops/**`, `docs/reports/**` |

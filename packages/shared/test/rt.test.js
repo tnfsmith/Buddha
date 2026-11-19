@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BATCH_HEAD, BLK_MAX, REC, STATES, b64u, byteYaw, checkTicketPayload, decodeBatch, decodeState, encodeBatch, encodeState, hallShard, nonce,
-  parseRoom, signTicket, unb64u, validRec, verifyTicket, yawByte,
+  BATCH_HEAD, BLF_MAX_N, REC, STATES, b64u, bloomHas, bloomMake, byteYaw, checkRoomReport, checkTicketPayload, decodeBatch, decodeState, encodeBatch,
+  encodeState, hallShard, hiddenPair, nonce, parseRoom, signTicket, unb64u, validRec, verifyTicket, yawByte,
 } from '../src/rt.js';
 
 const rec = (o = {}) => ({ slot: 7, x: 12.5, y: 75, z: -3.25, state: STATES.toa_thien, yaw: Math.PI / 2, ...o });
@@ -73,7 +73,7 @@ describe('khung gộp', () => {
 describe('vé v1', () => {
   const SECRET = 'bi-mat-thu-chi-de-kiem-thu';
   const now = 1_800_000_000_000;
-  const P = (o = {}) => ({ v: 1, uid: 'u_01HXYZabcd', room: 'hall:t0:s1', tinh_danh: 'Tuệ Thái', tag: '5696', look: { robe: 1 }, blk: [], exp: now + 60000, n: nonce(), ...o });
+  const P = (o = {}) => ({ v: 1, uid: 'u_01HXYZabcd', room: 'hall:t0:s1', tinh_danh: 'Tuệ Thái', tag: '5696', look: { robe: 1 }, blf: bloomMake([]), exp: now + 60000, n: nonce(), ...o });
   it('ký rồi kiểm: đúng phòng, còn hạn', async () => {
     const t = await signTicket(SECRET, P());
     expect(t.startsWith('v1.')).toBe(true);
@@ -95,14 +95,57 @@ describe('vé v1', () => {
   });
   it('thân vé sai hợp đồng: không ký được', async () => {
     const bad = [P({ v: 2 }), P({ uid: 'ngắn' }), P({ room: 'hall:t0' }), P({ room: 'group:x' }), P({ tinh_danh: 'A' }), P({ tag: '56' }), P({ look: [] }),
-      P({ blk: Array.from({ length: BLK_MAX + 1 }, (_, i) => 'u_chan_' + String(i).padStart(4, '0')) }), P({ blk: ['x'] }), P({ exp: 1.5 }), P({ n: 'ngan' })];
+      P({ blf: null }), P({ blf: { m: 300, b: '' } }), P({ blf: { m: 256, b: 'AAAA' } }), P({ exp: 1.5 }), P({ n: 'ngan' }),
+      P({ perm: 'host' }), P({ open: true }),   // hall không có perm/open
+      P({ room: 'island:u_01HXYZabcd' }),      // đảo thiếu perm/open
+      P({ room: 'island:u_chu_dao_01', perm: 'host', open: true }),   // vé chủ phải đúng chủ đảo
+      P({ room: 'island:u_01HXYZabcd', perm: 'open', open: true }),   // chủ không thể là khách
+      P({ room: 'island:u_chu_dao_01', perm: 'away', open: false })];   // Độc cư: khách không có vé
     for (const p of bad) { expect(checkTicketPayload(p)).toBe(false); await expect(signTicket(SECRET, p)).rejects.toThrow(); }
     await expect(signTicket('', P())).rejects.toThrow('rt_unavailable');
-    expect(checkTicketPayload(P({ room: 'island:u_01HXYZabcd', look: null }))).toBe(true);
+    expect(checkTicketPayload(P({ room: 'island:u_01HXYZabcd', look: null, perm: 'host', open: false }))).toBe(true);
+    expect(checkTicketPayload(P({ room: 'island:u_chu_dao_01', perm: 'open', open: true }))).toBe(true);
+    expect(checkTicketPayload(P({ room: 'island:u_chu_dao_01', perm: 'away', open: true }))).toBe(true);
   });
   it('nonce 16 byte base64url, mỗi lần một khác', () => {
     const a = nonce(), b = nonce();
     expect(a).toMatch(/^[A-Za-z0-9_-]{22}$/);
     expect(a).not.toBe(b);
+  });
+});
+
+describe('bộ lọc chặn (Bloom) trong vé', () => {
+  const ids = (n, p = 'u_chan_') => Array.from({ length: n }, (_, i) => p + String(i).padStart(5, '0'));
+  it('không có âm tính giả: mọi người đã chặn đều bị nhận ra, kể cả 800 người', () => {
+    for (const n of [0, 1, 64, 300, BLF_MAX_N]) {
+      const list = ids(n), f = bloomMake(list);
+      expect(f.m).toBeGreaterThanOrEqual(256); expect(f.m).toBeLessThanOrEqual(8192);
+      expect(list.every((u) => bloomHas(f, u))).toBe(true);
+    }
+  });
+  it('dương tính giả thấp (< 2 % trên 5.000 người lạ)', () => {
+    const f = bloomMake(ids(BLF_MAX_N)), others = ids(5000, 'u_la_');
+    expect(others.filter((u) => bloomHas(f, u)).length / others.length).toBeLessThan(0.02);
+    expect(bloomHas(bloomMake([]), 'u_bat_ky_01')).toBe(false);
+  });
+  it('vượt 800 người → không tạo bộ lọc (API không cấp vé, client dùng mô phỏng)', () => expect(bloomMake(ids(BLF_MAX_N + 1))).toBeNull());
+  it('cặp đã chặn bị ẩn bất kể ai vào trước: chỉ cần một trong hai bộ lọc chứa người kia', () => {
+    const a = { uid: 'u_nguoi_a_01', blf: bloomMake(['u_nguoi_b_01']) }, b = { uid: 'u_nguoi_b_01', blf: bloomMake([]) }, c = { uid: 'u_nguoi_c_01', blf: bloomMake([]) };
+    expect(hiddenPair(a, b)).toBe(true); expect(hiddenPair(b, a)).toBe(true);
+    expect(hiddenPair(a, c)).toBe(false);
+  });
+  it('vé 800 người chặn vẫn dưới 4.096 ký tự', async () => {
+    const t = await signTicket('khoa', { v: 1, uid: 'u_01HXYZabcd', room: 'hall:t0:s1', tinh_danh: 'Tuệ Thái', tag: '5696', look: { robe: 1, skin: 2, hair: 'ngan' }, blf: bloomMake(ids(BLF_MAX_N)), exp: 1, n: nonce() });
+    expect(t.length).toBeLessThan(4096);
+  });
+});
+
+describe('báo cáo trong phòng', () => {
+  it('room + slot + sid; lý do tùy chọn ≤ 500 ký tự', () => {
+    const sid = nonce();
+    expect(checkRoomReport({ context: 'room', room: 'hall:t0:s2', slot: 7, sid })).toEqual({ ok: true, v: { room: 'hall:t0:s2', slot: 7, sid, reason: null } });
+    for (const bad of [null, { context: 'island', room: 'hall:t0:s2', slot: 7, sid }, { context: 'room', room: 'hall:t0', slot: 7, sid },
+      { context: 'room', room: 'hall:t0:s2', slot: -1, sid }, { context: 'room', room: 'hall:t0:s2', slot: 7, sid: 'ngan' },
+      { context: 'room', room: 'hall:t0:s2', slot: 7, sid, reason: 'x'.repeat(501) }]) expect(checkRoomReport(bad).ok).toBe(false);
   });
 });

@@ -1,6 +1,7 @@
 // Thời gian thực (GĐ4, #108, roadmap §7): tên phòng, bản ghi 16 byte, khung gộp và vé HMAC v1.
 // Dùng chung API (/rt/ticket, Codex) và Durable Object Lobby/HallRoom/IslandRoom (Claude). Hợp đồng: docs/contracts/realtime.md.
 // Thuần: không đọc giờ, mạng hay bộ nhớ; ký/kiểm vé dùng Web Crypto (Workers, Node ≥ 20, trình duyệt).
+import { hash32 } from './missions.js';
 
 export const RT_V = 1;
 export const REC = 16;               // byte mỗi bản ghi trạng thái
@@ -13,12 +14,16 @@ export const SEND_HZ = 5;            // client → máy chủ, tối đa khi đa
 export const BATCH_HZ = 4;           // máy chủ → client; gói Free dùng 2
 export const BATCH_HZ_FREE = 2;
 export const TICKET_TTL_MS = 60000;
-export const BLK_MAX = 64;
+/** Bộ lọc chặn trong vé: tối đa 800 người (cả hai chiều); nhiều hơn thì không cấp vé (client dùng mô phỏng) */
+export const BLF_MAX_N = 800;
+export const BLF_K = 7;
+/** Quyền ở trong đảo do API xác thực lúc cấp vé (hợp đồng §4 IslandRoom) */
+export const PERMS = Object.freeze(['host', 'open', 'away']);
 /** Trạng thái thân (byte 14) */
 export const STATES = Object.freeze({ dung: 0, toa_thien: 1, chap_tay: 2, danh_le: 3, kinh_hanh: 4, tuy_hy: 5 });
 export const STATE_MAX = 5;
 /** Mã đóng WebSocket */
-export const CLOSE = Object.freeze({ ticket: 4401, forbidden: 4403, codec: 4400, replaced: 4409, rate: 4429, full: 4503, busy: 4504 });
+export const CLOSE = Object.freeze({ ticket: 4401, forbidden: 4403, codec: 4400, replaced: 4409, rate: 4429, full: 4503, busy: 4504, closed: 4410 });
 /** Giới hạn tọa độ theo loại phòng (đơn vị cảnh); bản ghi ngoài khoảng bị bỏ */
 export const BOUNDS = Object.freeze({ hall: Object.freeze({ r: 400, ymin: -50, ymax: 500 }), island: Object.freeze({ r: 260, ymin: -50, ymax: 300 }) });
 
@@ -92,9 +97,35 @@ export function unb64u(s) {
 }
 const hkey = (secret, use) => crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, [use]);
 
+// ── Bộ lọc Bloom cho danh sách chặn (DO không đọc D1 lúc vào phòng) ──
+// m bit = lũy thừa 2 ≥ 10·n, trong khoảng 256–8192; k = 7 → tỉ lệ dương tính giả < 1 %. Dương tính giả chỉ làm hai người
+// không chặn nhau cũng không thấy nhau (vô hại); không có âm tính giả nên mọi cặp đã chặn đều bị lọc, bất kể ai vào trước.
+const mix = (h) => { h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16; return h >>> 0; };
+const idx = (m, uid) => { const a = mix(hash32('b1|' + uid)), b = mix(hash32('b2|' + uid)) | 1; return Array.from({ length: BLF_K }, (_, i) => ((a + Math.imul(i, b)) >>> 0) % m); };
+/** Danh sách user_id (người mình chặn + người chặn mình) → { m, b } hoặc null nếu vượt BLF_MAX_N */
+export function bloomMake(uids) {
+  const list = [...new Set((uids || []).filter((x) => typeof x === 'string' && UID.test(x)))];
+  if (list.length > BLF_MAX_N) return null;
+  let m = 256; while (m < list.length * 10 && m < 8192) m *= 2;
+  const bits = new Uint8Array(m / 8);
+  for (const u of list) for (const i of idx(m, u)) bits[i >> 3] |= 1 << (i & 7);
+  return { m, b: b64u(bits) };
+}
+/** Bộ lọc có thể chứa uid không (false là chắc chắn không có) */
+export function bloomHas(f, uid) {
+  if (!f || typeof uid !== 'string') return false;
+  const bits = unb64u(f.b); if (!bits || bits.length * 8 !== f.m) return false;
+  return idx(f.m, uid).every((i) => (bits[i >> 3] >> (i & 7)) & 1);
+}
+/** Hai người trong phòng có phải ẩn với nhau không: bộ lọc của một trong hai chứa người kia */
+export const hiddenPair = (a, b) => bloomHas(a.blf, b.uid) || bloomHas(b.blf, a.uid);
+const okBlf = (f) => !!f && typeof f === 'object' && [256, 512, 1024, 2048, 4096, 8192].includes(f.m) && (unb64u(f.b) || []).length * 8 === f.m;
+
 /**
- * Thân vé hợp lệ: { v: 1, uid, room (đã có shard nếu là hall), tinh_danh, tag, look, blk[], exp, n }.
- * `blk`: tối đa 64 user_id hai bên đã chặn nhau (DO không đọc D1 lúc vào phòng); `n`: nonce chống dùng lại.
+ * Thân vé hợp lệ: { v: 1, uid, room (đã có shard nếu là hall), tinh_danh, tag, look, blf, exp, n } và với đảo thêm { perm, open }.
+ * - `blf`: bộ lọc Bloom của toàn bộ danh sách chặn hai chiều (bloomMake). Vượt BLF_MAX_N → API không cấp vé.
+ * - `perm` (chỉ đảo): `host` (chủ) · `open` (chủ đang Nghênh khách) · `away` (ghé khi vắng, canVisitAway); `open`: cổng đảo lúc cấp vé.
+ * - `n`: nonce chống dùng lại.
  */
 export function checkTicketPayload(p) {
   if (!p || typeof p !== 'object' || Array.isArray(p) || p.v !== RT_V) return false;
@@ -103,7 +134,12 @@ export function checkTicketPayload(p) {
   if (typeof p.tinh_danh !== 'string' || p.tinh_danh.length < 2 || p.tinh_danh.length > 16) return false;
   if (typeof p.tag !== 'string' || !/^\d{4}$/.test(p.tag)) return false;
   if (p.look !== null && (typeof p.look !== 'object' || Array.isArray(p.look))) return false;
-  if (!Array.isArray(p.blk) || p.blk.length > BLK_MAX || !p.blk.every((x) => typeof x === 'string' && UID.test(x))) return false;
+  if (!okBlf(p.blf)) return false;
+  if (r.kind === 'island') {
+    if (!PERMS.includes(p.perm) || typeof p.open !== 'boolean') return false;
+    if ((p.perm === 'host') !== (p.uid === r.host)) return false;
+    if (p.perm !== 'host' && !p.open) return false;   // Độc cư: chỉ chủ được vé
+  } else if (p.perm !== undefined || p.open !== undefined) return false;
   if (!Number.isInteger(p.exp) || typeof p.n !== 'string' || !/^[A-Za-z0-9_-]{16,32}$/.test(p.n)) return false;
   return true;
 }
@@ -133,5 +169,18 @@ export async function verifyTicket(secret, ticket, { now, room } = {}) {
   if (room !== undefined && room !== p.room) return { ok: false, code: 'ticket_room' };
   return { ok: true, payload: p };
 }
-/** Nonce 16 byte ngẫu nhiên cho vé */
+/**
+ * Báo cáo trong phòng (REST `POST /api/v1/reports`, ngữ cảnh `room`): { context: 'room', room, slot, sid, reason? }.
+ * `sid` là dấu phiên kết nối do DO cấp trong `welcome`/`join`; API hỏi DO `whois` để biết đúng người (hợp đồng §4).
+ */
+export function checkRoomReport(p) {
+  if (!p || typeof p !== 'object' || Array.isArray(p) || p.context !== 'room') return { ok: false, code: 'invalid_payload' };
+  const r = parseRoom(p.room);
+  if (!r || (r.kind === 'hall' && !r.shard) || !Number.isInteger(p.slot) || p.slot < 0 || p.slot > 0xffff) return { ok: false, code: 'invalid_payload' };
+  if (typeof p.sid !== 'string' || !/^[A-Za-z0-9_-]{16,32}$/.test(p.sid)) return { ok: false, code: 'invalid_payload' };
+  if (p.reason !== undefined && (typeof p.reason !== 'string' || [...p.reason].length > 500)) return { ok: false, code: 'invalid_payload' };
+  return { ok: true, v: { room: p.room, slot: p.slot, sid: p.sid, reason: p.reason ?? null } };
+}
+
+/** Nonce 16 byte ngẫu nhiên cho vé và dấu phiên kết nối (sid) */
 export const nonce = () => b64u(crypto.getRandomValues(new Uint8Array(16)));
