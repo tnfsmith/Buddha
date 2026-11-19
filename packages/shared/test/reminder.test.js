@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { solarToLunar } from '../src/amlich.js';
 import {
-  LATE_MS, MAX_ACTIVE, SHARDS, checkReminder, checkReminders, inQuiet, isTraiDate, localParts, nextReminderAt, occKey, occurrenceValid, pauseUntil, pushPayload, sendKey, shardOf, zonedToUtc,
+  LATE_MS, MAX_ACTIVE, SEND_FINAL, SHARDS, canSend, checkReminder, checkReminders, inQuiet, isTraiDate, localParts, nextReminderAt, occKey, occurrenceValid, pauseUntil, pushPayload, quietAt, recoverStatus, sendKey, shardOf, zonedToUtc,
 } from '../src/reminder.js';
 
 const VN = 'Asia/Ho_Chi_Minh';
@@ -155,5 +155,34 @@ describe('occurrenceValid (lượt đang thử lại)', () => {
     const r = R({ kind: 'uposatha', local_hm: '06:00' });
     expect(occurrenceValid(r, o, { tz: VN, now: t + 60000, uposatha: 'vn_4' })).toBe(true);
     expect(occurrenceValid(r, o, { tz: VN, now: t + 60000, uposatha: 'khong' })).toBe(false);
+  });
+});
+
+describe('giờ yên lặng theo giờ thực lúc gửi', () => {
+  it('nhắc 21:28 thử lại lúc 21:33 → hủy; thử lúc 21:29 → còn hiệu lực', () => {
+    const due = zonedToUtc('2026-11-20', '21:28', VN);
+    const occ = { kind: 'thien', local_hm: '21:28', local_date: '2026-11-20', due_at: due };
+    const rem = R({ local_hm: '21:28', channel: 'push' });
+    expect(occurrenceValid(rem, occ, { tz: VN, now: due + 60000 })).toBe(true);
+    expect(occurrenceValid(rem, occ, { tz: VN, now: due + 5 * 60000 })).toBe(false);
+  });
+  it('quietAt: alarm đến trễ vào giờ yên lặng thì bỏ lượt mới', () => {
+    expect(quietAt(zonedToUtc('2026-11-20', '21:35', VN), VN)).toBe(true);
+    expect(quietAt(zonedToUtc('2026-11-20', '04:59', VN), VN)).toBe(true);
+    expect(quietAt(zonedToUtc('2026-11-20', '05:00', VN), VN)).toBe(false);
+    expect(quietAt(NaN, VN)).toBe(false);
+    expect(quietAt(0, 'Không/Có')).toBe(false);
+  });
+});
+
+describe('phục hồi khóa gửi (không gửi trùng)', () => {
+  it('chỉ gửi khi chưa có khóa hoặc đang retry', () => {
+    expect([undefined, null, 'retry'].map(canSend)).toEqual([true, true, true]);
+    expect(['sending', ...SEND_FINAL].map(canSend).every((x) => x === false)).toBe(true);
+  });
+  it('sending còn lại từ alarm trước bị dừng → unknown, không gửi lại; trạng thái khác giữ nguyên', () => {
+    expect(recoverStatus('sending')).toBe('unknown');
+    expect(canSend(recoverStatus('sending'))).toBe(false);
+    for (const st of ['ok', 'retry', 'gone', 'fail', 'cancel', undefined]) expect(recoverStatus(st)).toBe(st);
   });
 });

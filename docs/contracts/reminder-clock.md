@@ -27,7 +27,9 @@ API và DO import cùng một mô-đun thuần. Mô-đun không đọc giờ, m�
 | `shardOf(userId)` | Shard 0–15; tên DO là `rc-${shardOf(user_id)}` |
 | `occKey(reminderId, localDate)` | Khóa của một lượt nhắc; giới hạn 2 lượt/ngày đếm theo khóa này |
 | `sendKey(reminderId, localDate, subId)` | Khóa chống gửi trùng tới từng đăng ký |
-| `occurrenceValid(rem, occ, { tz, uposatha, now })` | Lượt đang thử lại còn hiệu lực không (§4 bước 4) |
+| `occurrenceValid(rem, occ, { tz, uposatha, now })` | Lượt đang thử lại còn hiệu lực không (§4 bước 4), gồm giờ yên lặng theo giờ thực lúc gửi |
+| `quietAt(now, tz)` | Giờ thực có rơi vào giờ yên lặng không; áp ở mọi lần gửi, kể cả alarm đến trễ |
+| `canSend(status)`, `recoverStatus(status)`, `SEND_FINAL` | Chỉ gửi khi chưa có khóa hoặc khóa `retry`; `sending` còn lại từ lần trước → `unknown`, không gửi lại |
 | `pushPayload(kind, at)` | `{"v":1,"kind":…,"at":…}` |
 | `localParts`, `zonedToUtc`, `isTraiDate`, `inQuiet` | Hàm phụ trợ múi giờ, ngày trai, giờ yên lặng |
 
@@ -84,6 +86,7 @@ Bảng SQLite riêng trong mỗi shard, dọn dòng cũ hơn 3 ngày:
 
 Các bước:
 
+0. **Phục hồi khóa gửi.** Alarm của một DO chạy tuần tự. Vì vậy mọi khóa `sending` còn lại lúc bắt đầu là của lần chạy trước bị dừng giữa chừng: dịch vụ push có thể đã nhận mà chưa kịp ghi kết quả. Chuyển chúng sang `unknown` (`recoverStatus`), coi như đã gửi và **không gửi lại**: ưu tiên không gửi trùng hơn chắc chắn tới. `unknown` không cộng `fail_count`. Lượt nào không còn đăng ký `retry` thì đặt `done = 1`.
 1. **Lấy việc đến hạn**, tối đa 50 dòng mỗi lần:
    - lượt mới: dòng `idx` có `next_at ≤ now + 30 giây`;
    - lượt đang thử lại: dòng `occ` có `done = 0` và `retry_at ≤ now + 30 giây`.
@@ -95,7 +98,7 @@ Các bước:
    - **Bỏ lượt, không tạo dòng `occ`, không tính vào giới hạn**, rồi sang bước 6, khi rơi vào một trong các trường hợp:
      - cờ tắt hoặc thiếu VAPID;
      - đang Tịnh khẩu;
-     - giờ yên lặng;
+     - **giờ thực lúc gửi** rơi vào giờ yên lặng (`quietAt(now, tz)`), kể cả khi alarm đến trễ;
      - trễ quá 30 phút (`LATE_MS`);
      - người dùng đã có 2 dòng `occ` trong `local_date` đó.
    - Còn lại: `INSERT OR IGNORE` dòng `occ` (alarm chạy lại thì dùng dòng đã có), rồi gửi theo bước 5. Xong thì sang bước 6.
@@ -106,11 +109,12 @@ Các bước:
      - không Tịnh khẩu tại `due_at`;
      - ngày vẫn hợp `days_mask` hoặc vẫn là ngày trai;
      - `zonedToUtc(local_date, local_hm, tz) === due_at`, tức không đổi múi giờ;
-     - `now ≤ due_at + LATE_MS`.
+     - `now ≤ due_at + LATE_MS`;
+     - giờ thực `now` không rơi vào giờ yên lặng. Ví dụ: nhắc 21:28 thử lại lúc 21:33 thì hủy, không dời sang sáng.
    - Không hợp lệ (người dùng đã tắt, đổi giờ, đổi múi giờ, Tịnh khẩu, hoặc quá hạn) → `done = 1`, các đăng ký còn chờ ghi `cancel`, không gửi.
    - Hợp lệ → gửi theo bước 5, chỉ cho các đăng ký có trạng thái `retry`. Bước này không đụng `idx` hay `next_at`.
 5. **Gửi một lượt.**
-   - Đăng ký có khóa ở trạng thái `ok`, `gone`, `fail` hoặc `cancel` thì bỏ qua. Ghi khóa `sending` trước khi gửi.
+   - Chỉ gửi cho đăng ký mà `canSend(status)` đúng: chưa có khóa, hoặc khóa `retry`. Các trạng thái `ok`, `gone`, `fail`, `cancel`, `unknown` và `sending` đều bỏ qua. Ghi khóa `sending` trước khi gửi, rồi ghi kết quả ngay sau khi có phản hồi.
    - Gửi tối đa 6 yêu cầu cùng lúc (giới hạn kết nối của Workers). Dữ liệu là `pushPayload(kind, due_at)`; `TTL` 3600; `Urgency: normal`; `Topic` bằng `kind`.
    - Mã hóa aes128gcm bằng thư viện chỉ dùng Web Crypto. Thư viện `web-push` gốc không chạy trên Workers.
 
@@ -125,7 +129,7 @@ Các bước:
    - Hết lượt thử → các đăng ký `retry` chuyển `fail` (`fail_count + 1`); `done = 1`, `retry_at = NULL`.
    - Không còn đăng ký `retry` → `done = 1`.
    - `fail_count ≥ 5` thì xóa đăng ký.
-   - Alarm ném lỗi giữa chừng thì Cloudflare tự chạy lại. Khóa `sent` bảo đảm không gửi trùng cho đăng ký đã `ok`; dòng `occ` bảo đảm lượt chỉ tính một lần.
+   - Alarm ném lỗi giữa chừng thì Cloudflare tự chạy lại. Khóa `sent` bảo đảm không gửi trùng: đăng ký đã `ok` được bỏ qua, và đăng ký còn `sending` được chuyển `unknown` ở bước 0. Dòng `occ` bảo đảm lượt chỉ tính một lần.
 6. **Hẹn lần sau**, chỉ cho lượt mới ở bước 3, kể cả khi đã bỏ lượt:
    - `next = nextReminderAt(row, { tz, now: max(now, due_at), uposatha })`.
    - Ghi D1: `UPDATE reminder SET next_at = ? WHERE id = ? AND active = 1 AND next_at IS ?` (giá trị cũ). Không đổi dòng nào nghĩa là API vừa sửa; giữ bản của API.
@@ -185,6 +189,8 @@ Bước này sửa các lần gọi DO bị lỡ. Gọi trùng không sao vì `s
   - tắt nhắc, đổi giờ, đổi múi giờ hoặc bật Tịnh khẩu trước 06:05 → lượt bị hủy, không gửi;
   - `cancel` hủy lượt đang thử lại;
   - dừng sau 3 lần thử hoặc khi quá `due_at + 30 phút`;
+- **giờ yên lặng theo giờ thực:** nhắc 21:28 gặp 429 → lượt thử lúc 21:33 bị hủy; alarm của nhắc 21:20 đến trễ lúc 21:35 → bỏ lượt, vẫn hẹn lần sau;
+- **phục hồi `sending`:** giả lập alarm dừng sau khi dịch vụ push đã trả 2xx nhưng trước khi ghi `ok`. Lần alarm sau chuyển khóa sang `unknown`, không gọi dịch vụ push lần nữa cho đăng ký đó, và không cộng `fail_count`;
 - 404/410 → dòng `push_subscription` bị xóa; 429/5xx → thử lại sau 5 phút, tối đa 3 lần;
 - API sửa giờ trước khi alarm chạy → không gửi theo giờ cũ;
 - Tịnh khẩu, giờ yên lặng, đã đủ 2 nhắc trong ngày, trễ quá 30 phút → không gửi, vẫn hẹn lần sau;
