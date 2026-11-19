@@ -46,6 +46,9 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
     'SELECT id, program, cycle, local_date AS date, kind, slot, value_json, at, server_at FROM practice_event WHERE user_id = ? ORDER BY at, id',
   ).bind(user.id).all();
   const practice = await getPracticeProfile(db, user.id);
+  const choices = await db.prepare(`SELECT program, cycle, day, local_date AS date, pillar, variant_id, version,
+    snap, profile_rev, chosen_at, swapped_at FROM practice_choice WHERE user_id = ? ORDER BY program, cycle, date, pillar`)
+    .bind(user.id).all();
   const companions = await exportCompanions(db, user.id, now);
 
   c.header('Cache-Control', 'no-store');
@@ -59,6 +62,7 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
       island: JSON.parse(profileRow.island_json || '{}')
     } : null,
     practice_profile: practice.profile ? { ...practice.profile, updated_at: practice.rev } : null,
+    practice_choices: choices.results,
     journeys: journeys?.results || [],
     kusala_entries: kusalaEntries?.results || [],
     practice_sessions: sessions?.results || [],
