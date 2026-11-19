@@ -64,16 +64,18 @@ export function variantCatalog(rows) {
 }
 
 /**
- * Độ phủ để quyết định bật bộ chọn: đủ 21 ô, mỗi ô ≥ 3 lựa chọn và có ít nhất một phương án nhẹ ≤ 5 phút, miễn phí,
- * làm một mình tại nhà. → { ready, cells: { '1-duc': { n, light } }, missing: ['3-tue', …] }.
+ * Độ phủ để quyết định bật bộ chọn, cùng điều kiện với checkVariantCoverage của bộ nạp (#112): đủ 21 ô; mỗi ô 3–6 mục
+ * với 3–6 câu hành động khác nhau (mỗi mục một câu riêng); có ít nhất một phương án nhẹ ≤ 5 phút, miễn phí, làm một mình tại nhà.
+ * → { ready, cells: { '1-duc': { n, distinct, light } }, missing: ['3-tue', …] }.
  */
 export function variantCoverage(cat) {
   const out = { ready: true, cells: {}, missing: [] };
   for (let w = 1; w <= 7; w++) for (const p of PILLARS) {
     const key = `${w}-${p}`, list = (cat && cat.cells && cat.cells[key]) || [];
+    const distinct = new Set(list.map((v) => v.text)).size;
     const light = list.some((v) => v.level === 'nhe' && v.minutes <= 5 && v.money === false && v.at_home && !v.needs_others);
-    out.cells[key] = { n: list.length, light };
-    if (list.length < 3 || !light) { out.ready = false; out.missing.push(key); }
+    out.cells[key] = { n: list.length, distinct, light };
+    if (list.length < 3 || list.length > 6 || distinct !== list.length || !light) { out.ready = false; out.missing.push(key); }
   }
   return out;
 }
@@ -108,8 +110,9 @@ export function rankVariants(cat, profile, input) {
 export const pickVariant = (cat, profile, input) => rankVariants(cat, profile, input)[0] || null;
 
 /**
- * Đổi gợi ý: mục hợp lệ kế tiếp khác mục hiện tại (vòng lại đầu danh sách). Hết lựa chọn → giữ mục hiện tại (`same: true`).
- * Mục hiện tại không còn trong danh sách (danh mục/hồ sơ đổi) → mục đầu khác nó.
+ * Đổi gợi ý: mục hợp lệ kế tiếp có câu hành động khác mục hiện tại (vòng lại đầu danh sách), để người dùng không nhận
+ * lại cùng một việc dưới id khác. Hết lựa chọn → giữ mục hiện tại (`same: true`).
+ * Mục hiện tại không còn trong danh sách (danh mục/hồ sơ đổi) → mục đầu.
  * Chỉ tính toán: giới hạn một lần/trục/ngày, chống trùng và lưu thuộc #105 (today/swap). Đổi không hoàn tất trục, không cộng Kusala.
  * → { variant, same } với variant null khi không có lựa chọn nào.
  */
@@ -118,8 +121,8 @@ export function swapVariant(cat, profile, input, currentId) {
   if (!list.length) return { variant: null, same: true };
   const i = list.findIndex((v) => v.id === currentId);
   if (i < 0) return { variant: list[0], same: false };
-  if (list.length === 1) return { variant: list[0], same: true };
-  return { variant: list[(i + 1) % list.length], same: false };
+  for (let k = 1; k < list.length; k++) { const v = list[(i + k) % list.length]; if (v.text !== list[i].text) return { variant: v, same: false }; }
+  return { variant: list[i], same: true };
 }
 
 /** Dấu ngắn của ảnh chụp danh mục (để lưu kèm lựa chọn và so khi offline). */
