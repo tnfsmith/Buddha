@@ -967,14 +967,14 @@ Khi một yêu cầu "Cần giúp" được nhận và cả hai bấm "xong", m�
 
 ### 10.4 Bạn đồng tu — người quen ngoài đời cùng tu (#121, chủ dự án giao 18/11/2026)
 - **Kết nối:**
-  - liên kết/QR/mã mời 8 ký tự (7 ngày, 5 lượt); người mới vào qua liên kết thì thành bạn ngay và được ghi người dẫn dắt (`guidance`, tiêu chí Tầng 1);
-  - hoặc gõ đúng «Tịnh danh · mã» rồi bên kia đồng ý.
+  - liên kết/QR/mã mời 8 ký tự (7 ngày, 5 lượt); người mới vào qua liên kết thì thành bạn ngay và được ghi người giới thiệu (`guidance`, chỉ là dữ kiện; có dùng cho tiêu chí mở tầng hay không do §16/#107 quyết định);
+  - hoặc gõ đúng «Tịnh danh · mã» rồi bên kia đồng ý. Người gửi luôn chỉ thấy «đã gửi» cho tới khi bên kia đồng ý, để không dò được tài khoản.
   - Không danh bạ công khai, không tìm gần đúng, không GPS.
 - **Danh sách:** Thân thiết · Quen biết · Đang chờ. Trạng thái `online/thien/tham/tra/vang` qua nhịp hiện diện 2 phút; vắng sau 3 phút; người dùng tắt được.
 - **Lời mời gặp:** Ghé thăm đảo mình · Xin ghé thăm đảo bạn · Cùng ngồi thiền · Trà Đạo · Tham quan.
   - Theo phân khu đã mở: đi thăm cần Cổng Vân Môn của người đi nửa mở (ngày 29) và chủ đảo đang Nghênh khách; Trà Đạo cần chủ đảo từ ngày 15; thiền từ ngày 1, ngồi chung ở Đại Thiền Đường khi chưa đi được.
   - Thiền/trà bắt đầu cùng giờ máy chủ sau 60 giây. Lời mời không làm gián đoạn thời thiền.
-- **«Ở gần»** là Vân Đảo bạn đồng tu dựng cạnh đảo mình: thân thiết vòng gần nhất, quen biết vòng kế, tối đa 4 + 4. Thân thiết do hai người cùng chọn; bạn thân thiết có thể cho ghé khi vắng.
+- **«Ở gần»** là Vân Đảo bạn đồng tu dựng cạnh đảo mình: thân thiết vòng gần nhất, quen biết vòng kế, tối đa 4 + 4. Thân thiết do hai người cùng chọn; bạn thân thiết có thể cho ghé khi vắng, trừ lúc chủ đảo đang Độc cư.
 - **Không chữ tự do, không điểm/xếp hạng**, không cộng Kusala.
 - Thiết kế: [docs/thiet-ke/ban-dong-tu.md](docs/thiet-ke/ban-dong-tu.md). Hợp đồng D1/API: [docs/contracts/ban-dong-tu.md](docs/contracts/ban-dong-tu.md). Luật dùng chung: `packages/shared/src/dong-tu.js`. Đợt thời gian thực (đi cùng trên đảo) ở T5.2 sau GĐ4.
 
@@ -1496,7 +1496,7 @@ T3.7 đã đạt bộ audio phát hành (Sadaltager/Puck đúng ngoại lệ); #
 |---|---|---|---|
 | T5.4 | Thiết kế trải nghiệm, hợp đồng D1/API, luật dùng chung `dong-tu.js` + kiểm thử | C | Codex duyệt hợp đồng; gộp trước T5.5–T5.8 |
 | T5.5 | Migration kế tiếp (`companion` thêm cột, `presence`, `meet_invite`, `island_visit`); API liên kết/tìm/đồng ý/thân thiết/hiện diện/mời gặp/ghé khi vắng/chặn; xuất/xóa | AG | Đủ 9 nhóm ca ở hợp đồng §6 trên D1 cục bộ |
-| T5.6 | `apps/web/src/net/dong-tu.js`: gọi API, nhịp hiện diện, đọc `#ban=`, đẩy cài đặt riêng tư/Nghênh khách lên hồ sơ, đọc `me.social` | AG | Kiểm thử với máy chủ giả; không gửi khi chưa có tài khoản hoặc `dong_tu` chưa bật |
+| T5.6 | `apps/web/src/net/dong-tu.js`: gọi API, nhịp hiện diện, đọc `#ban=`, đẩy cài đặt riêng tư/Nghênh khách lên hồ sơ, đọc `me.social` | AG | Kiểm thử với máy chủ giả; không gửi khi chưa có phiên (tài khoản hoặc khách) hoặc `dong_tu` chưa bật |
 | T5.7 | UI: nút Bạn đồng tu, danh sách + trạng thái, Mời bạn tu cùng (QR), thẻ lời mời, thẻ bạn, cài đặt riêng tư | C | E2E hai thiết bị: kết bạn bằng liên kết, mời thiền, cùng đếm ngược; giao diện điện thoại ≤ 44vh |
 | T5.8 | 3D: đảo bạn thật gần đảo mình (thân thiết/quen biết), đèn hiện diện, ghé thăm/ghé khi vắng, cùng ngồi, Trà Đạo hai người | C | `perf.spec.js` trong ngân sách §12.2; e2e ghé thăm, cùng ngồi |
 | T5.9 | Thử với bạn thật; xác nhận các mặc định ở thiết kế §9 | O | Hai người thật kết bạn và cùng ngồi một thời thiền |

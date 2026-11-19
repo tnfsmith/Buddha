@@ -21,7 +21,7 @@ Chủ dự án giao ngày 18/11/2026. Claude thiết kế trải nghiệm, giao 
   - «Thân thiết» do hai người cùng chọn, không tự lên theo số lần gặp.
   - Số bạn không hiện thành thành tích.
   - Kết nối bạn đồng tu không cộng Kusala.
-  - Riêng dẫn dắt người mới (bảng `guidance` có sẵn) được ghi lại cho tiêu chí Tầng 1 «dẫn dắt ≥ 3 người».
+  - Lời mời người mới chỉ ghi lại **ai giới thiệu ai** (bảng `guidance` có sẵn). Có dùng bản ghi này cho tiêu chí mở tầng hay không là quyết định riêng ở §8.6/§16 và #107; Bạn đồng tu không mở tầng.
 - **Hai chiều đồng ý, rút lại lúc nào cũng được.** Có hủy kết nối, chặn, ẩn trạng thái và chế độ Độc cư (khép Cổng Vân Môn).
 
 ## 3. Giai đoạn phù hợp
@@ -35,7 +35,7 @@ Chủ dự án giao ngày 18/11/2026. Claude thiết kế trải nghiệm, giao 
 
 Lý do không đặt vào GĐ4: GĐ4 là Đại Thiền Đường nhiều người. Bạn đồng tu là quan hệ xã hội, đúng nhóm GĐ5 (bảng `companion`, `invite`, `guidance`, `user_block` đã có từ 0004). Kéo đợt 5A lên sớm vì nó không phụ thuộc thời gian thực hay kiểm duyệt.
 
-Tiêu chí Tầng 1 «thăm đảo bạn» và «dẫn dắt ≥ 3 người sơ nhập» (§1.2) dùng thẳng dữ liệu của đợt 5A.
+Đợt 5A ghi lại dữ kiện «đã thăm đảo bạn» và «ai giới thiệu ai». Các tiêu chí mở tầng ở §1.2/§16 có dùng chúng hay không, và với điều kiện gì, do #107 quyết định.
 
 ## 4. Khái niệm
 
@@ -44,10 +44,10 @@ Tiêu chí Tầng 1 «thăm đảo bạn» và «dẫn dắt ≥ 3 người sơ 
 | Bạn đồng tu | Hai tài khoản đã đồng ý kết nối | `companion.status = 'dong_y'` |
 | Quen biết | Mặc định khi kết nối | `closenessOf` → `'quen'` |
 | Thân thiết | Cả hai cùng chọn «Thân thiết» | `closenessOf(true, true)` → `'than'` |
-| Lời mời kết bạn | Liên kết `…/#ban=MÃ`, QR, mã 8 ký tự (7 ngày, 5 lượt); hoặc yêu cầu theo «Tịnh danh · mã» | `invite`, `companion` |
+| Lời mời kết bạn | Liên kết `…/#ban=MÃ`, QR, mã 8 ký tự (7 ngày, 5 lượt); hoặc lời kết nối theo «Tịnh danh · mã» (chờ 14 ngày) | `invite`, `companion_request` |
 | Lời mời gặp | 5 kiểu: `tham`, `xin_tham`, `thien`, `tra`, `tham_quan` | `MEET_KINDS` |
 | Hiện diện | `online` · `thien` · `tham` · `tra` · `vang` (quá 3 phút không có nhịp) | `presenceOf` |
-| Ghé khi vắng | Chỉ bạn thân thiết, bạn đã bật cho phép | `canVisitAway` |
+| Ghé khi vắng | Chỉ bạn thân thiết, bạn đã bật cho phép, và chủ đảo đang Nghênh khách lúc ghé | `canVisitAway(me, host, rel)` |
 
 **Điều kiện theo phân khu (dùng lại luật có sẵn, không thêm ngày mới):**
 - Đi thăm cần **Cổng Vân Môn của người đi đã nửa mở (ngày 29)** hoặc đã hoàn thành chương trình.
@@ -62,12 +62,18 @@ Tất cả nằm trong `canMeet`; máy chủ và máy khách cùng chạy.
 ### 5.1 Mời người quen tham gia Vân Đạo (người mới)
 1. Bia hoặc màn Bạn đồng tu → **«Mời bạn tu cùng»** → liên kết + QR + mã `K7M2-QX9A`, nút Chia sẻ (Web Share) và Sao chép.
 2. Người nhận mở liên kết. Người mới đi luồng tạo nhân vật như thường, thấy dòng «*Tuệ Thái · 5696* mời bạn cùng tu».
-3. Người mới bấm «Giữ hành trình» (tài khoản ẩn danh hiện có). Máy khách gửi mã, hai người thành **bạn đồng tu** ngay, vì người tạo liên kết đã đồng ý từ trước. Bảng `guidance` ghi người dẫn dắt.
+3. Người mới bấm «Giữ hành trình» (phiên khách hiện có). Máy khách gửi mã, hai người thành **bạn đồng tu** ngay, vì người tạo liên kết đã đồng ý từ trước.
+   - Bảng `guidance` ghi người giới thiệu, chỉ là dữ kiện.
+   - Khách được nhắc lưu mã khôi phục để không mất bạn đồng tu khi tài khoản khách bị dọn.
 4. Người mời nhận thông báo trong app: «*Minh An · 2210* đã nhận lời mời và trở thành bạn đồng tu».
 
 ### 5.2 Kết nối người đã dùng Vân Đạo
 - **Cách 1, mã/QR:** như trên. Người đã có tài khoản mở liên kết thì thấy thẻ xác nhận «Kết nối với *Tuệ Thái · 5696*?».
-- **Cách 2, Tịnh danh · mã:** gõ đúng «Tuệ Thái · 5696» → «Gửi lời kết nối». Bên kia thấy yêu cầu và chọn Đồng ý / Từ chối. Tối đa 5 yêu cầu/ngày. Người để quyền hiển thị «Ẩn» thì không tìm thấy; kết quả không phân biệt «không có» với «không nhận yêu cầu».
+- **Cách 2, Tịnh danh · mã:** gõ đúng «Tuệ Thái · 5696» → «Gửi lời kết nối».
+  - Người gửi luôn thấy «Đã gửi lời kết nối tới Tuệ Thái · 5696», cả lúc gửi lẫn trong mục Đang chờ, dù người ấy có thật hay không, có nhận lời kết nối hay không, đã chặn hay đã từ chối.
+  - Bên kia (nếu có thật và nhận lời kết nối) chọn Đồng ý / Từ chối. Từ chối thì người gửi không được báo; lời kết nối tự hết hạn sau 14 ngày.
+  - Chỉ khi đồng ý, người ấy mới hiện trong danh sách bạn.
+  - Tối đa 5 lời kết nối/ngày.
 
 ### 5.3 Danh sách và trạng thái
 - Nhóm: **Thân thiết** → **Quen biết** → **Đang chờ** (gửi đi / gửi đến).
@@ -95,7 +101,7 @@ Bàn trà ở Trà Đạo Tỉnh Thức của chủ đảo, 10 phút theo giờ 
 ### 5.8 Thân thiết, ghé khi vắng, hủy, chặn
 Trong thẻ bạn:
 - «Đánh dấu thân thiết»: bên kia thấy gợi ý «*Tuệ Thái* muốn là bạn thân thiết».
-- «Cho bạn ghé khi tôi vắng»: chỉ khi đã thân thiết, mặc định tắt.
+- «Cho bạn ghé khi tôi vắng»: chỉ khi đã thân thiết, mặc định tắt. Chế độ Độc cư luôn thắng: đang khép cổng thì không ai ghé được, kể cả bạn đã được cho phép.
 - «Hủy kết nối».
 - «Chặn» (cùng `user_block`): xóa kết nối, ẩn trạng thái, từ chối mọi lời mời.
 - «Báo cáo» (`report.context = 'island'`).
@@ -182,7 +188,7 @@ Lời đi kèm khi chia sẻ: «Mời bạn cùng tu tập với mình trên Vâ
 |---|---|---|---|---|---|
 | **T5.4** | Thiết kế, hợp đồng, luật dùng chung | **Claude** | `docs/thiet-ke/ban-dong-tu.md`, `docs/contracts/ban-dong-tu.md`, `packages/shared/src/dong-tu.js` + test, roadmap §10.4/GĐ5 | — | Codex duyệt; chủ dự án gộp |
 | **T5.5** | D1 0011 + API kết nối/mời/hiện diện/gặp, chặn, xuất/xóa, kiểm thử Worker | **Codex (AG)** | `db/migrations/0011_*.sql`, `workers/api/src/routes/companions.js`, `index.js`, `export.js`, test | T5.4 gộp | Mọi ca ở hợp đồng §6 xanh trên D1 cục bộ |
-| **T5.6** | Mô-đun mạng: gọi API, nhịp hiện diện, hỏi định kỳ, đọc `#ban=`, đẩy chế độ Nghênh khách lên hồ sơ | **Codex (AG)** | `apps/web/src/net/dong-tu.js` (mới), một móc trong `net/account.js` | T5.4 gộp | Kiểm thử đơn vị với máy chủ giả; không gửi khi chưa có tài khoản |
+| **T5.6** | Mô-đun mạng: gọi API, nhịp hiện diện, hỏi định kỳ, đọc `#ban=`, đẩy chế độ Nghênh khách lên hồ sơ | **Codex (AG)** | `apps/web/src/net/dong-tu.js` (mới), một móc trong `net/account.js` | T5.4 gộp | Kiểm thử đơn vị với máy chủ giả; không gửi khi chưa có phiên |
 | **T5.7** | Giao diện: nút, màn danh sách, mời bạn tu cùng (QR), thẻ lời mời, thẻ bạn, cài đặt riêng tư | **Claude** | `apps/web/src/ui/dong-tu.js` (mới), `main.js` (móc), `index.template.html` (CSS) | T5.4; làm song song T5.5/T5.6 với máy chủ giả | `tests/e2e/ban-dong-tu.spec.js` hai thiết bị: kết bạn bằng liên kết, mời thiền, cùng đếm ngược |
 | **T5.8** | 3D: đảo bạn thật gần đảo mình, đèn hiện diện, ghé thăm/ghé khi vắng, cùng ngồi (Đài Thiền/Đại Thiền Đường), Trà Đạo hai người | **Claude** | `world.js`, `island.js`, `people.js`, `music.js` | T5.7 | `perf.spec.js` trong ngân sách; e2e ghé thăm, cùng ngồi |
 | T5.9 | Nghiệm thu với bạn thật; xác nhận điều kiện mặc định ở §9 | **Chủ dự án** | — | T5.5–T5.8 | Hai người thật kết bạn, cùng ngồi một thời thiền |
@@ -208,5 +214,6 @@ Không bên nào phải dừng việc GĐ3 đang dở.
 2. **«Ở gần» là đảo gần trong Vân Đạo**, không dùng vị trí địa lý.
 3. **Thân thiết do hai người cùng chọn**, không tự lên theo số lần gặp.
 4. **Không chữ tự do** ở đợt 5A, chỉ lời mẫu.
-5. **Giới hạn:** tối đa 50 bạn đồng tu, 5 lời kết nối/ngày, mã mời 7 ngày/5 lượt; dựng tối đa 8 đảo bạn gần.
+5. **Giới hạn:** tối đa 50 bạn đồng tu; 5 lời kết nối/ngày, mỗi lời chờ 14 ngày, không báo khi bị từ chối; mã mời 7 ngày/5 lượt; dựng tối đa 8 đảo bạn gần.
 6. **Nhịp hiện diện 2 phút**, vắng sau 3 phút. Trên gói Free: khoảng 30 lượt ghi D1/giờ cho mỗi người đang mở app. Đủ cho vài trăm người dùng cùng lúc trước khi cần GĐ4/Paid.
+7. **Phiên khách** (tài khoản ẩn danh) dùng được Bạn đồng tu. Mất tài khoản khách thì mất các kết nối, và giao diện nhắc lưu mã khôi phục.

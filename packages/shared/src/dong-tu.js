@@ -19,6 +19,8 @@ export const LINK_USES = 5;
 /** Giới hạn mềm để giữ đúng tinh thần «bạn quen biết ngoài đời» và ngân sách cảnh 3D */
 export const MAX_COMPANIONS = 50;
 export const REQUESTS_PER_DAY = 5;
+/** Lời kết nối theo «Tịnh danh · mã» chờ tối đa 14 ngày; người gửi chỉ thấy «đã gửi» tới khi bên kia đồng ý hoặc hết hạn (không có tín hiệu từ chối) */
+export const REQUEST_TTL_MS = 14 * 86_400_000;
 /** Số Vân Đảo bạn đồng tu dựng gần đảo mình (còn lại chỉ hiện trong danh sách): thân thiết trước, rồi quen biết */
 export const NEAR_ISLES = Object.freeze({ than: 4, quen: 4 });
 
@@ -26,13 +28,15 @@ export const NEAR_ISLES = Object.freeze({ than: 4, quen: 4 });
  * Các kiểu gặp. `host`: bên có Vân Đảo làm nơi gặp ('from' = người mời, 'to' = người nhận); `place` 'dtd' = Đại Thiền Đường (không phải du vân).
  * `min`: số phút của hoạt động cùng giờ (null = không giới hạn, kết thúc khi khách về).
  */
-export const MEET_KINDS = Object.freeze({
+export const MEET_KINDS = Object.freeze(Object.assign(Object.create(null), {
   tham: { host: 'from', synced: false, min: null, label: 'Mời ghé thăm Vân Đảo của mình' },
   xin_tham: { host: 'to', synced: false, min: null, label: 'Xin ghé thăm Vân Đảo của bạn' },
   thien: { host: 'from', synced: true, min: 15, label: 'Mời cùng ngồi thiền' },
   tra: { host: 'from', synced: true, min: 10, label: 'Mời cùng Trà Đạo' },
   tham_quan: { host: 'from', synced: false, min: null, label: 'Mời tham quan Vân Đảo của mình' },
-});
+}));
+/** Chỉ các khóa định nghĩa ở trên (không nhận khóa kế thừa như `toString`, `constructor`, `__proto__`) */
+export const isMeetKind = (k) => typeof k === 'string' && Object.prototype.hasOwnProperty.call(MEET_KINDS, k);
 /** Lời mẫu (không chữ tự do cho tới khi GĐ5 có kiểm duyệt) */
 export const LINES = Object.freeze({
   tham: 'Mời bạn ghé Vân Đảo của mình.',
@@ -61,7 +65,8 @@ export const inviteUrl = (origin, code) => `${String(origin).replace(/\/+$/, '')
 /** Đọc mã từ địa chỉ: …/#ban=XXXX-XXXX (có thể kèm tham số khác sau &) */
 export function inviteFromHash(hash) {
   const m = /(?:^#|&)ban=([^&]+)/.exec(String(hash || ''));
-  return m ? normInviteCode(decodeURIComponent(m[1])) : null;
+  if (!m) return null;
+  try { return normInviteCode(decodeURIComponent(m[1])); } catch { return null; }   // mã hóa URL hỏng → không hợp lệ, không ném lỗi
 }
 
 /** «Tuệ Thái · 5696», «Tuệ Thái #5696», «Tuệ Thái 5696» → { tinh_danh, tag }. Chỉ tìm đúng, không gợi ý gần đúng. */
@@ -102,8 +107,8 @@ const teaOpen = (p) => !!p && (p.completed === true || (p.day || 0) >= ZONE_UNLO
  * Máy chủ chạy cùng hàm với ngày/hiện diện của máy chủ; máy khách dùng để ẩn/khóa nút và ghi lý do.
  */
 export function canMeet(kind, me, friend, rel, place = null) {
+  if (!isMeetKind(kind)) return { ok: false, code: 'invalid_kind' };
   const K = MEET_KINDS[kind];
-  if (!K) return { ok: false, code: 'invalid_kind' };
   if (!rel || rel.blocked) return { ok: false, code: 'blocked' };
   if (!rel.accepted) return { ok: false, code: 'not_companion' };
   const fp = (friend && friend.presence) || 'vang';
@@ -119,14 +124,26 @@ export function canMeet(kind, me, friend, rel, place = null) {
   return { ok: true, code: null, host: K.host, guest: K.host === 'from' ? 'to' : 'from', place: where, quiet: fp === 'thien' };
 }
 
-/** Ghé thăm đảo bạn khi bạn vắng: chỉ khi thân thiết, bạn đã cho phép, và mình đi được */
-export const canVisitAway = (me, rel) => !!rel && rel.accepted && !rel.blocked && rel.closeness === 'than' && rel.allowAway === true && canTravel(me);
+/**
+ * Ghé thăm đảo bạn khi bạn vắng. `me`: người đi { day, completed }; `host`: chủ đảo { open } — chế độ HIỆN HÀNH (máy chủ đọc lúc ghé);
+ * `rel`: { accepted, blocked, closeness, allowAway }. Đã cho phép từ trước nhưng chủ chuyển sang Độc cư thì không ghé được.
+ * Trả { ok, code }.
+ */
+export function canVisitAway(me, host, rel) {
+  if (!rel || rel.blocked) return { ok: false, code: 'blocked' };
+  if (!rel.accepted) return { ok: false, code: 'not_companion' };
+  if (rel.closeness !== 'than') return { ok: false, code: 'not_than' };
+  if (rel.allowAway !== true) return { ok: false, code: 'away_not_allowed' };
+  if (!canTravel(me)) return { ok: false, code: 'guest_gate_closed' };
+  if (!host || host.open !== true) return { ok: false, code: 'host_doc_cu' };
+  return { ok: true, code: null };
+}
 
 /** Kiểm thân yêu cầu POST /meet: { to, kind, place? } → { ok, v } | { ok:false, code } */
 export function checkMeetPayload(p) {
   if (!p || typeof p !== 'object') return { ok: false, code: 'invalid_payload' };
   if (typeof p.to !== 'string' || !/^[A-Za-z0-9_-]{8,64}$/.test(p.to)) return { ok: false, code: 'invalid_to' };
-  if (!MEET_KINDS[p.kind]) return { ok: false, code: 'invalid_kind' };
+  if (!isMeetKind(p.kind)) return { ok: false, code: 'invalid_kind' };
   if (p.place !== undefined && p.place !== null && !['dao', 'dtd'].includes(p.place)) return { ok: false, code: 'invalid_place' };
   return { ok: true, v: { to: p.to, kind: p.kind, place: p.place ?? null } };
 }
@@ -139,13 +156,13 @@ export function meetPhase(inv, now) {
   if (!inv) return { phase: 'het_han' };
   if (inv.status === 'tu_choi' || inv.status === 'huy') return { phase: inv.status };
   if (inv.status === 'cho') return now - inv.created_at > INVITE_TTL_MS ? { phase: 'het_han' } : { phase: 'cho', left: INVITE_TTL_MS - (now - inv.created_at) };
-  const K = MEET_KINDS[inv.kind] || {}, start = inv.start_at ?? inv.responded_at ?? now;
+  const K = isMeetKind(inv.kind) ? MEET_KINDS[inv.kind] : {}, start = inv.start_at ?? inv.responded_at ?? now;
   if (now < start) return { phase: 'sap', startIn: start - now };
   if (K.min && now >= start + K.min * 60_000) return { phase: 'xong' };
   return { phase: 'dang' };
 }
 /** Giờ bắt đầu khi lời mời được nhận (máy chủ đặt): hoạt động cùng giờ sau MEET_LEAD_MS, ghé thăm thì ngay */
-export const meetStartAt = (kind, acceptedAt) => (MEET_KINDS[kind] && MEET_KINDS[kind].synced ? acceptedAt + MEET_LEAD_MS : acceptedAt);
+export const meetStartAt = (kind, acceptedAt) => (isMeetKind(kind) && MEET_KINDS[kind].synced ? acceptedAt + MEET_LEAD_MS : acceptedAt);
 
 /** Lý do không mời được, để hiện cạnh nút bị khóa */
 export const REASON_TEXT = Object.freeze({
@@ -156,6 +173,8 @@ export const REASON_TEXT = Object.freeze({
   host_doc_cu: 'Cổng Vân Môn của chủ đảo đang ở chế độ Độc cư.',
   tea_closed: 'Trà Đạo Tỉnh Thức của chủ đảo chưa mở (mở từ ngày 15).',
   invalid_place: 'Nơi gặp không hợp lệ.',
+  not_than: 'Chỉ bạn thân thiết mới ghé được khi chủ đảo vắng.',
+  away_not_allowed: 'Bạn chưa cho phép ghé khi vắng.',
 });
 
 /**

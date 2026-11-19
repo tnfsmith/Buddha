@@ -22,6 +22,12 @@ describe('mã mời và liên kết', () => {
     expect(inviteFromHash('#q=0&ban=k7m2qx9a')).toBe('K7M2QX9A');
     expect(inviteFromHash('#view=board')).toBeNull();
   });
+  it('mã hóa URL hỏng thì là không hợp lệ, không ném lỗi', () => {
+    expect(() => inviteFromHash('#ban=%E0%A4%A')).not.toThrow();
+    expect(inviteFromHash('#ban=%E0%A4%A')).toBeNull();
+    expect(inviteFromHash('#ban=%')).toBeNull();
+    expect(inviteFromHash(undefined)).toBeNull();
+  });
 });
 
 describe('tìm đúng Tịnh danh · mã (không tìm gần đúng)', () => {
@@ -88,16 +94,30 @@ describe('canMeet: mời gặp theo phân khu đã mở và cổng Vân Môn', (
     expect(canMeet('thien', P(30), P(30, { presence: 'thien' }), rel)).toMatchObject({ ok: true, quiet: true });
     expect(canMeet('nhay_mua', P(30), P(30), rel)).toMatchObject({ ok: false, code: 'invalid_kind' });
   });
-  it('ghé khi bạn vắng: chỉ thân thiết, bạn cho phép, mình đi được', () => {
-    const r = { accepted: true, blocked: false, closeness: 'than', allowAway: true };
-    expect(canVisitAway(P(30), r)).toBe(true);
-    expect(canVisitAway(P(20), r)).toBe(false);
-    expect(canVisitAway(P(30), { ...r, closeness: 'quen' })).toBe(false);
-    expect(canVisitAway(P(30), { ...r, allowAway: false })).toBe(false);
+  it('ghé khi bạn vắng: chỉ thân thiết, bạn cho phép, mình đi được, chủ đảo đang Nghênh khách', () => {
+    const r = { accepted: true, blocked: false, closeness: 'than', allowAway: true }, host = { open: true };
+    expect(canVisitAway(P(30), host, r)).toEqual({ ok: true, code: null });
+    expect(canVisitAway(P(20), host, r).code).toBe('guest_gate_closed');
+    expect(canVisitAway(P(30), host, { ...r, closeness: 'quen' }).code).toBe('not_than');
+    expect(canVisitAway(P(30), host, { ...r, allowAway: false }).code).toBe('away_not_allowed');
+    expect(canVisitAway(P(30), host, { ...r, accepted: false }).code).toBe('not_companion');
+    expect(canVisitAway(P(30), host, { ...r, blocked: true }).code).toBe('blocked');
+    // đã cho phép từ trước, sau đó chủ đảo chuyển sang Độc cư: không ghé được nữa
+    expect(canVisitAway(P(30), { open: false }, r).code).toBe('host_doc_cu');
+    expect(canVisitAway(P(30), null, r).code).toBe('host_doc_cu');
     expect(canTravel({ day: 1, completed: true })).toBe(true);
   });
+  it('khóa kế thừa của Object không phải kiểu gặp', () => {
+    for (const k of ['toString', 'constructor', '__proto__', 'hasOwnProperty', 'valueOf']) {
+      expect(canMeet(k, P(30), P(30), rel).code).toBe('invalid_kind');
+      expect(checkMeetPayload({ to: '01M7BTQZ8K', kind: k }).code).toBe('invalid_kind');
+      expect(meetStartAt(k, 1000)).toBe(1000);
+      expect(meetPhase({ kind: k, status: 'dong_y', created_at: 0, responded_at: 0, start_at: 0 }, 10).phase).toBe('dang');
+    }
+    expect(Object.keys(MEET_KINDS).sort()).toEqual(['tham', 'tham_quan', 'thien', 'tra', 'xin_tham']);
+  });
   it('mọi mã lý do đều có câu hiện cho người dùng; mọi kiểu gặp có lời mẫu', () => {
-    for (const code of ['blocked', 'not_companion', 'friend_away', 'guest_gate_closed', 'host_doc_cu', 'tea_closed', 'invalid_place']) expect(REASON_TEXT[code]).toBeTruthy();
+    for (const code of ['blocked', 'not_companion', 'friend_away', 'guest_gate_closed', 'host_doc_cu', 'tea_closed', 'invalid_place', 'not_than', 'away_not_allowed']) expect(REASON_TEXT[code]).toBeTruthy();
     for (const k of Object.keys(MEET_KINDS)) expect(LINES[k]).toBeTruthy();
   });
 });
