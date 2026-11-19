@@ -41,22 +41,26 @@ export const variantsStale = () => ct.state !== 'loading' && Date.now() - ct.at 
 // Sổ trên máy theo từng tài khoản: { prof, rev, dirty, asked, pick: { ngày: { trục: { id, t, x, s } } }, swp: { ngày: { trục: 1 } } }
 let all = {}; try { all = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { all = {}; }
 const who = () => (acct.on && acct.uid ? acct.uid : 'local');
-// Lần đầu có phiên mà tài khoản chưa có sổ: mang lựa chọn đã lưu trên máy sang và gửi lên (rev 0 = tạo mới)
-const me = () => { const k = who(); if (!all[k] && k !== 'local' && all.local && all.local.prof) all[k] = { ...JSON.parse(JSON.stringify(all.local)), rev: 0, dirty: true, pick: {}, swp: {} };
-  return (all[k] = all[k] || { prof: null, rev: 0, dirty: false, asked: false, pick: {}, swp: {} }); };
+// Mỗi tài khoản một sổ riêng (hợp đồng #111: hồ sơ theo tài khoản, đọc không tự ghi). Không chép sổ của máy hay của
+// tài khoản khác sang; chỉ thao tác «Lưu lựa chọn» trong đúng tài khoản đang mở mới đánh dấu cần gửi (dirty).
+const me = () => { const k = who(); return (all[k] = all[k] || { prof: null, rev: 0, dirty: false, asked: false, pick: {}, swp: {} }); };
+/** Ngày trai của Bia theo hồ sơ của đúng tài khoản/máy đang mở; chưa có hồ sơ thì về mặc định */
+const applyUpo = (S) => { const p = me().prof; if (p) S.uposatha = p.uposatha; else delete S.uposatha; };
 const keep = () => { const m = me(), ds = Object.keys(m.pick).sort().slice(-3); for (const o of [m.pick, m.swp]) for (const k of Object.keys(o)) if (!ds.includes(k)) delete o[k]; try { localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) { /* chỉ giữ trong bộ nhớ */ } };
 export const dkProfile = () => me().prof;
 
 /** Đọc hồ sơ trên máy chủ (GET /practice/profile); bản máy chủ mới hơn thì dùng, bản trên máy chưa gửi thì gửi lại */
-let pulled = 0;
+const pulled = {};   // lần đọc gần nhất theo từng tài khoản
 export async function dkPull(S, force) {
-  if (!acct.on || (!force && Date.now() - pulled < 600000)) return;
-  pulled = Date.now();
+  applyUpo(S);
+  if (!acct.on || (!force && Date.now() - (pulled[who()] || 0) < 600000)) return;
+  pulled[who()] = Date.now();
   const m = me();
   try {
     const r = await api('/api/v1/practice/profile');
     if (m.dirty && m.prof && r.rev === m.rev) return void (await put(S));
-    if (r.profile && r.rev !== m.rev) { m.prof = r.profile; m.rev = r.rev; m.dirty = false; S.uposatha = r.profile.uposatha; keep(); }
+    if (r.profile && r.rev !== m.rev) { m.prof = r.profile; m.rev = r.rev; m.dirty = false; keep(); }
+    applyUpo(S);
   } catch (e) { /* offline: dùng bản trên máy */ }
 }
 async function put(S) {
@@ -65,7 +69,7 @@ async function put(S) {
     const r = await api('/api/v1/practice/profile', { method: 'PUT', body: { profile: m.prof, rev: m.rev } });
     m.rev = r.rev; m.dirty = false; keep(); return 'Đã lưu Duyên khởi.';
   } catch (e) {
-    if (e.code === 'practice_profile_conflict') { pulled = 0; m.dirty = false; m.rev = -1; await dkPull(S, true); return 'Thiết bị khác vừa lưu lựa chọn khác. Đã tải bản mới nhất; xem lại rồi lưu nếu muốn đổi.'; }
+    if (e.code === 'practice_profile_conflict') { pulled[who()] = 0; m.dirty = false; m.rev = -1; await dkPull(S, true); return 'Thiết bị khác vừa lưu lựa chọn khác. Đã tải bản mới nhất; xem lại rồi lưu nếu muốn đổi.'; }
     return e.status ? 'Chưa lưu được lên máy chủ (' + esc(e.code) + '). Lựa chọn vẫn giữ trên máy này.' : 'Đã lưu trên máy này; sẽ gửi khi có mạng.';
   }
 }

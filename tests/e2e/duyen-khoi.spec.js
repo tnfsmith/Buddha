@@ -18,7 +18,10 @@ const LOOK = { skin: 2, robe: 1, trim: 0, hairColor: 0, hair: 'ngan', build: 'vu
 const ymd = (t = Date.now()) => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 
 function fakeServer() {
-  const sv = { prof: null, rev: 0, puts: [], account: true,
+  // Hồ sơ theo từng tài khoản; `cur` là tài khoản của phiên đang mở (đổi khi giả lập đăng nhập tài khoản khác)
+  const sv = { cur: 'u-tue-thai', profs: {}, revs: {}, gets: [], puts: [], account: true,
+    get prof() { return this.profs[this.cur] || null; }, set prof(v) { this.profs[this.cur] = v; },
+    get rev() { return this.revs[this.cur] || 0; }, set rev(v) { this.revs[this.cur] = v; },
     journey: { program: 'so-nhap-49', cycle: 1, day: 1, started_on: ymd(), last_done_on: null, completed_at: null, sacca_count: 0, sessions_done: 0, sermons_done: 0, rev: 1 },
     profile: { tinh_danh: 'Tuệ Thái', tag: '5696', look: LOOK, settings: {}, island: {}, tz: 'Asia/Ho_Chi_Minh', visibility: 'dong_tu', pref_seat: null, rev: 3 } };
   const state = () => ({ profile: sv.profile, journey: { ...sv.journey }, totals: { duc: 0, thien: 0, tue: 0, all: 0 }, unlocked_zones: {}, server_now: Date.now(), practice: 1 });
@@ -27,14 +30,14 @@ function fakeServer() {
     if (p === '/api/v1/content') return json({ items: u.searchParams.get('kind') === 'chuong_trinh' ? VARIANTS : [] });
     if (p === '/api/v1/practice/profile') {
       if (!sv.account) return json({ error: { code: 'unauthorized', message: 'Cần phiên' } }, 401);
-      if (req.method() === 'GET') return json({ profile: sv.prof, rev: sv.rev });
-      const body = req.postDataJSON(); sv.puts.push(body);
+      if (req.method() === 'GET') { sv.gets.push(sv.cur); return json({ profile: sv.prof, rev: sv.rev }); }
+      const body = req.postDataJSON(); sv.puts.push({ ...body, uid: sv.cur });
       const same = sv.prof && JSON.stringify(sv.prof) === JSON.stringify(body.profile);
       if (same) return json({ profile: sv.prof, rev: sv.rev });
       if (body.rev !== sv.rev) return json({ error: { code: 'practice_profile_conflict', message: 'rev cũ' } }, 409);
       sv.prof = body.profile; sv.rev += 7; return json({ profile: sv.prof, rev: sv.rev });
     }
-    if (p === '/api/v1/me') return json({ user: { id: 'u-tue-thai', isAnonymous: false }, ...state(), guest_purge_after: null, ...(u.searchParams.get('entries') ? { entries: [], events: [] } : {}) });
+    if (p === '/api/v1/me') return json({ user: { id: sv.cur, isAnonymous: false }, ...state(), guest_purge_after: null, ...(u.searchParams.get('entries') ? { entries: [], events: [] } : {}) });
     if (p === '/api/v1/sync') return json({ applied: (req.postDataJSON().ops || []).map((o) => o.id), rejected: [], state: state() });
     if (p === '/api/v1/profile') return json({ success: true, profile: sv.profile });
     if (p.startsWith('/api/')) return json({ error: { code: 'not_found', message: 'không có' } }, 404);
@@ -120,7 +123,7 @@ test('cùng tài khoản: máy A lưu Duyên khởi → máy B cùng hồ sơ, c
   await openBia(A);
   await answer(A);
   await slow.poll(() => sv.rev).toBeGreaterThan(0);
-  expect(sv.puts[0]).toMatchObject({ rev: 0, profile: { level: 'nhe', minutes: 10, uposatha: 'vn_2', no_money: true, at_home: true, precepts: [1, 2, 3, 4, 5], familiarity: null } });
+  expect(sv.puts[0]).toMatchObject({ uid: 'u-tue-thai', rev: 0, profile: { level: 'nhe', minutes: 10, uposatha: 'vn_2', no_money: true, at_home: true, precepts: [1, 2, 3, 4, 5], familiarity: null } });
   expect(Object.keys(sv.puts[0].profile).sort()).toEqual(['at_home', 'familiarity', 'level', 'minutes', 'no_money', 'precepts', 'time_window', 'uposatha']);
   const tA = await texts(A);
 
@@ -143,4 +146,50 @@ test('cùng tài khoản: máy A lưu Duyên khởi → máy B cùng hồ sơ, c
   await P(B).locator('[data-act="dk-open"]').first().click();
   await expect(P(B).locator('[data-act="dk-set"][data-k="time_window"][data-v="sang"]')).toHaveClass(/on/);
   expect(A.errs).toEqual([]); expect(B.errs).toEqual([]);
+});
+
+/** Giả lập đăng nhập tài khoản khác trên cùng trình duyệt rồi mở lại app */
+async function switchTo(page, sv, uid) {
+  sv.cur = uid;
+  await page.evaluate((uid) => localStorage.setItem('vandao.acct', JSON.stringify({ uid, guest: false, cycle: 1 })), uid);
+  await page.reload();
+  await page.waitForFunction(() => window.__app?.world?.renderer, null, { timeout: 150_000 });
+}
+
+test('hai tài khoản cùng trình duyệt và hồ sơ trên máy: không chép hồ sơ sang tài khoản khác, đọc không tự ghi', async ({ browser }) => {
+  test.setTimeout(600_000);
+  const sv = fakeServer();
+  // Máy chưa giữ hành trình lưu Duyên khởi trên máy
+  const P0 = await device(browser, sv, { account: false });
+  await openBia(P0);
+  await answer(P0);
+  expect(sv.puts).toHaveLength(0);
+  // Đăng nhập tài khoản A: hồ sơ trên máy không được chép sang, không có PUT; Bia mời trả lời lại
+  await switchTo(P0, sv, 'u-a');
+  await openBia(P0);
+  await slow.poll(() => sv.gets.filter((u) => u === 'u-a').length).toBeGreaterThan(0);
+  await expect(P0.locator('#panel [data-act="dk-skip"]')).toBeVisible();
+  await expect(P0.locator('#panel')).not.toContainText('Gợi ý hôm nay theo Duyên khởi');
+  expect(await P0.evaluate(() => window.__app.state().uposatha)).toBeUndefined();
+  // A tự bấm Lưu → chỉ khi đó mới PUT cho A
+  await answer(P0);
+  await slow.poll(() => sv.puts.filter((x) => x.uid === 'u-a').length).toBe(1);
+  // Đổi sang tài khoản B trên cùng trình duyệt: không nhận hồ sơ của A, không PUT cho B
+  await switchTo(P0, sv, 'u-b');
+  await openBia(P0);
+  await slow.poll(() => sv.gets.filter((u) => u === 'u-b').length).toBeGreaterThan(0);
+  await expect(P0.locator('#panel [data-act="dk-skip"]')).toBeVisible();
+  await expect(P0.locator('#panel')).not.toContainText('Gợi ý hôm nay theo Duyên khởi');
+  expect(await P0.evaluate(() => window.__app.state().uposatha)).toBeUndefined();
+  await P0.waitForTimeout(1500);
+  expect(sv.puts.filter((x) => x.uid === 'u-b')).toHaveLength(0);
+  expect(sv.profs['u-b']).toBeUndefined();
+  // Sổ trên máy tách theo tài khoản: A còn nguyên hồ sơ của A, máy chưa giữ hành trình còn bản của nó, B không có
+  const book = await P0.evaluate(() => JSON.parse(localStorage.getItem('vandao.dk.v1')));
+  expect(book['u-a'].prof).toMatchObject({ minutes: 10, uposatha: 'vn_2' });
+  expect(book['u-a'].dirty).toBe(false);
+  expect(book.local.prof).toMatchObject({ minutes: 10 });
+  expect(book['u-b']?.prof ?? null).toBeNull();   // B chưa lưu gì: không có sổ hoặc sổ rỗng
+  expect(sv.puts.filter((x) => x.uid === 'u-a')).toHaveLength(1);
+  expect(P0.errs).toEqual([]);
 });
