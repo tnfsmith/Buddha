@@ -38,6 +38,22 @@ export const canSend = (status) => status === undefined || status === null || st
 /** Đầu mỗi lần alarm: trạng thái sau phục hồi của một khóa còn lại từ lần trước */
 export const recoverStatus = (status) => (status === 'sending' ? 'unknown' : status);
 
+/**
+ * Kết quả một lần gọi dịch vụ Web Push → trạng thái khóa (hợp đồng §4 bước 5).
+ * `res` là `{ status }` khi có phản hồi HTTP, hoặc `null`/`{ error }` khi không có phản hồi (lỗi mạng, hết giờ, bị hủy).
+ * Chỉ thử lại khi dịch vụ **xác nhận từ chối tạm thời** (429, 503). Không rõ dịch vụ đã nhận hay chưa
+ * (không có phản hồi, hoặc 5xx khác như 500/502/504) → `unknown`, không gửi lại: ưu tiên không gửi trùng.
+ */
+export function classifyPush(res) {
+  const st = res && Number.isInteger(res.status) ? res.status : null;
+  if (st === null) return 'unknown';
+  if (st >= 200 && st < 300) return 'ok';
+  if (st === 404 || st === 410) return 'gone';
+  if (st === 429 || st === 503) return 'retry';
+  if (st >= 400 && st < 500) return 'fail';
+  return 'unknown';
+}
+
 /** Khóa của một lượt nhắc (một nhắc trong một ngày địa phương); giới hạn 2 lượt/ngày đếm theo khóa này */
 export const occKey = (reminderId, localDate) => `${reminderId}:${localDate}`;
 /** Khóa chống gửi trùng của một lượt nhắc tới một đăng ký push */

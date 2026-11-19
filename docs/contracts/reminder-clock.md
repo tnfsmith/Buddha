@@ -30,6 +30,7 @@ API và DO import cùng một mô-đun thuần. Mô-đun không đọc giờ, m�
 | `occurrenceValid(rem, occ, { tz, uposatha, now })` | Lượt đang thử lại còn hiệu lực không (§4 bước 4), gồm giờ yên lặng theo giờ thực lúc gửi |
 | `quietAt(now, tz)` | Giờ thực có rơi vào giờ yên lặng không; áp ở mọi lần gửi, kể cả alarm đến trễ |
 | `canSend(status)`, `recoverStatus(status)`, `SEND_FINAL` | Chỉ gửi khi chưa có khóa hoặc khóa `retry`; `sending` còn lại từ lần trước → `unknown`, không gửi lại |
+| `classifyPush(res)` | Kết quả gọi dịch vụ push → `ok` / `gone` / `retry` / `fail` / `unknown` theo bảng §4 bước 5 |
 | `pushPayload(kind, at)` | `{"v":1,"kind":…,"at":…}` |
 | `localParts`, `zonedToUtc`, `isTraiDate`, `inQuiet` | Hàm phụ trợ múi giờ, ngày trai, giờ yên lặng |
 
@@ -122,8 +123,11 @@ Các bước:
    |---|---|
    | 2xx | `ok`; D1 đặt `fail_count = 0`, `last_ok_at = now` |
    | 404 / 410 | `gone`; xóa dòng `push_subscription` đó khỏi D1 |
-   | 400 / 401 / 403 / 413 | `fail`; `fail_count + 1`; không thử lại |
-   | 429 / 5xx / lỗi mạng | `retry` |
+   | 400 / 401 / 403 / 413 và 4xx khác | `fail`; `fail_count + 1`; không thử lại |
+   | 429 / 503 (dịch vụ xác nhận từ chối tạm thời) | `retry` |
+   | Không có phản hồi (lỗi mạng, hết giờ, bị hủy) hoặc 5xx khác (500, 502, 504…) | `unknown`: không rõ dịch vụ đã nhận hay chưa → coi như đã gửi, **không gửi lại**, không cộng `fail_count` |
+
+   - Phân loại bằng `classifyPush`. Chỉ thử lại khi dịch vụ xác nhận đã từ chối. Kết quả không xác định áp cùng nguyên tắc với bước 0: ưu tiên không gửi trùng hơn chắc chắn tới.
 
    - Còn đăng ký `retry`, `attempt < 3` và `now + 5 phút ≤ due_at + LATE_MS` → `attempt + 1`, `retry_at = now + 5 phút`.
    - Hết lượt thử → các đăng ký `retry` chuyển `fail` (`fail_count + 1`); `done = 1`, `retry_at = NULL`.
@@ -139,7 +143,7 @@ Các bước:
    **Ví dụ:** nhắc 06:00 gặp 429. Lúc 06:00 lượt mở với `due_at = 06:00`, `retry_at = 06:05`, `next_at` chuyển sang 06:00 ngày mai. Alarm 06:05 thử lại với khóa và payload của 06:00 hôm nay. Nếu trước 06:05 người dùng tắt nhắc hoặc đổi sang 07:00 thì lượt bị hủy ở bước 4.
 7. **Đặt lại alarm** về `min(idx.next_at, occ.retry_at với done = 0)` của shard; không còn gì thì xóa alarm.
 8. **`cancel` / `cancelUser`** xóa dòng `idx` và đặt `done = 1` cho các lượt `occ` chưa xong của nhắc hoặc người dùng đó. `schedule` không xóa lượt đang thử lại; bước 4 kiểm hiệu lực lúc chạy.
-9. **Log:** chỉ ghi số đếm theo trạng thái (`ok`, `gone`, `fail`, `retry`, `cancel`, `skip_*`), không ghi `user_id`, endpoint hay khóa.
+9. **Log:** chỉ ghi số đếm theo trạng thái (`ok`, `gone`, `fail`, `retry`, `unknown`, `cancel`, `skip_*`), không ghi `user_id`, endpoint hay khóa.
 
 ## 5. Đối soát (Codex)
 
@@ -190,6 +194,7 @@ Bước này sửa các lần gọi DO bị lỡ. Gọi trùng không sao vì `s
   - `cancel` hủy lượt đang thử lại;
   - dừng sau 3 lần thử hoặc khi quá `due_at + 30 phút`;
 - **giờ yên lặng theo giờ thực:** nhắc 21:28 gặp 429 → lượt thử lúc 21:33 bị hủy; alarm của nhắc 21:20 đến trễ lúc 21:35 → bỏ lượt, vẫn hẹn lần sau;
+- **lỗi mạng không rõ kết quả:** giả lập dịch vụ push nhận yêu cầu rồi cắt kết nối trước khi trả phản hồi (hoặc trả 502/504). Khóa thành `unknown`, không có lần thử lại nào cho đăng ký đó, `fail_count` không đổi. Trả 429/503 thì thử lại sau 5 phút;
 - **phục hồi `sending`:** giả lập alarm dừng sau khi dịch vụ push đã trả 2xx nhưng trước khi ghi `ok`. Lần alarm sau chuyển khóa sang `unknown`, không gọi dịch vụ push lần nữa cho đăng ký đó, và không cộng `fail_count`;
 - 404/410 → dòng `push_subscription` bị xóa; 429/5xx → thử lại sau 5 phút, tối đa 3 lần;
 - API sửa giờ trước khi alarm chạy → không gửi theo giờ cũ;

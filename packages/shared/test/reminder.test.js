@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { solarToLunar } from '../src/amlich.js';
 import {
-  LATE_MS, MAX_ACTIVE, SEND_FINAL, SHARDS, canSend, checkReminder, checkReminders, inQuiet, isTraiDate, localParts, nextReminderAt, occKey, occurrenceValid, pauseUntil, pushPayload, quietAt, recoverStatus, sendKey, shardOf, zonedToUtc,
+  LATE_MS, MAX_ACTIVE, SEND_FINAL, SHARDS, canSend, checkReminder, classifyPush, checkReminders, inQuiet, isTraiDate, localParts, nextReminderAt, occKey, occurrenceValid, pauseUntil, pushPayload, quietAt, recoverStatus, sendKey, shardOf, zonedToUtc,
 } from '../src/reminder.js';
 
 const VN = 'Asia/Ho_Chi_Minh';
@@ -184,5 +184,21 @@ describe('phục hồi khóa gửi (không gửi trùng)', () => {
     expect(recoverStatus('sending')).toBe('unknown');
     expect(canSend(recoverStatus('sending'))).toBe(false);
     for (const st of ['ok', 'retry', 'gone', 'fail', 'cancel', undefined]) expect(recoverStatus(st)).toBe(st);
+  });
+});
+
+describe('phân loại kết quả Web Push (chỉ thử lại khi dịch vụ xác nhận từ chối)', () => {
+  it('bảng mã', () => {
+    const c = (status) => classifyPush({ status });
+    expect([201, 200, 204].map(c)).toEqual(['ok', 'ok', 'ok']);
+    expect([404, 410].map(c)).toEqual(['gone', 'gone']);
+    expect([429, 503].map(c)).toEqual(['retry', 'retry']);
+    expect([400, 401, 403, 413, 422].map(c)).toEqual(['fail', 'fail', 'fail', 'fail', 'fail']);
+    expect([500, 502, 504, 599, 302].map(c)).toEqual(['unknown', 'unknown', 'unknown', 'unknown', 'unknown']);
+  });
+  it('không có phản hồi (lỗi mạng, hết giờ, bị hủy) → unknown, không gửi lại', () => {
+    for (const r of [null, undefined, { error: 'network' }, { error: 'timeout' }, { status: 'x' }]) expect(classifyPush(r)).toBe('unknown');
+    expect(canSend(classifyPush(null))).toBe(false);
+    expect(canSend(classifyPush({ status: 429 }))).toBe(true);
   });
 });
