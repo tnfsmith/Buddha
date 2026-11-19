@@ -215,4 +215,27 @@ describe('Bạn đồng tu trên Worker/D1 #122', () => {
     expect(badJson.status).toBe(400);
     expect(badJson.headers.get('Cache-Control')).toBe('no-store');
   });
+
+  it('nhận lời vào đảo phải kiểm cổng lại, nhận ở Đại Thiền Đường và từ chối vẫn dùng được', async () => {
+    const host = await guest(), visitor = await guest();
+    await link(host, visitor);
+    await day(visitor, 29);
+    await setPresence(host, 'online');
+    await setPresence(visitor, 'online');
+    const meet = (from, to, kind, place) => api(from, '/meet', 'POST', { to: id(to), kind, place });
+    const respond = (to, invite, accept) => api(to, '/meet/' + invite.id + '/respond', 'POST', { accept });
+    for (const [from, to, kind] of [[host, visitor, 'tham'], [visitor, host, 'xin_tham']]) {
+      await prefs(host, {}, true);
+      const issued = await meet(from, to, kind);
+      expect(issued.status).toBe(201);
+      await prefs(host, {}, false);
+      const held = issued.data.invite;
+      expect(await respond(to, held, true)).toMatchObject({ status: 409, data: { error: { code: 'host_doc_cu' } } });
+      expect(await db.prepare('SELECT status, start_at FROM meet_invite WHERE id = ?').bind(held.id).first())
+        .toEqual({ status: 'cho', start_at: null });
+      expect((await respond(to, held, false)).data.invite.status).toBe('tu_choi');
+    }
+    const meditation = await meet(host, visitor, 'thien', 'dtd');
+    expect((await respond(visitor, meditation.data.invite, true)).data.invite.status).toBe('dong_y');
+  });
 });

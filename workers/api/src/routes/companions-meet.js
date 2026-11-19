@@ -1,4 +1,4 @@
-import { INVITE_TTL_MS, PRESENCE, canMeet, canVisitAway, checkMeetPayload, meetStartAt } from '@vandao/shared/dong-tu.js';
+import { INVITE_TTL_MS, MEET_KINDS, PRESENCE, canMeet, canVisitAway, checkMeetPayload, meetStartAt } from '@vandao/shared/dong-tu.js';
 import { readJson } from '../lib.js';
 import { accepted, blocked, inviteRow, openIsland, pair, participant, relationship, userIdOk } from '../companions-data.js';
 
@@ -46,15 +46,25 @@ export function mountCompanionMeet(app, { quota, fail, who, missing, empty }) {
     const body = await readJson(c);
     if (typeof body?.accept !== 'boolean') return fail(c, 'invalid_payload');
     const id = c.req.param('id'), me = who(c), now = Date.now(), db = c.env.DB;
-    const current = await db.prepare('SELECT kind, status, created_at FROM meet_invite WHERE id = ? AND to_id = ?').bind(id, me).first();
+    const current = await db.prepare('SELECT from_id, to_id, kind, place, status, created_at FROM meet_invite WHERE id = ? AND to_id = ?')
+      .bind(id, me).first();
     if (!current) return missing(c);
     if (current.status !== 'cho') return fail(c, 'invite_not_pending', 409);
     if (now - current.created_at > INVITE_TTL_MS) return fail(c, 'invite_expired', 409);
+    const host = MEET_KINDS[current.kind].host === 'from' ? current.from_id : current.to_id;
+    // Kiểm cổng tại lúc ghi để một lần chuyển sang Độc cư không bị bản đọc trước đó bỏ qua.
     const result = await db.prepare(`UPDATE meet_invite SET status = ?3, responded_at = ?4, start_at = ?5
       WHERE id = ?1 AND to_id = ?2 AND status = 'cho' AND ${accepted('from_id','to_id')}
-      AND NOT ${blocked('from_id','to_id')} RETURNING ${inviteRow}`)
-      .bind(id, me, body.accept ? 'dong_y' : 'tu_choi', now, body.accept ? meetStartAt(current.kind, now) : null).first();
-    return result ? c.json({ invite: result }) : fail(c, 'invite_not_pending', 409);
+      AND NOT ${blocked('from_id','to_id')}
+      AND (?3 = 'tu_choi' OR place = 'dtd' OR EXISTS (SELECT 1 FROM profile WHERE user_id = ?6 AND ${openIsland('island_json')}))
+      RETURNING ${inviteRow}`)
+      .bind(id, me, body.accept ? 'dong_y' : 'tu_choi', now, body.accept ? meetStartAt(current.kind, now) : null, host).first();
+    if (result) return c.json({ invite: result });
+    if (body.accept && current.place !== 'dtd') {
+      const open = await db.prepare(`SELECT 1 FROM profile WHERE user_id = ? AND ${openIsland('island_json')}`).bind(host).first();
+      if (!open) return fail(c, 'host_doc_cu', 409);
+    }
+    return fail(c, 'invite_not_pending', 409);
   });
 
   app.post('/meet/:id/cancel', ...quota('meet_manage', 60), async (c) => {
