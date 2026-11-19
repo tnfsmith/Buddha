@@ -42,8 +42,15 @@ describe('Bạn đồng tu trên Worker/D1 #122', () => {
     expect((await api(owner, '/companions/link', 'POST', {})).data.uses_left).toBe(LINK_USES - 1);
     expect((await list(receiver)).companions[0].id).toBe(id(owner));
     expect((await list(owner)).companions[0].id).toBe(id(receiver));
+    const account = await db.prepare('SELECT createdAt FROM user WHERE id = ?').bind(id(receiver)).first();
+    expect(account.createdAt).toBeGreaterThan(Date.now() - 86_400_000);
+    expect(account.createdAt).toBeLessThanOrEqual(Date.now());
     const guide = await db.prepare('SELECT guide_id FROM guidance WHERE newcomer_id = ?').bind(id(receiver)).first();
     expect(guide).toEqual({ guide_id: id(owner) });
+    const older = await guest();
+    await db.prepare('UPDATE user SET createdAt = ? WHERE id = ?').bind(Date.now() - 8 * 86_400_000, id(older)).run();
+    expect((await api(older, '/companions/link/' + key + '/accept', 'POST')).status).toBe(201);
+    expect(await db.prepare('SELECT 1 FROM guidance WHERE newcomer_id = ?').bind(id(older)).first()).toBeNull();
     await db.prepare('UPDATE invite SET uses_left=0 WHERE code=?').bind(key).run();
     expect(code(await api(receiver, '/companions/link/' + key + '/accept', 'POST'))).toBe('link_used_up');
     await db.prepare('UPDATE invite SET uses_left=1, expires_at=0 WHERE code=?').bind(key).run();
@@ -69,6 +76,7 @@ describe('Bạn đồng tu trên Worker/D1 #122', () => {
     await prefs(disabled, { cho_tim: false });
     await api(hidden, '/profile', 'PATCH', { visibility: 'an' });
     await api(denied, '/blocks', 'POST', { user: id(sender) });
+    expect(code(await ask(sender, 'chưa có mã'))).toBe('invalid_payload');
     const outgoing = [];
     for (const query of ['Tâm An · 1101','Tuệ An · 1102','Tâm Hòa · 1103','Tâm Minh · 1104','Tâm Hiền · 1105']) {
       const result = await ask(sender, query);
