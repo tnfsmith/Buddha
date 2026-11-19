@@ -196,7 +196,7 @@ Bước này sửa các lần gọi DO bị lỡ. Gọi trùng không sao vì `s
 - **giờ yên lặng theo giờ thực:** nhắc 21:28 gặp 429 → lượt thử lúc 21:33 bị hủy; alarm của nhắc 21:20 đến trễ lúc 21:35 → bỏ lượt, vẫn hẹn lần sau;
 - **lỗi mạng không rõ kết quả:** giả lập dịch vụ push nhận yêu cầu rồi cắt kết nối trước khi trả phản hồi (hoặc trả 502/504). Khóa thành `unknown`, không có lần thử lại nào cho đăng ký đó, `fail_count` không đổi. Trả 429/503 thì thử lại sau 5 phút;
 - **phục hồi `sending`:** giả lập alarm dừng sau khi dịch vụ push đã trả 2xx nhưng trước khi ghi `ok`. Lần alarm sau chuyển khóa sang `unknown`, không gọi dịch vụ push lần nữa cho đăng ký đó, và không cộng `fail_count`;
-- 404/410 → dòng `push_subscription` bị xóa; 429/5xx → thử lại sau 5 phút, tối đa 3 lần;
+- 404/410 → dòng `push_subscription` bị xóa; 429/503 → thử lại sau 5 phút, tối đa 3 lần; mất phản hồi hoặc 5xx khác → `unknown`, không thử lại (§4 bước 5);
 - API sửa giờ trước khi alarm chạy → không gửi theo giờ cũ;
 - Tịnh khẩu, giờ yên lặng, đã đủ 2 nhắc trong ngày, trễ quá 30 phút → không gửi, vẫn hẹn lần sau;
 - cờ tắt hoặc thiếu VAPID → không gọi dịch vụ push;
