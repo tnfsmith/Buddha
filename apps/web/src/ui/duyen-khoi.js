@@ -1,7 +1,7 @@
 // Duyên khởi hành trình (#104, roadmap §8.3) và gợi ý biến thể theo trục ở Bia Tích Lũy (#112).
 // Máy chủ chỉ nhận tám trường của hợp đồng hồ sơ #111.
 // Gợi ý chỉ là gợi ý: đổi gợi ý không hoàn tất trục, không cộng Kusala. Mỗi trục đổi tối đa một lần mỗi ngày.
-import { variantCatalog, rankVariants, swapVariant } from '@vandao/shared/variant.js';
+import { variantCatalog, rankVariants, swapVariant, toVariant } from '@vandao/shared/variant.js';
 import { esc } from './dom.js';
 import { acct } from '../net/account.js';
 import { api } from '../net/api.js';
@@ -20,7 +20,8 @@ const LIM = [['at_home', 'Ít di chuyển'], ['no_money', 'Không muốn chi ti�
 const LV = (m) => (m <= 10 ? 'nhe' : m >= 45 ? 'sau' : 'vua');
 
 /** Danh mục biến thể: state idle → loading → ok | error; offline dùng bản lưu lần trước */
-export const ct = { state: 'idle', cat: variantCatalog([]), p: null, at: 0 };
+// `pub`: mọi cặp id@version hợp lệ mà API thực sự trả (kể cả bản cũ còn công khai), để kiểm lựa chọn đã lưu
+export const ct = { state: 'idle', cat: variantCatalog([]), pub: new Set(), p: null, at: 0 };
 export function loadVariants(force) {
   if (ct.p && !force) return ct.p;
   ct.state = 'loading';
@@ -34,6 +35,7 @@ export function loadVariants(force) {
       try { localStorage.setItem(CT, JSON.stringify(items)); } catch (e) { /* chỉ giữ trong bộ nhớ */ }
     } catch (e) { try { items = JSON.parse(localStorage.getItem(CT) || 'null'); } catch (er) { /* bản lưu hỏng */ } }
     ct.cat = variantCatalog(items); ct.state = Array.isArray(items) ? 'ok' : 'error';
+    ct.pub = new Set((Array.isArray(items) ? items : []).map(toVariant).filter(Boolean).map((v) => `${v.id}@${v.version}`));
   })());
 }
 export const variantsStale = () => ct.state !== 'loading' && Date.now() - ct.at > 600000;
@@ -93,11 +95,10 @@ function pickOf(S, pillar, date) {
     day[pillar] = { id: v.id, v: v.version, t: v.title, x: v.text, s: v.source_ref }; keep();
   }
   const p = day[pillar];
-  if (!p || (ct.state === 'ok' && !ids().has(p.id))) return null;
+  // Đúng phiên bản đã chọn phải còn công khai: v1 còn công khai khi đã có v3 thì giữ; v1 đã rút thì về gợi ý tuần
+  if (!p || (ct.state === 'ok' && !ct.pub.has(`${p.id}@${p.v}`))) return null;
   return p;
 }
-let idSet = null, idCat = null;
-const ids = () => { if (idCat !== ct.cat) { idCat = ct.cat; idSet = new Set(Object.values(ct.cat.cells).flat().map((v) => v.id)); } return idSet; };
 
 /** Phần đầu thẻ trục ở Bia: tiêu đề + câu gợi ý + nguồn + nút đổi; '' khi chưa có Duyên khởi hay danh mục */
 export function variantHtml(S, pillar, date, done, theme) {
