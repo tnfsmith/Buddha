@@ -363,7 +363,7 @@ function render() {
       <div class="row"><button class="btn" data-act="saveLook" ${nb.c.ok ? '' : 'disabled'}>Lưu nhân vật</button><button class="btn alt" data-act="rand">Ngẫu nhiên hài hòa</button><button class="ghost" data-act="home">← Vân Đảo</button></div>`;
   } else if (U.view === 'friend' && world) {
     const f = world.friends[U.friend], away = world.av.where === U.friend, gateOk = islandState().gate >= 0.5, moving = world.av.state === 'travel';
-    h = `<h2>${esc(f.name)}</h2><p class="pali">Bạn đồng tu · Vân Đảo láng giềng</p>
+    h = `<h2>${esc(f.name)}</h2><p class="pali">Bạn đồng tu · Vân Đảo láng giềng${f.day ? ` · ngày ${f.day}/49 của hành trình` : ''}</p>
       <p>${away ? 'Bạn đang ở đảo của ' + esc(f.name) + '. Hãy giữ sự tĩnh lặng của chủ nhà.' : esc(f.name) + ' đang tọa thiền trên đảo bên cạnh. Bạn có thể chào, tùy hỷ, hoặc du vân sang thăm.'}</p>
       <div class="row"><button class="btn" data-act="greet">Chắp tay chào</button><button class="btn alt" data-act="rejoice">Tùy hỷ công đức</button></div><div class="row">` +
       (away ? '<button class="btn alt" data-act="sitwith">Mời cùng tọa thiền</button><button class="btn alt" data-act="gohome">Về đảo của mình</button>' : `<button class="btn alt" data-act="visit" ${gateOk && !moving && world.av.where === 'home' ? '' : 'disabled'}>Du vân sang thăm</button>`) + '</div>' +

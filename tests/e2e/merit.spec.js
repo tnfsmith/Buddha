@@ -34,19 +34,62 @@ test('hạt công đức: chuông gió đúng lúc chạm ngọn cây, lần nh�
   expect(r.land).toHaveLength(1); expect(r.land[0]).toBeGreaterThan(3.9); expect(r.land[0]).toBeLessThan(4.2);
 });
 
-test('du vân sang đảo bạn: gió mây cả chặng, máy quay bám gần theo nhân vật, tới nơi khung cả hai', async ({ page }) => {
-  test.setTimeout(240_000);
+test('du vân qua Vân Môn: ra cổng, mây hạ xuống, bước lên, bay (máy quay nhìn ngang), hạ xuống trước Vân Môn đảo bạn, bước xuống, qua cổng vào; bạn đứng đón; về nhà cũng vậy', async ({ page }) => {
+  test.setTimeout(300_000);
   await page.goto(url('q=0&snap=1')); await ready(page);
   const r = await page.evaluate(() => {
-    const W = window.__app.world, A = W.av, log = [], dist = []; W.onSfx = (kind, o) => log.push([kind, o.dur]); W.setMode('island'); W.touch = 0;
-    const d0 = +W.camera.position.distanceTo(W.headPos()).toFixed(1); W.visit(0, () => {});
-    for (let i = 0; i < 400 && A.state === 'travel'; i++) { W._avatarStep(0.05, { breath: 0 }); W.controls.update(); if (i % 20 === 19 && A.state === 'travel') dist.push(+W.camera.position.distanceTo(W.ride.position).toFixed(1)); }
-    return { log, d0, dist, where: A.where, tween: !!W.tween };
+    const W = window.__app.world, A = W.av, f = W.friends[0], log = [], st = [], st2 = [], side = [], dist = []; let stood = null, gate = 99, gate2 = 99;
+    W.onSfx = (kind) => log.push(kind); W.setMode('island'); W.touch = 0;
+    const step = (rec) => { W._avatarStep(0.05, { breath: 0 }); W._friendStep(0.05); W.time += 0.05; W._meritStep(0.05); W.controls.update(); const T = A.trip; if (T && rec.at(-1) !== T.st) rec.push(T.st); return T; };
+    W.visit(0, () => W.greet(0));
+    for (let i = 0; i < 1600 && A.state === 'travel'; i++) { const T = step(st); if (!T) break; const P = W._wp();
+      if (stood === null && f.host) stood = T.st;
+      if (T.st === 'fly' && T.t > 1.5 && T.t < T.fly - 1 && i % 5 === 0) { const c = W.camera.position.clone().sub(P); dist.push(+c.length().toFixed(1)); c.y = 0; side.push(+Math.abs(c.normalize().dot(W.tcDir)).toFixed(2)); }
+      if (T.st === 'in') gate = Math.min(gate, Math.hypot(P.x - f.gate.x, P.z - f.gate.z)); }
+    const arrived = { where: A.where, d: +Math.hypot(A.pos.x - f.arrive.x, A.pos.z - f.arrive.z).toFixed(2), tween: !!W.tween, ride: W.ride.visible };
+    for (let i = 0; i < 80; i++) step([]);   // chào xong, đứng chờ
+    const face = Math.atan2(A.pos.x - f.pos.x, A.pos.z - f.pos.z) - f.fig.group.rotation.y, meet = { host: f.host, pose: f.fig.pose, smile: !!f.fig.joy, turn: +Math.abs(Math.atan2(Math.sin(face), Math.cos(face))).toFixed(2) };
+    W.goHome(() => {}); step(st2); const bye = f.fig.pose;
+    for (let i = 0; i < 1600 && A.state === 'travel'; i++) { const T = step(st2); if (T && T.st === 'walk') gate2 = Math.min(gate2, Math.hypot(A.pos.x - f.gate.x, A.pos.z - f.gate.z)); }
+    return { log, st, st2, stood, side, dist, gate, gate2, arrived, meet, bye, after: f.fig.pose, home: [A.where, +A.pos.x.toFixed(1), +A.pos.z.toFixed(1)] };
   });
-  expect(r.log).toEqual([['cloud', 8.5]]);
-  expect(r.where).toBe(0);
-  // sau 2 giây đầu (máy quay sà lại từ toàn cảnh), máy quay luôn trong khoảng 10–32 đơn vị quanh nhân vật
-  const mid = r.dist.slice(2); expect(mid.length).toBeGreaterThan(4);
-  for (const d of mid) { expect(d).toBeGreaterThan(10); expect(d).toBeLessThan(32); }
-  expect(r.tween, 'tới nơi: bay tới khung cả hai').toBe(true);
+  const STAGES = ['walk', 'summon', 'board', 'lift', 'fly', 'descend', 'alight', 'in'];
+  expect(r.st).toEqual(STAGES);
+  expect(r.log).toEqual(['summon', 'step', 'cloud', 'step', 'summon', 'step', 'cloud', 'step']);   // mây hạ xuống · bước lên · gió mây cả chặng · bước xuống (đi và về)
+  expect(r.stood, 'bạn đứng dậy lúc khách còn đang bay tới').toBe('fly');
+  // bay: máy quay nhìn ngang (lệch khỏi hướng bay hơn 70°) và đứng xa (16–34)
+  expect(r.side.length).toBeGreaterThan(10);
+  for (const s of r.side) expect(s).toBeLessThan(0.35);
+  for (const d of r.dist) { expect(d).toBeGreaterThan(16); expect(d).toBeLessThan(34); }
+  expect(r.gate, 'đi bộ qua Vân Môn đảo bạn').toBeLessThan(1);
+  expect(r.arrived).toEqual({ where: 0, d: expect.any(Number), tween: true, ride: false }); expect(r.arrived.d).toBeLessThan(0.3);
+  expect(r.meet).toEqual({ host: true, pose: 'stand', smile: true, turn: expect.any(Number) }); expect(r.meet.turn, 'bạn quay về phía khách').toBeLessThan(0.3);
+  expect(r.bye, 'khách về: bạn chắp tay tiễn').toBe('anjali'); expect(r.after, 'rồi ngồi lại thiền').toBe('sit');
+  expect(r.st2).toEqual(STAGES); expect(r.gate2, 'về: đi ra qua Vân Môn đảo bạn').toBeLessThan(1);
+  expect(r.home).toEqual(['home', 12.5, 12.5]);
+});
+
+test('đổi diện mạo giữa chặng du vân (bản từ thiết bị khác về): chuyến đi vẫn tới nơi, không lỗi', async ({ page }) => {
+  test.setTimeout(300_000);
+  const errs = []; page.on('pageerror', (e) => errs.push(e.message));
+  await page.goto(url('q=0&snap=1')); await ready(page);
+  const r = await page.evaluate(() => {
+    const W = window.__app.world, out = {};   // setLook dựng lại W.av: luôn đọc W.av mới
+    W.setMode('island'); W.touch = 0;
+    const step = () => { W._avatarStep(0.05, { breath: 0 }); W._friendStep(0.05); W.time += 0.05; W.controls.update(); };
+    for (const at of ['walk', 'fly']) {
+      W.visit(0, () => {});
+      let changed = false, st = [], err = null;
+      for (let i = 0; i < 1600 && W.av.state === 'travel'; i++) {
+        try { step(); } catch (e) { err = e.message; break; }
+        const T = W.av.trip; if (T && st.at(-1) !== T.st) st.push(T.st);
+        if (!changed && T && T.st === at && (at !== 'fly' || T.t > 1)) { W.setLook({ ...W.look, robe: (W.look.robe + 1) % 5 }); changed = true; }
+      }
+      out[at] = { changed, err, where: W.av.where, state: W.av.state, last: st.at(-1) };
+      W.goHome(() => {}); for (let i = 0; i < 1600 && W.av.state === 'travel'; i++) step();
+    }
+    return out;
+  });
+  for (const at of ['walk', 'fly']) expect(r[at], `đổi diện mạo lúc ${at}`).toEqual({ changed: true, err: null, where: 0, state: expect.not.stringMatching(/^travel$/), last: 'in' });
+  expect(errs).toEqual([]);
 });

@@ -49,3 +49,15 @@ CREATE TABLE island_visit (
   at       INTEGER NOT NULL,
   PRIMARY KEY (host_id, guest_id, day)
 );
+
+-- Cửa sổ giới hạn lượt của API. Chỉ ghi băm cho lượt xem liên kết công khai.
+CREATE TABLE companion_quota (
+  scope        TEXT NOT NULL,
+  actor        TEXT NOT NULL,
+  user_id      TEXT REFERENCES user(id) ON DELETE CASCADE,
+  window_start INTEGER NOT NULL,
+  expires_at   INTEGER NOT NULL,
+  n            INTEGER NOT NULL CHECK (n > 0),
+  PRIMARY KEY (scope, actor, window_start)
+);
+CREATE INDEX companion_quota_expiry ON companion_quota(expires_at);
