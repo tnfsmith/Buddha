@@ -18,5 +18,10 @@
   - Ảnh chụp và âm thanh chi tiết: `cd apps/web && node shot.mjs live` hoặc `node shot.mjs "ten_anh|q=2|5000"` (ảnh ở `apps/web/dist/`).
   - Thay đổi cảnh phải giữ: Tôn tượng cao hơn mọi tầng, thấy trọn tượng ở góc Vân Đảo trên máy tính và điện thoại, nhãn tầng xếp bậc thang.
   - Vân Du (`world.setVandu`, xem thử bằng `#vandu=0…6`): không điểm nhìn nào cao hơn mắt Tôn tượng; chặng cuối thấy trọn đầu tượng. Chặng tính theo số phút ngồi yên và chỉ gọi tên cảnh; không gọi là tầng thiền, không dùng tên quả vị (`AGENTS.md` mục 1.6).
+- **Bố cục lớp phủ trên bảng (#139):**
+  - Phần tử nằm trên `#panel` đặt theo mép trên **đo được** của bảng: biến `--subb` do `fitSub()` trong `main.js` cập nhật. Hiện có phụ đề `#sub`; lớp phủ mới sau này cũng vậy. Không giả định `vh` hay `bottom` cố định, vì thanh địa chỉ của Chrome điện thoại làm `vh` lớn hơn vùng nhìn thấy.
+  - Thêm hoặc sửa luật `bottom` của `#panel` theo lớp `barmin`, `pmin`, `stab`, `sermon` thì kiểm lại ở thẻ Thuyết giảng. Thẻ này ẩn thanh nhạc nên không chừa chỗ cho nút nhạc.
+  - Lớp phủ chỉ có chữ thì đặt `pointer-events:none`. Nút «Thu gọn» (`.pm`) có cả trên máy tính và điện thoại.
+  - `tests/e2e/sermon-layout.spec.js` (412×860, 360×700 có `barmin`, 1280×800) chạy trong CI mọi PR. Không xóa hay nới ca này; PR đổi bố cục bảng phải để ca này đạt.
 - **Hiệu năng:** theo `PROJECT_ROADMAP.md` §12 — tối ưu WebGL trước (GĐ1), WebGPURenderer + TSL sau (GĐ7, sau cờ `?r=webgpu`).
 - Lộ trình 3 bước cũ của tệp này đã thay bằng `PROJECT_ROADMAP.md` bản 3 (GĐ0–GĐ10).

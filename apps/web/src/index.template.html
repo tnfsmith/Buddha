@@ -112,7 +112,7 @@ input[type=text]{width:100%;border:1px solid var(--line);border-radius:10px;padd
 .rules li:before{position:absolute;left:0;top:0;font-weight:700}
 .rules li.ok:before{content:"✓";color:var(--jade)}
 .rules li.no{color:#9a4a2c}.rules li.no:before{content:"•";color:#c0602c}
-.pm{display:none;float:right;margin:0 0 4px 8px;padding:4px 10px}
+.pm{display:block;float:right;margin:0 0 4px 8px;padding:4px 10px}
 #toast{position:absolute;left:50%;top:76px;transform:translateX(-50%);padding:9px 16px;font-family:var(--serif);font-size:17px;opacity:0;transition:opacity .5s;pointer-events:none}
 #toast.on{opacity:1}
 #cam{position:absolute;left:14px;bottom:118px;display:flex;flex-direction:column;padding:4px;gap:2px;border-radius:12px;transition:opacity .7s}
@@ -236,7 +236,15 @@ body.hall.barmin #panel{bottom:14px}
 @media (max-width:820px){
   body.hall.stab #panel{bottom:8px;max-height:34vh}
   body.hall.barmin #bar{left:8px;bottom:8px}body.hall.barmin #panel{bottom:72px}
+  /* #139: thẻ Thuyết giảng ẩn thanh nhạc, nên không chừa 72px cho nút nhạc thu nhỏ; bảng nằm sát cuối màn hình */
+  body.hall.stab.barmin #panel,body.hall.sermon.barmin #panel{bottom:8px}
+  /* #139: phụ đề đặt theo mép trên THỰC TẾ của bảng (--subb do fitSub() trong main.js đo), không giả định 34vh */
+  #sub{bottom:var(--subb,calc(34vh + 20px))}body.pmin #sub{bottom:var(--subb,68px)}
 }
+/* #139: phụ đề chỉ là chữ, không bao giờ chặn chạm vào bảng hay nút bên dưới */
+#sub{pointer-events:none}
+/* #139: máy tính cũng có nút Thu gọn; bảng thu gọn thì phụ đề căn giữa toàn màn hình */
+@media (min-width:821px){body.pmin #sub{left:50%;width:min(760px,calc(100vw - 40px))}}
 </style>
 </head>
 <body>

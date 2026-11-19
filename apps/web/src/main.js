@@ -433,7 +433,20 @@ function render() {
   }
   panel.innerHTML = '<button class="ghost pm" data-act="pmin">' + (document.body.classList.contains('pmin') ? 'Mở bảng' : 'Thu gọn') + '</button>' + h;
   panel.scrollTop = keep;
+  fitSub();
 }
+
+// #139: phụ đề Thuyết giảng (#sub) luôn nằm trên mép trên thực tế của bảng. Đo khoảng từ đáy #ui tới mép trên #panel
+// (theo vùng nhìn thấy thật, kể cả khi thanh địa chỉ trình duyệt điện thoại hiện) rồi đặt --subb cho CSS điện thoại.
+// Đo lại khi bảng đổi cỡ, khi lớp của body đổi (thu gọn, thanh nhạc, thẻ giảng), khi xoay màn hình.
+function fitSub() {
+  const ui = $('#ui'); if (!ui || !panel) return;
+  const gap = ui.getBoundingClientRect().bottom - panel.getBoundingClientRect().top;
+  document.documentElement.style.setProperty('--subb', Math.max(8, Math.round(gap + 10)) + 'px');
+}
+if (typeof ResizeObserver === 'function') new ResizeObserver(fitSub).observe(panel);
+new MutationObserver(fitSub).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+if (window.visualViewport) window.visualViewport.addEventListener('resize', fitSub);
 
 // ───────── Trình tạo nhân vật ─────────
 function openCreator() {
@@ -595,7 +608,7 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'h' || e.key === 'H') U.quietManual = !U.quietManual;
   if (e.key === ' ') { e.preventDefault(); togglePlay(); }
 });
-window.addEventListener('resize', () => { if (world) world.resize(); renderDock(); });
+window.addEventListener('resize', () => { if (world) world.resize(); renderDock(); fitSub(); });
 
 // ───────── Radar và dao động ký ─────────
 const rc = $('#radar').getContext('2d'), sc = $('#scope').getContext('2d'), scopeBuf = new Float32Array(1024);
