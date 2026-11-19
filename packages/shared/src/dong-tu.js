@@ -103,7 +103,8 @@ const teaOpen = (p) => !!p && (p.completed === true || (p.day || 0) >= ZONE_UNLO
 /**
  * Kiểm một lời mời gặp. `me` là người mời, `friend` là người nhận: { day, completed, open (cổng Nghênh khách) } và với `friend` thêm
  * `presence` đã suy bằng presenceOf ('online' | 'thien' | 'tham' | 'tra' | 'vang').
- * `rel`: { accepted, blocked }. Trả { ok, code, host, guest, place, quiet } — `quiet`: người nhận đang thiền, lời mời chờ sau thời thiền.
+ * `rel`: { accepted, blocked } — `blocked` chỉ đúng khi chính người mời đã chặn người kia; phía bị chặn truyền
+ * { accepted: false } và nhận `not_companion`, để không lộ việc bị chặn (hợp đồng §3.4). Trả { ok, code, host, guest, place, quiet } — `quiet`: người nhận đang thiền, lời mời chờ sau thời thiền.
  * Máy chủ chạy cùng hàm với ngày/hiện diện của máy chủ; máy khách dùng để ẩn/khóa nút và ghi lý do.
  */
 export function canMeet(kind, me, friend, rel, place = null) {
@@ -126,7 +127,7 @@ export function canMeet(kind, me, friend, rel, place = null) {
 
 /**
  * Ghé thăm đảo bạn khi bạn vắng. `me`: người đi { day, completed }; `host`: chủ đảo { open } — chế độ HIỆN HÀNH (máy chủ đọc lúc ghé);
- * `rel`: { accepted, blocked, closeness, allowAway }. Đã cho phép từ trước nhưng chủ chuyển sang Độc cư thì không ghé được.
+ * `rel`: { accepted, blocked, closeness, allowAway } — `blocked` theo cùng quy tắc của canMeet. Đã cho phép từ trước nhưng chủ chuyển sang Độc cư thì không ghé được.
  * Trả { ok, code }.
  */
 export function canVisitAway(me, host, rel) {

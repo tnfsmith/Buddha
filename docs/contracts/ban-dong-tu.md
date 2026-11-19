@@ -35,7 +35,7 @@ CREATE TABLE companion_request (                -- lời kết nối theo «Tị
   from_id     TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
   tinh_danh   TEXT NOT NULL,                      -- như parseFriendQuery trả về
   tag         TEXT NOT NULL,
-  to_id       TEXT REFERENCES user(id) ON DELETE SET NULL,   -- NULL khi không có người đủ điều kiện; KHÔNG BAO GIỜ trả cho người gửi
+  to_id       TEXT REFERENCES user(id) ON DELETE SET NULL,   -- NULL khi không có người đủ điều kiện hoặc hai người chặn nhau sau khi gửi (§3.4); KHÔNG BAO GIỜ trả cho người gửi
   created_at  INTEGER NOT NULL,
   expires_at  INTEGER NOT NULL,                   -- created_at + REQUEST_TTL_MS (14 ngày)
   declined_at INTEGER                             -- người nhận từ chối: ẩn với người nhận; người gửi vẫn thấy «đã gửi» tới hết hạn
@@ -95,18 +95,18 @@ Máy khách gửi cả hai qua `PATCH /api/v1/profile` sẵn có. `settings` g�
 | `POST /api/v1/companions/link` | `{ renew?: bool }` | `{ code, uses_left, expires_at }`. Mỗi người một mã còn hạn; `renew` xóa mã cũ, tạo mã mới (`makeInviteCode` + `crypto.getRandomValues`) | 10/ngày |
 | `GET /api/v1/companions/link/:code` | — (không cần phiên) | `{ owner: { tinh_danh, tag }, valid: true }` hoặc 404 `link_invalid` | `byIp` 30/giờ |
 | `POST /api/v1/companions/link/:code/accept` | — | 201 `{ companion }`. Tạo `companion` `dong_y`, `source = 'ma_moi'`, `accepted_at`; giảm `uses_left`. Ghi `guidance` nếu người nhận chưa có người dẫn dắt và tài khoản tạo chưa quá 7 ngày | 20/ngày |
-| `POST /api/v1/companions/request` | `{ query: "Tuệ Thái · 5696" }` (đọc bằng `parseFriendQuery`) | **Luôn** 202 `{ request: { id, tinh_danh, tag, at, expires_at } }` khi cú pháp đúng. Luôn tạo một dòng `companion_request` với đúng điều người gửi gõ. `to_id` chỉ điền khi người ấy tồn tại, `cho_tim = true`, không ẩn, không chặn nhau, chưa là bạn. Gửi lại cùng tên thì trả dòng cũ | `REQUESTS_PER_DAY` = 5/ngày, đếm cả lần không tìm thấy |
+| `POST /api/v1/companions/request` | `{ query: "Tuệ Thái · 5696" }` (đọc bằng `parseFriendQuery`) | **Luôn** 202 `{ request: { id, tinh_danh, tag, at, expires_at } }` khi cú pháp đúng. Luôn tạo một dòng `companion_request` với đúng điều người gửi gõ. `to_id` chỉ điền khi người ấy tồn tại, `cho_tim = true`, không ẩn, không chặn nhau, chưa là bạn. Gửi lại cùng tên khi dòng cũ còn hạn thì trả dòng cũ; dòng đã hết hạn thì thay bằng dòng mới và xét lại `to_id` | `REQUESTS_PER_DAY` = 5/ngày, đếm cả lần không tìm thấy |
 | `DELETE /api/v1/companions/requests/:id` | — | Người gửi rút lời kết nối | 60/giờ |
-| `POST /api/v1/companions/requests/:id/respond` | `{ accept: bool }` | Chỉ người nhận (`to_id` = mình). Đồng ý: tạo `companion` `dong_y`, `source = 'tim'`, `accepted_at`, xóa dòng lời kết nối. Từ chối: đặt `declined_at`, **người gửi không được báo** | 60/giờ |
+| `POST /api/v1/companions/requests/:id/respond` | `{ accept: bool }` | Chỉ người nhận: `to_id` = mình, chưa từ chối, còn hạn, không chặn nhau; khác đi thì 404 `not_found`. Đồng ý: tạo `companion` `dong_y`, `source = 'tim'`, `accepted_at`, xóa dòng lời kết nối. Từ chối: đặt `declined_at`, **người gửi không được báo** | 60/giờ |
 | `PATCH /api/v1/companions/:id` | `{ than?: bool, away?: bool }` | Đổi cột phía mình (`than_a` hoặc `than_b`…). `away` chỉ có tác dụng khi `closenessOf` = `than` | 60/giờ |
-| `DELETE /api/v1/companions/:id` | — | Hủy kết nối hoặc rút yêu cầu; hủy các lời mời gặp đang chờ của cặp | 60/giờ |
+| `DELETE /api/v1/companions/:id` | — | Hủy kết nối (rút lời kết nối dùng `DELETE /companions/requests/:id`); hủy các lời mời gặp đang chờ của cặp | 60/giờ |
 | `GET /api/v1/companions` | — | Xem §4 | `RL_API` |
 | `POST /api/v1/presence` | `{ state: 'online'\|'thien'\|'tham'\|'tra' }` | 204. Chỉ ghi khi trạng thái đổi hoặc lần ghi trước đã quá 60 giây | 90/giờ |
 | `POST /api/v1/meet` | `{ to, kind, place? }` (`checkMeetPayload`) | 201 `{ invite }`, hoặc 409 `{ error: { code } }` theo `canMeet` chạy bằng dữ liệu máy chủ. Mỗi cặp một lời mời `cho`: lời mời mới thay lời cũ cùng chiều | 20/giờ |
 | `POST /api/v1/meet/:id/respond` | `{ accept: bool }` | Nhận: `dong_y`, `responded_at = now`, `start_at = meetStartAt(kind, now)`. Từ chối: `tu_choi`. Quá `INVITE_TTL_MS` thì 409 `invite_expired` | 60/giờ |
 | `POST /api/v1/meet/:id/cancel` | — | `huy` (hai bên đều được; cũng dùng để kết thúc ghé thăm) | 60/giờ |
 | `POST /api/v1/visits/away` | `{ host }` | 200 khi `canVisitAway(me, host, rel)`; ghi `island_visit` (một dòng/ngày). Kiểm bằng `island_json.open` **hiện hành** của chủ đảo lúc ghé, không bằng quyền đã cấp từ trước. 409 với mã của `canVisitAway` | 20/ngày |
-| `GET/POST /api/v1/blocks`, `DELETE /api/v1/blocks/:id` | `{ user }` | Chặn: xóa `companion`, hủy lời mời, sau đó mọi yêu cầu/lời mời của người bị chặn đều im lặng bỏ qua | 20/ngày |
+| `GET/POST /api/v1/blocks`, `DELETE /api/v1/blocks/:id` | `{ user }` | Chặn và bỏ chặn theo §3.4 | 20/ngày |
 | `POST /api/v1/reports` | `{ target, context: 'island', reason? }` | 201. `reason` ≤ 500 ký tự, chỉ người kiểm duyệt thấy | 10/ngày |
 
 **Dữ liệu máy chủ dùng cho `canMeet`:**
@@ -121,6 +121,24 @@ Máy khách gửi cả hai qua `PATCH /api/v1/profile` sẵn có. `settings` g�
 - Mã mời đọc bằng `normInviteCode` (không hợp lệ → `link_invalid`).
 - Loại gặp kiểm bằng `isMeetKind` (chỉ khóa định nghĩa; `toString`, `__proto__`… → `invalid_kind`).
 - Thân JSON hỏng → `invalid_payload`.
+
+### 3.4 Chặn — chỉ vô hiệu phía nhận
+
+Khi A chặn B (`POST /blocks { user: B }`), máy chủ làm ba việc trong một lượt ghi:
+- xóa `companion` của cặp;
+- hủy (`huy`) mọi `meet_invite` chưa xong của cặp;
+- đặt `to_id = NULL` cho mọi `companion_request` đang chờ giữa hai người, **cả hai chiều**.
+
+Kết quả với từng phía:
+- **Người gửi một lời kết nối không thấy gì đổi.** Dòng vẫn nằm trong `outgoing` với cùng dạng tới khi người gửi rút hoặc hết hạn 14 ngày. Lời kết nối mới giữa hai người vẫn 202 và tạo dòng như §3.3, với `to_id = NULL`.
+- **Người nhận không thấy và không đồng ý được.** Dòng vô hiệu không còn trong `incoming`; `respond` trả 404 `not_found`; không có `companion` nào được tạo.
+- **B thấy như kết nối đã bị hủy, không biết mình bị chặn.**
+  - A biến khỏi `companions` của B.
+  - `POST /meet` và `visits/away` tới A → 409 `not_companion`.
+  - Liên kết của A → 404 `link_invalid`, như mã không tồn tại. Chặn theo chiều nào cũng vậy.
+  - Máy chủ chỉ truyền `rel.blocked = true` vào `canMeet`/`canVisitAway` khi **chính người gọi** đã chặn người kia. Vì vậy chỉ A nhận mã `blocked`.
+
+Bỏ chặn (`DELETE /blocks/:id`) không khôi phục dòng đã vô hiệu. Muốn kết nối lại thì người gửi rút rồi gửi lại, hoặc gửi lại sau khi dòng hết hạn.
 
 ## 4. `GET /api/v1/companions`
 
@@ -142,10 +160,10 @@ Máy khách gửi cả hai qua `PATCH /api/v1/profile` sẵn có. `settings` g�
 ```
 - `presence`: `presenceOf`. Bạn tắt hiện trạng thái thì `presence: null`, `seen: null`.
 - `day`, `completed`: `null` nếu bạn tắt `hien_ngay`.
-- `outgoing`: **đúng điều người gửi đã gõ**, cùng một dạng cho mọi trường hợp: có người thật, không có ai, người ẩn/tắt tìm kiếm, đã chặn, đã từ chối.
+- `outgoing`: **đúng điều người gửi đã gõ**, cùng một dạng cho mọi trường hợp: có người thật, không có ai, người ẩn/tắt tìm kiếm, đã chặn (trước hay sau khi gửi), đã từ chối.
   - Lời kết nối chỉ rời danh sách khi người gửi rút, khi hết hạn 14 ngày, hoặc khi bên kia đồng ý (lúc đó người ấy hiện trong `companions`). Đồng ý là tín hiệu duy nhất, và chỉ có khi người ấy muốn.
   - Không có trường `id` người dùng, `look`, `presence` trong `outgoing`.
-- `incoming`: lời kết nối gửi đến mình, chưa từ chối, còn hạn.
+- `incoming`: lời kết nối có `to_id` = mình, chưa từ chối, còn hạn. Dòng đã vô hiệu do chặn (§3.4) không có ở đây.
 - `invites`: lời mời của mình còn hiệu lực (gửi đi và gửi đến, `cho` hoặc `dong_y` chưa xong).
 - `visits`: ai đã ghé khi mình vắng trong 7 ngày.
 - Sắp xếp: thân thiết → quen biết, rồi theo `accepted_at`.
@@ -174,7 +192,7 @@ export function pushSocialPrefs({ hien_trang_thai, cho_tim, hien_ngay, open }); 
 
 ## 6. Nghiệm thu phía máy chủ (`workers/api/test/companions.test.js`)
 
-1. **Liên kết:** tạo → người khác nhận → hai bên thành bạn `dong_y`. `uses_left` giảm. Hết lượt, hết hạn, tự nhận mã mình, người đã chặn thì có mã lỗi đúng. `renew` làm mã cũ hỏng.
+1. **Liên kết:** tạo → người khác nhận → hai bên thành bạn `dong_y`. `uses_left` giảm. Hết lượt, hết hạn, tự nhận mã mình thì có mã lỗi đúng. Chặn theo chiều nào cũng trả 404 `link_invalid` (§3.4). `renew` làm mã cũ hỏng.
 2. **Tìm theo tên không làm lộ tài khoản, ở cả POST lẫn GET.**
    - Với năm người nhận: có thật và đủ điều kiện; không tồn tại; `cho_tim = false`; `visibility = 'an'`; đã chặn người gửi.
    - Phản hồi `POST /companions/request` và mục tương ứng trong `GET /companions.outgoing` phải **giống hệt nhau về dạng và trường** (chỉ khác `id`, giờ).
@@ -194,8 +212,20 @@ export function pushSocialPrefs({ hien_trang_thai, cho_tim, hien_ngay, open }); 
    - bạn ẩn trạng thái → nhận lời mời.
 5. **Lời mời gặp:** nhận lời thì `start_at = responded_at + 60 000` cho thiền/trà, `= responded_at` cho ghé thăm. Quá 10 phút thì `invite_expired`. Lời mời mới thay lời cũ cùng chiều.
 6. **Hiện diện:** ghi tối đa 1 lần/60 giây nếu không đổi trạng thái. Quá 3 phút thì danh sách trả `vang`. Tắt hiện trạng thái thì `presence: null`.
-7. **Chặn:** xóa kết nối và lời mời; sau đó người bị chặn gửi gì cũng không tạo dòng.
-8. **Dữ liệu:** `/export` có `companions`, `meet_invites`, `presence`, `island_visits`, `blocks`. Xóa tài khoản xóa sạch theo `ON DELETE CASCADE`.
+7. **Chặn chỉ vô hiệu phía nhận (§3.4):**
+   - Chặn xóa kết nối và hủy lời mời gặp của cặp.
+   - **Ca chặn khi đã có lời kết nối đang chờ**, thử cả hai chiều:
+     - mục `outgoing` của người gửi giống hệt trước khi chặn, tới khi rút hoặc hết hạn;
+     - người nhận không còn thấy trong `incoming`;
+     - `respond` → 404 `not_found`, không tạo `companion`.
+   - Sau khi chặn, người bị chặn gửi lời kết nối mới: vẫn 202 cùng dạng và có mục `outgoing`, người chặn không thấy.
+   - Phía bị chặn gửi `meet` hoặc `visits/away` → 409 `not_companion`; mở liên kết của người chặn → 404 `link_invalid`. Không phản hồi nào trả `blocked` cho phía bị chặn.
+   - Bỏ chặn không làm dòng đã vô hiệu hiện lại trong `incoming`.
+8. **Dữ liệu:** `/export` có `companions`, `companion_requests`, `meet_invites`, `presence`, `island_visits`, `blocks`.
+   - `companion_requests.outgoing` giống hệt `GET /companions.outgoing`: đúng điều người gửi gõ. Không có `to_id` hay dấu hiệu nào về người nhận, kể cả dòng đã bị từ chối hoặc vô hiệu do chặn.
+   - `companion_requests.incoming`: chỉ dòng có `to_id` = mình, dạng `{ id, from: { tinh_danh, tag }, at, declined_at }`.
+   - Xóa tài khoản xóa sạch theo `ON DELETE CASCADE`.
+   - Lời kết nối người khác gửi tới tài khoản đã xóa vẫn còn phía người gửi, với `to_id = NULL` (`ON DELETE SET NULL`) và không đổi dạng.
 9. **Không ghi PII vào log/Analytics.**
 10. **Phiên và đầu vào hỏng:**
     - Không phiên → 401 ở mọi đường dẫn trừ `GET link/:code`; phiên khách làm được mọi thao tác.

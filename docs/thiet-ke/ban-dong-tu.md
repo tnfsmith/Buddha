@@ -103,7 +103,7 @@ Trong thẻ bạn:
 - «Đánh dấu thân thiết»: bên kia thấy gợi ý «*Tuệ Thái* muốn là bạn thân thiết».
 - «Cho bạn ghé khi tôi vắng»: chỉ khi đã thân thiết, mặc định tắt. Chế độ Độc cư luôn thắng: đang khép cổng thì không ai ghé được, kể cả bạn đã được cho phép.
 - «Hủy kết nối».
-- «Chặn» (cùng `user_block`): xóa kết nối, ẩn trạng thái, từ chối mọi lời mời.
+- «Chặn» (cùng `user_block`): xóa kết nối, ẩn trạng thái, từ chối mọi lời mời. Lời kết nối đang chờ giữa hai người chỉ bị vô hiệu phía nhận: người chặn không còn thấy, người bị chặn vẫn thấy «Đã gửi» như cũ và chỉ thấy như kết nối đã bị hủy (hợp đồng §3.4).
 - «Báo cáo» (`report.context = 'island'`).
 
 ## 6. Giao diện (Claude thiết kế và dựng)

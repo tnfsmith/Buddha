@@ -1495,7 +1495,7 @@ T3.7 đã đạt bộ audio phát hành (Sadaltager/Puck đúng ngoại lệ); #
 | ID | Việc | Làn | Nghiệm thu |
 |---|---|---|---|
 | T5.4 | Thiết kế trải nghiệm, hợp đồng D1/API, luật dùng chung `dong-tu.js` + kiểm thử | C | Codex duyệt hợp đồng; gộp trước T5.5–T5.8 |
-| T5.5 | Migration kế tiếp (`companion` thêm cột, `presence`, `meet_invite`, `island_visit`); API liên kết/tìm/đồng ý/thân thiết/hiện diện/mời gặp/ghé khi vắng/chặn; xuất/xóa | AG | Đủ 9 nhóm ca ở hợp đồng §6 trên D1 cục bộ |
+| T5.5 | Migration kế tiếp (`companion` thêm cột, `presence`, `meet_invite`, `island_visit`); API liên kết/tìm/đồng ý/thân thiết/hiện diện/mời gặp/ghé khi vắng/chặn; xuất/xóa | AG | Đủ 10 nhóm ca ở hợp đồng §6 trên D1 cục bộ |
 | T5.6 | `apps/web/src/net/dong-tu.js`: gọi API, nhịp hiện diện, đọc `#ban=`, đẩy cài đặt riêng tư/Nghênh khách lên hồ sơ, đọc `me.social` | AG | Kiểm thử với máy chủ giả; không gửi khi chưa có phiên (tài khoản hoặc khách) hoặc `dong_tu` chưa bật |
 | T5.7 | UI: nút Bạn đồng tu, danh sách + trạng thái, Mời bạn tu cùng (QR), thẻ lời mời, thẻ bạn, cài đặt riêng tư | C | E2E hai thiết bị: kết bạn bằng liên kết, mời thiền, cùng đếm ngược; giao diện điện thoại ≤ 44vh |
 | T5.8 | 3D: đảo bạn thật gần đảo mình (thân thiết/quen biết), đèn hiện diện, ghé thăm/ghé khi vắng, cùng ngồi, Trà Đạo hai người | C | `perf.spec.js` trong ngân sách §12.2; e2e ghé thăm, cùng ngồi |
