@@ -43,8 +43,8 @@ Worker #105 và client import cùng một mô-đun. Mô-đun không đọc giờ
 | `variantCatalog(rows)` | Các hàng `GET /api/v1/content?kind=chuong_trinh&tier=0`, `meta` là chuỗi hoặc đối tượng. Trả `{ cells: { '1-duc': [...] … 21 ô }, snap, n }`. Mỗi id lấy phiên bản cao nhất; hàng sai hợp đồng bị bỏ. `snap` = `id@version` sắp theo id, nối bằng dấu phẩy |
 | `rankVariants(cat, profile, { userId, cycle, day, pillar })` | Danh sách hợp lệ theo thứ tự tất định; mục đầu là gợi ý. Rỗng khi chưa có hồ sơ, đầu vào sai hoặc không còn mục hợp |
 | `pickVariant(…)` | Mục đầu của `rankVariants`, hoặc `null` (app giữ gợi ý tuần và cho bỏ qua) |
-| `swapVariant(cat, profile, input, currentId)` | `{ variant, same }`: mục kế tiếp khác `currentId`, vòng lại đầu. Chỉ một lựa chọn thì `same: true`. `currentId` không còn trong danh sách thì trả mục đầu. Không kiểm giới hạn một lần/ngày, không lưu |
-| `fitsProfile(v, profile)`, `variantCoverage(cat)`, `variantSeed(input)`, `weekOfDay(day)`, `snapHash(cat)` | Bộ lọc hồ sơ #111; độ phủ 21 ô (≥ 3, có phương án nhẹ); seed; tuần 1–7; dấu ngắn của `snap` |
+| `swapVariant(cat, profile, input, currentId)` | `{ variant, same }`: mục kế tiếp có câu hành động khác mục `currentId`, vòng lại đầu. Chỉ một lựa chọn thì `same: true`. `currentId` không còn trong danh sách thì trả mục đầu. Không kiểm giới hạn một lần/ngày, không lưu |
+| `fitsProfile(v, profile)`, `variantCoverage(cat)`, `variantSeed(input)`, `weekOfDay(day)`, `snapHash(cat)` | Bộ lọc hồ sơ #111; độ phủ 21 ô cùng điều kiện `checkVariantCoverage` của bộ nạp (3–6 mục, câu hành động khác nhau, có phương án nhẹ); seed; tuần 1–7; dấu ngắn của `snap` |
 
 - `userId` là `user.id` của phiên. `cycle` là số nguyên ≥ 1 của `journey`. `day` là ngày 1–49. `pillar` thuộc `duc | thien | tue`.
 - Worker nên lưu `{ id, version }` của mục đã chọn kèm `snapHash` lúc chọn. Danh mục cập nhật thì không thay lặng lẽ việc đã ghi (mục 4 ở trên).

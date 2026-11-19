@@ -125,7 +125,7 @@ describe('rankVariants / pickVariant', () => {
 });
 
 describe('swapVariant', () => {
-  const cat = variantCatalog(['a', 'b', 'c'].map((s) => row(`sn49-${s}`)));
+  const cat = variantCatalog(['a', 'b', 'c'].map((s) => row(`sn49-${s}`, {}, { body_inline: `Việc ${s}.` })));
   const list = rankVariants(cat, PROFILE, IN).map((v) => v.id);
   it('chọn mục kế tiếp khác mục hiện tại, vòng lại đầu', () => {
     expect(swapVariant(cat, PROFILE, IN, list[0])).toMatchObject({ same: false, variant: { id: list[1] } });
@@ -138,6 +138,46 @@ describe('swapVariant', () => {
   });
   it('mục hiện tại không còn trong danh sách → mục đầu', () => {
     expect(swapVariant(cat, PROFILE, IN, 'sn49-da-rut')).toMatchObject({ same: false, variant: { id: list[0] } });
+  });
+  it('bỏ qua mục trùng câu hành động với mục hiện tại', () => {
+    const dup = variantCatalog([row('sn49-x', {}, { body_inline: 'Cùng một việc.' }), row('sn49-y', {}, { body_inline: 'Cùng một việc.' })]);
+    const cur = pickVariant(dup, PROFILE, IN);
+    expect(swapVariant(dup, PROFILE, IN, cur.id)).toMatchObject({ same: true, variant: { id: cur.id } });
+    const three = variantCatalog([row('sn49-x', {}, { body_inline: 'Cùng một việc.' }), row('sn49-y', {}, { body_inline: 'Cùng một việc.' }), row('sn49-z', {}, { body_inline: 'Việc khác.' })]);
+    const c3 = pickVariant(three, PROFILE, IN), r = swapVariant(three, PROFILE, IN, c3.id);
+    expect(r.same).toBe(false);
+    expect(r.variant.text).not.toBe(c3.text);
+  });
+});
+
+describe('variantCoverage khớp kiểm của bộ nạp (#112)', () => {
+  // Ô đủ chuẩn: 3 mục, 3 câu khác nhau, có phương án nhẹ
+  const cell = (w, p, n = 3, text = (k) => `Việc ${w}-${p} số ${k}.`) => Array.from({ length: n }, (_, k) => row(`sn49-w${w}-${p}-${k}`, { week: w, pillar: p }, { body_inline: text(k) }));
+  const full = () => [1, 2, 3, 4, 5, 6, 7].flatMap((w) => PILLARS.flatMap((p) => cell(w, p)));
+  it('đủ 21 ô chuẩn thì sẵn sàng, cùng kết luận với checkVariantCoverage', () => {
+    const rows = full();
+    expect(variantCoverage(variantCatalog(rows))).toMatchObject({ ready: true, missing: [] });
+    expect(() => checkVariantCoverage(rows.map((r) => ({ ...r, status: 'da_duyet' })))).not.toThrow();
+  });
+  it('một ô có 7 câu khác nhau → chưa sẵn sàng (tối đa 6), bộ nạp cũng từ chối', () => {
+    const rows = [...full().filter((r) => !r.id.startsWith('sn49-w1-duc-')), ...cell(1, 'duc', 7)];
+    const cov = variantCoverage(variantCatalog(rows));
+    expect(cov.ready).toBe(false);
+    expect(cov.missing).toEqual(['1-duc']);
+    expect(cov.cells['1-duc']).toMatchObject({ n: 7, distinct: 7 });
+    expect(() => checkVariantCoverage(rows.map((r) => ({ ...r, status: 'da_duyet' })))).toThrow(/Tuần 1\/duc/);
+  });
+  it('3 id nhưng chỉ 2 câu hành động khác nhau → chưa sẵn sàng, bộ nạp cũng từ chối', () => {
+    const rows = [...full().filter((r) => !r.id.startsWith('sn49-w1-duc-')), ...cell(1, 'duc', 3, (k) => (k === 2 ? 'Việc 1-duc số 0.' : `Việc 1-duc số ${k}.`))];
+    const cov = variantCoverage(variantCatalog(rows));
+    expect(cov.ready).toBe(false);
+    expect(cov.missing).toEqual(['1-duc']);
+    expect(cov.cells['1-duc']).toMatchObject({ n: 3, distinct: 2 });
+    expect(() => checkVariantCoverage(rows.map((r) => ({ ...r, status: 'da_duyet' })))).toThrow(/Tuần 1\/duc/);
+  });
+  it('thiếu phương án nhẹ → chưa sẵn sàng', () => {
+    const rows = full().map((r) => (r.id.startsWith('sn49-w2-tue-') ? row(r.id, { week: 2, pillar: 'tue', level: 'vua', minutes: 10 }, { body_inline: r.body_inline }) : r));
+    expect(variantCoverage(variantCatalog(rows)).missing).toEqual(['2-tue']);
   });
 });
 
