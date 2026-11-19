@@ -4,6 +4,7 @@ import { perDay } from '../guard.js';
 import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
 import { getPracticeProfile } from '../practice-profile.js';
+import { exportCompanions } from '../companions-data.js';
 
 const exportApp = new Hono();
 
@@ -45,7 +46,9 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
     'SELECT id, program, cycle, local_date AS date, kind, slot, value_json, at, server_at FROM practice_event WHERE user_id = ? ORDER BY at, id',
   ).bind(user.id).all();
   const practice = await getPracticeProfile(db, user.id);
+  const companions = await exportCompanions(db, user.id, now);
 
+  c.header('Cache-Control', 'no-store');
   return c.json({
     exported_at: now,
     user: userRow,
@@ -60,7 +63,8 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
     kusala_entries: kusalaEntries?.results || [],
     practice_sessions: sessions?.results || [],
     practice_events: (events?.results || []).map(({ value_json, ...e }) => ({ ...e, value: value_json === null ? null : JSON.parse(value_json) })),
-    consents: consents?.results || []
+    consents: consents?.results || [],
+    ...companions,
   });
 });
 

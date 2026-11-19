@@ -10,6 +10,7 @@ import exportApp from './routes/export.js';
 import accountApp from './routes/account.js';
 import rtApp from './routes/rt.js';
 import contentApp from './routes/content.js';
+import companionsApp from './routes/companions.js';
 import metricsApp from './routes/metrics.js';
 import mediaApp from './routes/media.js';
 import { byIp, turnstile } from './guard.js';
@@ -61,6 +62,7 @@ app.route('/api/v1/account', accountApp);
 app.route('/api/v1/rt', rtApp);
 app.route('/api/v1/content', contentApp);
 app.route('/api/v1/metrics', metricsApp);
+app.route('/api/v1', companionsApp);
 
 // Đường dẫn /api/* không tồn tại: trả 404 JSON, không rơi xuống trang SPA
 app.all('/api/*', (c) => c.json({ error: { code: 'not_found', message: 'Không có API này' } }, 404));

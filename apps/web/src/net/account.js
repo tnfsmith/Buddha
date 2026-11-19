@@ -5,6 +5,7 @@
 import * as A from './api.js';
 import { enqueueOp, triggerSync, startAutoSync, setSyncEnabled, onSyncComplete, getDeviceId } from './sync.js';
 import { idbGet, idbSet, idbGetAll } from './idb.js';
+import { observeDongTuMe, setDongTuAccount } from './dong-tu.js';
 import { foldPractice, importEvents, mergePractice } from '@vandao/shared/practice.js';
 
 const FLAG = 'vandao.acct';
@@ -20,9 +21,11 @@ function writeFlag() {
   try { if (v) localStorage.setItem(FLAG, JSON.stringify(v)); else localStorage.removeItem(FLAG); } catch { /* chỉ giữ trong bộ nhớ */ }
   idbSet('meta', 'acct', v).catch(() => {});
 }
-function setOn(user, cycle) {
+function setOn(user, cycle, me) {
   acct.on = true; acct.uid = user.id; acct.guest = Boolean(user.isAnonymous); if (cycle !== undefined) acct.cycle = cycle;
   writeFlag(); setSyncEnabled(true); startAutoSync(); startLive();
+  setDongTuAccount(user.id);
+  observeDongTuMe(user.id, me);
 }
 
 const r2 = (x) => Math.round(x * 100) / 100;
@@ -74,6 +77,7 @@ async function pushLocal(S, me) {
 export async function initAccount(S, apply) {
   hooks = { S, apply };
   if (!acct.available) return acct;
+  setDongTuAccount(null);
   let f = readFlag(); if (!f) { try { f = await idbGet('meta', 'acct'); } catch { f = null; } }
   onSyncComplete(async (state, res) => {
     acct.rejected = (res.rejected || []).filter((r) => r.code !== 'exists');
@@ -88,6 +92,7 @@ export async function initAccount(S, apply) {
     if (changedCycle || markOf(state) !== acct.mark || state.journey.day > S.day || state.totals.all > sum(S.totals) + 0.05) await pull(changedCycle).catch(() => {});
   });
   if (f && f.uid) {
+    setDongTuAccount(f.uid);
     acct.on = true; acct.uid = f.uid; acct.guest = f.guest !== false; acct.cycle = f.cycle ?? null;
     acct.practice = Boolean(f.practice); acct.imported = f.imported ?? null; acct.mark = f.mark ?? null; acct.syncedAt = f.syncedAt || 0;
     setSyncEnabled(true); startAutoSync(); startLive();
@@ -111,7 +116,8 @@ async function pull(full = false) {
   const S = hooks.S; if (!acct.on || !S) return false;
   acct.pulling = true;
   try {
-    const me = await A.getMe(true);
+    const uid = acct.uid, me = await A.getMe(true);
+    observeDongTuMe(uid, me);
     // Máy chủ vừa nhận sổ việc: xếp hàng sổ trên máy TRƯỚC khi gộp, để bản máy chủ (còn trống) không đè mất việc đã làm
     if (me.practice && me.journey) { acct.practice = true; await importOnce(me.journey); }
     const ops = await pendingOps(), kusalaWaiting = ops.some((o) => o.type !== 'practice.event');
@@ -167,7 +173,8 @@ export async function syncNow(force = false) {
   if ((await pendingOps()).length) { await triggerSync(); if (!force) return true; }
   try {
     if (!force) {
-      const me = await A.getMe(); acct.syncedAt = Date.now();
+      const uid = acct.uid, me = await A.getMe();
+      observeDongTuMe(uid, me); acct.syncedAt = Date.now();
       if (me.practice && !acct.practice) { acct.practice = true; writeFlag(); await triggerSync(); return true; }   // máy chủ vừa cập nhật (#94)
       if (markOf(me) === acct.mark && me.journey.day === hooks.S.day) { writeFlag(); return false; }
     }
@@ -206,7 +213,7 @@ export async function keepJourney(S) {
   const s = await A.getSession().catch((e) => { if (e.status === 0) throw e; return null; });
   if (s && s.user) return afterSignIn(S, s);
   const r = await A.signInAnonymous(), me = await A.getMe();
-  setOn({ ...r.user, isAnonymous: true });
+  setOn({ ...r.user, isAnonymous: true }, undefined, me);
   await pushLocal(S, me);
   return { mode: 'pushed' };
 }
@@ -220,18 +227,18 @@ export async function keepJourney(S) {
 export async function afterSignIn(S, s) {
   s = s || (await A.getSession()); const me = await A.getMe(true);
   const serverHas = !serverEmpty(me) || Boolean(me.profile.tinh_danh), localHas = hasProgress(S);
-  if (!serverHas) { setOn(s.user, me.journey.cycle); await pushLocal(S, me); return { mode: 'pushed' }; }
+  if (!serverHas) { setOn(s.user, me.journey.cycle, me); await pushLocal(S, me); return { mode: 'pushed' }; }
   const fields = fromServer(me);
-  if (localHas && (me.journey.day !== S.day || Math.abs(me.totals.all - sum(S.totals)) > 0.05)) { pending = { user: s.user, cycle: me.journey.cycle }; return { mode: 'conflict', me, fields }; }
-  setOn(s.user, me.journey.cycle);
+  if (localHas && (me.journey.day !== S.day || Math.abs(me.totals.all - sum(S.totals)) > 0.05)) { pending = { user: s.user, cycle: me.journey.cycle, me }; return { mode: 'conflict', me, fields }; }
+  setOn(s.user, me.journey.cycle, me);
   return { mode: 'restore', fields: localHas ? keepNotes(fields, S) : fields };
 }
 /** Xung đột → "Giữ hành trình đã lưu": giao diện sao lưu bản trên máy, ghi bản đã lưu vào S, rồi mới bật đồng bộ */
-export function useSaved() { if (pending) setOn(pending.user, pending.cycle); pending = null; }
+export function useSaved() { if (pending) setOn(pending.user, pending.cycle, pending.me); pending = null; }
 /** Xung đột → "Dùng hành trình trên máy này": bản đã lưu thành chu kỳ cũ, hành trình trên máy thành chu kỳ hiện tại */
 export async function useLocal(S) {
   const now = Date.now(), me = await A.getMe();
-  if (pending) setOn(pending.user, null); pending = null;
+  if (pending) setOn(pending.user, null, me); pending = null;
   acct.cycle = null; writeFlag();   // lượt đồng bộ kế tiếp chỉ ghi nhận chu kỳ mới, không kéo bản máy chủ về
   await pushProfile(S, me);
   await enqueueOp('journey.reset_cycle', {}, now - 1);
@@ -255,5 +262,5 @@ export function markSecured() { if (acct.on) { acct.guest = false; writeFlag(); 
 /** Đăng xuất máy này: dữ liệu trên máy giữ nguyên, ngừng đồng bộ */
 export async function signOutHere() {
   await A.signOut().catch(() => {});
-  acct.on = false; acct.uid = null; acct.guest = true; acct.cycle = null; acct.rejected = []; acct.practice = false; acct.imported = null; acct.mark = null; acct.syncedAt = 0; writeFlag(); setSyncEnabled(false);
+  acct.on = false; acct.uid = null; acct.guest = true; acct.cycle = null; acct.rejected = []; acct.practice = false; acct.imported = null; acct.mark = null; acct.syncedAt = 0; writeFlag(); setSyncEnabled(false); setDongTuAccount(null);
 }
