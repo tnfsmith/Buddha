@@ -9,6 +9,7 @@ import { S, mem, save, allDone, today, resetState, stateReady, fixMusic } from '
 import { PASSIVE, MIN_VANDU, heardEnough, listenCode, logPassive, lotus, weakest, calendar, weekSitMinutes, heardIds } from '@vandao/shared/missions.js';
 import { PARAMI } from '@vandao/shared/parami.js';
 import { nv, loadMissions, soNhapView, soNhapAct, todayBox, todayLeft, missionsStale } from './ui/so-nhap.js';
+import { ct, loadVariants, variantsStale, variantHtml, dkCard, dkView, dkAct, dkPull } from './ui/duyen-khoi.js';
 import { registerPWA, persistStorage } from './boot.js';
 import { startMetrics } from './net/metrics.js';
 import { $, fmt, esc } from './ui/dom.js';
@@ -145,6 +146,8 @@ player.onend = () => { const vd = S.vandu && U.mode === 'island' && sitMin() >= 
 /** Mở Bia: kéo ngay bản mới nhất từ các thiết bị khác và danh mục việc nếu đã cũ (#93) */
 function boardFresh() {
   if (missionsStale()) loadMissions(true).then(() => { if (U.view === 'board') render(); });
+  if (variantsStale()) loadVariants(true).then(() => { if (U.view === 'board') render(); });   // #104: biến thể theo Duyên khởi
+  dkPull(S).then(() => { if (U.view === 'board') render(); });
   const p = syncNow(true); if (U.view === 'board') render();
   p.then(() => { if (U.view === 'board') render(); }, () => {});
 }
@@ -330,6 +333,8 @@ function render() {
       `<p class="muted">Bấm một tầng để bay tới đó. Càng lên cao, Vân Đảo càng giản lược; ở Tầng 4 chỉ còn Vân Tọa sáng quanh hào quang.</p>`;
   } else if (U.view === 'account') {
     h = accountView();
+  } else if (U.view === 'duyen') {
+    h = dkView();
   } else if (U.view === 'creator') {
     const D = U.draft, k = D.look, nb = nameBlock(D.name);
     h = `<h2>Nhân vật của bạn</h2>${S.name ? '' : '<div class="row"><button class="ghost" data-act="acct-open" data-v="have">Tôi đã có hành trình</button></div>'}
@@ -372,12 +377,14 @@ function render() {
   } else if (U.view === 'board') {
     h = `<h2>Bia Tích Lũy</h2><p class="pali">Ngày ${d}/49 · Tuần ${wk}: ${esc(W.title)}</p>${bars()}`;
     // #93: việc còn lại hôm nay và trạng thái đồng bộ giữa các thiết bị
-    h += todayBox(S, today(), S.completed || allDone(d) ? 0 : 3 - Object.keys(S.done[d] || {}).length) + '<span id="nv-chinh"></span>';
+    h += todayBox(S, today(), S.completed || allDone(d) ? 0 : 3 - Object.keys(S.done[d] || {}).length) + '<span id="nv-chinh"></span>' + dkCard();
+    if (ct.state === 'idle') loadVariants().then(render);
     const tdy = S.tu[today()] || {}, ev = passiveLines(tdy);
     if (library.state === 'idle') loadSermons().then(render);
     PILLARS.forEach((p) => {
       const [title, text] = W[p.key], dn = S.done[d] && S.done[d][p.key];
-      h += `<div class="task${dn ? ' done' : ''}" data-p="${p.key}"><div class="k" style="color:${p.color}">${p.name} · ${p.sub}</div><h4>${esc(title)}</h4><p>${esc(text)}</p>` +
+      // #104: có Duyên khởi và danh mục biến thể thì hiện gợi ý hôm nay; không thì gợi ý chung của tuần
+      h += `<div class="task${dn ? ' done' : ''}" data-p="${p.key}"><div class="k" style="color:${p.color}">${p.name} · ${p.sub}</div>${variantHtml(S, p.key, today(), dn, title) || `<h4>${esc(title)}</h4><p>${esc(text)}</p>`}` +
         // quyết định 3 (#85): tự ghi nhận không tự hoàn thành trục Tuệ, chỉ là bằng chứng để tự quán chiếu
         (p.key === 'tue' && !dn && ev.length ? `<p class="muted ev">Đã tự ghi nhận hôm nay: ${esc(ev.join(' · '))}. Hãy tự quán chiếu rồi xác nhận.</p>` : '') +
         (dn ? `<p class="muted" style="margin-top:6px">Đã ghi nhận hôm nay · +${dn.E.toFixed(2)}</p>` :
@@ -398,7 +405,7 @@ function render() {
       (allDone(d) ? `<p><strong>${d < 49 ? 'Đã trọn ba việc hôm nay. Ngày mai sẽ mở ngày ' + (d + 1) + '.' : 'Đã viên mãn 49 ngày: Cổng Vân Môn mở, bước lên Tầng 1.'}</strong></p>` : '') +
       `<div class="row"><button class="btn alt" data-act="sacca">Sám hối chân thật</button><span class="muted">Hạt Chân thật: ${S.sacca}</span></div>
       <p class="muted">Mỗi ngày chỉ mở một nấc. Các hệ số là tự khai để quán chiếu, không phải phép đo tâm.</p>
-      <div class="row"><button class="ghost" data-act="home">← Vân Đảo</button><button class="ghost" data-act="reset">${U.resetArm ? 'Bấm lần nữa để xóa hành trình' : 'Bắt đầu lại từ ngày 1'}</button>${d > 1 || accountOn() ? accountHint() : ''}</div>`;
+      <div class="row"><button class="ghost" data-act="home">← Vân Đảo</button><button class="ghost" data-act="dk-open">Duyên khởi</button><button class="ghost" data-act="reset">${U.resetArm ? 'Bấm lần nữa để xóa hành trình' : 'Bắt đầu lại từ ngày 1'}</button>${d > 1 || accountOn() ? accountHint() : ''}</div>`;
   } else if (U.view === 'zone' && U.zone) {
     const z = ZONES.find((x) => x.id === U.zone), ok = unlocked(z);
     h = `<h2>${esc(z.name)}</h2><p class="pali">${esc(z.pali)}</p><p>${esc(z.text)}</p>` + (z.note ? `<p class="note">${esc(z.note)}</p>` : '') +
@@ -476,6 +483,7 @@ panel.addEventListener('click', (e) => {
   if (act !== 'reset') U.resetArm = false;
   if (act.startsWith('acct-')) return accountAct(act.slice(5), b);   // T2.3: Giữ hành trình, Tài khoản (ui/account.js)
   if (act === 'nv-jump') { const t = panel.querySelector('#' + b.dataset.to); if (t) t.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
+  if (act.startsWith('dk-')) { const end = (r) => { if (r.view) U.view = r.view; if (r.msg) toast(r.msg); save(); render(); }, r = dkAct(act, b, S, today()); if (r && r.then) r.then(end); else end(r); return; }   // #104: ui/duyen-khoi.js
   if (act.startsWith('nv-')) { const msg = soNhapAct(act, b, S, today()); save(); if (msg) { toast(msg); if (world && /cánh sen|Đã giữ|thọ trì|giữ nguyện/.test(msg)) world.burst(0xf3d27a, null, 0.7); } render(); return; }   // đợt C (#91): ui/so-nhap.js
   if (['board', 'sit', 'visit'].includes(act) && meditating()) return move(() => { const again = panel.querySelector('[data-act="' + act + '"]'); if (again) again.click(); });
   if (act === 'kuti-sit') { const sat = () => { world.setFace(S.kface || 0); savePos(); U.sit = { at: Date.now(), zone: 'kuti' }; toast('Đã an tọa tại Tịnh Thất.'); render(); };
