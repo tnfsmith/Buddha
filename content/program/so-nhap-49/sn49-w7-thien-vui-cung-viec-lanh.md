@@ -6,7 +6,7 @@ tier: 0
 lang: vi
 title: "Vui cùng việc lành"
 source_ref: "Vân Đạo tự biên soạn; tham khảo AN 4.32 (https://www.dhammatalks.org/suttas/AN/AN4_32.html) theo chủ đề §8.2."
-status: cho_duyet
+status: da_duyet
 meta: { program: so-nhap-49, schema: 1, week: 7, pillar: thien, level: vua, minutes: 5, money: false, at_home: true, outdoors: false, needs_others: false, punna: pattanumodana, parami: [dana, metta], scope: doi_thuc }
 ---
 Gửi lời vui cùng một người vừa hoàn tất việc tử tế họ đã chọn.
