@@ -19,7 +19,7 @@ const ymd = (t = Date.now()) => { const d = new Date(t); return d.getFullYear() 
 
 function fakeServer() {
   // Hồ sơ theo từng tài khoản; `cur` là tài khoản của phiên đang mở (đổi khi giả lập đăng nhập tài khoản khác)
-  const sv = { cur: 'u-tue-thai', profs: {}, revs: {}, gets: [], puts: [], account: true,
+  const sv = { cur: 'u-tue-thai', profs: {}, revs: {}, gets: [], puts: [], account: true, variants: VARIANTS,
     get prof() { return this.profs[this.cur] || null; }, set prof(v) { this.profs[this.cur] = v; },
     get rev() { return this.revs[this.cur] || 0; }, set rev(v) { this.revs[this.cur] = v; },
     journey: { program: 'so-nhap-49', cycle: 1, day: 1, started_on: ymd(), last_done_on: null, completed_at: null, sacca_count: 0, sessions_done: 0, sermons_done: 0, rev: 1 },
@@ -27,7 +27,7 @@ function fakeServer() {
   const state = () => ({ profile: sv.profile, journey: { ...sv.journey }, totals: { duc: 0, thien: 0, tue: 0, all: 0 }, unlocked_zones: {}, server_now: Date.now(), practice: 1 });
   sv.handle = async (route) => {
     const req = route.request(), u = new URL(req.url()), p = u.pathname, json = (b, status = 200) => route.fulfill({ status, contentType: 'application/json', headers: { 'cache-control': 'no-store' }, body: JSON.stringify(b) });
-    if (p === '/api/v1/content') return json({ items: u.searchParams.get('kind') === 'chuong_trinh' ? VARIANTS : [] });
+    if (p === '/api/v1/content') return json({ items: u.searchParams.get('kind') === 'chuong_trinh' ? sv.variants : [] });
     if (p === '/api/v1/practice/profile') {
       if (!sv.account) return json({ error: { code: 'unauthorized', message: 'Cần phiên' } }, 401);
       if (req.method() === 'GET') { sv.gets.push(sv.cur); return json({ profile: sv.prof, rev: sv.rev }); }
@@ -238,5 +238,37 @@ test('đổi Duyên khởi trong ngày (#132 mục 2): lựa chọn còn hợp t
   if (/^Việc tue [b]\.$/.test(tue)) expect(t[2]).toBe(tue); else expect(t[2]).not.toMatch(/^Việc tue/);
   await expect(P(A).locator('[data-act="dk-swap"][data-p="tue"]')).toHaveCount(0);   // lượt đổi Tuệ đã dùng vẫn giữ
   await expect(P(A).locator('[data-act="dk-swap"][data-p="duc"]')).toHaveCount(0);   // thẻ tuần không có nút đổi
+  expect(A.errs).toEqual([]);
+});
+
+test('lựa chọn đã lưu theo đúng phiên bản (#46/#132): v1 bị rút khi có v3 → gợi ý tuần; v1 còn công khai cùng v3 → giữ v1; lượt đổi giữ nguyên', async ({ browser }) => {
+  test.setTimeout(420_000);
+  const sv = fakeServer();
+  const A = await device(browser, sv, { account: false, seed: 2024 });   // hồ sơ rộng: Đức chọn sn49-w1-duc-c (v1)
+  const reopen = async () => { await A.reload(); await A.waitForFunction(() => window.__app?.world?.renderer, null, { timeout: 150_000 }); await openBia(A); await slow(P(A)).toContainText('Gợi ý hôm nay theo Duyên khởi'); };
+  await openBia(A);
+  await P(A).locator('[data-act="dk-open"]').first().click();
+  await P(A).locator('[data-act="dk-set"][data-k="minutes"][data-v="45"]').click();
+  await P(A).locator('[data-act="dk-save"]').click();
+  await slow(P(A)).toContainText('Gợi ý hôm nay theo Duyên khởi');
+  expect((await texts(A))[0]).toBe('Việc duc c.');
+  await P(A).locator('[data-act="dk-swap"][data-p="duc"]').click();   // dùng lượt đổi Đức
+  const swapped = (await texts(A))[0];
+  await P(A).locator('[data-act="dk-open"]').first().click();
+  await P(A).locator('[data-act="dk-save"]').click();
+  // đưa lựa chọn về c v1 để kiểm phiên bản: ghi thẳng sổ trên máy như một lựa chọn đã lưu từ trước
+  await A.evaluate(() => { const b = JSON.parse(localStorage.getItem('vandao.dk.v1')); const day = Object.values(b.local.pick).pop(); day.duc = { id: 'sn49-w1-duc-c', v: 1, t: 'Tiêu đề duc c', x: 'Việc duc c.', s: 'nguồn' }; localStorage.setItem('vandao.dk.v1', JSON.stringify(b)); });
+  const v3 = { ...VARIANTS.find((r) => r.id === 'sn49-w1-duc-c'), version: 3, body_inline: 'Việc duc c bản 3.' };
+  // 1) Danh mục chỉ còn v3 (v2 đã ngừng, v1 không còn công khai) → về gợi ý tuần, không hiện câu v1, không tự chọn lại
+  sv.variants = [...VARIANTS.filter((r) => r.id !== 'sn49-w1-duc-c'), v3];
+  await reopen();
+  expect((await texts(A))[0]).not.toMatch(/^Việc duc/);
+  await expect(P(A).locator('[data-act="dk-swap"][data-p="duc"]')).toHaveCount(0);
+  // 2) v1 vẫn công khai cùng v3 → giữ đúng câu v1 đã chọn; lượt đổi Đức vẫn đã dùng
+  sv.variants = [...VARIANTS, v3];
+  await reopen();
+  expect((await texts(A))[0]).toBe('Việc duc c.');
+  await expect(P(A).locator('[data-act="dk-swap"][data-p="duc"]')).toHaveCount(0);
+  expect(swapped).not.toBe('Việc duc c.');
   expect(A.errs).toEqual([]);
 });
