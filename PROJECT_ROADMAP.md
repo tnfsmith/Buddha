@@ -692,7 +692,7 @@ Ghi chú: `kusala_entry` (0003) được bổ sung cột `variant_id`, `punna`, 
 | `GET /api/v1/export` | phiên | Xuất toàn bộ dữ liệu (JSON) | 2/ngày |
 | `POST /api/v1/account/delete` · `DELETE …/delete` | phiên + OTP | Yêu cầu/hủy yêu cầu xóa tài khoản | — |
 | `POST /api/v1/rt/ticket` | phiên | Vé vào phòng thời gian thực (§7.2) | 20/phút |
-| `GET/POST /api/v1/companions`, `/invites`, `/groups`, `/blocks`, `/reports` | phiên | Xã hội tu tập (GĐ5) | theo loại |
+| `GET/POST /api/v1/companions`, `/companions/link`, `/presence`, `/meet`, `/visits/away`, `/blocks`, `/reports`, `/groups` | phiên | Xã hội tu tập (GĐ5); Bạn đồng tu theo [hợp đồng #121](docs/contracts/ban-dong-tu.md) | theo loại |
 | `GET /api/v1/content?tier=&kind=` | công khai | Nội dung **đã chọn phát hành**, trạng thái kỹ thuật `da_duyet` (cache KV; không chứng nhận Hội đồng) | cache 1 giờ |
 
 Lỗi trả về dạng `{"error":{"code":"day_locked","message":"…"}}`. Mọi phản hồi có `x-d1-bookmark`; client gửi lại ở request sau để đọc nhất quán qua bản sao [2]. Kiểm tra đầu vào bằng thư viện schema nhẹ (Valibot) dùng chung ở `packages/shared`.
@@ -964,6 +964,19 @@ Thêm **Sự kiện thiện nguyện** do đối tác đã xác minh hoặc nhó
 
 ### 10.3 Nối việc giúp với tu tập
 Khi một yêu cầu "Cần giúp" được nhận và cả hai bấm "xong", mỗi bên có thể chọn việc đó làm nhiệm vụ Thiện (phục vụ – veyyāvacca) của ngày, vẫn theo luật 1 nấc/ngày. Giúp ngoài đời → `scope = doi_thuc`; giúp trong app → `scope = dong_tu`.
+
+### 10.4 Bạn đồng tu — người quen ngoài đời cùng tu (#121, chủ dự án giao 18/11/2026)
+- **Kết nối:**
+  - liên kết/QR/mã mời 8 ký tự (7 ngày, 5 lượt); người mới vào qua liên kết thì thành bạn ngay và được ghi người giới thiệu (`guidance`, chỉ là dữ kiện; có dùng cho tiêu chí mở tầng hay không do §16/#107 quyết định);
+  - hoặc gõ đúng «Tịnh danh · mã» rồi bên kia đồng ý. Người gửi luôn chỉ thấy «đã gửi» cho tới khi bên kia đồng ý, để không dò được tài khoản.
+  - Không danh bạ công khai, không tìm gần đúng, không GPS.
+- **Danh sách:** Thân thiết · Quen biết · Đang chờ. Trạng thái `online/thien/tham/tra/vang` qua nhịp hiện diện 2 phút; vắng sau 3 phút; người dùng tắt được.
+- **Lời mời gặp:** Ghé thăm đảo mình · Xin ghé thăm đảo bạn · Cùng ngồi thiền · Trà Đạo · Tham quan.
+  - Theo phân khu đã mở: đi thăm cần Cổng Vân Môn của người đi nửa mở (ngày 29) và chủ đảo đang Nghênh khách; Trà Đạo cần chủ đảo từ ngày 15; thiền từ ngày 1, ngồi chung ở Đại Thiền Đường khi chưa đi được.
+  - Thiền/trà bắt đầu cùng giờ máy chủ sau 60 giây. Lời mời không làm gián đoạn thời thiền.
+- **«Ở gần»** là Vân Đảo bạn đồng tu dựng cạnh đảo mình: thân thiết vòng gần nhất, quen biết vòng kế, tối đa 4 + 4. Thân thiết do hai người cùng chọn; bạn thân thiết có thể cho ghé khi vắng, trừ lúc chủ đảo đang Độc cư.
+- **Không chữ tự do, không điểm/xếp hạng**, không cộng Kusala.
+- Thiết kế: [docs/thiet-ke/ban-dong-tu.md](docs/thiet-ke/ban-dong-tu.md). Hợp đồng D1/API: [docs/contracts/ban-dong-tu.md](docs/contracts/ban-dong-tu.md). Luật dùng chung: `packages/shared/src/dong-tu.js`. Đợt thời gian thực (đi cùng trên đảo) ở T5.2 sau GĐ4.
 
 ---
 
@@ -1477,6 +1490,17 @@ T3.7 đã đạt bộ audio phát hành (Sadaltager/Puck đúng ngoại lệ); #
 | T5.2 | UI Bảng Hộ Trì ở Cổng Vân Môn, sự kiện, đồng tu, thăm đảo (IslandRoom), nhóm, phòng nhóm | C | Hai người thật thăm đảo nhau, cùng an tọa |
 | T5.3 | Tóm tắt kiểm duyệt hằng ngày; xác minh đối tác sự kiện | H + O | Không việc kiểm duyệt nào tồn quá 24 giờ |
 
+**Đợt 5A — Bạn đồng tu (§10.4, #121).** Không cần thời gian thực hay kiểm duyệt nên bắt đầu sớm, song song GĐ4: Codex sau #105, Claude sau #104. Hai bên không sửa chung tệp.
+
+| ID | Việc | Làn | Nghiệm thu |
+|---|---|---|---|
+| T5.4 | Thiết kế trải nghiệm, hợp đồng D1/API, luật dùng chung `dong-tu.js` + kiểm thử | C | Codex duyệt hợp đồng; gộp trước T5.5–T5.8 |
+| T5.5 | Migration kế tiếp (`companion` thêm cột, `presence`, `meet_invite`, `island_visit`); API liên kết/tìm/đồng ý/thân thiết/hiện diện/mời gặp/ghé khi vắng/chặn; xuất/xóa | AG | Đủ 10 nhóm ca ở hợp đồng §6 trên D1 cục bộ |
+| T5.6 | `apps/web/src/net/dong-tu.js`: gọi API, nhịp hiện diện, đọc `#ban=`, đẩy cài đặt riêng tư/Nghênh khách lên hồ sơ, đọc `me.social` | AG | Kiểm thử với máy chủ giả; không gửi khi chưa có phiên (tài khoản hoặc khách) hoặc `dong_tu` chưa bật |
+| T5.7 | UI: nút Bạn đồng tu, danh sách + trạng thái, Mời bạn tu cùng (QR), thẻ lời mời, thẻ bạn, cài đặt riêng tư | C | E2E hai thiết bị: kết bạn bằng liên kết, mời thiền, cùng đếm ngược; giao diện điện thoại ≤ 44vh |
+| T5.8 | 3D: đảo bạn thật gần đảo mình (thân thiết/quen biết), đèn hiện diện, ghé thăm/ghé khi vắng, cùng ngồi, Trà Đạo hai người | C | `perf.spec.js` trong ngân sách §12.2; e2e ghé thăm, cùng ngồi |
+| T5.9 | Thử với bạn thật; xác nhận các mặc định ở thiết kế §9 | O | Hai người thật kết bạn và cùng ngồi một thời thiền |
+
 ### GĐ6 — Đại Công Đức (≈ 3 tuần; chỉ mở khi xong các việc pháp lý của [O])
 | ID | Việc | Làn | Nghiệm thu |
 |---|---|---|---|
@@ -1506,7 +1530,7 @@ T3.7 đã đạt bộ audio phát hành (Sadaltager/Puck đúng ngoại lệ); #
 ### GĐ10 — Sau ra mắt
 iOS (Capacitor), sự kiện hồi hướng chung ngày rằm, gian hàng thành viên (giai đoạn B của §11.3, cần luật sư), tra cứu kinh có trích dẫn, xác thực thời thiền bằng nhịp thở trên máy, phân vùng dữ liệu khi vượt ngưỡng §4.4.
 
-**Song song hóa:** GĐ0 (tuần tự) → (GĐ1 ∥ GĐ2) → (GĐ3 ∥ GĐ4 ∥ GĐ8) → (GĐ5 ∥ GĐ7) → GĐ6 → GĐ9. Việc pháp lý của [O] chạy song song từ ngày đầu vì GĐ6 phụ thuộc vào nó.
+**Song song hóa:** GĐ0 (tuần tự) → (GĐ1 ∥ GĐ2) → (GĐ3 ∥ GĐ4 ∥ GĐ8) → (GĐ5 ∥ GĐ7) → GĐ6 → GĐ9. Riêng đợt 5A Bạn đồng tu (T5.4–T5.9) chạy cùng GĐ4 vì chỉ cần GĐ2. Việc pháp lý của [O] chạy song song từ ngày đầu vì GĐ6 phụ thuộc vào nó.
 
 **Đánh số migration thực tế (18/11/2026):** main `da45e04` có 0001–0010 sau #109. Production v0.17.1 dùng 0001–0009. Số 0006/0007 trong ví dụ §4.6 đã dùng cho auth/recovery. Kiểm origin/main trước khi tạo migration và giữ nguyên migration đã merge.
 
