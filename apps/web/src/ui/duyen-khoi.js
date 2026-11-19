@@ -38,7 +38,7 @@ export function loadVariants(force) {
 }
 export const variantsStale = () => ct.state !== 'loading' && Date.now() - ct.at > 600000;
 
-// Sổ trên máy theo từng tài khoản: { prof, rev, dirty, asked, pick: { ngày: { trục: { id, t, x, s } } }, swp: { ngày: { trục: 1 } } }
+// Sổ trên máy theo từng tài khoản: { prof, rev, dirty, asked, pick: { ngày: { trục: { id, v, t, x, s } | null } }, swp: { ngày: { trục: 1 } } }
 let all = {}; try { all = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { all = {}; }
 const who = () => (acct.on && acct.uid ? acct.uid : 'local');
 // Mỗi tài khoản một sổ riêng (hợp đồng #111: hồ sơ theo tài khoản, đọc không tự ghi). Không chép sổ của máy hay của
@@ -46,7 +46,10 @@ const who = () => (acct.on && acct.uid ? acct.uid : 'local');
 const me = () => { const k = who(); return (all[k] = all[k] || { prof: null, rev: 0, dirty: false, asked: false, pick: {}, swp: {} }); };
 /** Ngày trai của Bia theo hồ sơ của đúng tài khoản/máy đang mở; chưa có hồ sơ thì về mặc định */
 const applyUpo = (S) => { const p = me().prof; if (p) S.uposatha = p.uposatha; else delete S.uposatha; };
-const keep = () => { const m = me(), ds = Object.keys(m.pick).sort().slice(-3); for (const o of [m.pick, m.swp]) for (const k of Object.keys(o)) if (!ds.includes(k)) delete o[k]; try { localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) { /* chỉ giữ trong bộ nhớ */ } };
+// Gợi ý (pick) và lượt đổi (swp) dọn riêng, mỗi loại giữ 3 ngày gần nhất của chính nó: xóa gợi ý để tính lại
+// không bao giờ làm mất lượt đổi đã dùng trong ngày (giới hạn một lần đổi/trục/ngày).
+const prune = (o) => { const ds = Object.keys(o).sort().slice(-3); for (const k of Object.keys(o)) if (!ds.includes(k)) delete o[k]; };
+const keep = () => { const m = me(); prune(m.pick); prune(m.swp); try { localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) { /* chỉ giữ trong bộ nhớ */ } };
 export const dkProfile = () => me().prof;
 
 /** Đọc hồ sơ trên máy chủ (GET /practice/profile); bản máy chủ mới hơn thì dùng, bản trên máy chưa gửi thì gửi lại */
@@ -77,16 +80,24 @@ async function put(S) {
 /** Đầu vào bộ chọn: người dùng của phiên (chưa giữ hành trình thì theo máy), chu kỳ, ngày 1–49, trục */
 const input = (S, pillar) => ({ userId: acct.on && acct.uid ? acct.uid : 'local:' + (S.seed || 0), cycle: acct.cycle || 1, day: Math.min(49, Math.max(1, S.day || 1)), pillar });
 
-/** Gợi ý của một trục hôm nay, giữ cố định trong ngày kể cả khi danh mục cập nhật. null → dùng gợi ý tuần. */
+/**
+ * Gợi ý của một trục hôm nay, giữ cố định trong ngày kể cả khi danh mục cập nhật. null → dùng gợi ý tuần.
+ * Theo hợp đồng #132 mục 2: lựa chọn đã ghi mà không còn hợp hồ sơ (đánh dấu null khi Lưu) hoặc đã bị rút khỏi danh mục
+ * thì hiện gợi ý tuần, không tự chọn lại; lượt đổi đã dùng vẫn giữ.
+ */
 function pickOf(S, pillar, date) {
   const m = me(); if (!m.prof || !ct.cat.n) return null;
   const day = (m.pick[date] = m.pick[date] || {});
-  if (!day[pillar]) {
+  if (!Object.prototype.hasOwnProperty.call(day, pillar)) {
     const v = rankVariants(ct.cat, m.prof, input(S, pillar))[0]; if (!v) return null;
-    day[pillar] = { id: v.id, t: v.title, x: v.text, s: v.source_ref }; keep();
+    day[pillar] = { id: v.id, v: v.version, t: v.title, x: v.text, s: v.source_ref }; keep();
   }
-  return day[pillar];
+  const p = day[pillar];
+  if (!p || (ct.state === 'ok' && !ids().has(p.id))) return null;
+  return p;
 }
+let idSet = null, idCat = null;
+const ids = () => { if (idCat !== ct.cat) { idCat = ct.cat; idSet = new Set(Object.values(ct.cat.cells).flat().map((v) => v.id)); } return idSet; };
 
 /** Phần đầu thẻ trục ở Bia: tiêu đề + câu gợi ý + nguồn + nút đổi; '' khi chưa có Duyên khởi hay danh mục */
 export function variantHtml(S, pillar, date, done, theme) {
@@ -126,14 +137,18 @@ export function dkAct(act, el, S, date) {
   if (act === 'dk-lim') { D.lim = D.lim.includes(v) ? D.lim.filter((x) => x !== v) : [...D.lim, v]; return {}; }
   if (act === 'dk-save') {
     m.prof = { level: D.level, minutes: D.minutes, time_window: D.time_window, familiarity: D.familiarity || null, precepts: [...D.precepts].sort(), uposatha: D.uposatha, no_money: D.lim.includes('no_money'), at_home: D.lim.includes('at_home') };
-    m.asked = true; m.dirty = true; delete m.pick[date]; S.uposatha = m.prof.uposatha; D = null; keep();
+    // Lựa chọn hôm nay còn hợp hồ sơ mới thì giữ (Lưu mà không đổi gì thì không đổi gợi ý); không còn hợp thì đánh dấu
+    // null → gợi ý tuần, không tự chọn lại (#132 mục 2). Lượt đổi đã dùng (swp) giữ nguyên.
+    const day = m.pick[date] || {};
+    for (const p of Object.keys(day)) if (day[p] && !rankVariants(ct.cat, m.prof, input(S, p)).some((v) => v.id === day[p].id)) day[p] = null;
+    m.asked = true; m.dirty = true; S.uposatha = m.prof.uposatha; D = null; keep();
     return acct.on ? put(S).then((msg) => ({ view: 'board', msg })) : { view: 'board', msg: 'Đã lưu Duyên khởi trên máy này.' };
   }
   if (act === 'dk-swap') {
     const p = el.dataset.p, cur = pickOf(S, p, date); if (!cur || (m.swp[date] || {})[p]) return {};
     const r = swapVariant(ct.cat, m.prof, input(S, p), cur.id);
     if (r.same || !r.variant) return { msg: 'Trục này chỉ còn một gợi ý hợp với Duyên khởi của bạn.' };
-    m.pick[date][p] = { id: r.variant.id, t: r.variant.title, x: r.variant.text, s: r.variant.source_ref };
+    m.pick[date][p] = { id: r.variant.id, v: r.variant.version, t: r.variant.title, x: r.variant.text, s: r.variant.source_ref };
     (m.swp[date] = m.swp[date] || {})[p] = 1; keep();
     return { msg: 'Đã đổi gợi ý. Mỗi trục đổi được một lần mỗi ngày.' };
   }
