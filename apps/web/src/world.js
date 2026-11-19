@@ -705,7 +705,7 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
   visit(i, done) { this._trip(i, done); }
   goHome(done) { if (this.av.where !== 'home') this._trip('home', done); }
   _trip(dest, done) {
-    const A = this.av; if (A.state === 'travel' || A.where === dest) return;
+    const A = this.av; if (A.state === 'travel' || A.where === dest || (A.where !== 'home' && dest !== 'home')) return;   // chỉ đi giữa Vân Đảo và một đảo bạn (vân lộ nối qua Vân Đảo)
     const io = this.home.group.position.y, hp = (x, z) => V(x, floorH(x, z) + io, z), home = A.where === 'home', fs = !home && this.friends[A.where], ts = dest !== 'home' && this.friends[dest];
     const HG = hp(15.5, 15.5), HW = hp(16.2, 16.2), HP = V(17.8, HW.y, 17.8), gA = home ? HG : fs.gate, pA = home ? HP : fs.pad, gB = ts ? ts.gate : HG, pB = ts ? ts.pad : HP, up = V(0, 2.4, 0);
     const br = this.bridges[home ? dest : A.where].getPoints(20), out = pA.clone().sub(gA).setY(0).normalize(), walk = [...(home ? this._route('gate').map(([x, z]) => hp(x, z)) : []), gA, home ? HW : pA.clone().addScaledVector(out, -1.7)];

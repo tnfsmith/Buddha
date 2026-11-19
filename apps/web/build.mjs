@@ -8,7 +8,7 @@ const require = createRequire(import.meta.url);
 // npm workspaces đưa gói lên node_modules gốc, nên tìm thư mục phông theo cơ chế resolve của Node
 const pkgDir = (pkg) => dirname(require.resolve(`@fontsource/${pkg}/package.json`));
 
-// Thu gọn mã GLSL có sẵn của three.js (#95, tiết kiệm ~5 KB): chỉ các dòng `var|const tên = "…";` mang mã shader trong three.module.js.
+// Thu gọn mã GLSL có sẵn của three.js (#95, tiết kiệm ~12 KB): chỉ các dòng `var|const tên = "…";` mang mã shader trong three.module.js.
 // Chuỗi được giải mã/mã lại bằng JSON (không lệch ký tự); mỗi dòng GLSL bỏ chú thích //, thụt lề, khoảng trắng thừa; bỏ dòng trống;
 // dòng mã (không phải chỉ thị #) bỏ thêm khoảng trắng quanh , ; ( ) { } = < > ? : — không đụng + - * / để không sinh ra ++ -- // /*.
 // Giữ xuống dòng (chỉ thị # cần dòng riêng, regex #include/unroll_loop của three cần) và nguyên dòng chỉ thị (vd. "#include <…>").
