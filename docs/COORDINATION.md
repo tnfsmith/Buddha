@@ -298,3 +298,8 @@ PR81 chưa merge/deploy; #82 phải cập nhật máy quay hướng chúng sanh 
 
 - [#138](https://github.com/tnfsmith/Buddha/pull/138) đã vào `main@423d1bc`. Codex trả quyền gói Bạn đồng tu. Claude giữ [#124](https://github.com/tnfsmith/Buddha/issues/124) và nghiệm thu hai phiên thật sau khi staging có gói này.
 - Codex giữ [#105](https://github.com/tnfsmith/Buddha/issues/105#issuecomment-7012959770) cho ba gói Worker theo [hợp đồng #132](contracts/practice-today.md). Gói đầu thêm 0012, `GET /practice/today` và vòng đời lựa chọn. Gói sau nối `swap` trực tiếp và qua `/sync`, rồi `summary`. Claude giữ giao diện #104 và có thể nối sau khi các gói liên quan lên staging.
+
+## 28. Bàn giao ReminderClock — 20/11/2026
+
+- [#130](https://github.com/tnfsmith/Buddha/pull/130) đã vào main `17c65fe`. Codex giữ API lịch, đăng ký, cron và binding theo [claim #105](https://github.com/tnfsmith/Buddha/issues/105#issuecomment-7026283311). Claude giữ lớp DO, sender, service worker và giao diện theo [#106](https://github.com/tnfsmith/Buddha/issues/106#issuecomment-7026283656).
+- Gói API lịch đứng sau #146, dùng migration 0014 để giữ Tịnh khẩu khi chưa có lịch. Wrangler đặt `REMINDERS_ENABLED=0`. Codex nối binding và tag `v-rc1` khi Claude bàn giao lớp DO để chạy CI cùng.

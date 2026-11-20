@@ -3,6 +3,7 @@ import { authMiddleware } from '../auth/session.js';
 import { byUser } from '../guard.js';
 import { bad, readJson } from '../lib.js';
 import { getPracticeProfile, writePracticeProfile } from '../practice-profile.js';
+import { refreshReminders } from '../reminder-data.js';
 
 const practiceProfileApp = new Hono();
 const fields = ['level', 'minutes', 'time_window', 'familiarity', 'precepts', 'uposatha', 'no_money', 'at_home'];
@@ -44,7 +45,10 @@ practiceProfileApp.put('/', async (c) => {
   if (current.rev !== rev) return conflict();
 
   const written = await writePracticeProfile(db, userId, profile, rev);
-  if (written) return c.json(written);
+  if (written) {
+    if (current.profile?.uposatha !== written.profile.uposatha) await refreshReminders(c.env, userId, Date.now());
+    return c.json(written);
+  }
   // Hai thiết bị lưu cùng lựa chọn thì gửi lại vẫn thành công mà không tăng rev hai lần.
   const latest = await getPracticeProfile(db, userId);
   return matches(latest) ? c.json(latest) : conflict();
