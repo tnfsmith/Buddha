@@ -172,6 +172,7 @@ const zoneLb = {}; ZONES.forEach((z) => (zoneLb[z.id] = mkLabel('zl', () => goZo
 const meLb = mkLabel('zl me', () => openCreator());
 const friendLb = world ? world.friends.map((f, i) => mkLabel('zl fr', () => openFriend(i))) : [];
 const tierLb = TIER_LABEL.map((p, i) => mkLabel('tl ladder', () => pickTier(i)));
+const daisLb = Array.from({ length: 6 }, () => mkLabel('zl fr dais'));   // #151: tên người trên Đài Đồng Tu
 function place(el, v, on, margin = 20) {
   const p = on ? world.project(v) : null, ok = !!p && p.vis && p.x > margin && p.x < world.w - margin && p.y > 56 && p.y < world.h - 96;
   el.style.opacity = ok ? '1' : '0'; el.style.pointerEvents = ok ? 'auto' : 'none'; if (ok) { el.style.left = p.x.toFixed(1) + 'px'; el.style.top = p.y.toFixed(1) + 'px'; }
@@ -187,6 +188,15 @@ function updateLabels() {
   const nm = S.name || 'Bạn'; if (meLb.dataset.k !== nm) { meLb.dataset.k = nm; meLb.textContent = nm; }
   place(meLb, world.headPos().add(new THREE.Vector3(0, 0.9, 0)), isl && !creator && world.av.state !== 'travel');
   world.friends.forEach((f, i) => { const el = friendLb[i]; if (!el.dataset.k) { el.dataset.k = '1'; el.textContent = f.name; } place(el, f.head, isl && !creator); });
+  // Đài Đồng Tu: «Tịnh danh · mã» từng bạn, mình là «Tịnh danh (bạn)», chưa vào thì «đang tới».
+  // Toàn cảnh: các bạn chỉ cách nhau vài điểm ảnh, nên gộp thành một nhãn đặt giữa đài
+  const dh = world.daisHeads(), inHall = U.mode === 'hall' && !creator, one = world.daisView === 'far' && dh.length > 1;
+  const nameOf = (h) => (h.me ? `${h.name} (bạn)` : h.here ? h.name : `${h.name} · đang tới`);
+  daisLb.forEach((el, i) => {
+    const h = dh[i], t = !h || (one && i) ? '' : one ? dh.map(nameOf).join(', ') : nameOf(h);
+    if (el.dataset.k !== t) { el.dataset.k = t; el.textContent = t; }
+    place(el, h ? (one ? h.head.clone().lerp(dh[dh.length - 1].head, 0.5) : h.head) : null, inHall && !!t);
+  });
   // Nhãn các tầng xếp bậc thang đều: Sơ nhập dưới cùng, Tầng 1 → Tầng 4 lên dần và thụt đều về phía Tôn tượng
   tierLb.forEach((el, i) => { if (!el.dataset.k) { el.dataset.k = '1'; el.textContent = TIERS[i].name.replace(' · ', ': '); } });
   const showT = U.mode === 'journey' && !world.tween && world.mode === 'overview';
@@ -258,7 +268,22 @@ window.addEventListener('keydown', (e) => {
 });
 window.addEventListener('keyup', (e) => { if (held.delete((e.key || '').toLowerCase())) steerNow(); });
 window.addEventListener('blur', () => { held.clear(); steerNow(); });
-$('#cam').addEventListener('click', (e) => { const b = e.target.closest('[data-cam]'); if (!b || !world) return; const k = b.dataset.cam; if (k === 'in') world.dolly(0.7); else if (k === 'out') world.dolly(1.43); else if (U.mode === 'island') world.focusAvatar(); });
+$('#cam').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-cam]'); if (!b || !world) return; const k = b.dataset.cam;
+  if (k === 'in') world.dolly(0.7); else if (k === 'out') world.dolly(1.43);
+  else if (k === 'dais') { world.daisSpin = false; world.daisShot(world.daisView === 'far' ? 'near' : 'far'); daisCam(); }   // #151: Cùng ngồi ⇄ Toàn cảnh
+  else if (k === 'spin') { world.daisSpin = !world.daisSpin; daisCam(); }
+  else if (U.mode === 'hall' && world.dais) { world.daisShot('near'); daisCam(); }
+  else if (U.mode === 'island') world.focusAvatar();
+});
+/** Nút góc máy Đài Đồng Tu chỉ hiện khi đài có người */
+function daisCam() {
+  const on = !!(world && world.dais), far = on && world.daisView === 'far', db = $('#cam [data-cam="dais"]'), sb = $('#cam [data-cam="spin"]');
+  db.hidden = sb.hidden = !on;
+  const t = far ? 'Cùng ngồi: nhìn gần các bạn trên Đài Đồng Tu' : 'Toàn cảnh: thấy trọn Tôn tượng và Đài Đồng Tu'; db.textContent = far ? '⌂' : '⛰'; db.title = t; db.setAttribute('aria-label', t);
+  sb.setAttribute('aria-pressed', on && world.daisSpin ? 'true' : 'false');
+}
+if (world) world.onDaisSpin = () => daisCam();
 function openFriend(i) { U.friend = i; U.view = 'friend'; U.zone = null; render(); }
 function pickTier(k) { U.tier = k; U.sim = null; if (world) world.setMode(k === 0 ? 'island' : 'tier', { tier: k }); render(); }
 
@@ -734,6 +759,8 @@ function goMeet(inv) {
 }
 dtInit({
   S, render, toast, cardEl: $('#dtm'), badge: dtMark, presence, together, go: goMeet,
+  // #151: Đài Đồng Tu trong Đại Thiền Đường; mình mang Tịnh danh và hình dáng đang dùng
+  dais: (people) => { if (!world) return; if (world.setDais(people.map((p) => (p.me ? { ...p, name: S.name || 'Bạn', look: S.look } : p)))) daisCam(); },
   show: () => { if (U.view === 'creator') { closeCreator(false); if (world) world.setMode('island'); } if (U.view !== 'dongtu') U.back = U.view; U.view = 'dongtu'; document.body.classList.remove('pmin'); panel.scrollTop = 0; render(); dtMark(); },
   close: () => { U.view = ['home', 'zone', 'board', 'friend'].includes(U.back) && (U.back !== 'zone' || U.zone) ? U.back : 'home'; render(); dtMark(); },
   viewOpen: () => U.view === 'dongtu',

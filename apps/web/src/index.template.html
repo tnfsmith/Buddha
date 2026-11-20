@@ -117,7 +117,7 @@ input[type=text]{width:100%;border:1px solid var(--line);border-radius:10px;padd
 #toast.on{opacity:1}
 #cam{position:absolute;left:14px;bottom:118px;display:flex;flex-direction:column;padding:4px;gap:2px;border-radius:12px;transition:opacity .7s}
 #cam button{width:34px;height:34px;border:0;background:transparent;border-radius:8px;font-size:19px;line-height:1;color:var(--ink)}
-#cam button:hover{background:rgba(255,255,255,.7)}
+#cam button:hover{background:rgba(255,255,255,.7)}#cam button[hidden]{display:none}#cam button[aria-pressed="true"]{background:rgba(255,255,255,.75)}
 body.hall #cam [data-cam=me],body.journey #cam [data-cam=me]{display:none}
 body.quiet #cam{opacity:0;pointer-events:none}
 #wake{position:absolute;left:50%;bottom:128px;transform:translateX(-50%);padding:12px 16px;background:rgba(255,251,243,.9);text-align:center;font-family:var(--serif);font-size:16.5px;width:max-content;max-width:min(440px,calc(100vw - 28px));z-index:5}
@@ -259,8 +259,8 @@ body.hall.barmin #panel{bottom:14px}
 /* Thẻ lời mời: máy tính đứng cạnh trái bảng; Đại Thiền Đường thì nằm trên thanh phát */
 #dtm{position:absolute;right:428px;bottom:14px;width:min(340px,calc(100vw - 28px));padding:12px 14px;z-index:6;background:rgba(255,251,243,.92);font-size:14px}
 #dtm b{font-family:var(--serif);font-size:16.5px}#dtm p{margin:4px 0 0}#dtm .row{margin-top:8px}
-/* Đại Thiền Đường trên máy tính: trên thanh phát. Chỉ máy tính: trên điện thoại thẻ luôn neo theo mép bảng đo được (--subb, #139) */
-@media (min-width:821px){body.hall:not(.sermon) #dtm{bottom:122px}}
+/* Đại Thiền Đường trên máy tính: thẻ sang trái, trên thanh phát, không che Đài Đồng Tu ở giữa cảnh (#151). Chỉ máy tính: trên điện thoại thẻ luôn neo theo mép bảng đo được (--subb, #139) */
+@media (min-width:821px){body.hall:not(.sermon) #dtm{right:auto;left:72px;bottom:122px}}
 @media (min-width:1500px){#dtm{right:458px}}
 /* Màn thấp (điện thoại xoay ngang): trên bảng thu gọn chỉ còn ~120 px, nên thẻ thành hai dòng, nút bên phải, giữ dòng đếm ngược, bỏ dòng phụ.
    Bảng đang mở thì không còn chỗ trên mép bảng: thẻ tạm ẩn (chấm số trên nút Bạn đồng tu vẫn còn), thu gọn bảng thì thẻ hiện lại */
@@ -269,8 +269,8 @@ body.hall.barmin #panel{bottom:14px}
   #dt{padding:6px 9px;font-size:13.5px}
   /* #139: lớp phủ trên bảng đặt theo mép trên đo được của bảng (--subb), không giả định vh hay bottom cố định */
   #dtm{left:8px;right:8px;width:auto;bottom:var(--subb,calc(44vh + 72px))}
-  /* Đại Thiền Đường: thẻ gọn hơn để không che cảnh giữa màn hình */
-  body.hall #dtm{padding:8px 11px;font-size:13.5px}body.hall #dtm b{font-size:15px}body.hall #dtm .row{margin-top:6px}
+  /* Đại Thiền Đường: thẻ gọn hơn, bỏ dòng phụ, để không che Đài Đồng Tu giữa màn hình (vẫn neo theo mép bảng) */
+  body.hall #dtm{padding:8px 11px;font-size:13.5px}body.hall #dtm b{font-size:15px}body.hall #dtm .row{margin-top:6px}body.hall #dtm .dtx{display:none}
 }
 </style>
 </head>
@@ -311,7 +311,7 @@ body.hall.barmin #panel{bottom:14px}
     </div>
   </footer>
   <section id="mdock" class="glass" aria-label="Vân Nhạc" hidden></section>
-  <div id="cam" class="glass" aria-label="Máy quay"><button data-cam="in" title="Phóng to" aria-label="Phóng to">+</button><button data-cam="out" title="Thu nhỏ" aria-label="Thu nhỏ">−</button><button data-cam="me" title="Về bên nhân vật" aria-label="Về bên nhân vật">◎</button></div>
+  <div id="cam" class="glass" aria-label="Máy quay"><button data-cam="in" title="Phóng to" aria-label="Phóng to">+</button><button data-cam="out" title="Thu nhỏ" aria-label="Thu nhỏ">−</button><button data-cam="me" title="Về bên nhân vật" aria-label="Về bên nhân vật">◎</button><button data-cam="dais" hidden>⛰</button><button data-cam="spin" hidden aria-pressed="false" title="Xoay chậm quanh Đài Đồng Tu" aria-label="Xoay chậm quanh Đài Đồng Tu">⟳</button></div>
   <div id="vd" class="glass" hidden></div>
   <div id="wake" class="glass" role="alertdialog" aria-live="assertive" hidden><span></span><div class="row"><button class="btn" data-wake="yes">Xả thiền</button><button class="btn alt" data-wake="no">Ngồi tiếp</button></div></div>
   <div id="dtm" class="glass" role="dialog" aria-label="Lời mời của bạn đồng tu" aria-live="polite" hidden></div>
