@@ -145,7 +145,8 @@ export class ReminderClock extends DurableObject {
         this.sql.exec('INSERT OR IGNORE INTO occ (occ_key, reminder_id, user_id, local_date, due_at, kind, local_hm) VALUES (?, ?, ?, ?, ?, ?, ?)',
           key, row.reminder_id, row.user_id, lp.date, due, rem.kind, rem.local_hm);
         const occ = this.sql.exec('SELECT * FROM occ WHERE occ_key = ?', key).one();
-        await this.deliver(occ, d, false, now, count);
+        // Lượt đã hẹn thử lại (vd. 429 rồi bước 6 lỗi nên idx còn giờ cũ): để nhánh thử lại gửi đúng retry_at, không gửi sớm
+        if (occ.retry_at === null) await this.deliver(occ, d, false, now, count);
       }
       await this.advance(row, rem, d, now);   // 6.
     }

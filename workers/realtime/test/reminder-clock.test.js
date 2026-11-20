@@ -109,6 +109,21 @@ describe('lịch và alarm', () => {
     expect((await sql(stub, 'SELECT status FROM sent ORDER BY sub_id')).map((r) => r.status)).toEqual(['ok', 'ok']);
   });
 
+  it('429 rồi bước hẹn lần sau lỗi: alarm chạy lại lúc 06:01 không gửi sớm, chỉ hẹn lại; lượt thử vẫn gửi lúc 06:05', async () => {
+    const t = at(23, '06:00'), { stub, rid } = await seed({ devices: 1, rems: [{ id: 'a', hm: '06:00', next: t }] });
+    await runInDurableObject(stub, async (inst) => {
+      inst.now = () => t; inst.pushFetch = async () => new Response(null, { status: 429 });
+      const adv = inst.advance; inst.advance = async () => { inst.advance = adv; throw new Error('D1 tạm lỗi'); };
+      await expect(inst.alarm()).rejects.toThrow('D1 tạm lỗi');
+    });
+    expect(await nextAt(rid('a'))).toBe(t);   // D1 chưa kịp hẹn lần sau
+    expect(await tick(stub, t + MIN)).toEqual([]);
+    expect(await nextAt(rid('a'))).toBe(t + DAY);
+    expect(await sql(stub, 'SELECT retry_at, done FROM occ')).toEqual([{ retry_at: t + 5 * MIN, done: 0 }]);
+    expect(await tick(stub, t + 5 * MIN)).toHaveLength(1);
+    expect(await sql(stub, 'SELECT done FROM occ')).toEqual([{ done: 1 }]);
+  });
+
   it('tắt nhắc trước 06:05 thì lượt đang thử lại bị hủy, không gửi; cancel cũng hủy', async () => {
     const t = at(23, '06:00'), { stub, subs, rid } = await seed({ devices: 1, rems: [{ id: 'a', hm: '06:00', next: t }, { id: 'b', kind: 'nhiem_vu', hm: '06:00', next: t }] });
     await tick(stub, t, () => 429);
