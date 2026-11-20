@@ -12,11 +12,19 @@ test('tắt mạng vẫn mở được ứng dụng và chạy thời thiền', 
   // chờ service worker kiểm soát trang và lưu xong bộ đệm
   await page.evaluate(async () => { await navigator.serviceWorker.ready; if (!navigator.serviceWorker.controller) await new Promise((r) => navigator.serviceWorker.addEventListener('controllerchange', r, { once: true })); });
   expect(await page.evaluate(async () => (await caches.keys()).some((k) => k.startsWith('vandao-')))).toBe(true);
+  // #161: bản web nạp mã dạng module từ /assets/, three.js, mã ứng dụng và phông nằm sẵn trong cache riêng vandao-assets
+  expect(await page.evaluate(() => document.querySelector('script[type="module"]')?.getAttribute('src'))).toMatch(/^\/assets\/app-\w+\.js$/);
+  const kept = await page.evaluate(async () => (await (await caches.open('vandao-assets')).keys()).map((r) => new URL(r.url).pathname));
+  for (const re of [/^\/assets\/three-\w+\.js$/, /^\/assets\/app-\w+\.js$/, /^\/assets\/be-vietnam-pro-vietnamese-400-\w+\.woff2$/]) expect(kept.some((x) => re.test(x)), String(re)).toBe(true);
 
   await context.setOffline(true);
+  const fromSw = [];
+  page.on('response', (r) => { if (new URL(r.url()).pathname.startsWith('/assets/')) fromSw.push(r.fromServiceWorker()); });
   const res = await page.reload();
   expect(res?.fromServiceWorker(), 'trang phải do service worker trả khi mất mạng').toBe(true);
   await booted(page);
+  expect(fromSw.length, 'tệp /assets/ nạp lại khi mất mạng').toBeGreaterThanOrEqual(2);
+  expect(fromSw.every(Boolean), 'mọi tệp /assets/ do service worker trả').toBe(true);
   expect(await page.evaluate(() => navigator.onLine)).toBe(false);
   // thời thiền chạy (âm thanh sinh tại chỗ, không cần mạng)
   const t = await page.evaluate(async () => { const P = window.__app.player; await P.play(); await new Promise((r) => setTimeout(r, 3000)); const x = P.time; P.pause(); return x; });
