@@ -13,6 +13,7 @@ import contentApp from './routes/content.js';
 import companionsApp from './routes/companions.js';
 import metricsApp from './routes/metrics.js';
 import mediaApp from './routes/media.js';
+import inviteCard from './routes/invite-card.js';
 import { byIp, turnstile } from './guard.js';
 import { runCron } from './cron.js';
 
@@ -68,6 +69,7 @@ app.route('/api/v1', companionsApp);
 app.all('/api/*', (c) => c.json({ error: { code: 'not_found', message: 'Không có API này' } }, 404));
 
 app.route('/media', mediaApp);
+app.route('/moi', inviteCard);
 
 // Chuyển tiếp các request tĩnh không thuộc /api/* hoặc /media/* cho Static Assets (apps/web)
 app.all('*', async (c) => {

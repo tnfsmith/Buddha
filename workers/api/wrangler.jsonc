@@ -10,7 +10,7 @@
     "binding": "ASSETS",
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*", "/media/*", "/ws/*", "/.well-known/*"]
+    "run_worker_first": ["/api/*", "/media/*", "/moi/*", "/ws/*", "/.well-known/*"]
   },
   "routes": [
     { "pattern": "vandao.ainextbrain.com", "custom_domain": true }
@@ -44,19 +44,20 @@
   "vars": { "ENV_NAME": "production" },
   // Dọn dữ liệu hằng đêm 02:17 giờ Việt Nam (src/cron.js)
   "triggers": { "crons": ["17 19 * * *"] },
-  "observability": { "enabled": true },
+  "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": false } },
   "env": {
     "staging": {
       "name": "vandao-staging",
       "workers_dev": true,
       "preview_urls": true,
       "routes": [],
+      "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": false } },
       "assets": {
         "directory": "../../apps/web/public",
         "binding": "ASSETS",
         "html_handling": "auto-trailing-slash",
         "not_found_handling": "single-page-application",
-        "run_worker_first": ["/api/*", "/media/*", "/ws/*", "/.well-known/*"]
+        "run_worker_first": ["/api/*", "/media/*", "/moi/*", "/ws/*", "/.well-known/*"]
       },
       "d1_databases": [
         {
