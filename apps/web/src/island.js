@@ -516,18 +516,20 @@ vA=smoothstep(0.,.08,f)*(1.-f)*(ty<.5?uOn.x:ty<1.5?uOn.y:uOn.z)*mix(.55,.5,tea);
     St.add(steleL); steleL.position.set(0, 3.47, 0.04); steleL.rotation.x = 0.42; steleL.scale.setScalar(1.15); steleL.visible = false;
     const ringM = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true, opacity: 0, depthWrite: false });
     const ring = add(petals(0.8, 0.32, ringM)); ring.scale.setScalar(1.25); ring.renderOrder = 4; ring.visible = false;
-    let key = null, ringA = 0;
+    let key = null, ringA = 0, wall = 0;
     H.reflect = (R, dt, sitAt) => {
+      // nhịp theo đồng hồ thật, không theo dt đã chặn của khung: máy chậm (SwiftShader, máy yếu) vẫn sáng đèn, nở nụ đúng nhịp
+      const now = performance.now(), e = wall ? Math.min(1, (now - wall) / 1000) : 0; wall = now;
       const nl = Math.min(lam.instanceMatrix.count, R ? R.lamps | 0 : 0), nb = Math.min(bud.instanceMatrix.count, R ? R.buds | 0 : 0);
       // mở app: hiện ngay; trong phiên, đèn hay nụ mới (thêm 1–2) lớn dần trong khoảng 1,7 giây
-      const to = (cur, n) => (n < cur || n - cur > 2 ? n : Math.min(n, cur + dt * 0.6));
+      const to = (cur, n) => (n < cur || n - cur > 2 ? n : Math.min(n, cur + e * 0.6));
       uLit.value = to(uLit.value, nl); uBud.value = to(uBud.value, nb);
       lam.count = Math.max(0, Math.ceil(uLit.value - 1e-3)); lam.visible = lam.count > 0; bud.count = Math.max(0, Math.ceil(uBud.value - 1e-3)); bud.visible = bud.count > 0;
       const p = R && R.petals, k = p ? p.map((x) => Math.round(x * 20)).join() : '';
       if (k !== key) { key = k; for (let i = 0; i < 10; i++) { const v = p ? Math.max(0, Math.min(1, p[i] || 0)) : 0; steleL.setColorAt(i, pc.copy(DIM).lerp(GOLD, v)); ring.setColorAt(i, pc.copy(RDIM).lerp(RGOLD, v)); }
         steleL.instanceColor.needsUpdate = ring.instanceColor.needsUpdate = true; }
       steleL.visible = !!p;
-      ringA += ((sitAt && p && p.some((x) => x > 0) ? 1 : 0) - ringA) * Math.min(1, dt * 1.2); ringM.opacity = 0.85 * ringA; ring.visible = ringA > 0.01;
+      ringA += ((sitAt && p && p.some((x) => x > 0) ? 1 : 0) - ringA) * Math.min(1, e * 1.2); ringM.opacity = 0.85 * ringA; ring.visible = ringA > 0.01;
       if (sitAt) ring.position.copy(G.worldToLocal(v3.copy(sitAt))).add(v3.set(0, 0.1, 0));
     };
     H.reflectInfo = () => ({ lamps: lam.count, lampMax: lam.instanceMatrix.count, buds: bud.count, budMax: bud.instanceMatrix.count, stele: steleL.visible, ring: Math.round(ringA * 100) / 100, petals: key }); }
