@@ -19,11 +19,20 @@ import { qr } from './account.js';
  * Trạng thái màn. `tab`: list · moi (mã mời) · tim (tìm bạn) · ban (một bạn) · bao (báo cáo) · rieng (quyền riêng tư) ·
  * loi (vừa mở liên kết mời khi chưa có phiên). `skew`: giờ máy chủ − giờ máy, để đếm ngược hai bên khớp nhau.
  */
-const D = {
-  tab: 'list', sel: null, busy: '', err: '', msg: '', arm: '', link: null, me: null, blocks: null, q: '', pend: null,
-  skew: 0, at: 0, lastLoad: 0, msgInv: null, cardKey: '', viewKey: '', openSynced: false,
-  quietSeen: new Set(), chimed: new Set(), watch: new Set(), joined: new Set(), hide: new Set(), answered: new Set(),
-};
+const D = { uid: null, tab: 'list', pend: null };
+/** Mọi trạng thái riêng của một tài khoản. Đổi người (đăng xuất, đăng nhập người khác) thì xóa sạch, kể cả mã mời đã tạo. */
+function resetFor(uid) {
+  Object.assign(D, {
+    uid, tab: D.tab === 'loi' ? 'loi' : 'list', sel: null, busy: '', err: '', msg: '', arm: '', link: null, me: null, blocks: null, q: '',
+    skew: 0, at: 0, lastLoad: 0, msgInv: null, cardKey: null, viewKey: '', openSynced: false,
+    quietSeen: new Set(), chimed: new Set(), watch: new Set(), joined: new Set(), hide: new Set(), answered: new Set(),
+  });
+}
+resetFor(null);
+/** Gọi ở mọi lối vào: tài khoản đổi thì trạng thái cũ không được lọt sang người mới */
+const follow = () => { if (acct.uid !== D.uid) resetFor(acct.uid); };
+/** Kết quả bất đồng bộ chỉ được ghi khi vẫn đúng tài khoản lúc bắt đầu */
+const still = (uid) => uid === acct.uid && uid === D.uid;
 let ctx = null;
 
 const L = (k) => { const v = dongTu.list && dongTu.list[k]; return Array.isArray(v) ? v : []; };
@@ -67,6 +76,7 @@ const prefs = () => { const s = (D.me && D.me.settings && D.me.settings.dong_tu)
 
 /** Số chấm trên nút: lời kết nối và lời mời gặp đang chờ mình. Không bao giờ là số bạn. */
 export function dtBadge() {
+  follow();
   if (!dongTu.on) return 0;
   if (!dongTu.list) return (dongTu.social.requests || 0) + (dongTu.social.invites || 0);
   return L('incoming').length + invites().incoming.length;
@@ -81,6 +91,7 @@ const left = (end, f) => `<span data-dt-end="${end}" data-dt-f="${f}">${fmtLeft(
 const guestNote = () => (acct.on && acct.guest ? '<p class="note">Hành trình này đang giữ bằng phiên khách. Gắn vân tay / Face ID hoặc lưu mã khôi phục ở trang Tài khoản để không mất bạn đồng tu.</p><div class="row"><button class="ghost" data-act="acct-open">Tài khoản</button></div>' : '');
 
 export function dtView() {
+  follow();
   if (D.tab === 'loi') return linkNote();
   if (!dongTu.on) return `<h2>Bạn đồng tu</h2>${acct.on ? '<p class="muted" role="status">Đang kết nối máy chủ…</p>' : '<p>Giữ hành trình để kết nối với người bạn tu cùng ngoài đời.</p><div class="row"><button class="btn" data-act="acct-open">Giữ hành trình của tôi</button></div>'}<div class="row"><button class="ghost" data-act="dt-close">← Quay lại</button></div>`;
   if (D.tab === 'moi') return inviteView();
@@ -242,6 +253,7 @@ function updateLeft() {
 // ───────── Nhịp mỗi giây: hiện diện, bắt đầu cùng giờ, tải lại danh sách khi đang chờ ─────────
 function tick() {
   if (!ctx) return;
+  follow();
   setPresence(ctx.presence());
   if (!dongTu.on) { card(); return; }
   // Liên kết mời đã gửi mà sau 15 giây chưa thấy người mời trong danh sách: mô-đun mạng đã xóa mã (mã hỏng, hết lượt, mã của mình)
@@ -258,9 +270,10 @@ function tick() {
     // vừa tới giờ khi máy đang theo dõi đếm ngược: tự bắt đầu cho cả hai; trễ (máy ngủ, mất mạng) thì để người dùng bấm «Vào ngồi cùng»
     if (D.watch.has(inv.id) && !D.hide.has(inv.id) && t - inv.start_at < 10_000) start(inv, t - inv.start_at);
   }
-  // Danh sách tự tải lại: 10 giây khi đang chờ bạn trả lời hoặc sắp bắt đầu, 30 giây khi màn đang mở (hợp đồng §5)
+  // Danh sách tự tải lại: 10 giây khi đang chờ bạn trả lời hoặc sắp bắt đầu, 30 giây khi màn đang mở (hợp đồng §5).
+  // Tab ẩn thì ngừng, để nhiều tab không cùng ăn hạn mức; quay lại thì GET /me của net/account.js và nhịp này tải tiếp.
   const wait = I.outgoing.length || I.together.some((x) => x.ph.phase === 'sap'), gap = wait ? 10_000 : ctx.viewOpen() ? 30_000 : 0;
-  if (gap && Date.now() - D.lastLoad > gap) { D.lastLoad = Date.now(); void loadCompanions().catch(() => {}); }
+  if (gap && document.visibilityState === 'visible' && Date.now() - D.lastLoad > gap) { D.lastLoad = Date.now(); void loadCompanions().catch(() => {}); }
   card(I);
   const vk = ['together', 'incoming', 'outgoing'].map((k) => I[k].map((x) => x.inv.id + x.ph.phase).join(',')).join('|');
   if (vk !== D.viewKey) { D.viewKey = vk; if (ctx.viewOpen()) ctx.render(); }
@@ -274,6 +287,7 @@ function start(inv, elapsed) {
 }
 
 function changed() {
+  follow();
   if (dongTu.at !== D.at) {
     // Độ lệch giờ máy chủ − giờ máy. Mỗi mẫu đã trừ đi thời gian phản hồi, nên mẫu lớn nhất gần đúng nhất; đồng hồ máy nhảy (> 1 phút) thì lấy lại
     const off = dongTu.at ? dongTu.at - Date.now() : 0;
@@ -295,12 +309,18 @@ function changed() {
 // ───────── Nạp dữ liệu ─────────
 async function loadMe() {
   if (!dongTu.on) return;
-  try { const me = await getMe(); observeDongTuMe(acct.uid, me); D.me = me && me.profile ? me.profile : D.me; } catch { /* giữ bản cũ */ }
+  const uid = D.uid;
+  try {
+    const me = await getMe();
+    if (!still(uid) || !me || !me.user || me.user.id !== uid) return;   // phản hồi chậm của phiên trước
+    observeDongTuMe(uid, me); D.me = me.profile || D.me;
+  } catch { if (!still(uid)) return; }
   if (D.me && !D.openSynced) syncOpen();
   if (ctx.viewOpen()) ctx.render();
 }
 async function loadBlocks() {
-  try { const r = await listBlocks(); D.blocks = (r && r.blocks) || []; } catch (e) { D.blocks = []; D.err = human(e); }
+  const uid = D.uid;
+  try { const r = await listBlocks(); if (!still(uid)) return; D.blocks = (r && r.blocks) || []; } catch (e) { if (!still(uid)) return; D.blocks = []; D.err = human(e); }
   if (ctx.viewOpen()) ctx.render();
 }
 /** Chế độ cổng trên máy (S.open) là lựa chọn của người dùng; máy chủ lệch (vd. đổi cổng trước khi có Bạn đồng tu) thì đưa lên một lần */
@@ -311,24 +331,31 @@ function syncOpen() {
 }
 /** Gọi khi bấm đổi cổng ở Cổng Vân Môn */
 export async function dtSyncOpen(open) {
+  follow();
   if (!dongTu.on) return;
+  const uid = D.uid;
   try {
-    if (!D.me) { const me = await getMe(); D.me = me && me.profile; }
+    if (!D.me) { const me = await getMe(); if (!still(uid) || !me || !me.user || me.user.id !== uid) return; D.me = me.profile; }
     const r = await pushSocialPrefs({ ...prefs(), open });
-    if (r && r.profile) D.me = r.profile;
-  } catch { ctx.toast('Chưa đồng bộ được chế độ cổng. Hãy thử lại khi có mạng.'); D.openSynced = false; }
+    if (still(uid) && r && r.profile) D.me = r.profile;
+  } catch { if (still(uid)) { ctx.toast('Chưa đồng bộ được chế độ cổng. Hãy thử lại khi có mạng.'); D.openSynced = false; } }
 }
 
+/** Chạy một thao tác mạng. `fn(ok)`: chỉ ghi vào D khi ok() còn đúng (tài khoản chưa đổi giữa chừng). */
 async function run(label, fn, fromCard = false) {
+  follow();
+  const uid = D.uid, ok = () => still(uid);
   D.busy = label; D.err = ''; D.msg = ''; if (ctx.viewOpen()) ctx.render();
-  try { await fn(); } catch (e) { const m = human(e); if (fromCard || !ctx.viewOpen()) ctx.toast(m); else D.err = m; }
+  try { await fn(ok); } catch (e) { if (!ok()) return; const m = human(e); if (fromCard || !ctx.viewOpen()) ctx.toast(m); else D.err = m; }
+  if (!ok()) return;
   D.busy = ''; card(); if (ctx.viewOpen()) ctx.render();
 }
 function open(tab) {
+  follow();
   D.tab = tab; D.err = ''; D.msg = ''; D.arm = '';
   ctx.show();
   if (tab === 'list') { D.lastLoad = Date.now(); void loadCompanions().catch(() => {}); void loadMe(); }
-  if (tab === 'moi' && (!D.link || D.link.expires_at <= Date.now() || D.link.uses_left <= 0)) run('Đang tạo mã mời', async () => { D.link = await createLink(false); });
+  if (tab === 'moi' && (!D.link || D.link.expires_at <= Date.now() || D.link.uses_left <= 0)) dtAct('link', { dataset: {} });
   if (tab === 'tim' || tab === 'rieng') void loadMe();
   if (tab === 'rieng') { D.blocks = null; void loadBlocks(); }
 }
@@ -336,61 +363,64 @@ export const dtOpen = () => open('list');
 const findInv = (id) => L('invites').find((x) => x && x.id === id);
 
 export function dtAct(act, b) {
+  follow();
   const id = b.dataset.id;
   if (act !== 'renew' && act !== 'remove' && act !== 'block') D.arm = '';
   if (act === 'open') return open('list');
   if (act === 'close') { D.tab = 'list'; return ctx.close(); }
   if (act === 'tab') return open(b.dataset.v);
   if (act === 'ban') { D.sel = id; return open('ban'); }
-  if (act === 'link') return run('Đang tạo mã mời', async () => { D.link = await createLink(false); });
+  if (act === 'link') return run('Đang tạo mã mời', async (ok) => { const k = await createLink(false); if (ok()) D.link = k; });
   if (act === 'renew') {
     if (D.arm !== 'renew') { D.arm = 'renew'; return ctx.render(); }
-    D.arm = ''; return run('Đang tạo mã mới', async () => { D.link = await createLink(true); D.msg = 'Đã tạo mã mới. Mã cũ không dùng được nữa.'; });
+    D.arm = ''; return run('Đang tạo mã mới', async (ok) => { const k = await createLink(true); if (ok()) { D.link = k; D.msg = 'Đã tạo mã mới. Mã cũ không dùng được nữa.'; } });
   }
   if (act === 'share') return navigator.share({ text: shareText() }).catch(() => {});
-  if (act === 'copy') return run('Đang chép', async () => { await navigator.clipboard.writeText(shareText()); D.msg = 'Đã chép lời mời.'; });
+  if (act === 'copy') return run('Đang chép', async (ok) => { await navigator.clipboard.writeText(shareText()); if (!ok()) return; D.msg = 'Đã chép lời mời.'; });
   if (act === 'find') {
     const el = document.getElementById('dtFind'); if (el) D.q = el.value.trim();
     const f = parseFriendQuery(D.q);
     if (!f) { D.msg = ''; D.err = 'Hãy gõ đúng dạng Tịnh danh · mã, ví dụ Tuệ Thái · 5696.'; return ctx.render(); }
-    return run('Đang gửi', async () => { await requestByName(`${f.tinh_danh} · ${f.tag}`); D.q = ''; D.msg = `Đã gửi lời kết nối tới ${f.tinh_danh} · ${f.tag}. Khi người ấy đồng ý, hai bạn sẽ thấy nhau trong danh sách.`; });
+    return run('Đang gửi', async (ok) => { await requestByName(`${f.tinh_danh} · ${f.tag}`); if (!ok()) return; D.q = ''; D.msg = `Đã gửi lời kết nối tới ${f.tinh_danh} · ${f.tag}. Khi người ấy đồng ý, hai bạn sẽ thấy nhau trong danh sách.`; });
   }
-  if (act === 'req-yes' || act === 'req-no') return run('Đang trả lời', async () => { await respondRequest(id, act === 'req-yes'); D.msg = act === 'req-yes' ? 'Đã kết nối đồng tu.' : 'Đã bỏ qua lời kết nối.'; });
-  if (act === 'withdraw') return run('Đang rút lại', async () => { await withdrawRequest(id); });
-  if (act === 'meet') return run('Đang gửi lời mời', async () => { const r = await meet(id, b.dataset.k, b.dataset.p || null); D.lastLoad = Date.now(); D.msg = 'Đã gửi lời mời. Lời mời chờ trả lời trong 10 phút.'; D.msgInv = r && r.invite ? r.invite.id : null; });
+  if (act === 'req-yes' || act === 'req-no') return run('Đang trả lời', async (ok) => { await respondRequest(id, act === 'req-yes'); if (!ok()) return; D.msg = act === 'req-yes' ? 'Đã kết nối đồng tu.' : 'Đã bỏ qua lời kết nối.'; });
+  if (act === 'withdraw') return run('Đang rút lại', async (ok) => { await withdrawRequest(id); if (!ok()) return; });
+  if (act === 'meet') return run('Đang gửi lời mời', async (ok) => { const r = await meet(id, b.dataset.k, b.dataset.p || null); if (!ok()) return; D.lastLoad = Date.now(); D.msg = 'Đã gửi lời mời. Lời mời chờ trả lời trong 10 phút.'; D.msgInv = r && r.invite ? r.invite.id : null; });
   if (act === 'yes' || act === 'no') {
     const inv = findInv(id), fromCard = !!b.closest('#dtm');
-    return run(act === 'yes' ? 'Đang nhận lời' : 'Đang trả lời', async () => {
-      await respondMeet(id, act === 'yes'); D.answered.add(id);   // ẩn ngay, không đợi danh sách tải lại
+    return run(act === 'yes' ? 'Đang nhận lời' : 'Đang trả lời', async (ok) => {
+      await respondMeet(id, act === 'yes'); if (!ok()) return; D.answered.add(id);   // ẩn ngay, không đợi danh sách tải lại
       if (act === 'yes' && !(inv && MEET_KINDS[inv.kind] && MEET_KINDS[inv.kind].synced)) ctx.toast('Đã nhận lời.');
     }, fromCard);
   }
-  if (act === 'cancel') return run('Đang hủy lời mời', async () => { await cancelMeet(id); D.hide.add(id); }, !!b.closest('#dtm'));
+  if (act === 'cancel') return run('Đang hủy lời mời', async (ok) => { await cancelMeet(id); if (!ok()) return; D.hide.add(id); }, !!b.closest('#dtm'));
   if (act === 'go') { const inv = findInv(id); if (inv) ctx.go(inv); return; }
   if (act === 'join') { const inv = findInv(id); if (inv) start(inv, now() - inv.start_at); return; }
   if (act === 'hide') { D.hide.add(id); return card(); }
   if (act === 'remove' || act === 'block') {
     if (D.arm !== act) { D.arm = act; return ctx.render(); }
     D.arm = ''; const nm = plainName(D.sel), sel = D.sel;
-    return run(act === 'block' ? 'Đang chặn' : 'Đang hủy kết nối', async () => {
+    return run(act === 'block' ? 'Đang chặn' : 'Đang hủy kết nối', async (ok) => {
       if (act === 'block') await block(sel); else await removeCompanion(sel);
+      if (!ok()) return;
       D.tab = 'list'; D.msg = act === 'block' ? `Đã chặn ${nm}.` : `Đã hủy kết nối với ${nm}.`;
     });
   }
-  if (act === 'report') return run('Đang gửi báo cáo', async () => { await report(D.sel, b.dataset.v); D.tab = 'ban'; D.msg = 'Đã gửi báo cáo. Người kiểm duyệt sẽ xem xét.'; });
-  if (act === 'unblock') return run('Đang bỏ chặn', async () => { await unblock(id); const r = await listBlocks(); D.blocks = (r && r.blocks) || []; });
+  if (act === 'report') return run('Đang gửi báo cáo', async (ok) => { await report(D.sel, b.dataset.v); if (!ok()) return; D.tab = 'ban'; D.msg = 'Đã gửi báo cáo. Người kiểm duyệt sẽ xem xét.'; });
+  if (act === 'unblock') return run('Đang bỏ chặn', async (ok) => { await unblock(id); const r = await listBlocks(); if (ok()) D.blocks = (r && r.blocks) || []; });
 }
 
 /** Ô đánh dấu và ô chữ trong bảng (data-dt) */
 export function dtInput(t) {
+  follow();
   const k = t.dataset.dt;
   if (k === 'q') { D.q = t.value; return; }
   if (k === 'than' || k === 'away') { const sel = D.sel; return run('Đang lưu', async () => { await setCompanion(sel, { [k]: t.checked }); }); }
   if (k in prefs()) {
     const next = { ...prefs(), [k]: t.checked };
-    return run('Đang lưu', async () => {
+    return run('Đang lưu', async (ok) => {
       const r = await pushSocialPrefs({ ...next, open: !!ctx.S.open });
-      D.me = r && r.profile ? r.profile : { ...D.me, settings: { ...(D.me.settings || {}), dong_tu: next } };
+      if (ok()) D.me = r && r.profile ? r.profile : { ...D.me, settings: { ...(D.me.settings || {}), dong_tu: next } };
     });
   }
 }

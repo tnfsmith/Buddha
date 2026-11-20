@@ -41,11 +41,20 @@ function fakeServer(day = 1) {
       visits: [], server_now: now,
     };
   }
-  sv.handle = async (route, me) => {
+  // who: id cố định, hoặc hàm trả về người đang đăng nhập trên trang (null khi đã đăng xuất), cho ca đổi tài khoản
+  sv.handle = async (route, who) => {
     const req = route.request(), u = new URL(req.url()), p = u.pathname, m = req.method(), now = Date.now();
     const json = (b, status = 200) => route.fulfill({ status, contentType: 'application/json', headers: { 'cache-control': 'no-store' }, body: b === null ? '' : JSON.stringify(b) });
     const err = (code, status) => json({ error: { code, message: code } }, status);
     const body = () => { try { return req.postDataJSON() || {}; } catch { return {}; } };
+    const me = typeof who === 'function' ? who() : who;
+    if (p === '/api/auth/get-session') return json(me ? { user: { id: me, isAnonymous: false }, session: {} } : null);
+    if (p === '/api/auth/sign-out') { if (typeof who === 'function') who(null); return json({ success: true }); }
+    if (p === '/api/auth/sign-in/anonymous') { const id = typeof who === 'function' ? who('next') : me; return json({ token: 't', user: { id, isAnonymous: true } }); }
+    if (p === '/api/auth/recovery-code/status') return json({ has_code: true, created_at: now });
+    if (p === '/api/auth/list-sessions') return json([{}]);
+    if (p === '/api/auth/passkey/list-user-passkeys') return json([]);
+    if (p.startsWith('/api/v1/') && !me) return err('unauthorized', 401);
     if (p.startsWith('/api/v1/')) sv.log.push(`${me.slice(2, 5)} ${m} ${p.slice(7)}`);
     if (p === '/api/v1/me') {
       return json({ user: { id: me, isAnonymous: false }, practice: 1, profile: prof(me), journey: { ...journey }, totals: { duc: 0, thien: 0, tue: 0, all: 0 },
@@ -59,7 +68,7 @@ function fakeServer(day = 1) {
     if (p === '/api/v1/companions' && m === 'GET') return json(list(me, now));
     if (p === '/api/v1/companions/link' && m === 'POST') {
       let k = Object.values(sv.links).find((l) => l.owner === me && l.uses_left > 0);
-      if (!k || body().renew) { if (k) delete sv.links[k.code]; k = { code: 'K7M2QX9A', owner: me, uses_left: 5, expires_at: now + 7 * 86_400_000 }; sv.links[k.code] = k; }
+      if (!k || body().renew) { if (k) delete sv.links[k.code]; k = { code: me === U.a.id ? 'K7M2QX9A' : 'P3R8TW6H', owner: me, uses_left: 5, expires_at: now + 7 * 86_400_000 }; sv.links[k.code] = k; }
       return json({ code: k.code, uses_left: k.uses_left, expires_at: k.expires_at });
     }
     let r = /^\/api\/v1\/companions\/link\/([^/]+)(\/accept)?$/.exec(p);
@@ -114,10 +123,10 @@ function fakeServer(day = 1) {
   return sv;
 }
 
-async function device(browser, sv, who, viewport, day = 1) {
+async function device(browser, sv, who, viewport, day = 1, session = null) {
   const ctx = await browser.newContext({ viewport, serviceWorkers: 'block', isMobile: viewport.width <= 820, hasTouch: viewport.width <= 820 });
   const me = sv.U[who];
-  await ctx.route('**/api/**', (r) => sv.handle(r, me.id));
+  await ctx.route('**/api/**', (r) => sv.handle(r, session || me.id));
   await ctx.addInitScript(({ LOOK, me, day }) => {
     if (localStorage.getItem('vandao.seeded')) return; localStorage.setItem('vandao.seeded', '1');
     localStorage.setItem('vandao.v1', JSON.stringify({ v: 1, day, lastDate: null, done: {}, totals: { duc: 0, thien: 0, tue: 0 }, sacca: 0, sessions: 0, completed: false, open: false, name: me.tinh_danh, look: LOOK, seed: 1 }));
@@ -261,5 +270,35 @@ test('quyền riêng tư và chế độ Cổng Vân Môn đồng bộ lên hồ
   await P(A).locator('[data-act="gate"]').click();
   await slow.poll(() => sv.island[sv.U.a.id]?.open).toBe(true);
   expect(sv.settings[sv.U.a.id].dong_tu.hien_ngay).toBe(false);   // đổi cổng không ghi đè quyền riêng tư
+  expect(A.errs).toEqual([]);
+});
+
+test('đổi tài khoản trên cùng trang: mã mời và dữ liệu của người trước không lọt sang người sau', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const sv = fakeServer();
+  // A đang đăng nhập; đăng xuất thì không còn phiên; «Giữ hành trình» lần sau tạo phiên của B
+  let cur = sv.U.a.id;
+  const session = (v) => { if (v === null) cur = null; else if (v === 'next') cur = sv.U.b.id; return cur; };
+  const A = await device(browser, sv, 'a', { width: 1280, height: 800 }, 1, session);
+  await slow(A.locator('#dt')).toBeVisible();
+  await openList(A);
+  await P(A).locator('[data-act="dt-tab"][data-v="moi"]').click();
+  await slow(P(A).locator('[data-dt-code]')).toHaveText('K7M2-QX9A');
+  await P(A).locator('[data-act="dt-tab"][data-v="list"]').click();
+  await closeView(A);
+  // Đăng xuất (bấm hai lần) rồi giữ hành trình thành tài khoản B, không tải lại trang
+  await P(A).locator('[data-act="acct-open"]').first().click();
+  await slow(P(A).locator('[data-act="acct-out"]')).toBeVisible();
+  await P(A).locator('[data-act="acct-out"]').click();
+  await P(A).locator('[data-act="acct-out"]').click();
+  await slow(A.locator('#dt')).toBeHidden();
+  await slow(P(A).locator('[data-act="acct-keep"]')).toBeVisible();
+  await P(A).locator('[data-act="acct-keep"]').click();
+  await slow(A.locator('#dt')).toBeVisible();
+  expect(await A.evaluate(() => performance.getEntriesByType('navigation')[0].type)).not.toBe('reload');
+  await openList(A);
+  await P(A).locator('[data-act="dt-tab"][data-v="moi"]').click();
+  await slow(P(A).locator('[data-dt-code]')).toHaveText('P3R8-TW6H');   // mã của B, không dùng lại mã của A
+  expect(Object.values(sv.links).map((k) => k.owner).sort()).toEqual([sv.U.a.id, sv.U.b.id].sort());
   expect(A.errs).toEqual([]);
 });
