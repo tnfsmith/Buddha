@@ -2,8 +2,10 @@
 // Nghiệm thu: tìm đúng «Tịnh danh · mã» (người gửi không nhận tín hiệu từ chối), kết nối bằng liên kết mời, lời mời cùng ngồi thiền
 // ẩn khi người nhận đang thiền và hiện lại sau thời thiền, đếm ngược chung theo giờ máy chủ rồi cả hai cùng bắt đầu.
 import { test, expect } from '@playwright/test';
+import { closeContextsAfterEach } from './hooks.js';
 import { slow, LEAD, fakeServer, device, P, M, badge, relist, listUntil, openList, closeView, secs } from './dong-tu-fake.js';
 
+closeContextsAfterEach();
 test.use({ serviceWorkers: 'block' });
 test.skip(!!process.env.E2E_BASE_URL, 'máy chủ giả lập chỉ chạy với bản dựng cục bộ');
 

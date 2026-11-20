@@ -2,8 +2,10 @@
 // ngang tòa sen, cao hơn hội chúng; nhãn «Tịnh danh · mã»; góc Cùng ngồi / Toàn cảnh, xoay chậm 360°; máy quay
 // không lên quá tầm mắt Tôn tượng; số lệnh vẽ vẫn trong ngân sách §12.2.
 import { test, expect } from '@playwright/test';
+import { closeContextsAfterEach } from './hooks.js';
 import { slow, fakeServer, device, M } from './dong-tu-fake.js';
 
+closeContextsAfterEach();
 test.use({ serviceWorkers: 'block' });
 test.skip(!!process.env.E2E_BASE_URL, 'máy chủ giả lập chỉ chạy với bản dựng cục bộ');
 const SHOTS = !!process.env.DT_SHOTS;   // DT_SHOTS=1: lưu ảnh để xem bằng mắt (không chạy trong CI)
