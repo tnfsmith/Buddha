@@ -14,10 +14,11 @@ export function fakeServer(day = 1) {
     a: { id: 'u-tue-thai-0001', tinh_danh: 'Tuệ Thái', tag: '5696' },
     b: { id: 'u-minh-an-00002', tinh_danh: 'Minh An', tag: '2210' },
   };
-  // days: ngày hành trình bạn cho hiện (mặc định 1); blank: người chưa tạo nhân vật (#151 §7)
-  const sv = { U, settings: {}, island: {}, presence: {}, links: {}, pairs: [], requests: [], invites: [], log: [], n: 0, days: {}, blank: new Set() };
+  // days: ngày hành trình bạn cho hiện (mặc định 1); blank: người chưa tạo nhân vật (#151 §7);
+  // noLook: hồ sơ máy chủ có Tịnh danh nhưng chưa có hình dáng; hold[đường dẫn]: Promise thì yêu cầu đó chờ đến khi nó xong (máy chủ chậm)
+  const sv = { U, settings: {}, island: {}, presence: {}, links: {}, pairs: [], requests: [], invites: [], log: [], n: 0, days: {}, blank: new Set(), noLook: new Set(), hold: {}, profiles: [] };
   const byId = (id) => Object.values(U).find((u) => u.id === id);
-  const prof = (id) => ({ ...byId(id), ...(sv.blank.has(id) ? { tinh_danh: null } : {}), look: sv.blank.has(id) ? {} : LOOK, settings: sv.settings[id] || {}, island: sv.island[id] || {}, tz: 'Asia/Ho_Chi_Minh', visibility: 'dong_tu', pref_seat: null, rev: 3 });
+  const prof = (id) => ({ ...byId(id), ...(sv.blank.has(id) ? { tinh_danh: null } : {}), look: sv.blank.has(id) || sv.noLook.has(id) ? {} : LOOK, settings: sv.settings[id] || {}, island: sv.island[id] || {}, tz: 'Asia/Ho_Chi_Minh', visibility: 'dong_tu', pref_seat: null, rev: 3 });
   const journey = { program: 'so-nhap-49', cycle: 1, day, started_on: ymd(), last_done_on: null, completed_at: null, sacca_count: 0, sessions_done: 0, sermons_done: 0, rev: 1 };
   const pairOf = (a, b) => sv.pairs.find((p) => (p.a === a && p.b === b) || (p.a === b && p.b === a));
   const live = (inv, now) => !['het_han', 'xong', 'tu_choi', 'huy'].includes(meetPhase(inv, now).phase);
@@ -53,17 +54,18 @@ export function fakeServer(day = 1) {
     if (p === '/api/auth/passkey/list-user-passkeys') return json([]);
     if (p.startsWith('/api/v1/') && !me) return err('unauthorized', 401);
     if (p.startsWith('/api/v1/')) sv.log.push(`${me.slice(2, 5)} ${m} ${p.slice(7)}`);
+    if (sv.hold[p]) await sv.hold[p];
     if (p === '/api/v1/me') {
       return json({ user: { id: me, isAnonymous: false }, practice: 1, profile: prof(me), journey: { ...journey }, totals: { duc: 0, thien: 0, tue: 0, all: 0 },
         unlocked_zones: {}, guest_purge_after: null, dong_tu: 1, server_now: now,
         social: { requests: incomingReq(me, now).length, invites: sv.invites.filter((i) => i.to === me && meetPhase(i, now).phase === 'cho').length } });
     }
     if (p === '/api/v1/sync') return json({ applied: (body().ops || []).map((o) => o.id), rejected: [], state: { profile: prof(me), journey: { ...journey }, totals: { duc: 0, thien: 0, tue: 0, all: 0 }, unlocked_zones: {}, server_now: now, practice: 1 } });
-    if (p === '/api/v1/profile') { const b = body(); if (b.settings) sv.settings[me] = { ...(sv.settings[me] || {}), ...b.settings }; if (b.island) sv.island[me] = b.island; return json({ success: true, profile: prof(me) }); }
+    if (p === '/api/v1/profile') { const b = body(); sv.profiles.push(b); if (b.look && Object.keys(b.look).length) sv.noLook.delete(me); if (b.tinh_danh) sv.blank.delete(me); if (b.settings) sv.settings[me] = { ...(sv.settings[me] || {}), ...b.settings }; if (b.island) sv.island[me] = b.island; return json({ success: true, profile: prof(me) }); }
     if (p === '/api/v1/content') return json({ items: [] });
     if (p === '/api/v1/practice/profile') return json({ profile: null, rev: 0 });
     if (p === '/api/v1/companions' && m === 'GET') return json(list(me, now));
-    if (['/api/v1/companions/link', '/api/v1/companions/request', '/api/v1/meet'].includes(p) && m === 'POST' && sv.blank.has(me)) return err('need_character', 409);   // hợp đồng §11
+    if (['/api/v1/companions/link', '/api/v1/companions/request', '/api/v1/meet'].includes(p) && m === 'POST' && (sv.blank.has(me) || sv.noLook.has(me))) return err('need_character', 409);   // hợp đồng §11
     if (p === '/api/v1/companions/link' && m === 'POST') {
       let k = Object.values(sv.links).find((l) => l.owner === me && l.uses_left > 0);
       if (!k || body().renew) { if (k) delete sv.links[k.code]; k = { code: me === U.a.id ? 'K7M2QX9A' : 'P3R8TW6H', owner: me, uses_left: 5, expires_at: now + 7 * 86_400_000 }; sv.links[k.code] = k; }

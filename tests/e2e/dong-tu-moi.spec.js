@@ -106,3 +106,55 @@ test('danh sách: tên và ID, Xem nhanh (ngày, phân khu đã mở, cổng), c
   await slow.poll(() => sv.invites.map((i) => `${i.kind}@${i.place}`)).toEqual(['thien@dtd']);
   expect(A.errs).toEqual([]);
 });
+
+/** Cho một đường dẫn API chờ đến khi gọi hàm trả về (máy chủ chậm) */
+const holdApi = (sv, path) => { let go; sv.hold[path] = new Promise((r) => { go = r; }); return () => { delete sv.hold[path]; go(); }; };
+
+test('hồ sơ máy chủ tải chậm: nút mời khóa đến khi nhận Tịnh danh và hình dáng đã lưu của đúng tài khoản', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const sv = fakeServer(), { a, b } = sv.U;
+  sv.pairs.push({ a: b.id, b: a.id, sa: { than: false, away: false }, sb: { than: false, away: false }, at: Date.now() - 86_400_000 });
+  sv.presence[b.id] = { state: 'online', updated_at: Date.now() };
+  const A = await device(browser, sv, 'a', { width: 1280, height: 800 });
+  await slow(A.locator('#dt')).toBeVisible();
+  const release = holdApi(sv, '/api/v1/me');
+  await openList(A);
+  const moi = P(A).locator('[data-act="dt-tab"][data-v="moi"]');
+  await slow(P(A)).toContainText('Đang kiểm tra nhân vật đã lưu…');
+  await slow(P(A)).toContainText('Minh An');
+  await expect(moi).toBeDisabled();
+  await expect(P(A).locator('[data-act="dt-tab"][data-v="tim"]')).toBeDisabled();
+  await expect(P(A).getByRole('button', { name: 'Mời cùng ngồi thiền' })).toBeDisabled();
+  expect(Object.keys(sv.links)).toHaveLength(0);
+  release();
+  await slow(moi).toBeEnabled();
+  await expect(P(A)).not.toContainText('Đang kiểm tra nhân vật đã lưu…');
+  await expect(P(A).getByRole('button', { name: 'Mời cùng ngồi thiền' })).toBeEnabled();
+  await moi.click();
+  await slow(P(A).locator('[data-dt-code]')).toHaveText('K7M2-QX9A');
+  expect(A.errs).toEqual([]);
+});
+
+test('hồ sơ máy chủ có Tịnh danh nhưng chưa có hình dáng: «Lưu nhân vật» chờ chính yêu cầu ghi rồi mới mở nút mời', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const sv = fakeServer(), { a } = sv.U;
+  sv.noLook.add(a.id);
+  const A = await device(browser, sv, 'a', { width: 390, height: 760 });
+  await slow(A.locator('#dt')).toBeVisible();
+  await openList(A);
+  const moi = P(A).locator('[data-act="dt-tab"][data-v="moi"]');
+  await slow(P(A)).toContainText('Nhân vật chưa lưu lên máy chủ.');
+  await expect(moi).toBeDisabled();
+  const release = holdApi(sv, '/api/v1/profile');
+  await P(A).locator('[data-act="dt-save"]').click();
+  await slow(P(A)).toContainText('Đang lưu nhân vật…');
+  await expect(moi).toBeDisabled();   // chưa có phản hồi ghi hồ sơ thì chưa mở
+  release();
+  await slow(moi).toBeEnabled();
+  const saved = sv.profiles.find((x) => x.look);
+  expect(saved.tinh_danh).toBe(a.tinh_danh);
+  expect(Object.keys(saved.look).length).toBeGreaterThan(0);
+  await moi.click();
+  await slow(P(A).locator('[data-dt-code]')).toHaveText('K7M2-QX9A');
+  expect(A.errs).toEqual([]);
+});

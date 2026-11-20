@@ -771,7 +771,6 @@ dtInit({
   // #151: Đài Đồng Tu trong Đại Thiền Đường; mình mang Tịnh danh và hình dáng đang dùng
   dais: (people) => { if (!world) return; if (world.setDais(people.map((p) => (p.me ? { ...p, name: S.name || 'Bạn', look: S.look } : p)))) daisCam(); },
   creator: () => openCreator(),   // #151: phải tạo và lưu nhân vật trước khi mời bạn
-  saveProfile: () => { recordProfile(S); return syncNow(true); },
   show: () => { if (U.view === 'creator') { closeCreator(false); if (world) world.setMode('island'); } if (U.view !== 'dongtu') U.back = U.view; U.view = 'dongtu'; document.body.classList.remove('pmin'); panel.scrollTop = 0; render(); dtMark(); },
   close: () => { U.view = ['home', 'zone', 'board', 'friend'].includes(U.back) && (U.back !== 'zone' || U.zone) ? U.back : 'home'; render(); dtMark(); },
   viewOpen: () => U.view === 'dongtu',
