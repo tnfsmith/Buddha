@@ -105,3 +105,41 @@ it('cron dọn D1 rồi hủy index, gọi shard đúng và không phát lại m
   expect(matched.next_at).toBeGreaterThan(now);
   expect(events.find((e) => e.cancelled === gone.user.id)).toMatchObject({ remaining: null });
 });
+
+it('cron sửa hơn 50 lịch quá hạn trong hạn mức truy vấn của D1 Free', async () => {
+  const { token, user } = await guest();
+  expect((await req(token, 'POST', await subscription())).status).toBe(200);
+  const now = Date.parse('2026-11-20T19:17:00Z');
+  const due = now - 3_600_000;
+  const ids = Array.from({ length: 64 }, () => crypto.randomUUID());
+  await env.DB.batch(ids.map((id) => env.DB.prepare(`INSERT INTO reminder
+    (id, user_id, kind, local_hm, channel, next_at, active, created_at)
+    VALUES (?, ?, 'thien', '06:00', 'push', ?, 1, ?)`)
+    .bind(id, user.id, due, due)));
+
+  let calls = 0;
+  const request = async (run) => {
+    if (++calls > 50) throw new Error('D1 query limit');
+    return run();
+  };
+  const track = (statement) => ({
+    statement,
+    bind: (...values) => track(statement.bind(...values)),
+    all: () => request(() => statement.all()),
+    first: () => request(() => statement.first()),
+  });
+  const DB = {
+    prepare: (sql) => track(env.DB.prepare(sql)),
+    batch: (statements) => request(() => env.DB.batch(statements.map((entry) => entry.statement))),
+  };
+  const events = [];
+  const result = await runCron({ ...fakeClock(events), DB }, now);
+  expect(result.reminders.failures).toBe(0);
+  expect(calls).toBeLessThanOrEqual(50);
+  const scheduled = events.filter((event) => event.user_id === user.id);
+  expect(scheduled.map((event) => event.reminder_id).sort()).toEqual(ids.sort());
+  expect(scheduled.every((event) => event.next_at > now)).toBe(true);
+  const remaining = await env.DB.prepare('SELECT COUNT(*) AS n FROM reminder WHERE user_id = ? AND next_at = ?')
+    .bind(user.id, due).first();
+  expect(remaining.n).toBe(0);
+});
