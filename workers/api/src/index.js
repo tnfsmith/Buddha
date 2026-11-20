@@ -73,8 +73,13 @@ app.route('/moi', inviteCard);
 
 // Chuyển tiếp các request tĩnh không thuộc /api/* hoặc /media/* cho Static Assets (apps/web)
 app.all('*', async (c) => {
+  // Static Assets đã phục vụ tệp có thật trước Worker. Tệp thiếu không được thay bằng trang SPA.
+  if (c.req.path.startsWith('/assets/')) return c.text('Not Found', 404, { 'Cache-Control': 'no-store' });
   if (c.env?.ASSETS && typeof c.env.ASSETS.fetch === 'function') {
-    return c.env.ASSETS.fetch(c.req.raw);
+    const response = await c.env.ASSETS.fetch(c.req.raw);
+    if (response.status !== 404 || !['GET', 'HEAD'].includes(c.req.method)) return response;
+    await response.body?.cancel();
+    return c.env.ASSETS.fetch(new Request(new URL('/', c.req.url), { method: c.req.method }));
   }
   return c.text('Not Found', 404);
 });

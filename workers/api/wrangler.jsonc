@@ -9,7 +9,7 @@
     "directory": "../../apps/web/public",
     "binding": "ASSETS",
     "html_handling": "auto-trailing-slash",
-    "not_found_handling": "single-page-application",
+    "not_found_handling": "none",
     "run_worker_first": ["/api/*", "/media/*", "/moi/*", "/ws/*", "/.well-known/*"]
   },
   "routes": [
@@ -56,7 +56,7 @@
         "directory": "../../apps/web/public",
         "binding": "ASSETS",
         "html_handling": "auto-trailing-slash",
-        "not_found_handling": "single-page-application",
+        "not_found_handling": "none",
         "run_worker_first": ["/api/*", "/media/*", "/moi/*", "/ws/*", "/.well-known/*"]
       },
       "d1_databases": [
