@@ -21,11 +21,15 @@ import { dtInit, dtView, dtAct, dtInput, dtOpen, dtBadge, dtGateLine, dtSyncOpen
 import { dongTu } from './net/dong-tu.js';
 
 
-// #151: liên kết mời chia sẻ ra ngoài dạng /?ban=MÃ (Facebook có thể bỏ phần sau #). Đổi về #ban= trước khi đọc hash và trước khi
-// net/dong-tu.js nhận mã (lúc khởi động tài khoản), giữ các tham số hash khác nếu có
+// #151/#160: liên kết mời chia sẻ ra ngoài dạng /moi/MÃ[?d=1] (hợp đồng §12) hoặc /?ban=MÃ (dạng cũ; Facebook có thể bỏ phần sau #).
+// Đổi về /#ban= trước khi đọc hash và trước khi net/dong-tu.js nhận mã (lúc khởi động tài khoản), giữ các tham số hash khác nếu có
 {
-  const q = new URLSearchParams(location.search), b = q.get('ban');
-  if (b) { q.delete('ban'); const rest = q.toString(), h = location.hash.slice(1); history.replaceState(null, '', location.pathname + (rest ? '?' + rest : '') + '#' + (h ? h + '&' : '') + 'ban=' + encodeURIComponent(b)); }
+  const q = new URLSearchParams(location.search), m = /^\/moi\/([^/]+)\/?$/.exec(location.pathname), b = m ? m[1] : q.get('ban');
+  if (b) {
+    q.delete('ban'); if (m) q.delete('d');
+    const rest = q.toString(), h = location.hash.slice(1), code = m ? b : encodeURIComponent(b);
+    history.replaceState(null, '', (m ? '/' : location.pathname) + (rest ? '?' + rest : '') + '#' + (h ? h + '&' : '') + 'ban=' + code);
+  }
 }
 
 // ───────── Lưu trạng thái trên máy: xem state.js ─────────

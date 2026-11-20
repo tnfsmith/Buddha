@@ -1,4 +1,4 @@
-// #151 (phần không cần API mới): chia sẻ mã mời lên Facebook / sao chép trên máy tính và điện thoại, liên kết dạng /?ban=,
+// #151 (phần không cần API mới): chia sẻ mã mời lên Facebook / sao chép trên máy tính và điện thoại, liên kết dạng /moi/MÃ (#160, hợp đồng §12) và /?ban= cũ,
 // điều kiện «tạo và lưu nhân vật trước khi mời», danh sách có tên và ID, «Xem nhanh» tiến trình bạn, các kiểu mời theo canMeet.
 import { test, expect } from '@playwright/test';
 import { closeContextsAfterEach } from './hooks.js';
@@ -12,7 +12,7 @@ const SHOTS = !!process.env.DT_SHOTS;   // DT_SHOTS=1: lưu ảnh để xem bằ
 const catchOpen = (page) => page.evaluate(() => { window.__opened = []; window.open = (u, n, f) => { window.__opened.push([u, n, f]); return null; }; });
 
 for (const [name, vp] of [['máy tính', { width: 1280, height: 800 }], ['điện thoại', { width: 390, height: 760 }]]) {
-  test(`${name}: mã mời, Sao chép (kèm tiến trình) và Facebook dùng liên kết /?ban=`, async ({ browser }) => {
+  test(`${name}: mã mời, Sao chép (kèm tiến trình) và Facebook dùng liên kết /moi/MÃ, ?d=1 khi kèm tiến trình`, async ({ browser }) => {
     test.setTimeout(240_000);
     const sv = fakeServer(31);
     const A = await device(browser, sv, 'a', vp, 31);
@@ -21,17 +21,19 @@ for (const [name, vp] of [['máy tính', { width: 1280, height: 800 }], ['điệ
     await openList(A);
     await P(A).locator('[data-act="dt-tab"][data-v="moi"]').click();
     await slow(P(A).locator('[data-dt-code]')).toHaveText('K7M2-QX9A');
-    const url = new URL(BASE).origin + '/?ban=K7M2QX9A';
+    const url = new URL(BASE).origin + '/moi/K7M2QX9A', urlD = url + '?d=1';
+    await expect(P(A)).toContainText('Ai có liên kết cũng thấy Tịnh danh · mã của bạn trên thẻ xem trước.');
+    await expect(P(A).locator('[data-dt="kem"]')).not.toBeChecked();   // «Kèm tiến trình» tắt mặc định (§12)
     await P(A).locator('[data-act="dt-copy"]').click();
     await slow(P(A)).toContainText('Đã chép lời mời.');
     expect(await A.evaluate(() => navigator.clipboard.readText())).toBe(`Mời bạn cùng tu tập với mình trên Vân Đạo: ${url}`);
     await P(A).locator('[data-dt="kem"]').check();
     await P(A).locator('[data-act="dt-copy"]').click();
-    await slow.poll(() => A.evaluate(() => navigator.clipboard.readText())).toBe(`Mình đang ở ngày 31 của hành trình 49 ngày trên Vân Đạo. Mời bạn cùng tu tập với mình trên Vân Đạo: ${url}`);
+    await slow.poll(() => A.evaluate(() => navigator.clipboard.readText())).toBe(`Mình đang ở ngày 31 của hành trình 49 ngày trên Vân Đạo. Mời bạn cùng tu tập với mình trên Vân Đạo: ${urlD}`);
     await catchOpen(A);
     await P(A).locator('[data-act="dt-fb"]').click();
     const [[u, n, f]] = await A.evaluate(() => window.__opened);
-    expect(u).toBe('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url));
+    expect(u).toBe('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(urlD));
     if (vp.width > 820) { expect(n).toBe('vandao-fb'); expect(f).toContain('width=600'); } else expect(n).toBe('_blank');
     // Facebook đọc thẻ xem trước chung của trang (không theo mã, hợp đồng §12)
     await expect(A.locator('meta[property="og:title"]')).toHaveAttribute('content', 'Mời bạn tu cùng trên Vân Đạo');
@@ -41,17 +43,21 @@ for (const [name, vp] of [['máy tính', { width: 1280, height: 800 }], ['điệ
   });
 }
 
-test('mở liên kết /?ban=MÃ (dạng chia sẻ Facebook): ứng dụng đổi về #ban= và kết nối hai bạn', async ({ browser }) => {
-  test.setTimeout(240_000);
-  const sv = fakeServer();
-  sv.links.K7M2QX9A = { code: 'K7M2QX9A', owner: sv.U.a.id, uses_left: 5, expires_at: Date.now() + 86_400_000 };
-  const B = await device(browser, sv, 'b', { width: 390, height: 760 });
-  await B.goto(BASE + '?ban=K7M2QX9A#q=0&snap=1');
-  await B.waitForFunction(() => window.__app?.world?.renderer, null, { timeout: 150_000 });
-  await slow(B.locator('#toast')).toContainText('Đã kết nối đồng tu với Tuệ Thái · 5696');
-  expect(new URL(B.url()).search).toBe('');
-  expect(sv.pairs).toHaveLength(1);
-});
+for (const [form, path] of [['/moi/MÃ?d=1 (liên kết mới, §12)', 'moi/K7M2QX9A?d=1'], ['/?ban=MÃ (dạng cũ)', '?ban=K7M2QX9A']]) {
+  test(`mở liên kết ${form}: ứng dụng về trang gốc, đổi sang #ban= và kết nối hai bạn`, async ({ browser }) => {
+    test.setTimeout(240_000);
+    const sv = fakeServer();
+    sv.links.K7M2QX9A = { code: 'K7M2QX9A', owner: sv.U.a.id, uses_left: 5, expires_at: Date.now() + 86_400_000 };
+    const B = await device(browser, sv, 'b', { width: 390, height: 760 });
+    await B.goto(BASE + path + '#q=0&snap=1');
+    await B.waitForFunction(() => window.__app?.world?.renderer, null, { timeout: 150_000 });
+    await slow(B.locator('#toast')).toContainText('Đã kết nối đồng tu với Tuệ Thái · 5696');
+    const u = new URL(B.url());
+    expect([u.pathname, u.search]).toEqual([new URL(BASE).pathname, '']);
+    expect(sv.pairs).toHaveLength(1);
+    expect(B.errs).toEqual([]);
+  });
+}
 
 test('chưa tạo nhân vật: không mời, không tìm được; nhận lời mời của người khác vẫn được', async ({ browser }) => {
   test.setTimeout(240_000);
