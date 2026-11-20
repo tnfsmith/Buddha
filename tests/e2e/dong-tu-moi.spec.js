@@ -188,6 +188,15 @@ test('Xem nhanh tiến trình (§10.2): bạn bật chia sẻ thì thấy số t
   await slow(pk).toContainText('Đã ngồi 12 thời thiền · đã nghe 5 bài giảng.');
   await expect(pk).toContainText('Tu tập gần nhất: hôm qua.');
   await expect(pk).not.toContainText('Kusala');
+  // bạn tắt chia sẻ trong lúc lượt tải cũ (200) còn chờ: 404 mới về trước, 200 cũ về sau không được ghi đè
+  let late; sv.progLag = new Promise((r) => { late = r; });
+  await row.locator('[data-act="dt-peek"]').click(); await row.locator('[data-act="dt-peek"]').click();   // lượt 1: đã tính 200, về muộn
+  sv.settings[b.id] = { dong_tu: { chia_se_tien_trinh: false } };
+  await row.locator('[data-act="dt-peek"]').click(); await row.locator('[data-act="dt-peek"]').click();   // lượt 2: 404 ngay
+  await slow(pk).toContainText('Bạn ấy chưa bật chia sẻ tiến trình.');
+  late(); await A.waitForTimeout(800);
+  await expect(pk).toContainText('Bạn ấy chưa bật chia sẻ tiến trình.');
+  await expect(pk).not.toContainText('thời thiền ·');
   // quyền riêng tư của mình: mặc định tắt; bật thì PATCH chỉ có khóa chia_se_tien_trinh
   await P(A).locator('[data-act="dt-tab"][data-v="rieng"]').click();
   const box = P(A).locator('[data-dt="chia_se_tien_trinh"]');

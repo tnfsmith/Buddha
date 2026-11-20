@@ -101,7 +101,10 @@ export function fakeServer(day = 1) {
     r = /^\/api\/v1\/companions\/([^/]+)\/progress$/.exec(p);   // §10.2: chỉ khi đã kết nối và bạn bật chia sẻ; còn lại 404 cùng dạng
     if (r) {
       const o = decodeURIComponent(r[1]);
-      if (!pairOf(me, o) || shared(o).chia_se_tien_trinh !== true) return err('not_found', 404);
+      const ok = pairOf(me, o) && shared(o).chia_se_tien_trinh === true;
+      // progLag: Promise thì phản hồi đã tính xong của lượt này về muộn (mô phỏng 200 cũ tới sau 404 mới)
+      const lag = sv.progLag; sv.progLag = null; if (lag) await lag;
+      if (!ok) return err('not_found', 404);
       return json({ cycle: 1, day: sv.days[o] ?? 1, completed: false, sessions_done: 12, sermons_done: 5, last_active: 'hom_qua' });
     }
     if (p === '/api/v1/presence') { sv.presence[me] = { state: body().state, updated_at: now }; return json(null, 204); }

@@ -24,7 +24,7 @@ const D = { uid: null, tab: 'list', pend: null };
 /** Mọi trạng thái riêng của một tài khoản. Đổi người (đăng xuất, đăng nhập người khác) thì xóa sạch, kể cả mã mời đã tạo. */
 function resetFor(uid) {
   Object.assign(D, {
-    uid, tab: D.tab === 'loi' ? 'loi' : 'list', sel: null, busy: '', err: '', msg: '', arm: '', link: null, me: null, blocks: null, q: '', peek: null, prog: new Map(), kem: false,
+    uid, tab: D.tab === 'loi' ? 'loi' : 'list', sel: null, busy: '', err: '', msg: '', arm: '', link: null, me: null, blocks: null, q: '', peek: null, prog: new Map(), progReq: new Map(), kem: false,
     skew: 0, at: 0, lastLoad: 0, msgInv: null, cardKey: null, viewKey: '', openSynced: false,
     quietSeen: new Set(), chimed: new Set(), watch: new Set(), joined: new Set(), hide: new Set(), answered: new Set(),
   });
@@ -191,12 +191,15 @@ function row(c, I) {
  */
 const LAST = { hom_nay: 'hôm nay', hom_qua: 'hôm qua', trong_tuan: 'trong tuần này', lau_hon: 'hơn một tuần trước' };
 async function loadProg(id) {
-  const uid = D.uid, had = D.prog.get(id);
+  // Mỗi lần tải có thẻ riêng theo bạn: chỉ phản hồi của lần tải MỚI NHẤT được ghi, để 200 cũ tới muộn không ghi đè 404 mới
+  // (bạn vừa tắt chia sẻ thì số liệu không hiện lại)
+  const uid = D.uid, had = D.prog.get(id), tok = {};
+  D.progReq.set(id, tok);
   if (!had || had.st !== 'ok') D.prog.set(id, { st: 'loading' });   // mở lại thì tải mới, giữ số cũ trong lúc chờ
   let r;
   try { const v = await api(`/api/v1/companions/${encodeURIComponent(id)}/progress`); r = v && typeof v === 'object' ? { st: 'ok', v } : { st: 'err' }; }
   catch (e) { r = { st: e && e.status === 404 ? 'none' : 'err' }; }
-  if (!still(uid)) return;
+  if (!still(uid) || D.progReq.get(id) !== tok) return;
   D.prog.set(id, r); if (ctx.viewOpen()) ctx.render();
 }
 function progLines(id) {
