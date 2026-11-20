@@ -42,6 +42,12 @@ Chủ dự án merge từng PR schema sau CI đạt; `deploy.yml` tuần tự h�
 
 Đây là phương án tuần tự hóa cho 0008 theo #33 cập nhật lần 2, **chưa hoàn thành cô lập dữ liệu #35**: preview không có migration vẫn dùng D1/KV staging. Không thử tài khoản/người dùng thật trên preview. Chưa cấp phát hay cleanup tài nguyên Cloudflare riêng; tác vụ đó giữ mở. Không dùng kết quả cổng này để tuyên bố hai preview đã có DB/KV độc lập.
 
+### Pilot D1/KV riêng theo PR (#35)
+
+- Cấp trước một D1 tên `vandao-core-preview-pr-N` và một KV tên `vandao-config-preview-pr-N` trong tài khoản staging. Trong biến repo `BUDDHA_PREVIEW_BINDINGS`, đặt đối tượng JSON theo số PR với dạng `{"142":{"d1":"<UUID của D1>","kv":"<ID KV>"}}`. Mỗi D1/KV chỉ thuộc một PR và cần bắt đầu từ dữ liệu thử. Giới hạn D1 Free theo tài khoản cần tính cả staging và các DB hiện có.
+- Workflow đọc hai tài nguyên để đối chiếu ID/tên trên Cloudflare trước khi áp migration. Token staging cần đọc KV, đọc và ghi D1 thử, và quyền upload version của Worker staging. Cấu hình tạm chỉ chứa DB/KV riêng đã xác nhận. Workflow áp migration, nạp danh mục và tải version cùng alias `pr-N`. R2 bài giảng staging tiếp tục phục vụ nội dung công khai.
+- Trong pilot, PR chưa có cặp riêng giữ cổng chuyển tiếp ở trên. Sau khi nghiệm thu hai PR cùng lúc, đặt `BUDDHA_PREVIEW_REQUIRE_ISOLATION=true` để mọi PR chưa có cặp chỉ chạy CI cục bộ. Gỡ ánh xạ sau khi PR đóng. Chỉ thu hồi tài nguyên thử khi biết rõ alias không còn được sử dụng và xác nhận đúng ID đã cấp cho PR. Workflow không tự cấp phát hoặc xóa D1/KV.
+
 ## Secret của Worker (đặt một lần, không nằm trong repo)
 
 | Secret | Bắt buộc | Dùng cho | Đặt bằng |
@@ -85,7 +91,7 @@ Chủ dự án merge từng PR schema sau CI đạt; `deploy.yml` tuần tự h�
 - **Analytics Engine** (`vd_metrics` production, `vd_metrics_staging` staging; binding `METRICS`): `apps/web/src/net/metrics.js` lắng nghe `vandao:perf` (world.js phát mỗi 10 giây) và lỗi JS, gửi tóm tắt mỗi 5 phút hoặc khi rời trang tới `POST /api/v1/metrics`.
   - Mỗi lần gửi tối đa 1 điểm hiệu năng (FPS p50/p10, lệnh vẽ, tam giác, mức chất lượng, DPR) và 10 điểm lỗi.
   - Chỉ kèm nhóm máy thô: điện thoại, máy tính bảng hoặc máy tính; bậc số lõi; bậc bộ nhớ.
-  - Không cookie, không IP, không User-Agent. Thông điệp lỗi đã lược URL, email và chuỗi số. Tắt khi trình duyệt bật Do Not Track hoặc GPC.
+  - Không cookie, không IP, không User-Agent. Worker chỉ ghi nhóm máy, cảnh, nguồn và loại lỗi theo danh sách cố định. Nội dung thông điệp lỗi không được lưu vào Analytics Engine. Trình duyệt tắt gửi số liệu khi bật Do Not Track hoặc GPC.
   - Gói Free cho 100.000 điểm/ngày. Truy vấn bằng SQL API của Analytics Engine, ví dụ `SELECT blob3 AS nhom, quantileWeighted(0.5)(double1, 1) AS fps FROM vd_metrics WHERE blob1 = 'perf' GROUP BY nhom`.
 - **Cloudflare Web Analytics** (không cookie):
   - Production: zone `ainextbrain.com` đã bật tự chèn beacon, lọc theo host `vandao.ainextbrain.com` trong dashboard.
