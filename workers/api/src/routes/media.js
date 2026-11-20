@@ -3,7 +3,26 @@ import { Hono } from 'hono';
 import { publicContent } from '../content-public.js';
 
 const mediaApp = new Hono();
+export const INVITE_IMAGE_KEY = 'og/invite-v1.png';
 const matches = (header, etag) => header?.split(',').some(x => x.trim() === '*' || x.trim().replace(/^W\//, '') === etag);
+
+mediaApp.on(['GET', 'HEAD'], `/${INVITE_IMAGE_KEY}`, async c => {
+  const headOnly = c.req.method === 'HEAD';
+  const bucket = c.env.MEDIA;
+  const image = headOnly ? await bucket?.head(INVITE_IMAGE_KEY) : await bucket?.get(INVITE_IMAGE_KEY);
+  if (!image) return c.body(null, 404, { 'Cache-Control': 'no-store' });
+  const headers = new Headers({
+    'Content-Type': 'image/png', 'Content-Length': String(image.size),
+    'Cache-Control': 'public, max-age=31536000, immutable',
+    'X-Content-Type-Options': 'nosniff', ETag: image.httpEtag,
+  });
+  if (matches(c.req.header('If-None-Match'), image.httpEtag)) {
+    await image.body?.cancel();
+    headers.delete('Content-Length');
+    return new Response(null, { status: 304, headers });
+  }
+  return new Response(headOnly ? null : image.body, { headers });
+});
 
 function byteRange(header, size) {
   const match = /^bytes=(\d*)-(\d*)$/.exec(header);
