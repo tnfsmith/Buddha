@@ -9,12 +9,17 @@ concurrency:
 permissions:
   contents: read
   pull-requests: write
+env:
+  PR: ${{ github.event.pull_request.number }}
+  BUDDHA_PREVIEW_BINDINGS: ${{ vars.BUDDHA_PREVIEW_BINDINGS }}
+  BUDDHA_PREVIEW_REQUIRE_ISOLATION: ${{ vars.BUDDHA_PREVIEW_REQUIRE_ISOLATION }}
 jobs:
   migration-policy:
     runs-on: ubuntu-latest
     permissions: { contents: read }
     outputs:
       remote_allowed: ${{ steps.policy.outputs.remote_allowed }}
+      isolated: ${{ steps.policy.outputs.isolated }}
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
@@ -29,8 +34,6 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == github.repository && needs.migration-policy.outputs.remote_allowed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 40
-    env:
-      PR: ${{ github.event.pull_request.number }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -43,6 +46,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_STAGING_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_STAGING_ACCOUNT_ID }}
+          ISOLATED: ${{ needs.migration-policy.outputs.isolated }}
         run: |
           set -euo pipefail
           if ! npx wrangler deployments list --env staging >/dev/null; then
@@ -50,7 +54,19 @@ jobs:
             exit 1
           fi
           upload_log="$RUNNER_TEMP/wrangler-preview.txt"
-          npx wrangler versions upload --env staging --preview-alias "pr-$PR" --message "PR #$PR ${GITHUB_SHA::7}" | tee "$upload_log"
+          config_args=(--env staging)
+          if [[ "$ISOLATED" == "true" ]]; then
+            config_file="$(mktemp "$PWD/.preview-config.XXXXXX.json")"
+            sql_file="$(mktemp "$RUNNER_TEMP/preview-content.XXXXXX.sql")"
+            trap 'rm -f -- "$config_file" "$sql_file"' EXIT
+            node ../../scripts/prepare-preview.mjs "$config_file" "$sql_file"
+            config_args=(--config "$config_file")
+            npx wrangler d1 migrations apply DB --remote "${config_args[@]}"
+            if [[ -s "$sql_file" ]]; then
+              npx wrangler d1 execute DB --remote --file "$sql_file" "${config_args[@]}"
+            fi
+          fi
+          npx wrangler versions upload "${config_args[@]}" --preview-alias "pr-$PR" --message "PR #$PR ${GITHUB_SHA::7}" | tee "$upload_log"
           url="https://pr-$PR-vandao-staging.vandao-staging.workers.dev"
           if ! grep -oE 'https://[[:alnum:].-]+' "$upload_log" | grep -Fx -- "$url" >/dev/null; then
             echo "::error::Wrangler không trả đúng URL preview của PR #$PR."

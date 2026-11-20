@@ -8,14 +8,14 @@ const post = (env, body, headers = {}) => app.request('/api/v1/metrics', { metho
 describe('POST /api/v1/metrics', () => {
   it('ghi một điểm hiệu năng và các điểm lỗi, không cần đăng nhập', async () => {
     const pts = [], env = { METRICS: { writeDataPoint: (p) => pts.push(p) }, ENV_NAME: 'staging' };
-    const r = await post(env, { v: 1, device: { cls: 'phone', cores: '≤4', mem: '≤2' }, perf: { n: 6, fps_p50: 31, fps_p10: 24, calls_max: 104, tris_max: 359674, q_last: 0, q_min: 0, dpr: 1, mode: 'island' }, errors: [{ kind: 'error', msg: 'x is not defined', n: 2 }] });
+    const r = await post(env, { v: 1, device: { cls: 'phone', cores: '≤4', mem: '≤2' }, perf: { n: 6, fps_p50: 31, fps_p10: 24, calls_max: 104, tris_max: 359674, q_last: 0, q_min: 0, dpr: 1, mode: 'island' }, errors: [{ kind: 'error', msg: 'Uncaught ReferenceError: x is not defined', n: 2 }] });
     expect(r.status).toBe(204);
     expect(pts).toHaveLength(2);
     expect(pts[0]).toMatchObject({ indexes: ['phone'], blobs: ['perf', 'staging', 'phone', '≤4', '≤2', 'island'] });
     expect(pts[0].doubles.slice(0, 4)).toEqual([31, 24, 104, 359674]);
-    expect(pts[1]).toMatchObject({ indexes: ['err'], blobs: ['error', 'staging', 'phone', 'error', 'x is not defined'], doubles: [2] });
+    expect(pts[1]).toMatchObject({ indexes: ['err'], blobs: ['error', 'staging', 'phone', 'error', 'ReferenceError'], doubles: [2] });
   });
-  it('kẹp số và cắt chuỗi; tối đa 10 lỗi mỗi lần', async () => {
+  it('kẹp số và giới hạn tối đa 10 điểm lỗi mỗi lần', async () => {
     const pts = [], env = { METRICS: { writeDataPoint: (p) => pts.push(p) } };
     await post(env, { v: 1, device: { cls: '<script>' }, perf: { fps_p50: 1e9, calls_max: -5 }, errors: Array.from({ length: 30 }, (_, i) => ({ kind: 'error', msg: 'e' + i, n: 1 })) });
     expect(pts).toHaveLength(11);
@@ -23,10 +23,30 @@ describe('POST /api/v1/metrics', () => {
     expect(pts[0].doubles[0]).toBe(240);
     expect(pts[0].doubles[2]).toBe(0);
   });
+  it('chỉ lưu nhãn thuộc danh sách quy định và bỏ qua mục lỗi sai kiểu', async () => {
+    const pts = [], env = { METRICS: { writeDataPoint: (p) => pts.push(p) }, ENV_NAME: 'staging' };
+    const r = await post(env, {
+      v: 1, device: { cls: 'ten-rieng', cores: 'ma-rieng', mem: '>8' },
+      perf: { mode: 'du-lieu-rieng', fps_p50: { toString: null } },
+      errors: [null, [], { kind: 'ten-rieng', msg: 'https://example.test/ ghi chú riêng', n: 2 },
+        { kind: 'rejection', msg: 'Uncaught (in promise) TypeError: le@example.test', n: 3 }],
+    });
+    expect(r.status).toBe(204);
+    expect(pts.map((pt) => pt.blobs)).toEqual([
+      ['perf', 'staging', 'na', 'na', '>8', 'na'],
+      ['error', 'staging', 'na', 'na', 'Other'],
+      ['error', 'staging', 'na', 'rejection', 'TypeError'],
+    ]);
+    expect(pts[0].doubles[0]).toBe(0);
+    expect(pts.slice(1).map((pt) => pt.doubles)).toEqual([[2], [3]]);
+  });
   it('body sai hoặc quá 8 KB bị từ chối; chưa gắn Analytics Engine thì bỏ qua', async () => {
     expect((await post({}, '{x')).status).toBe(400);
     expect((await post({}, { v: 2, device: {} })).status).toBe(400);
+    expect((await post({}, { v: 1, device: null })).status).toBe(400);
+    expect((await post({}, { v: 1, device: [] })).status).toBe(400);
     expect((await post({}, 'x'.repeat(9000))).status).toBe(413);
+    expect((await post({}, { v: 1, device: {}, extra: 'ệ'.repeat(3000) })).status).toBe(413);
     expect((await post({}, { v: 1, device: {} })).status).toBe(204);
   });
 });
