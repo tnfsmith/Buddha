@@ -19,7 +19,7 @@ it('trả 404 không lưu cache khi tệp tĩnh bị thiếu và vẫn chuyển 
 it('giữ trang gốc cho đường dẫn SPA và giữ lỗi của phương thức ghi', async () => {
   const assets = { fetch: vi.fn(async request => new URL(request.url).pathname === '/'
     ? new Response('<html>Vân Đạo</html>') : new Response(null, { status: 404 })) };
-  const navigation = await app.request('/moi/EXAMPLE1', {}, { ASSETS: assets });
+  const navigation = await app.request('/hanh-trinh/offline', {}, { ASSETS: assets });
   expect(navigation.status).toBe(200);
   expect(await navigation.text()).toBe('<html>Vân Đạo</html>');
   expect(assets.fetch).toHaveBeenCalledTimes(2);
