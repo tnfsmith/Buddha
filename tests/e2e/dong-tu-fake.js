@@ -1,6 +1,6 @@
 // Máy chủ giả lập Bạn đồng tu theo hợp đồng #126 và các tiện ích kiểm thử dùng chung (#124, #151).
 import { expect } from '@playwright/test';
-import { canMeet, meetPhase, parseFriendQuery, presenceOf, seenBucket, closenessOf } from '../../packages/shared/src/dong-tu.js';
+import { SESSION_AHEAD_MS, SESSION_MAX, SESSION_OPEN_MAX, SESSION_STEP_MS, canMeet, meetPhase, parseFriendQuery, presenceOf, seenBucket, closenessOf, sessionPhase } from '../../packages/shared/src/dong-tu.js';
 
 export const BASE = (process.env.E2E_BASE_URL || 'http://127.0.0.1:4173/').replace(/#.*$/, '').replace(/\/?$/, '/');
 export const slow = expect.configure({ timeout: 60_000 });
@@ -13,10 +13,11 @@ export function fakeServer(day = 1) {
   const U = {
     a: { id: 'u-tue-thai-0001', tinh_danh: 'Tuệ Thái', tag: '5696' },
     b: { id: 'u-minh-an-00002', tinh_danh: 'Minh An', tag: '2210' },
+    c: { id: 'u-hai-dang-0003', tinh_danh: 'Hải Đăng', tag: '3307' },
   };
   // days: ngày hành trình bạn cho hiện (mặc định 1); blank: người chưa tạo nhân vật (#151 §7);
   // noLook: hồ sơ máy chủ có Tịnh danh nhưng chưa có hình dáng; hold[đường dẫn]: Promise thì yêu cầu đó chờ đến khi nó xong (máy chủ chậm)
-  const sv = { U, settings: {}, island: {}, presence: {}, links: {}, pairs: [], requests: [], invites: [], log: [], n: 0, days: {}, blank: new Set(), noLook: new Set(), hold: {}, profiles: [] };
+  const sv = { U, settings: {}, island: {}, presence: {}, links: {}, pairs: [], requests: [], invites: [], log: [], n: 0, days: {}, blank: new Set(), noLook: new Set(), hold: {}, profiles: [], sessions: [], sessionPosts: [] };
   const byId = (id) => Object.values(U).find((u) => u.id === id);
   const prof = (id) => ({ ...byId(id), ...(sv.blank.has(id) ? { tinh_danh: null } : {}), look: sv.blank.has(id) || sv.noLook.has(id) ? {} : LOOK, settings: sv.settings[id] || {}, island: sv.island[id] || {}, tz: 'Asia/Ho_Chi_Minh', visibility: 'dong_tu', pref_seat: null, rev: 3 });
   const journey = { program: 'so-nhap-49', cycle: 1, day, started_on: ymd(), last_done_on: null, completed_at: null, sacca_count: 0, sessions_done: 0, sermons_done: 0, rev: 1 };
@@ -36,9 +37,13 @@ export function fakeServer(day = 1) {
       incoming: incomingReq(me, now).map((r) => ({ id: r.id, from: { tinh_danh: byId(r.from).tinh_danh, tag: byId(r.from).tag }, at: r.at })),
       outgoing: sv.requests.filter((r) => r.from === me && r.expires_at > now).map((r) => ({ id: r.id, tinh_danh: r.tinh_danh, tag: r.tag, at: r.at, expires_at: r.expires_at })),
       invites: sv.invites.filter((i) => (i.from === me || i.to === me) && live(i, now)),
+      // §9.3: phiên mình chủ trì hoặc có ghế, còn hẹn, start_at > now − 15 phút
+      sessions: sv.sessions.filter((x) => x.status === 'hen' && x.start_at > now - 15 * 60_000 && (x.host === me || x.seats.some((q) => q.id === me))).map(sessionView),
       visits: [], server_now: now,
     };
   }
+  const person = (id) => ({ id, tinh_danh: byId(id).tinh_danh, tag: byId(id).tag, look: LOOK });
+  const sessionView = (x) => ({ id: x.id, host: person(x.host), kind: 'thien', place: 'dtd', start_at: x.start_at, created_at: x.created_at, status: x.status, seats: x.seats.map((q) => ({ ...person(q.id), status: q.status })) });
   // who: id cố định, hoặc hàm trả về người đang đăng nhập trên trang (null khi đã đăng xuất), cho ca đổi tài khoản
   sv.handle = async (route, who) => {
     const req = route.request(), u = new URL(req.url()), p = u.pathname, m = req.method(), now = Date.now();
@@ -124,6 +129,29 @@ export function fakeServer(day = 1) {
       if (inv.to !== me || inv.status !== 'cho') return err('invite_not_pending', 409);
       if (body().accept) Object.assign(inv, { status: 'dong_y', responded_at: now, start_at: now + LEAD }); else inv.status = 'tu_choi';
       return json({ invite: inv });
+    }
+    // Phiên đồng tu (§9.3). «Ngay» dùng LEAD thay cho MEET_LEAD_MS như lời mời gặp
+    if (p === '/api/v1/sessions' && m === 'POST') {
+      const b = body(); sv.sessionPosts.push(b);
+      if (sv.blank.has(me) || sv.noLook.has(me)) return err('need_character', 409);
+      const ids = Array.isArray(b.invitees) ? b.invitees : [];
+      if (!ids.length || ids.length > SESSION_MAX - 1 || new Set(ids).size !== ids.length || ids.some((id) => !pairOf(me, id))) return err('invalid_payload', 400);
+      const ngay = b.start_at === 'ngay', at = ngay ? now + LEAD : b.start_at;
+      if (!ngay && (!Number.isInteger(at) || at % SESSION_STEP_MS || at < now + 60_000 || at > now + SESSION_AHEAD_MS)) return err('invalid_payload', 400);
+      if (sv.sessions.filter((x) => x.host === me && x.status === 'hen' && x.start_at > now).length >= SESSION_OPEN_MAX) return err('session_limit', 409);
+      const away = ngay ? ids.filter((id) => presenceOf(sv.presence[id], now) === 'vang') : [];
+      const x = { id: 'ss-' + ++sv.n, host: me, start_at: at, created_at: now, status: 'hen', seats: ids.filter((id) => !away.includes(id)).map((id) => ({ id, status: 'moi' })) };
+      sv.sessions.push(x); return json({ session: sessionView(x), skipped: away }, 201);
+    }
+    r = /^\/api\/v1\/sessions\/([^/]+)\/(respond|cancel)$/.exec(p);
+    if (r && m === 'POST') {
+      const x = sv.sessions.find((y) => y.id === r[1]); if (!x) return err('not_found', 404);
+      if (r[2] === 'cancel') { if (x.host !== me) return err('not_found', 404); x.status = 'huy'; return json(null, 204); }
+      const q = x.seats.find((y) => y.id === me); if (!q) return err('not_found', 404);
+      const ph = sessionPhase(x, now); if (ph === 'huy' || ph === 'xong' || (ph === 'dang' && now - x.start_at > 60_000)) return err('session_closed', 409);
+      const yes = body().accept === true;
+      q.status = yes ? 'nhan' : q.status === 'nhan' ? 'roi' : 'tu_choi';
+      return json({ session: sessionView(x) });
     }
     if (p === '/api/v1/blocks') return json({ blocks: [] });
     if (p.startsWith('/api/')) return err('not_found', 404);
