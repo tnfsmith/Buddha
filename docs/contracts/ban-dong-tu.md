@@ -254,9 +254,9 @@ Thiết kế: `docs/thiet-ke/dong-tu-dai-thien-duong.md`. Các mục dưới **c
 | `SESSION_MAX` | 6 | Tối đa người trong một phiên, gồm chủ phiên |
 | `SESSION_AHEAD_MS` | 7 ngày | Hẹn trước tối đa |
 | `SESSION_MIN_LEAD_MS` | `MEET_LEAD_MS` (60 giây) | «Ngay» = sau 60 giây |
-| `SESSION_STEP_MS` | 5 phút | Giờ hẹn làm tròn tới bội 5 phút (trừ «Ngay») |
+| `SESSION_STEP_MS` | 5 phút | Giờ hẹn phải là bội 5 phút. «Ngay» tách khỏi bước này: máy chủ đặt `now + MEET_LEAD_MS`, không làm tròn |
 | `SESSION_OPEN_MAX` | 3 | Phiên sắp tới do một người tạo |
-| `SESSION_REMIND_MS` | `[600_000, 60_000]` | Mốc nhắc: 10 phút (Web Push, `.ics`), 1 phút (trong ứng dụng) |
+| `SESSION_REMIND_MS` | `[600_000, 60_000]` | Mốc nhắc trong ứng dụng: 10 phút và 1 phút; tệp `.ics` báo trước 10 phút. Web Push cho phiên: §9.5 |
 | `sessionPhase(s, now)` | hàm | `'hen' \| 'sap' \| 'dang' \| 'xong' \| 'huy'`. `sap` khi còn ≤ `MEET_LEAD_MS`; `dang` trong 15 phút từ `start_at` |
 
 ### 9.2 D1 (Codex giữ số migration)
@@ -297,22 +297,37 @@ Session = {
 ```
 
 - `GET /me` thêm `social.sessions`: số phiên mình có ghế `moi` chưa trả lời và chưa qua giờ.
-- Chặn (§3.4) sau khi mời: ghế của hai người chặn nhau biến khỏi mảng của nhau, không báo lý do.
-- Xóa tài khoản: phiên do người đó chủ trì bị xóa theo `ON DELETE CASCADE`.
+- **Chặn (§3.4), áp dụng mọi lúc kể cả sau khi mời:**
+  - Người xem và **chủ phiên** chặn nhau (một trong hai chiều): cả phiên biến khỏi `sessions` và khỏi `social.sessions` của người xem. `POST /sessions/:id/respond` trả 404 `not_found`, cùng dạng với phiên không có thật.
+  - Người xem và **một khách khác** chặn nhau: chỉ ghế của người kia biến khỏi `seats` của người xem, và ngược lại. Phiên vẫn còn.
+  - Không báo lý do ở mọi trường hợp.
+- **Vòng đời dữ liệu (phiên, ghế, khích lệ, mốc đã xem):**
+  - Xóa tài khoản: `ON DELETE CASCADE` xóa phiên do người đó chủ trì (kéo theo ghế), ghế của người đó, khích lệ gửi và nhận, mốc đã xem.
+  - Gộp phiên khách vào tài khoản có sẵn (#96): không chuyển các dòng này; xóa cùng tài khoản khách.
+  - Xuất dữ liệu (`/export`): phiên mình chủ trì (giờ, trạng thái, số ghế theo trạng thái), ghế của mình, khích lệ mình gửi và nhận (lời mẫu, ngày, Tịnh danh · mã người kia). Không có id người khác.
+  - Cron hằng ngày: xóa phiên quá 30 ngày sau `start_at` (kéo theo ghế), khích lệ quá 7 ngày.
 
-### 9.4 Nhắc giờ (ReminderClock, #106/#150)
-- Ghế chuyển sang `nhan`, và chủ phiên khi tạo phiên, thì lên lịch push `session` lúc `start_at − 600 000`. Hủy phiên, `tu_choi`, `roi` thì hủy lịch.
-- Tịnh khẩu và giờ yên lặng áp dụng như nhắc tu tập (`quietAt`).
-- Nội dung push: `{ type: 'session', id, start_at }`, tiêu đề «Sắp tới giờ đồng tu», thân «Còn 10 phút: cùng ngồi thiền ở Đại Thiền Đường». Không có tên bạn trong push.
-- `notificationclick` mở `/#dtd=<id>`.
-- Mốc 1 phút và tệp `.ics` do máy khách tự lo, không cần API.
+### 9.4 Nhắc giờ, bản này: chỉ trong ứng dụng và `.ics`
+- **Trong ứng dụng:** máy khách hiện thẻ nhắc lúc còn 10 phút và 1 phút, khi ứng dụng đang mở và không đang thiền. Không cần API ngoài `sessions` trong danh sách.
+- **«Thêm vào lịch»:** máy khách tạo tệp `.ics` có `VALARM` trước 10 phút. Không cần API.
+- **Không có Web Push cho phiên** trong phần này. Nhận lời sau mốc trước 10 phút, hoặc phiên «Ngay», thì chỉ có nhắc trong ứng dụng.
+
+### 9.5 Web Push cho phiên: để sau, cần hợp đồng DO riêng
+ReminderClock (#106) hiện chỉ nhận `reminder_id` của bảng nhắc định kỳ, payload `{ v, kind, at }`. Nhắc phiên một lần cần thêm RPC và nguồn D1 riêng, nên **tắt cho tới khi Claude và Codex chốt một PR hợp đồng riêng**. Điều kiện tối thiểu của hợp đồng đó:
+- Khóa theo cặp `(session_id, user_id)`; lên lịch một lần lúc `start_at − 600 000`. Không lên lịch khi lúc nhận lời đã qua mốc này.
+- Ngay trước khi gửi, kiểm lại: ghế còn `nhan` (chủ phiên: phiên còn `hen`), không chặn hai chiều với chủ phiên, Tịnh khẩu và giờ yên lặng (`quietAt`). Có lần gửi thì tính vào hạn mức 2 lượt/ngày của nhắc tu tập.
+- Nội dung không có tên bạn: tiêu đề «Sắp tới giờ đồng tu», thân «Còn 10 phút: cùng ngồi thiền ở Đại Thiền Đường». `notificationclick` mở `/#dtd=<id>`.
 
 ## 10. Tiến trình bạn và khích lệ
 
 ### 10.1 Cài đặt
 - `profile.settings_json.dong_tu.chia_se_tien_trinh: bool`, mặc định `false`.
 - `visibility = 'an'` thì coi như `false`.
-- Gửi kèm ba cài đặt sẵn có qua `PATCH /api/v1/profile`: luôn gửi đủ đối tượng `dong_tu`.
+- **`PATCH /api/v1/profile` với `settings.dong_tu` đổi sang gộp theo từng khóa:**
+  - Chỉ nhận bốn khóa `hien_trang_thai`, `cho_tim`, `hien_ngay`, `chia_se_tien_trinh`, giá trị phải là boolean. Khóa lạ hoặc sai kiểu thì 400 `invalid_payload`.
+  - Khóa có trong yêu cầu thì ghi đè; khóa vắng mặt giữ nguyên giá trị cũ.
+  - Máy khách v1 (#148) vẫn gửi đủ ba khóa cũ, nên `chia_se_tien_trinh` không bị mất.
+- Nghiệm thu: gửi `false`; gửi thiếu khóa (giá trị cũ còn); `visibility = 'an'` (đọc ra `false` dù đã lưu `true`).
 
 ### 10.2 `GET /api/v1/companions/:id/progress`
 - Chỉ khi hai người đã kết nối, không chặn, và bạn đã bật `chia_se_tien_trinh`. Chưa bật hoặc không đủ điều kiện thì trả 404 `not_found`, cùng một dạng để không lộ lý do.
@@ -350,12 +365,20 @@ Session = {
   - Mỗi cặp mỗi ngày một lời; trùng thì 409 `cheer_today`.
   - 201. Hạn mức 30/ngày.
 - **`GET /api/v1/companions`** thêm `cheers: [{ from: { id, tinh_danh, tag }, line, day?, completed?, at }]`: lời gửi tới mình trong 7 ngày, mới trước.
-- **`GET /me`** thêm `social.cheers`: số lời chưa xem.
-- **`POST /api/v1/cheers/seen`** `{ until: at }`: đánh dấu đã xem. 204.
+- **`GET /me`** thêm `social.cheers`: số lời có `at > cheer_seen.seen_at`.
+- **`POST /api/v1/cheers/seen`** `{ until: at }`: đánh dấu đã xem tới `until`. 204.
+  - Mốc lưu ở bảng riêng, chỉ tăng: `seen_at = max(seen_at, min(until, now))`. Giới hạn ở giờ máy chủ để máy khách không đặt mốc tương lai.
+  ```sql
+  CREATE TABLE cheer_seen (
+    user_id TEXT PRIMARY KEY REFERENCES user(id) ON DELETE CASCADE,
+    seen_at INTEGER NOT NULL
+  );
+  ```
 - Không có push cho khích lệ.
 
 ## 11. Điều kiện nhân vật
-- Các đường dẫn sau trả 409 `need_character` khi `profile.tinh_danh` rỗng hoặc `profile.look` rỗng:
+- «Chưa lưu nhân vật» nghĩa là `profile.tinh_danh` là `NULL` hoặc chuỗi rỗng, **hoặc** `profile.look_json` là `NULL` hay `'{}'` (chưa lưu hình dáng).
+- Các đường dẫn sau trả 409 `need_character` khi chưa lưu nhân vật:
   - `POST /companions/link`;
   - `POST /companions/request`;
   - `POST /meet`;
@@ -363,14 +386,17 @@ Session = {
 - Nhận lời (`accept` link, `respond`) **không** cần nhân vật, để người mới vẫn kết nối được.
 - `REASON_TEXT.need_character` = «Hãy tạo nhân vật và giữ hành trình trước khi mời bạn.»
 
-## 12. Trang mời có thẻ xem trước: `GET /moi/:code`
-- Worker trả HTML nhỏ, `Cache-Control: public, max-age=300`. Mã sai hoặc hết hạn vẫn trả trang chung, không lộ mã có thật hay không.
-  - `<meta property="og:title" content="{tinh_danh} mời bạn tu cùng trên Vân Đạo">`; mã hỏng thì «Mời bạn tu cùng trên Vân Đạo».
-  - `og:description`: «Không gian tu tập 49 ngày: thiền 15 phút, nghe giảng, cùng bạn đồng tu.»
-  - `og:image` (ảnh tĩnh sẵn có), `og:url`.
-  - Script `location.replace('/#ban=' + code)`. `<noscript>` có liên kết tương đương.
-- Không ghi mã hay địa chỉ IP vào log/Analytics.
-- Máy khách chia sẻ ra ngoài bằng `/moi/:code` khi `/me` báo `moi_page: 1`; trước đó dùng `/?ban=CODE`. Ứng dụng đổi `?ban=` thành `#ban=` khi mở.
+## 12. Liên kết chia sẻ ra ngoài và thẻ xem trước: không cần Worker
+- **Liên kết:** `/?ban=CODE`. Ứng dụng đổi `?ban=` thành `#ban=` khi mở rồi đi theo luồng có sẵn: hiện tên người mời qua `GET /companions/link/:code`, nhận qua `accept`.
+- **Đường dẫn:**
+  - `/` là tài nguyên tĩnh, không nằm trong `run_worker_first`. Yêu cầu không gọi Worker, nên mã không vào invocation logs dù observability đang bật.
+  - Không thêm `/moi/*`.
+- **Thẻ xem trước Open Graph chung cho mọi mã**, đặt sẵn trong `index.html` (máy khách, #155):
+  - `og:title` «Mời bạn tu cùng trên Vân Đạo»;
+  - `og:description` «Không gian tu tập 49 ngày: thiền 15 phút, nghe giảng, cùng bạn đồng tu.»
+  - Không có tên người mời trong thẻ, nên không cần phân biệt mã đúng hay sai, cũng không lo bộ nhớ đệm công khai.
+- **`og:image`** cần một ảnh PNG/JPG tĩnh, vì Facebook không nhận SVG. Codex hoặc chủ dự án chọn làn và đặt tệp ở `apps/web/public/`; thư mục này hiện chưa thuộc làn nào trong `.github/lanes.yml`.
+- **Có tên người mời trong thẻ Facebook** là một mức công khai mới. Chỉ làm khi chủ dự án xác nhận; khi đó cần thêm một hợp đồng riêng về trang Worker và bộ nhớ đệm.
 
 ## 13. Nghiệm thu phía máy chủ bổ sung
 - **Phiên:**
@@ -380,8 +406,11 @@ Session = {
   - phiên thứ tư đang mở → 409 `session_limit`;
   - người bị chặn → biến khỏi `seats`;
   - `respond` sau 15 phút từ giờ bắt đầu → 409 `session_closed`.
-- **Nhắc:** nhận lời → có lịch nhắc; rút lui hoặc hủy phiên → lịch nhắc bị hủy; đúng giờ yên lặng thì không gửi push.
+- **Chặn:** chủ phiên chặn người xem (hoặc ngược lại) → phiên biến khỏi `sessions` và `social.sessions` của người xem; `respond` → 404 như phiên không có thật.
+- **Cài đặt:** PATCH `dong_tu` chỉ có ba khóa cũ thì giữ `chia_se_tien_trinh`; khóa lạ hoặc giá trị không phải boolean → 400.
+- **Đã xem:** `until` lớn hơn giờ máy chủ thì bị giới hạn về giờ máy chủ; gửi `until` nhỏ hơn mốc cũ thì mốc không lùi.
+- **Vòng đời:** xóa tài khoản → không còn phiên, ghế, khích lệ, mốc đã xem; cron xóa đúng hạn.
 - **Tiến trình:** bạn chưa bật và người lạ nhận cùng 404; đã bật → không có trường nào ngoài §10.2.
 - **Khích lệ:** lời thứ hai trong ngày → 409; người chặn không gửi được; `tien_trinh` lấy ngày từ `journey`, không lấy từ thân yêu cầu.
 - **`need_character`:** đủ bốn đường dẫn §11; `accept` vẫn đạt.
-- **`/moi/:code`:** mã đúng và mã sai trả cùng mã trạng thái và kích thước khung; không có PII ngoài Tịnh danh công khai.
+- **`need_character`:** `look_json = '{}'` cũng bị chặn.

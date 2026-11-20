@@ -106,7 +106,7 @@ Trước khi #125 xong, các nút ở hàng «#125» hiện bị khóa, kèm dò
 - **Danh sách:** có mục «Lịch đồng tu» liệt kê các phiên sắp tới.
 - **Nhắc giờ** (ba lớp, cái nào có thì dùng):
   1. **Trong ứng dụng:** còn 10 phút và còn 1 phút, nếu ứng dụng đang mở và không đang thiền. Thẻ nhắc có nút «Vào Đại Thiền Đường».
-  2. **Web Push qua ReminderClock (#106/#150):** còn 10 phút, chỉ khi người dùng đã bật thông báo; tuân Tịnh khẩu và giờ yên lặng như nhắc tu tập. Chạm vào thông báo thì mở thẳng Đại Thiền Đường.
+  2. **Web Push qua ReminderClock (#106/#150): để sau.** Cần một hợp đồng DO riêng (hợp đồng §9.5). Khi có: còn 10 phút, chỉ khi người dùng đã bật thông báo; tuân Tịnh khẩu và giờ yên lặng. Chạm vào thông báo thì mở thẳng Đại Thiền Đường.
   3. **«Thêm vào lịch»:** tệp `.ics` có báo trước 10 phút. Không cần bật thông báo; mở được trên điện thoại và máy tính.
 - **Tới giờ:** mọi người đã nhận lời cùng lên Đài Đồng Tu (§3), đếm ngược theo giờ máy chủ. Vào trễ thì bắt kịp đúng chỗ của người khác, như #148.
 - **Hạn mức:**
@@ -122,9 +122,8 @@ Trước khi #125 xong, các nút ở hàng «#125» hiện bị khóa, kèm dò
   - Điện thoại: mở tab mới; ứng dụng Facebook nhận nếu có.
   - Facebook chỉ nhận liên kết, không nhận câu chữ soạn sẵn. Lời nhắn do người dùng tự gõ trong Facebook.
 - **Nút «Chia sẻ»** (điện thoại, Web Share): mở bảng chia sẻ của máy, gồm Messenger, Zalo, tin nhắn…
-- **Liên kết:**
-  - Facebook bỏ phần sau dấu `#` ở một số nơi, nên liên kết chia sẻ ra ngoài dùng dạng truy vấn `https://vandao.ainextbrain.com/?ban=K7M2QX9A`. Ứng dụng đổi `?ban=` thành `#ban=` khi mở.
-  - Khi Codex có trang `/moi/:code` (§12 hợp đồng), liên kết chuyển sang dạng này để Facebook hiện thẻ xem trước «Tuệ Thái mời bạn tu cùng trên Vân Đạo».
+- **Liên kết:** Facebook bỏ phần sau dấu `#` ở một số nơi, nên liên kết chia sẻ ra ngoài dùng dạng truy vấn `https://vandao.ainextbrain.com/?ban=K7M2QX9A`. Ứng dụng đổi `?ban=` thành `#ban=` khi mở.
+- **Thẻ xem trước:** dùng chung cho mọi mã, đặt trong `index.html` (hợp đồng §12): «Mời bạn tu cùng trên Vân Đạo». Thẻ không có tên người mời, nên không cần trang Worker. Có tên người mời là việc cần chủ dự án xác nhận.
 - QR và mã chữ lớn giữ như #148.
 
 ## 7. Điều kiện mời: nhân vật đã tạo và lưu
@@ -183,8 +182,8 @@ Trước khi #125 xong, các nút ở hàng «#125» hiện bị khóa, kèm dò
 3. **Codex, sau khi hợp đồng merge:**
    - migration và đường dẫn phiên đồng tu, tiến trình, khích lệ;
    - `need_character`;
-   - nhắc giờ phiên qua ReminderClock;
-   - trang `/moi/:code`.
+   - mốc đã xem khích lệ, PATCH cài đặt gộp theo khóa;
+   - Web Push cho phiên để sau, theo một hợp đồng DO riêng (hợp đồng §9.5).
 4. **Claude, sau bước 3:** giao diện mời nhóm, hẹn giờ, lịch đồng tu, nhắc trong ứng dụng, `.ics`, Xem nhanh đầy đủ, khích lệ, chia sẻ tiến trình.
 5. **Claude:** #125, Vân Đảo bạn 3D, du vân sang thăm, các kiểu gặp ở hàng «#125» của §4.
 
