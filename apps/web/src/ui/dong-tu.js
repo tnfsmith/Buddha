@@ -284,9 +284,11 @@ function tick() {
     // vừa tới giờ khi máy đang theo dõi đếm ngược: tự bắt đầu cho cả hai; trễ (máy ngủ, mất mạng) thì để người dùng bấm «Vào ngồi cùng»
     if (D.watch.has(inv.id) && !D.hide.has(inv.id) && t - inv.start_at < 10_000) start(inv, t - inv.start_at);
   }
-  // Danh sách tự tải lại: 10 giây khi đang chờ bạn trả lời hoặc sắp bắt đầu, 30 giây khi màn đang mở (hợp đồng §5).
-  // Tab ẩn thì ngừng, để nhiều tab không cùng ăn hạn mức; quay lại thì GET /me của net/account.js và nhịp này tải tiếp.
-  const wait = I.outgoing.length || I.together.some((x) => x.ph.phase === 'sap'), gap = wait ? 10_000 : ctx.viewOpen() ? 30_000 : 0;
+  // Danh sách tự tải lại: 10 giây khi đang chờ bạn trả lời hoặc sắp bắt đầu; 15 giây khi đang cùng thiền (Đài Đồng Tu cần hiện diện mới
+  // để thấy bạn vào muộn, kể cả khi màn Bạn đồng tu đã đóng); 30 giây khi màn đang mở (hợp đồng §5). Tab ẩn thì ngừng, để nhiều tab không
+  // cùng ăn hạn mức; quay lại thì GET /me của net/account.js và nhịp này tải tiếp. loadCompanions đã gộp lượt gọi đang chạy.
+  const wait = I.outgoing.length || I.together.some((x) => x.ph.phase === 'sap'), sit = I.together.some((x) => x.ph.phase === 'dang');
+  const gap = wait ? 10_000 : sit ? 15_000 : ctx.viewOpen() ? 30_000 : 0;
   if (gap && document.visibilityState === 'visible' && Date.now() - D.lastLoad > gap) { D.lastLoad = Date.now(); void loadCompanions().catch(() => {}); }
   card(I);
   if (ctx.dais) ctx.dais(daisPeople(I));

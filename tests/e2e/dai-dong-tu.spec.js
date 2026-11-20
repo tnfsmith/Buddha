@@ -91,3 +91,22 @@ test('hủy lời mời: đài tan, nhân vật về chỗ ở hội chúng, nú
   expect(sv.invites[0].status).toBe('huy');
   expect(A.errs).toEqual([]);
 });
+
+// Codex review #153: bạn vào muộn khi mình đang thiền và màn Bạn đồng tu đã đóng → ghế của bạn phải có người (danh sách tự tải lại)
+test('bạn vào muộn khi mình đang cùng thiền, màn Bạn đồng tu đóng: Vân Tọa của bạn có người, nhãn bỏ «đang tới»', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const sv = seeded(-5_000);   // đã tới giờ 5 giây
+  sv.presence[sv.U.b.id] = { state: 'online', updated_at: Date.now() };   // B chưa vào
+  const A = await device(browser, sv, 'a', { width: 1280, height: 800 });
+  await slow(M(A)).toContainText('Minh An · 2210 đang cùng ngồi thiền với bạn');
+  await M(A).locator('[data-act="dt-join"]').click();
+  await slow.poll(() => A.evaluate(() => window.__app.player.playing)).toBe(true);
+  expect(await A.evaluate(() => window.__app.U.view)).not.toBe('dongtu');
+  await slow.poll(() => daisState(A).then((s) => s.n)).toBe(2);
+  const here = () => A.evaluate(() => window.__app.world.daisHeads().map((h) => h.here));
+  expect(await here()).toEqual([false, true]);   // B «đang tới», mình đã ngồi
+  sv.presence[sv.U.b.id] = { state: 'thien', updated_at: Date.now() };   // B vào thiền
+  await slow.poll(here, { timeout: 30_000 }).toEqual([true, true]);
+  await expect(A.locator('#labels .zl.dais', { hasText: 'Minh An · 2210' })).not.toContainText('đang tới');
+  expect(A.errs).toEqual([]);
+});

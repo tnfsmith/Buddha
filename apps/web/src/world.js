@@ -393,9 +393,9 @@ void main(){ float k = clamp(uP*1.7 - aSeed*0.7, 0., 1.); k = k*k*(3.-2.*k); vec
     if (!this.dais) return;
     this.daisView = kind; const P = this.portrait, z = BUD.z + DAIS_R;
     // Khung hình tính sẵn (máy tính 16:10 có bảng bên phải: các bạn ở khoảng 38 % chiều ngang; điện thoại dọc: nửa trên màn hình, trên bảng):
-    // Toàn cảnh — đỉnh đầu Tôn tượng ở ~15 % từ trên, hai bạn ở ~72 % (máy tính) / ~57 % (điện thoại); Cùng ngồi — đầu hai bạn ở ~60 % / ~40 %
+    // Toàn cảnh — đỉnh đầu Tôn tượng ở ~15 % từ trên, hai bạn ở ~72 % (máy tính) / ~57 % (điện thoại); Cùng ngồi — đầu hai bạn ở ~60 % / ~29 %
     if (kind === 'far') { if (P) this.flyTo(V(30, 125, BUD.z + 700), V(0, 315, BUD.z + 40), 56, 2); else this.flyTo(V(110, 152, BUD.z + 600), V(28, 222, BUD.z + 40), 56, 2); }
-    else if (P) this.flyTo(V(10, DAIS_Y + 6, z + 50), V(0, DAIS_Y + 20, z - 5), 56, 1.6);
+    else if (P) this.flyTo(V(10, DAIS_Y + 12, z + 50), V(0, DAIS_Y + 12, z - 5), 56, 1.6);   // điện thoại: hai bạn ở nửa trên, thẻ hẹn neo trên mép bảng không che
     else this.flyTo(V(19, DAIS_Y + 7, z + 40), V(5, DAIS_Y + 16, z), 56, 1.6);
   }
   set daisSpin(v) { this._spin = !!v; } get daisSpin() { return !!this._spin && !!this.dais; }
