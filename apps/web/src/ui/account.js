@@ -43,11 +43,11 @@ const btn = (act, text, cls = 'btn', extra = '') => `<button class="${cls}" data
 const back = (to = 'home') => (to === 'home' ? '<button class="ghost" data-act="home">← Vân Đảo</button>' : btn('tab', '← Quay lại', 'ghost', ` data-v="${to}"`));
 const status = () => (A.busy ? `<p class="muted" role="status">${esc(A.busy)}…</p>` : '') + (A.err ? `<p class="note" role="alert">${esc(A.err)}</p>` : '') + (A.msg ? `<p class="muted" role="status">${esc(A.msg)}</p>` : '');
 
-/** Mã QR dạng SVG (một path), viền trắng 2 ô */
-function qr(text) {
+/** Mã QR dạng SVG (một path), viền trắng 2 ô. Bạn đồng tu (#124) dùng lại cho mã mời. */
+export function qr(text, label = 'Mã QR liên kết thiết bị') {
   const { data, size } = encode(text, { ecc: 'M', border: 2 }); let d = '';
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) if (data[y][x]) d += `M${x} ${y}h1v1h-1z`;
-  return `<svg class="qr" viewBox="0 0 ${size} ${size}" width="168" height="168" role="img" aria-label="Mã QR liên kết thiết bị"><rect width="${size}" height="${size}" fill="#fff"/><path d="${d}" fill="#231f1c"/></svg>`;
+  return `<svg class="qr" viewBox="0 0 ${size} ${size}" width="168" height="168" role="img" aria-label="${esc(label)}"><rect width="${size}" height="${size}" fill="#fff"/><path d="${d}" fill="#231f1c"/></svg>`;
 }
 
 function applyFields(fields, reload) {

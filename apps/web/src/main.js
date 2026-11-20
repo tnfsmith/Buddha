@@ -16,6 +16,8 @@ import { startMetrics } from './net/metrics.js';
 import { $, fmt, esc } from './ui/dom.js';
 import { accountView, accountAct, accountHint, accountOn, accountInit } from './ui/account.js';
 import { record, recordProfile, recordPractice, syncNow } from './net/account.js';
+import { dtInit, dtView, dtAct, dtInput, dtOpen, dtBadge, dtGateLine, dtSyncOpen } from './ui/dong-tu.js';
+import { dongTu } from './net/dong-tu.js';
 
 
 // ───────── Lưu trạng thái trên máy: xem state.js ─────────
@@ -303,7 +305,9 @@ function render() {
   // thẻ Thuyết giảng: ẩn thanh phát thời thiền (trừ khi thời thiền đang phát) cho đỡ rối (#79)
   document.body.classList.toggle('stab', U.mode === 'hall' && U.hallTab === 'sermon' && !player.playing);
   let h = '';
-  if (U.mode === 'hall' && U.hallTab === 'sermon') {
+  if (U.view === 'dongtu') {
+    h = dtView();   // #124: Bạn đồng tu mở được ở mọi không gian; đang giảng thì phụ đề vẫn chạy
+  } else if (U.mode === 'hall' && U.hallTab === 'sermon') {
     const L = library, list = L.items, q = sermon.on && U.queue;
     if (L.state === 'idle') loadSermons().then(() => { sermonPick(); render(); });
     // khi đang giảng, hàng nút điều khiển đứng ngay dưới tên: trên điện thoại bảng thu gọn vẫn thấy Dừng, Tạm dừng, ‹ › (#79)
@@ -421,7 +425,8 @@ function render() {
         <p class="muted">${amb.on && amb.cur ? 'Đang phát: ' + esc(SONG[amb.cur].name) + leftTxt() + '.' : 'Nhạc đang tắt.'} ${S.music.len ? 'Mỗi khúc ' + S.music.len + ' phút, ' + ORDER[S.music.order].toLowerCase() + '.' : 'Phát liên tục.'}</p>` : '') +
       (['kuti', 'pad', 'tea'].includes(z.id) && ok ? `<h3>Vân Du</h3><label class="chk"><input type="checkbox" data-vandu ${S.vandu ? 'checked' : ''}> Khi tọa thiền, máy quay rời chỗ ngồi đi viếng cảnh</label>
         <p class="muted">Ngồi yên càng lâu, cảnh càng xa: ${VD.slice(1).map((v) => v[0] + ' (' + v[1] + '′)').join(', ')}. Vân Du chỉ đếm thời gian ngồi yên; đó không phải thước đo tầng thiền hay quả vị. Chạm vào cảnh để xả thiền hoặc ngồi tiếp.</p>` : '') +
-      (z.action === 'gate' && ok ? `<p class="muted">Hiện tại: ${S.open ? 'Nghênh khách. Bấm tên một bạn đồng tu ở đảo bên để chào hoặc sang thăm.' : 'Độc cư.'}</p>` : '');
+      (z.action === 'gate' && ok ? `<p class="muted">Hiện tại: ${S.open ? 'Nghênh khách. Bấm tên một bạn đồng tu ở đảo bên để chào hoặc sang thăm.' : 'Độc cư.'}</p>` : '') +
+      (z.action === 'gate' ? dtGateLine() : '');
   } else {
     const sim = U.sim ?? d;
     h = `<h2>Vân Đảo của ${esc(S.name || 'bạn')}</h2><p class="pali">Sơ nhập Tịnh Cảnh · ngày ${d}/49 · tuần ${wk}: ${esc(W.title)}</p>${bars()}
@@ -463,6 +468,7 @@ function applyDraft() { clearTimeout(lookTimer); lookTimer = setTimeout(() => { 
 function closeCreator(saved) { if (!saved && world) { world.setLook(S.look); } if (world) { world.av.hold = 0; if (world.fig.pose === 'anjali') world.fig.setPose('stand'); } U.draft = null; }
 panel.addEventListener('input', (e) => {
   const t = e.target;
+  if (t.dataset.dt !== undefined) return dtInput(t);
   if (t.dataset.bn !== undefined) { S.birds.n = +t.value; const o = panel.querySelector('[data-bnv]'); if (o) o.textContent = S.birds.n; save(); return; }
   if (t.dataset.bvol !== undefined) { S.birds.vol = +t.value; const o = panel.querySelector('[data-bvv]'); if (o) o.textContent = S.birds.vol > 0 ? Math.round(S.birds.vol * 100) + '%' : 'tắt'; save(); return; }
   if (t.dataset.tts !== undefined) { S.tts = t.checked; save(); return; }
@@ -498,6 +504,7 @@ panel.addEventListener('click', (e) => {
   const act = b.dataset.act;
   if (act !== 'reset') U.resetArm = false;
   if (act.startsWith('acct-')) return accountAct(act.slice(5), b);   // T2.3: Giữ hành trình, Tài khoản (ui/account.js)
+  if (act.startsWith('dt-')) return dtAct(act.slice(3), b);   // #124: Bạn đồng tu (ui/dong-tu.js)
   if (act === 'nv-jump') { const t = panel.querySelector('#' + b.dataset.to); if (t) t.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
   if (act.startsWith('pt-')) { const r = ptAct(act, b, S, today()); if (r.view) U.view = r.view; if (r.msg) toast(r.msg); render(); return; }   // #104: ui/phan-tinh.js, chỉ trên máy
   if (act.startsWith('dk-')) { const end = (r) => { if (r.view) U.view = r.view; if (r.msg) toast(r.msg); save(); render(); }, r = dkAct(act, b, S, today()); if (r && r.then) r.then(end); else end(r); return; }   // #104: ui/duyen-khoi.js
@@ -525,7 +532,7 @@ panel.addEventListener('click', (e) => {
   else if (act === 'overview') { world.setMode('overview'); }
   else if (act === 'realm') { U.tier = null; world.setMode('realm'); render(); }
   else if (act === 'mine') { world.setMode('island'); }
-  else if (act === 'gate') { S.open = !S.open; save(); toast(S.open ? 'Nghênh khách: cổng mây mở' : 'Độc cư: cổng mây khép'); }
+  else if (act === 'gate') { S.open = !S.open; save(); void dtSyncOpen(S.open); toast(S.open ? 'Nghênh khách: cổng mây mở' : 'Độc cư: cổng mây khép'); }   // #124: máy chủ kiểm quyền ghé thăm theo chế độ cổng
   else if (act === 'nosim') { U.sim = null; }
   else if (act === 'greet') { world.greet(U.friend); toast('Bạn chắp tay chào. ' + world.friends[U.friend].name + ' mỉm cười đáp lễ.'); }
   else if (act === 'rejoice') { world.rejoice(U.friend); toast('Sādhu! Tùy hỷ công đức của ' + world.friends[U.friend].name + '.'); }
@@ -548,6 +555,7 @@ panel.addEventListener('click', (e) => {
 // ───────── Chuyển không gian ─────────
 function setMode(m) {
   if (U.view === 'creator') closeCreator(false);
+  if (U.view === 'dongtu') U.view = 'home';
   if (m !== 'hall' && sermon.on) sermon.stop(); U.mode = m; document.body.classList.toggle('hall', m === 'hall'); document.body.classList.toggle('journey', m === 'journey');
   document.querySelectorAll('#tabs button').forEach((x) => x.classList.toggle('on', x.dataset.m === m));
   if (m !== 'journey') U.tier = null;
@@ -701,6 +709,38 @@ accountInit({
   show: () => { if (U.view === 'creator') { closeCreator(false); if (world) world.setMode('island'); } U.view = 'account'; U.zone = null; document.body.classList.remove('pmin'); panel.scrollTop = 0; render(); },
   remote: () => { if (world && JSON.stringify(Object.entries(S.look || {}).sort()) !== JSON.stringify(Object.entries(world.look || {}).filter(([k]) => k in (S.look || {})).sort())) world.setLook(S.look); fixMusic(S.music); render(); renderDock(); },
 }).then((r) => { if (r.welcome) toast('Hành trình đã trở lại trên máy này.'); }).catch(() => {});
+// ───────── Bạn đồng tu (#124) ─────────
+// Nút trên thanh chính chỉ hiện khi máy chủ báo dong_tu: 1 cho phiên này; chấm số là lời kết nối và lời mời gặp đang chờ, không phải số bạn.
+const dtBtn = $('#dt');
+function dtMark() { const on = dongTu.on, n = dtBadge(); dtBtn.hidden = !on; dtBtn.querySelector('.n').textContent = n ? String(n) : ''; dtBtn.setAttribute('aria-label', 'Bạn đồng tu' + (n ? `, ${n} đang chờ` : '')); }
+dtBtn.addEventListener('click', () => (U.view === 'dongtu' ? dtAct('close', { dataset: {} }) : dtOpen()));
+/** Hiện diện gửi cho bạn đồng tu: đang thiền / thưởng trà / thăm đảo bạn / ở Vân Đạo */
+function presence() {
+  if (player.playing || meditating()) return U.zone === 'tea' ? 'tra' : 'thien';
+  if (world && world.av.where !== 'home') return 'tham';
+  return U.view === 'zone' && U.zone === 'tea' ? 'tra' : 'online';
+}
+/** Tới giờ hẹn: cả hai cùng bắt đầu, `ms` là thời gian đã trôi từ giờ hẹn (vào trễ thì bắt kịp đúng chỗ của người kia) */
+function together(inv, ms) {
+  if (inv.kind === 'tra') { if (U.mode !== 'island') setMode('island'); goZone('tea'); return; }
+  goMeet(inv);
+  player.seek(Math.min(DUR - 5, ms / 1000)); if (!player.playing) togglePlay(); render();
+}
+// Nơi gặp: Đại Thiền Đường; gặp trên Vân Đảo (du vân sang đảo chủ) thuộc #125, tạm ngồi ở Đài Thiền của mình
+function goMeet(inv) {
+  if (U.view === 'dongtu') { U.view = 'home'; render(); }
+  if (inv.place === 'dtd') { if (U.mode !== 'hall') setMode('hall'); if (U.hallTab === 'sermon') { sermonStop(); U.hallTab = 'sit'; render(); } }
+  else { if (U.mode !== 'island') setMode('island'); goZone('pad'); }
+}
+dtInit({
+  S, render, toast, cardEl: $('#dtm'), badge: dtMark, presence, together, go: goMeet,
+  show: () => { if (U.view === 'creator') { closeCreator(false); if (world) world.setMode('island'); } if (U.view !== 'dongtu') U.back = U.view; U.view = 'dongtu'; document.body.classList.remove('pmin'); panel.scrollTop = 0; render(); dtMark(); },
+  close: () => { U.view = ['home', 'zone', 'board', 'friend'].includes(U.back) && (U.back !== 'zone' || U.zone) ? U.back : 'home'; render(); dtMark(); },
+  viewOpen: () => U.view === 'dongtu',
+  quiet: () => player.playing || meditating() || !!U.vd,   // đang thiền: không hiện lời mời, không âm
+  sfx: (k) => amb.sfx(k, { k: 0.4 }, S.music.vol),
+});
+dtMark();
 // #93: tải danh mục việc sớm để nhắc việc còn lại trong ngày; quay lại app sau một lúc thì nhắc lại
 stateReady.then(() => { if (S.name) return loadMissions().then(() => setTimeout(remind, 4000)); }).catch(() => {});
 window.addEventListener('focus', () => setTimeout(remind, 1500));

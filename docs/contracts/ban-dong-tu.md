@@ -103,7 +103,7 @@ Máy khách gửi cả hai qua `PATCH /api/v1/profile` sẵn có. `settings` g�
 | `GET /api/v1/companions` | — | Xem §4 | `RL_API` |
 | `POST /api/v1/presence` | `{ state: 'online'\|'thien'\|'tham'\|'tra' }` | 204. Chỉ ghi khi trạng thái đổi hoặc lần ghi trước đã quá 60 giây | 90/giờ |
 | `POST /api/v1/meet` | `{ to, kind, place? }` (`checkMeetPayload`) | 201 `{ invite }`, hoặc 409 `{ error: { code } }` theo `canMeet` chạy bằng dữ liệu máy chủ. Mỗi cặp một lời mời `cho`: lời mời mới thay lời cũ cùng chiều | 20/giờ |
-| `POST /api/v1/meet/:id/respond` | `{ accept: bool }` | Nhận: `dong_y`, `responded_at = now`, `start_at = meetStartAt(kind, now)`. Từ chối: `tu_choi`. Quá `INVITE_TTL_MS` thì 409 `invite_expired` | 60/giờ |
+| `POST /api/v1/meet/:id/respond` | `{ accept: bool }` | Nhận: `dong_y`, `responded_at = now`, `start_at = meetStartAt(kind, now)`. Từ chối: `tu_choi`. Quá `INVITE_TTL_MS` thì 409 `invite_expired`. Nhận lời gặp `place = 'dao'` thì kiểm lại chế độ cổng **hiện hành** của chủ đảo ngay trong lượt ghi: chủ đảo đã chuyển sang Độc cư sau khi mời → 409 `host_doc_cu`, lời mời vẫn `cho` (#138) | 60/giờ |
 | `POST /api/v1/meet/:id/cancel` | — | `huy` (hai bên đều được; cũng dùng để kết thúc ghé thăm) | 60/giờ |
 | `POST /api/v1/visits/away` | `{ host }` | 200 khi `canVisitAway(me, host, rel)`; ghi `island_visit` (một dòng/ngày). Kiểm bằng `island_json.open` **hiện hành** của chủ đảo lúc ghé, không bằng quyền đã cấp từ trước. 409 với mã của `canVisitAway` | 20/ngày |
 | `GET/POST /api/v1/blocks`, `DELETE /api/v1/blocks/:id` | `{ user }` | Chặn và bỏ chặn theo §3.4 | 20/ngày |
