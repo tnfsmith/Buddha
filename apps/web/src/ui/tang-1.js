@@ -36,7 +36,9 @@ export function tierMigrate(S) {
 /** Tải trạng thái (đẩy hàng đợi thực hành lên trước để số thời thiền trọn tính cả thời vừa ngồi) */
 export async function tierLoad(render, force = false) {
   follow();
-  if (!acct.on || G.loading || (!force && G.at && Date.now() - G.at < FRESH_MS)) return;
+  // Chu kỳ trên máy đã đổi (đặt lại ở thiết bị khác) thì ảnh chụp cũ hết giá trị: tải lại ngay, không chờ hết 60 giây
+  const stale = !!G.snap && acct.cycle !== null && G.snap.cycle !== acct.cycle;
+  if (!acct.on || G.loading || (!force && !stale && G.at && Date.now() - G.at < FRESH_MS)) return;
   const uid = G.uid; G.loading = true;
   try {
     await syncNow().catch(() => {});
@@ -80,13 +82,15 @@ const ERR = {
   cycle_conflict: 'Chu kỳ đã đổi trên thiết bị khác. Đã tải lại tình trạng cổng.',
   reflection_too_early: 'Tự vấn tuần 7 được xác nhận từ ngày 49.',
   tier_not_ready: 'Còn điều kiện chưa đạt. Đã tải lại tình trạng cổng.',
+  invalid_payload: 'Chưa gửi được: thiếu thông tin chu kỳ. Đã tải lại tình trạng cổng.',
 };
 /** Nút tg-*: tải lại, xác nhận tự vấn, mở cổng. Không đổi Kusala hay tiến trình ngày. */
 export async function tierAct(act, render, toast) {
   follow();
   if (act === 'tg-reload') { G.err = ''; render(); return tierLoad(render, true); }
   if (!acct.on || G.busy || (act !== 'tg-reflect' && act !== 'tg-open')) return;
-  const uid = G.uid, cycle = acct.cycle;
+  // Gửi đúng chu kỳ của ảnh chụp người dùng đang xem: chu kỳ đã đổi thì máy chủ trả cycle_conflict, không ghi nhầm sang chu kỳ mới
+  const uid = G.uid, cycle = G.snap ? G.snap.cycle : acct.cycle;
   G.busy = act === 'tg-open' ? 'Đang mở cổng' : 'Đang gửi xác nhận'; G.err = ''; render();
   try {
     if (act === 'tg-reflect') await api(URL1 + '/reflection', { method: 'POST', body: { cycle, done: true } });

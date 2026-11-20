@@ -97,6 +97,21 @@ test('ngày 49, 29/30 thời trọn: hiện điều kiện còn thiếu, chưa c
   expect(page.errs).toEqual([]);
 });
 
+test('chu kỳ đổi ở thiết bị khác: tải lại cổng ngay, không giữ nút mở của chu kỳ cũ', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const sv = fake(49); sv.full = 30; sv.reflected = true;
+  const page = await open(browser, sv, { S: { day: 49, completed: true, tier1v: 1 } });
+  await bia(page);
+  const tg = P(page).locator('.tg');
+  await slow(tg.locator('[data-act="tg-open"]')).toBeVisible();
+  // thiết bị khác đặt lại hành trình: chu kỳ 2, ngày 1. Đồng bộ kéo chu kỳ mới về trong vòng 60 giây giữ ảnh chụp.
+  sv.cycle = 2; sv.day = 1; sv.done49 = false; sv.reflected = false;
+  const gets = () => sv.calls.filter((c) => c.startsWith('GET')).length, before = gets();
+  await expect.poll(async () => { await page.evaluate(() => window.dispatchEvent(new Event('online'))); return gets(); }, { timeout: 40_000, intervals: [4500] }).toBeGreaterThan(before);
+  await expect(tg.locator('[data-act="tg-open"]')).toHaveCount(0);   // ảnh chụp chu kỳ 1 không còn cho mở
+  expect(sv.calls.filter((c) => c.startsWith('POST'))).toEqual([]);
+  expect(page.errs).toEqual([]);
+});
 test('chưa giữ hành trình: cổng ghi «Giữ hành trình để mở Tầng 1», không gọi API, Tầng 1 vẫn khóa', async ({ browser }) => {
   test.setTimeout(240_000);
   const sv = fake(49);
