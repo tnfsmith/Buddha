@@ -4,7 +4,7 @@
 // Lời mời gặp không hiện và không có âm khi đang thiền; xuất thiền rồi mới hiện, kèm dòng «trong lúc bạn thiền».
 import {
   INVITE_TTL_MS, LINES, MAX_COMPANIONS, MEET_KINDS, PRESENCE_TEXT, REASON_TEXT, SEEN_TEXT,
-  canMeet, inviteFromHash, inviteUrl, isMeetKind, meetPhase, parseFriendQuery, showInviteCode,
+  canMeet, inviteFromHash, isMeetKind, meetPhase, parseFriendQuery, showInviteCode,
 } from '@vandao/shared/dong-tu.js';
 import {
   block, cancelMeet, createLink, dongTu, linkInfo, listBlocks, loadCompanions, meet, observeDongTuMe, onDongTu, pushSocialPrefs,
@@ -12,6 +12,7 @@ import {
 } from '../net/dong-tu.js';
 import { acct } from '../net/account.js';
 import { getMe } from '../net/api.js';
+import { ZONE_UNLOCK, gateLevel } from '@vandao/shared/schedule.js';
 import { esc } from './dom.js';
 import { qr } from './account.js';
 
@@ -23,7 +24,7 @@ const D = { uid: null, tab: 'list', pend: null };
 /** Mọi trạng thái riêng của một tài khoản. Đổi người (đăng xuất, đăng nhập người khác) thì xóa sạch, kể cả mã mời đã tạo. */
 function resetFor(uid) {
   Object.assign(D, {
-    uid, tab: D.tab === 'loi' ? 'loi' : 'list', sel: null, busy: '', err: '', msg: '', arm: '', link: null, me: null, blocks: null, q: '',
+    uid, tab: D.tab === 'loi' ? 'loi' : 'list', sel: null, busy: '', err: '', msg: '', arm: '', link: null, me: null, blocks: null, q: '', peek: null, kem: false,
     skew: 0, at: 0, lastLoad: 0, msgInv: null, cardKey: null, viewKey: '', openSynced: false,
     quietSeen: new Set(), chimed: new Set(), watch: new Set(), joined: new Set(), hide: new Set(), answered: new Set(),
   });
@@ -85,10 +86,11 @@ export function dtBadge() {
 // ───────── Các màn ─────────
 const status = () => (D.busy ? `<p class="muted" role="status">${esc(D.busy)}…</p>` : '') + (D.err ? `<p class="note" role="alert">${esc(D.err)}</p>` : '') + (D.msg ? `<p class="muted" role="status">${esc(D.msg)}</p>` : '');
 const dis = () => (D.busy ? ' disabled' : '');
-const back = (to = 'list') => (to === 'list' ? '<div class="row"><button class="ghost" data-act="dt-tab" data-v="list">← Danh sách</button></div>'
-  : `<div class="row"><button class="ghost" data-act="dt-ban" data-id="${esc(D.sel)}">← Quay lại</button></div>`);
+const back = (to = 'list') => rw(to === 'list' ? bt('dt-tab', '← Danh sách', 'ghost', ' data-v="list"') : bt('dt-ban', '← Quay lại', 'ghost', ` data-id="${esc(D.sel)}"`));
+/** Nút và hàng nút (gọn mã: bản HTML đơn có trần kích thước) */
+const bt = (act, text, cls = 'btn', x = '') => `<button class="${cls}" data-act="${act}"${x}>${text}</button>`, rw = (...b) => `<div class="row">${b.join('')}</div>`;
 const left = (end, f) => `<span data-dt-end="${end}" data-dt-f="${f}">${fmtLeft(end - now(), f)}</span>`;
-const guestNote = () => (acct.on && acct.guest ? '<p class="note">Hành trình này đang giữ bằng phiên khách. Gắn vân tay / Face ID hoặc lưu mã khôi phục ở trang Tài khoản để không mất bạn đồng tu.</p><div class="row"><button class="ghost" data-act="acct-open">Tài khoản</button></div>' : '');
+const guestNote = () => (acct.on && acct.guest ? '<p class="note">Hành trình đang giữ bằng phiên khách: gắn vân tay / Face ID hoặc lưu mã khôi phục để không mất bạn đồng tu.</p><div class="row"><button class="ghost" data-act="acct-open">Tài khoản</button></div>' : '');
 
 export function dtView() {
   follow();
@@ -103,8 +105,37 @@ export function dtView() {
   return listView();
 }
 
+/**
+ * Điều kiện mời (#151 §7): nhân vật đã tạo trên máy (Tịnh danh + hình dáng), đã giữ hành trình, và hồ sơ máy chủ đã nhận Tịnh danh.
+ * Nhận lời mời của người khác không cần điều kiện này. Máy chủ chặn cùng điều kiện bằng 409 need_character (hợp đồng §11).
+ */
+function ready() {
+  const S = ctx.S;
+  if (!S.name || !S.look) return { ok: false, step: 'tao' };
+  if (!acct.on) return { ok: false, step: 'giu' };
+  if (D.me && !D.me.tinh_danh) return { ok: false, step: 'luu' };
+  return { ok: true };
+}
+function gateNote(g) {
+  if (g.ok) return '';
+  const [t, a, l] = g.step === 'tao' ? ['Hãy tạo nhân vật trước khi mời bạn.', 'dt-creator', 'Tạo nhân vật'] : g.step === 'giu' ? ['Hãy giữ hành trình trước khi mời bạn.', 'acct-open', 'Giữ hành trình của tôi'] : ['Nhân vật chưa lưu lên máy chủ.', 'dt-save', 'Lưu nhân vật'];
+  return `<p class="note" role="status">${t}</p>` + rw(bt(a, l, 'btn', dis()));
+}
+/** Các kiểu mời theo canMeet (#151 §4). Gặp trên Vân Đảo cần du vân sang đảo bạn (#125): đủ điều kiện thì ghi «sắp có», chưa đủ thì ghi lý do. */
+const KINDS = [['thien', 'dtd', 'Cùng ngồi thiền ở Đại Thiền Đường'], ['thien', 'dao', 'Thiền tọa trên Vân Đảo của mình'], ['tra', 'dao', 'Cùng Trà Đạo'], ['tham', 'dao', 'Mời Vân Mây sang thăm'], ['xin_tham', 'dao', 'Xin sang thăm Vân Đảo bạn'], ['tham_quan', 'dao', 'Mời tham quan Vân Đảo']];
+function kinds(c) {
+  const S = ctx.S, me = { day: S.day, completed: !!S.completed, open: !!S.open }, fr = { day: c.day, completed: c.completed === true, open: c.open === true, presence: c.presence == null ? 'online' : c.presence }, g = ready().ok;
+  return KINDS.map(([k, p, label]) => {
+    const r = canMeet(k, me, fr, { accepted: true }, p), now = k === 'thien' && p === 'dtd';
+    const why = !g ? 'Cần tạo và lưu nhân vật trước.' : !r.ok ? REASON_TEXT[r.code] || '' : now ? (r.quiet ? 'Bạn ấy đang tọa thiền: lời mời sẽ hiện khi bạn ấy xuất thiền.' : '') : 'Sắp có (#125).';
+    const on = g && r.ok && now;
+    return `<div class="dtk"><button class="btn alt"${on ? ` data-act="dt-meet" data-id="${esc(c.id)}" data-k="${k}" data-p="${p}"` : ' disabled'}${dis()}>${esc(label)}</button>${why ? `<span class="muted">${esc(why)}</span>` : ''}</div>`;
+  }).join('');
+}
 function listView() {
-  let h = `<h2>Bạn đồng tu</h2><div class="row"><button class="btn" data-act="dt-tab" data-v="moi">Mời bạn tu cùng</button><button class="btn alt" data-act="dt-tab" data-v="tim">Tìm bạn</button></div>` + status();
+  const g = ready();
+  const x = g.ok ? '' : ' disabled';
+  let h = '<h2>Bạn đồng tu</h2>' + gateNote(g) + rw(bt('dt-tab', 'Mời bạn tu cùng', 'btn', ' data-v="moi"' + x), bt('dt-tab', 'Tìm bạn', 'btn alt', ' data-v="tim"' + x)) + status();
   if (!dongTu.list) return h + '<p class="muted" role="status">Đang tải danh sách…</p>' + foot();
   const I = invites(), cs = L('companions'), inc = L('incoming'), og = L('outgoing');
   if (I.incoming.length) h += `<h3>Lời mời đang chờ (${I.incoming.length})</h3>` + I.incoming.map(incomingRow).join('');
@@ -113,10 +144,10 @@ function listView() {
   if (than.length) h += '<h3>Thân thiết</h3>' + than.map((c) => row(c, I)).join('');
   if (quen.length) h += '<h3>Quen biết</h3>' + quen.map((c) => row(c, I)).join('');
   if (og.length) h += '<h3>Đang chờ</h3>' + og.map(outRow).join('');
-  if (!cs.length && !inc.length && !og.length) h += '<p class="muted">Chưa có bạn đồng tu. Hãy mời người bạn quen ngoài đời bằng mã mời, hoặc tìm đúng «Tịnh danh · mã» người ấy đưa cho bạn.</p>';
+  if (!cs.length && !inc.length && !og.length) h += '<p class="muted">Chưa có bạn đồng tu. Mời người quen bằng mã mời, hoặc tìm đúng «Tịnh danh · mã».</p>';
   return h + guestNote() + foot();
 }
-const foot = () => '<div class="row"><button class="ghost" data-act="dt-tab" data-v="rieng">Quyền riêng tư</button><button class="ghost" data-act="dt-close">← Quay lại</button></div>';
+const foot = () => rw(bt('dt-tab', 'Quyền riêng tư', 'ghost', ' data-v="rieng"'), bt('dt-close', '← Quay lại', 'ghost'));
 
 function presenceLine(c) {
   const p = c.presence, bits = [p == null ? 'Không chia sẻ trạng thái' : PRESENCE_TEXT[p] || PRESENCE_TEXT.vang];
@@ -133,15 +164,36 @@ function meetBlock(c, I) {
   const out = I.outgoing.find((x) => x.inv.to === c.id);
   if (out) return `<p class="muted">Đã mời ${WHAT[out.inv.kind] || 'gặp'} · chờ trả lời, còn ${left(out.inv.created_at + INVITE_TTL_MS, 'm')}</p><div class="row"><button class="ghost" data-act="dt-cancel" data-id="${esc(out.inv.id)}"${dis()}>Hủy lời mời</button></div>`;
   if (I.incoming.some((x) => x.inv.from === c.id)) return '';
+  if (!ready().ok) return rw(bt('', 'Mời cùng ngồi thiền', 'btn alt', ' disabled'));
   const S = ctx.S, chk = canMeet('thien', { day: S.day, completed: !!S.completed, open: !!S.open },
     // bạn tắt hiện trạng thái: máy chủ coi như đang ở Vân Đạo khi kiểm (hợp đồng §3.3), máy khách cũng để nút mở
     { day: c.day, completed: c.completed === true, open: c.open === true, presence: c.presence == null ? 'online' : c.presence }, { accepted: true }, 'dtd');
-  if (!chk.ok) return `<div class="row"><button class="btn alt" disabled>Mời cùng ngồi thiền</button></div><p class="muted">${esc(REASON_TEXT[chk.code] || '')}</p>`;
+  if (!chk.ok) return rw(bt('', 'Mời cùng ngồi thiền', 'btn alt', ' disabled')) + `<p class="muted">${esc(REASON_TEXT[chk.code] || '')}</p>`;
   return `<div class="row"><button class="btn alt" data-act="dt-meet" data-id="${esc(c.id)}" data-k="thien" data-p="dtd"${dis()}>Mời cùng ngồi thiền</button></div>` +
     (chk.quiet ? '<p class="muted">Bạn ấy đang tọa thiền: lời mời sẽ hiện khi bạn ấy xuất thiền.</p>' : '');
 }
+/** Tên và ID: ID là mã 4 số công khai, cùng dạng người khác gõ khi tìm («Tịnh danh · mã») */
+const nameId = (p) => `<b>${esc(p.tinh_danh)}</b> <span class="dtid">ID ${esc(p.tag)}</span>`;
 function row(c, I) {
-  return `<div class="dtf" data-id="${esc(c.id)}"><button class="dtn" data-act="dt-ban" data-id="${esc(c.id)}">${dot(c)}<b>${who(c)}</b><span>${esc(presenceLine(c))}</span></button>${meetBlock(c, I)}</div>`;
+  const open = D.peek === c.id;
+  return `<div class="dtf" data-id="${esc(c.id)}"><button class="dtn" data-act="dt-ban" data-id="${esc(c.id)}">${dot(c)}${nameId(c)}<span>${esc(presenceLine(c))}</span></button>${meetBlock(c, I)}` +
+    `<div class="row"><button class="ghost" data-act="dt-peek" data-id="${esc(c.id)}" aria-expanded="${open}">${open ? 'Thu lại' : 'Xem nhanh'}</button><button class="ghost" data-act="dt-ban" data-id="${esc(c.id)}">Mời khác · chi tiết</button></div>${open ? peek(c) : ''}</div>`;
+}
+/**
+ * Xem nhanh (#151 §8) từ dữ liệu bạn đã cho hiện trong danh sách: ngày hành trình, phân khu Vân Đảo đã mở (suy từ ngày), chế độ cổng.
+ * Không Kusala, không so sánh. Số thời thiền và buổi giảng cần bạn bật «Chia sẻ tiến trình» (API §10, Codex).
+ */
+function peek(c) {
+  const day = Number.isFinite(c.day) ? c.day : null, done = c.completed === true, bits = [];
+  bits.push(done ? 'Đã hoàn thành chương trình 49 ngày.' : day ? `Ngày ${day} của hành trình 49 ngày.` : 'Bạn ấy không hiện ngày hành trình.');
+  if (day || done) {
+    const z = [['Tịnh Thất', 1], ['Đài Thiền', 1], ['Vườn Tâm Thức', 1], ['Bia Tích Lũy', 1], ['Trà Đạo Tỉnh Thức', ZONE_UNLOCK.tea]].filter(([, d]) => done || day >= d).map(([n]) => n);
+    const gl = done ? 1 : gateLevel(day);
+    if (gl) z.push(gl >= 1 ? 'Cổng Vân Môn (mở hẳn)' : 'Cổng Vân Môn (mở nửa)');
+    bits.push(`Vân Đảo đã mở: ${z.join(', ')}.`);
+  }
+  bits.push(`Cổng Vân Môn: ${c.open ? 'Nghênh khách' : 'Độc cư'}.`);
+  return `<div class="dtpk">${bits.map((b) => `<p>${esc(b)}</p>`).join('')}<p class="muted">Xem Vân Đảo bạn: sắp có (#125).</p></div>`;
 }
 function togetherText({ inv, ph }) {
   const what = WHAT[inv.kind] || 'gặp nhau';
@@ -150,39 +202,48 @@ function togetherText({ inv, ph }) {
 function incomingRow({ inv }) {
   const where = PLACE[inv.place];
   return `<div class="dtf"><div class="dtn"><b>${nameOf(inv.from)}</b><span>${esc(LINES[inv.kind])}</span></div><p class="muted">${where ? where + ' · ' : ''}còn ${left(inv.created_at + INVITE_TTL_MS, 'm')} để trả lời</p>` +
-    `<div class="row"><button class="btn" data-act="dt-yes" data-id="${esc(inv.id)}"${dis()}>Đồng ý</button><button class="btn alt" data-act="dt-no" data-id="${esc(inv.id)}"${dis()}>Để lúc khác</button></div></div>`;
+    rw(bt('dt-yes', 'Đồng ý', 'btn', ` data-id="${esc(inv.id)}"${dis()}`), bt('dt-no', 'Để lúc khác', 'btn alt', ` data-id="${esc(inv.id)}"${dis()}`)) + '</div>';
 }
-const reqRow = (r) => `<div class="dtf"><div class="dtn"><b>${who(r.from || {})}</b><span>muốn kết nối đồng tu với bạn</span></div><div class="row"><button class="btn" data-act="dt-req-yes" data-id="${esc(r.id)}"${dis()}>Đồng ý</button><button class="btn alt" data-act="dt-req-no" data-id="${esc(r.id)}"${dis()}>Bỏ qua</button></div></div>`;
+const reqRow = (r) => { const x = ` data-id="${esc(r.id)}"${dis()}`; return `<div class="dtf"><div class="dtn"><b>${who(r.from || {})}</b><span>muốn kết nối đồng tu với bạn</span></div>${rw(bt('dt-req-yes', 'Đồng ý', 'btn', x), bt('dt-req-no', 'Bỏ qua', 'btn alt', x))}</div>`; };
 // Người gửi chỉ thấy «đã gửi» tới khi bên kia đồng ý hoặc hết hạn: không có tín hiệu từ chối hay «không tìm thấy» (hợp đồng §4)
-const outRow = (r) => `<div class="dtf"><div class="dtn"><b>${who(r)}</b><span>Đã gửi lời kết nối · chờ người ấy đồng ý</span></div><div class="row"><button class="ghost" data-act="dt-withdraw" data-id="${esc(r.id)}"${dis()}>Rút lại</button></div></div>`;
+const outRow = (r) => `<div class="dtf"><div class="dtn"><b>${who(r)}</b><span>Đã gửi lời kết nối · chờ người ấy đồng ý</span></div>${rw(bt('dt-withdraw', 'Rút lại', 'ghost', ` data-id="${esc(r.id)}"${dis()}`))}</div>`;
 
 function friendView(c) {
   const me = c.me || {}, than = c.closeness === 'than';
-  return `<h2>${who(c)}</h2><p class="pali">Bạn đồng tu · ${than ? 'thân thiết' : 'quen biết'}</p><p>${dot(c)} ${esc(presenceLine(c))}</p>${meetBlock(c, invites())}${status()}
+  return `<h2>${esc(c.tinh_danh)}</h2><p class="pali">ID ${esc(c.tag)} · bạn đồng tu ${than ? 'thân thiết' : 'quen biết'}</p><p>${dot(c)} ${esc(presenceLine(c))}</p>${meetBlock(c, invites())}${status()}
+    <h3>Các kiểu mời</h3>${kinds(c)}<h3>Xem nhanh</h3>${peek(c)}
     <h3>Mức gần gũi</h3><label class="chk"><input type="checkbox" data-dt="than"${me.than ? ' checked' : ''}${dis()}> Thân thiết</label>
     <p class="muted">Hai người cùng chọn thì thành thân thiết. Không có nấc nào tự lên theo số lần gặp.</p>` +
     (than ? `<label class="chk"><input type="checkbox" data-dt="away"${me.away ? ' checked' : ''}${dis()}> Cho bạn ấy ghé Vân Đảo của mình khi mình vắng</label><p class="muted">Chỉ có tác dụng khi Cổng Vân Môn của bạn ở chế độ Nghênh khách.</p>` : '') +
-    `<h3>Khác</h3><div class="row"><button class="ghost" data-act="dt-remove"${dis()}>${D.arm === 'remove' ? 'Bấm lần nữa để hủy kết nối' : 'Hủy kết nối'}</button><button class="ghost" data-act="dt-block"${dis()}>${D.arm === 'block' ? 'Bấm lần nữa để chặn' : 'Chặn'}</button><button class="ghost" data-act="dt-tab" data-v="bao">Báo cáo</button></div>` +
+    '<h3>Khác</h3>' + rw(bt('dt-remove', D.arm === 'remove' ? 'Bấm lần nữa để hủy kết nối' : 'Hủy kết nối', 'ghost', dis()), bt('dt-block', D.arm === 'block' ? 'Bấm lần nữa để chặn' : 'Chặn', 'ghost', dis()), bt('dt-tab', 'Báo cáo', 'ghost', ' data-v="bao"')) +
     (D.arm === 'block' ? '<p class="muted">Người bị chặn không được báo; với họ, kết nối chỉ như đã bị hủy.</p>' : '') + back();
 }
-const reportView = (c) => `<h2>Báo cáo ${who(c)}</h2><p class="muted">Chỉ người kiểm duyệt thấy báo cáo; người bị báo cáo không được thông báo. Chọn lý do:</p>${status()}` +
-  REPORT.map((r) => `<div class="row"><button class="btn alt" data-act="dt-report" data-v="${esc(r)}"${dis()}>${esc(r)}</button></div>`).join('') + back('ban');
+const reportView = (c) => `<h2>Báo cáo ${who(c)}</h2><p class="muted">Chỉ người kiểm duyệt thấy; người bị báo cáo không được báo. Chọn lý do:</p>${status()}` +
+  REPORT.map((r) => rw(bt('dt-report', esc(r), 'btn alt', ` data-v="${esc(r)}"${dis()}`))).join('') + back('ban');
 
 function inviteView() {
-  const k = D.link;
-  let h = '<h2>Mời bạn tu cùng</h2><p class="muted">Gửi cho người bạn quen ngoài đời. Người ấy mở liên kết hoặc quét mã là hai bạn kết nối.</p>' + status();
-  if (!k) return h + (D.busy ? '' : '<div class="row"><button class="btn" data-act="dt-link">Tạo mã mời</button></div>') + back();
+  const k = D.link, g = ready();
+  if (!g.ok) return `<h2>Mời bạn tu cùng</h2>${gateNote(g)}` + back();
+  let h = '<h2>Mời bạn tu cùng</h2><p class="muted">Người bạn mở liên kết hoặc quét mã là hai bạn kết nối.</p>' + status();
+  if (!k) return h + (D.busy ? '' : rw(bt('dt-link', 'Tạo mã mời'))) + back();
   const share = typeof navigator !== 'undefined' && !!navigator.share;
-  h += `<div class="dtq">${qr(inviteUrl(location.origin, k.code), 'Mã QR mời bạn tu cùng')}<div class="dtc" data-dt-code>${esc(showInviteCode(k.code))}</div><p class="muted">Còn ${k.uses_left} lượt · hết hạn ngày ${date(k.expires_at)}</p></div>` +
-    `<div class="row">${share ? `<button class="btn" data-act="dt-share">Chia sẻ</button><button class="btn alt" data-act="dt-copy">Sao chép</button>` : '<button class="btn" data-act="dt-copy">Sao chép lời mời</button>'}<button class="ghost" data-act="dt-renew"${dis()}>${D.arm === 'renew' ? 'Bấm lần nữa: mã cũ sẽ không dùng được' : 'Tạo mã mới'}</button></div>`;
+  h += `<div class="dtq">${qr(shareUrl(), 'Mã QR mời bạn tu cùng')}<div class="dtc" data-dt-code>${esc(showInviteCode(k.code))}</div><p class="muted">Còn ${k.uses_left} lượt · hết hạn ngày ${date(k.expires_at)}</p></div>` +
+    `<label class="chk"><input type="checkbox" data-dt="kem"${D.kem ? ' checked' : ''}> Kèm tiến trình của mình (${esc(progressLine())})</label>` +
+    `<div class="row dtsh"><button class="btn" data-act="dt-copy">Sao chép</button><button class="btn fb" data-act="dt-fb">Facebook</button>${share ? '<button class="btn alt" data-act="dt-share">Chia sẻ…</button>' : ''}</div>` +
+    '<p class="muted">Facebook chỉ nhận liên kết; «Sao chép» chép cả câu mời.</p>' +
+    rw(bt('dt-renew', D.arm === 'renew' ? 'Bấm lần nữa: mã cũ sẽ không dùng được' : 'Tạo mã mới', 'ghost', dis()));
   return h + guestNote() + back();
 }
-const shareText = () => `Mời bạn cùng tu tập với mình trên Vân Đạo: ${inviteUrl(location.origin, D.link.code)}`;
+// Liên kết chia sẻ ra ngoài dạng /?ban=MÃ: Facebook có thể bỏ phần sau dấu #; ứng dụng đổi lại thành #ban= khi mở (main.js)
+const shareUrl = () => `${location.origin}/?ban=${encodeURIComponent(D.link.code)}`;
+/** Một câu về tiến trình của mình để chia sẻ (không Kusala, không so sánh; hoàn thành thì chỉ nói «đã hoàn thành chương trình») */
+const progressLine = () => (ctx.S.completed ? 'Mình đã hoàn thành chương trình 49 ngày' : `Mình đang ở ngày ${ctx.S.day || 1} của hành trình 49 ngày`);
+const shareText = () => (D.kem ? `${progressLine()} trên Vân Đạo. ` : '') + `Mời bạn cùng tu tập với mình trên Vân Đạo: ${shareUrl()}`;
 
 function findView() {
-  return `<h2>Tìm bạn</h2><p class="muted">Chỉ tìm đúng tên và mã người ấy đưa cho bạn.</p>
-    <input id="dtFind" type="text" maxlength="40" autocomplete="off" spellcheck="false" placeholder="Tịnh danh · mã, ví dụ Tuệ Thái · 5696" value="${esc(D.q)}" data-dt="q">
-    <div class="row"><button class="btn" data-act="dt-find"${dis()}>Gửi lời kết nối</button></div>${status()}` +
+  const g = ready();
+  if (!g.ok) return `<h2>Tìm bạn</h2>${gateNote(g)}` + back();
+  return `<h2>Tìm bạn</h2><p class="muted">Chỉ tìm đúng tên và mã người ấy đưa cho bạn.</p><input id="dtFind" type="text" maxlength="40" autocomplete="off" spellcheck="false" placeholder="Tịnh danh · mã, ví dụ Tuệ Thái · 5696" value="${esc(D.q)}" data-dt="q"><div class="row"><button class="btn" data-act="dt-find"${dis()}>Gửi lời kết nối</button></div>${status()}` +
     (D.me && D.me.tinh_danh ? `<p class="muted">Tịnh danh · mã của bạn: <b>${who(D.me)}</b>. Đưa cho người bạn để người ấy tìm bạn.</p>` : '') + back();
 }
 
@@ -193,7 +254,7 @@ function privacyView() {
   h += box('hien_trang_thai', 'Hiện trạng thái với bạn đồng tu', an) + '<p class="muted">Tắt thì bạn đồng tu không thấy bạn đang thiền, thưởng trà hay vắng mặt.</p>' +
     box('cho_tim', 'Cho người khác gửi lời kết nối bằng Tịnh danh · mã', an) +
     box('hien_ngay', 'Hiện ngày hành trình với bạn đồng tu') +
-    (an ? '<p class="note">Quyền hiển thị đang là «Ẩn» (trang Tài khoản): người khác không tìm được bạn và không thấy trạng thái của bạn.</p>' : '') +
+    (an ? '<p class="note">Quyền hiển thị đang «Ẩn»: không ai tìm được và thấy trạng thái của bạn.</p>' : '') +
     `<p class="muted">Cổng Vân Môn: ${ctx.S.open ? 'Nghênh khách' : 'Độc cư'}. Đổi ở phân khu Cổng Vân Môn.</p><h3>Đã chặn</h3>`;
   const B = D.blocks;
   h += !B ? '<p class="muted">Đang tải…</p>' : !B.length ? '<p class="muted">Chưa chặn ai.</p>'
@@ -205,29 +266,29 @@ function linkNote() {
   const o = D.pend && D.pend.owner;
   let h = `<h2>Lời mời tu cùng</h2>${o ? `<p><b>${who(o)}</b> mời bạn cùng tu tập trên Vân Đạo.</p>` : '<p>Bạn vừa mở một liên kết mời tu cùng.</p>'}`;
   h += acct.on ? '<p class="muted" role="status">Đang kết nối hai bạn…</p>'
-    : '<p class="muted">Giữ hành trình để có chỗ lưu bạn đồng tu; hai bạn sẽ tự kết nối ngay sau đó.</p><div class="row"><button class="btn" data-act="acct-open">Giữ hành trình của tôi</button><button class="ghost" data-act="acct-open" data-v="have">Tôi đã có hành trình</button></div>';
-  return h + '<div class="row"><button class="ghost" data-act="dt-close">← Quay lại</button></div>';
+    : '<p class="muted">Giữ hành trình để hai bạn tự kết nối.</p><div class="row"><button class="btn" data-act="acct-open">Giữ hành trình của tôi</button><button class="ghost" data-act="acct-open" data-v="have">Tôi đã có hành trình</button></div>';
+  return h + rw(bt('dt-close', '← Quay lại', 'ghost'));
 }
 
 /** Một dòng ở Cổng Vân Môn: bao nhiêu bạn đang ở Vân Đạo, và lối vào danh sách */
 export function dtGateLine() {
   if (!dongTu.on) return '';
   const n = L('companions').filter((c) => c.presence && c.presence !== 'vang').length;
-  return `<p class="muted">Bạn đồng tu${dongTu.list ? ` (${n} đang ở Vân Đạo)` : ''}. Chế độ cổng được đồng bộ để bạn đồng tu biết có ghé được không.</p><div class="row"><button class="ghost" data-act="dt-open">Bạn đồng tu</button></div>`;
+  return `<p class="muted">Bạn đồng tu${dongTu.list ? ` (${n} đang ở Vân Đạo)` : ''}.</p>` + rw(bt('dt-open', 'Bạn đồng tu', 'ghost'));
 }
 
 // ───────── Thẻ lời mời (lớp phủ trên bảng, luật #139: điện thoại đặt theo --subb) ─────────
 function togetherCard({ inv, ph }) {
   const nm = nameOf(other(inv)), what = WHAT[inv.kind] || 'gặp nhau', where = PLACE[inv.place] || '';
   if (ph.phase === 'sap') return `<b>${what[0].toUpperCase() + what.slice(1)} với ${nm}</b><p>${where} · bắt đầu sau ${left(inv.start_at, 'c')}</p><p class="muted dtx">Đến giờ, thời thiền tự bắt đầu cho cả hai.</p>` +
-    `<div class="row"><button class="btn" data-act="dt-go" data-id="${esc(inv.id)}">${inv.place === 'dtd' ? 'Vào Đại Thiền Đường' : 'Đến chỗ ngồi'}</button><button class="ghost" data-act="dt-cancel" data-id="${esc(inv.id)}">Hủy</button></div>`;
-  return `<b>${nm} đang ${what} với bạn</b><p>${where}</p><div class="row"><button class="btn" data-act="dt-join" data-id="${esc(inv.id)}">Vào ngồi cùng</button><button class="ghost" data-act="dt-hide" data-id="${esc(inv.id)}">Để sau</button></div>`;
+    rw(bt('dt-go', inv.place === 'dtd' ? 'Vào Đại Thiền Đường' : 'Đến chỗ ngồi', 'btn', ` data-id="${esc(inv.id)}"`), bt('dt-cancel', 'Hủy', 'ghost', ` data-id="${esc(inv.id)}"`));
+  return `<b>${nm} đang ${what} với bạn</b><p>${where}</p>` + rw(bt('dt-join', 'Vào ngồi cùng', 'btn', ` data-id="${esc(inv.id)}"`), bt('dt-hide', 'Để sau', 'ghost', ` data-id="${esc(inv.id)}"`));
 }
 function incomingCard({ inv }, n) {
   const where = PLACE[inv.place];
   return `<b>${nameOf(inv.from)}</b><p>${esc(LINES[inv.kind])}</p><p class="muted">${where ? where + ' · ' : ''}còn ${left(inv.created_at + INVITE_TTL_MS, 'm')} để trả lời</p>` +
     (D.quietSeen.has(inv.id) ? '<p class="muted">Lời mời đến trong lúc bạn thiền.</p>' : '') +
-    `<div class="row"><button class="btn" data-act="dt-yes" data-id="${esc(inv.id)}">Đồng ý</button><button class="btn alt" data-act="dt-no" data-id="${esc(inv.id)}">Để lúc khác</button>${n > 1 ? `<button class="ghost" data-act="dt-open">+${n - 1} lời mời khác</button>` : ''}</div>`;
+    rw(bt('dt-yes', 'Đồng ý', 'btn', ` data-id="${esc(inv.id)}"`), bt('dt-no', 'Để lúc khác', 'btn alt', ` data-id="${esc(inv.id)}"`), n > 1 ? bt('dt-open', `+${n - 1} lời mời khác`, 'ghost') : '');
 }
 function card(I = invites()) {
   const el = ctx && ctx.cardEl; if (!el) return;
@@ -372,7 +433,7 @@ function open(tab) {
   D.tab = tab; D.err = ''; D.msg = ''; D.arm = '';
   ctx.show();
   if (tab === 'list') { D.lastLoad = Date.now(); void loadCompanions().catch(() => {}); void loadMe(); }
-  if (tab === 'moi' && (!D.link || D.link.expires_at <= Date.now() || D.link.uses_left <= 0)) dtAct('link', { dataset: {} });
+  if (tab === 'moi' && ready().ok && (!D.link || D.link.expires_at <= Date.now() || D.link.uses_left <= 0)) dtAct('link', { dataset: {} });
   if (tab === 'tim' || tab === 'rieng') void loadMe();
   if (tab === 'rieng') { D.blocks = null; void loadBlocks(); }
 }
@@ -391,6 +452,15 @@ export function dtAct(act, b) {
   if (act === 'renew') {
     if (D.arm !== 'renew') { D.arm = 'renew'; return ctx.render(); }
     D.arm = ''; return run('Đang tạo mã mới', async (ok) => { const k = await createLink(true); if (ok()) { D.link = k; D.msg = 'Đã tạo mã mới. Mã cũ không dùng được nữa.'; } });
+  }
+  if (act === 'peek') { D.peek = D.peek === id ? null : id; return ctx.render(); }
+  if (act === 'creator') return ctx.creator();
+  if (act === 'save') return run('Đang lưu nhân vật', async (ok) => { await ctx.saveProfile(); if (ok()) await loadMe(); });
+  if (act === 'fb') {
+    // Facebook chỉ nhận liên kết (u=). Máy tính: cửa sổ nhỏ; điện thoại: tab mới, ứng dụng Facebook nhận nếu có
+    const u = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl()), narrow = window.innerWidth <= 820;
+    window.open(u, narrow ? '_blank' : 'vandao-fb', narrow ? 'noopener' : 'noopener,width=600,height=560');
+    return;
   }
   if (act === 'share') return navigator.share({ text: shareText() }).catch(() => {});
   if (act === 'copy') return run('Đang chép', async (ok) => { await navigator.clipboard.writeText(shareText()); if (!ok()) return; D.msg = 'Đã chép lời mời.'; });
@@ -432,6 +502,7 @@ export function dtInput(t) {
   follow();
   const k = t.dataset.dt;
   if (k === 'q') { D.q = t.value; return; }
+  if (k === 'kem') { D.kem = t.checked; return; }
   if (k === 'than' || k === 'away') { const sel = D.sel; return run('Đang lưu', async () => { await setCompanion(sel, { [k]: t.checked }); }); }
   if (k in prefs()) {
     const next = { ...prefs(), [k]: t.checked };
