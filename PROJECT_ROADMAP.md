@@ -897,7 +897,7 @@ Hỏi 6 câu khi bắt đầu (bỏ qua được, sửa lại bất cứ lúc n�
 4. **Quy đổi thành hành động xã hội có sổ cái:** §11.6.
 
 ### 8.6 Từ Tầng 0 lên Tầng 1
-Điều kiện đề xuất (xem §16): hoàn tất 49 ngày, ≥ 30 thời thiền trọn, bài tự vấn tuần 7, tùy chọn ≥ 1 chứng thực. Giao diện chỉ nói "đã hoàn thành chương trình Sơ nhập", không nói đã chứng đắc.
+Ngày 20/11/2026, chủ dự án chốt ba điều kiện mở Tầng 1 gồm hoàn tất 49 ngày, ≥ 30 thời thiền trọn và tự vấn tuần 7. Chứng thực tùy chọn. Giao diện dùng câu «Đã hoàn thành chương trình Sơ nhập». [Hợp đồng mở Tầng 1](docs/contracts/tier-unlock.md) · [Quyết định #107](https://github.com/tnfsmith/Buddha/issues/107#issuecomment-7036036276)
 
 ---
 
@@ -1327,8 +1327,8 @@ Mọi dòng trên cần luật sư/kế toán xác nhận trước GĐ6. Tài li
 - Mọi bài giảng, bài thiền, chương trình tầng nằm trong `content/` (Markdown + front-matter: `id, version, tier, source_ref, status`) → CI nạp vào `content_item`/KV. `da_duyet` giữ làm tên kỹ thuật cho nội dung đã chọn phát hành qua quy trình biên tập/PR; không chứng nhận Hội đồng. `reviewed_by`/`reviewed_at` là truy vết tùy chọn, không bắt buộc ở client/công cụ nạp. Nháp/ẩn/ngừng không tự công khai.
 - Bảy bài tóm lược cũ và các loạt mới được biên tập có nguồn, ghi rõ tóm lược bằng lời mới; có thể chọn phát hành qua PR mà không chờ thành lập Hội đồng hoặc biên bản duyệt riêng. Issue #53/PR #54 giữ loạt «Lời Phật dạy»; #47/#52 giữ thiết kế «Đường Xưa Mây Trắng».
 - Giữ tab Thuyết giảng. Khi chưa có nội dung công khai, hiện "Chưa có bài chia sẻ. Nội dung đang được cập nhật."; lỗi tải có trạng thái thử lại riêng. Không dùng câu thiếu Hội đồng để khóa bài hoặc khẳng định mọi bài đã được Hội đồng duyệt.
-- **Khung điều kiện mở tầng (đề xuất, chủ dự án quyết sau biên tập):**
-  - 0 → 1: hoàn tất 49 ngày (đã có) + ≥ 30 thời thiền trọn + bài tự vấn cuối chương trình.
+  - **Khung điều kiện mở tầng** (0 → 1 đã chốt ở [§8.6](#86-từ-tầng-0-lên-tầng-1); các bước tiếp theo chờ chủ dự án duyệt):
+    - 0 → 1: hoàn tất 49 ngày, ≥ 30 thời thiền trọn và tự vấn tuần 7. Chứng thực tùy chọn.
   - 1 → 2: hoàn tất chương trình Tầng 1 + đã dẫn dắt ≥ 3 người sơ nhập hoàn thành ít nhất tuần đầu.
   - 2 → 3: tham gia hoặc khởi xướng một nhóm đồng tu và hoàn thành mục tiêu chung.
   - 3 → 4: giữ vai trò điều phối nhóm sơ nhập trong một chu kỳ.
@@ -1465,7 +1465,7 @@ Ký hiệu: **[C]** Claude · **[AG]** Antigravity · **[H]** Hermes · **[O]** 
 | T3.1 | Nội dung biến thể 7 tuần × 3 trục × 3–6 biến thể; ánh xạ §8.2; lời nhắc | O + H | **Một phần:** 73 mục #87/#90 đã duyệt/phát hành (25/40/7/1). Hợp đồng [#112](https://github.com/tnfsmith/Buddha/pull/112) đã merge, tiếp theo là bộ nạp và tối thiểu 63 biến thể ở [#103](https://github.com/tnfsmith/Buddha/issues/103). Chủ dự án chọn phát hành nội dung |
 | T3.2 | `variant.js`, Duyên khởi, Bia (hoa sen/lịch/nhịp thiền/phản tỉnh), chứng thực tuần | C | **Một phần:** A/C #89/#92 và đồng bộ #96 đã merge; thiếu onboarding/biến thể/phản tỉnh/chứng thực tuần/E phản chiếu. [#104](https://github.com/tnfsmith/Buddha/issues/104); #101 là cảnh 3D, chưa thay phần chức năng này |
 | T3.3 | Schema; API practice/deeds/attest/reminders/push; ReminderClock/Web Push | AG (DO: C) | **Một phần:** 0009 + practice.event/#97/#100 đã phát hành. Nền 0010 ở staging qua #109. Hợp đồng #111 đã merge, Codex triển khai GET/PUT hồ sơ và vòng đời ở [#105](https://github.com/tnfsmith/Buddha/issues/105). Còn today/swap/summary, deed, chứng thực, nhắc giờ và push. Claude làm DO [#106](https://github.com/tnfsmith/Buddha/issues/106) |
-| T3.4 | Điều kiện Tầng 0 → 1, `tier_progress` | AG + C | **Mới có bảng:** chưa có cổng máy chủ/UI theo tiêu chí đã chốt; S.completed hiện chưa thay tier_progress. [#107](https://github.com/tnfsmith/Buddha/issues/107), chốt đề xuất §8.6/§16 trước; không nói chứng đắc |
+| T3.4 | Điều kiện Tầng 0 → 1, `tier_progress` | AG + C | **Đã chốt tiêu chí:** 49 ngày, ≥ 30 thời thiền trọn và tự vấn tuần 7. Chứng thực tùy chọn. Codex triển khai kiểm điều kiện phía máy chủ sau khi [hợp đồng](docs/contracts/tier-unlock.md) merge. Claude nối giao diện. Trạng thái cổng lấy từ `tier_progress` theo [#107](https://github.com/tnfsmith/Buddha/issues/107) |
 | T3.5 | Thiết kế hai loạt và hợp đồng nội dung/giọng đọc R2 (ADR 0002, #47/#52) | C | **Đã merge/phát hành:** #52/#72 và điều chỉnh nghi thức đã vào main, hợp đồng áp dụng cho 42 mục hiện hành |
 | T3.6 | 7 Lời Phật dạy v2/96k; 33 Đường Xưa B10/#76, C11/#77, D12/#78 | H + O | **Đã phát hành:** #76–78 đã merge, v0.16.0 có đủ 33/498 cue; hiện v0.17.1 API thật 7+33 bài và 2 nghi thức. Chủ dự án đã chọn cả 33 bài; giữ nguồn/chương/thứ tự và sáu cờ ASR gốc |
 | T3.7 | Google Chirp 3 HD Sadaltager 0,85 cho Lời Phật dạy/Đường Xưa; ngoại lệ nghi thức kết P1/Puck 1,00 đã duyệt (#49/#80) | H + AG | **Đạt bản phát hành:** LINEAR16→MP3 96k mono 24k, −16 LUFS/−1,5 dBTP, cues/ID3; khóa/giọng/tốc độ theo mục. Khóa cũ ≥30 ngày còn theo dõi ở #49, không đổi giọng chung |
