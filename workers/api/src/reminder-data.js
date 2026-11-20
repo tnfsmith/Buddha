@@ -103,3 +103,11 @@ export async function refreshReminders(env, uid, now) {
     console.warn('[reminders-refresh]', 1);
   }
 }
+
+export async function resyncStoredReminders(env, uid) {
+  if (!env.REMINDER_CLOCK) return;
+  try {
+    const state = await readReminders(env.DB, uid);
+    if (state) await notifyClock(env, uid, state.rows, [], state.policy.subscribed);
+  } catch { console.warn('[reminders-rpc]', 1); }
+}

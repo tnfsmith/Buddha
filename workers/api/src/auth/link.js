@@ -7,6 +7,7 @@
 // Mọi câu lệnh chạy trong một db.batch (giao dịch D1).
 
 import { VARIANT_PROGRAM } from '@vandao/shared/variant.js';
+import { cancelRemovedUsers } from '../reminder-ops.js';
 
 const MOVE = ['practice_session', 'device', 'deed_log'];
 
@@ -20,7 +21,7 @@ export async function hasProgress(db, uid) {
   return (r?.n || 0) > 0;
 }
 
-export async function linkGuest(db, guest, target) {
+export async function linkGuest(db, guest, target, env) {
   if (!guest?.id || !target?.id || guest.id === target.id) return { moved: 'none' };
   const g = guest.id, t = target.id, now = Date.now();
   const moveAll = MOVE.map((tb) => db.prepare(`UPDATE ${tb} SET user_id = ? WHERE user_id = ?`).bind(t, g));
@@ -41,6 +42,7 @@ export async function linkGuest(db, guest, target) {
       AND EXISTS (SELECT 1 FROM reminder_setting WHERE user_id = ?1 AND write_id = ?3)`).bind(t, g, reminderMove),
     db.prepare('DELETE FROM reminder WHERE user_id = ?').bind(g),
     db.prepare('DELETE FROM reminder_setting WHERE user_id = ?').bind(g),
+    db.prepare('DELETE FROM push_subscription WHERE user_id = ?').bind(g),
   );
   // Hồ sơ Duyên khởi theo tài khoản và không phụ thuộc chế độ gộp hành trình.
   moveAll.push(db.prepare(`UPDATE practice_profile SET user_id = ?1 WHERE user_id = ?2
@@ -79,5 +81,6 @@ export async function linkGuest(db, guest, target) {
   }
   // Đích vẫn là tài khoản khách (chưa gắn passkey/Google/mã khôi phục): plugin không tự xóa khách cũ → xóa ở đây
   if (target.isAnonymous) await db.prepare('DELETE FROM user WHERE id = ?').bind(g).run();
+  await cancelRemovedUsers(env, [g]);
   return { moved: mode };
 }

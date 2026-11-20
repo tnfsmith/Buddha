@@ -66,6 +66,7 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
       FROM attestation WHERE attester_id = ? ORDER BY confirmed_at`).bind(user.id),
   ]);
   const reminderState = await readReminders(db, user.id);
+  const subscriptions = await db.prepare('SELECT id, created_at, last_ok_at FROM push_subscription WHERE user_id = ? ORDER BY created_at, id').bind(user.id).all();
 
   c.header('Cache-Control', 'no-store');
   return c.json({
@@ -84,6 +85,7 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
     attestations_given: given.results,
     reminders: (reminderState?.rows ?? []).map((row) => ({ ...row, active: Boolean(row.active) })),
     reminder_paused_until: reminderState?.policy.paused_until ?? null,
+    push_subscriptions: subscriptions.results,
     journeys: journeys?.results || [],
     kusala_entries: kusalaEntries?.results || [],
     practice_sessions: sessions?.results || [],

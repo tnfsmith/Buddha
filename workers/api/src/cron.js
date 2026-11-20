@@ -6,6 +6,7 @@
 //  3. Dọn sync_op quá 30 ngày, phiên hết hạn, mã dùng một lần (verification) hết hạn và dữ liệu Bạn đồng tu tới hạn.
 // Mỗi lần chạy xử lý tối đa BATCH tài khoản để giữ trong giới hạn CPU/ghi D1 của gói Free; phần còn lại chạy đêm sau.
 // Log chỉ ghi số lượng, không ghi định danh (AGENTS.md §5).
+import { cancelRemovedUsers, reconcileReminders } from './reminder-ops.js';
 
 export const DAY = 24 * 60 * 60 * 1000;
 export const GUEST_IDLE_DAYS = 90, SYNC_OP_DAYS = 30, BATCH = 200;
@@ -17,26 +18,29 @@ export const LAST_SEEN_SQL = `MAX(u.updatedAt,
   COALESCE((SELECT MAX(k.server_at) FROM kusala_entry k WHERE k.user_id = u.id), 0),
   COALESCE((SELECT MAX(p.server_at) FROM practice_session p WHERE p.user_id = u.id), 0))`;
 
-async function deleteUsers(db, ids) {
+async function deleteUsers(env, ids) {
   if (!ids.length) return 0;
-  const q = ids.map(() => '?').join(',');
+  const db = env.DB, arg = JSON.stringify(ids), q = 'SELECT value FROM json_each(?)';
+  const targets = env.REMINDER_CLOCK ? (await db.prepare(`SELECT user_id FROM reminder_setting WHERE user_id IN (${q})
+    UNION SELECT user_id FROM reminder WHERE user_id IN (${q})`).bind(arg, arg).all()).results : [];
   await db.batch([
-    db.prepare(`DELETE FROM sync_op WHERE user_id IN (${q})`).bind(...ids),
-    db.prepare(`DELETE FROM deletion_request WHERE user_id IN (${q})`).bind(...ids),
-    db.prepare(`DELETE FROM user WHERE id IN (${q})`).bind(...ids),   // CASCADE: session, account, passkey, profile, journey…
+    db.prepare(`DELETE FROM sync_op WHERE user_id IN (${q})`).bind(arg),
+    db.prepare(`DELETE FROM deletion_request WHERE user_id IN (${q})`).bind(arg),
+    db.prepare(`DELETE FROM user WHERE id IN (${q})`).bind(arg),
   ]);
+  await cancelRemovedUsers(env, targets.map((r) => r.user_id));
   return ids.length;
 }
 
 export async function runCron(env, now = Date.now()) {
   const db = env.DB, out = {};
   const due = (await db.prepare('SELECT user_id FROM deletion_request WHERE execute_after <= ? LIMIT ?').bind(now, BATCH).all()).results || [];
-  out.deleted_requested = await deleteUsers(db, due.map((r) => r.user_id));
+  out.deleted_requested = await deleteUsers(env, due.map((r) => r.user_id));
 
   const idle = (await db.prepare(
     `SELECT u.id FROM user u WHERE u.isAnonymous = 1 AND ${LAST_SEEN_SQL} < ? LIMIT ?`,
   ).bind(now - GUEST_IDLE_DAYS * DAY, BATCH).all()).results || [];
-  out.deleted_idle_guests = await deleteUsers(db, idle.map((r) => r.id));
+  out.deleted_idle_guests = await deleteUsers(env, idle.map((r) => r.id));
 
   const [ops, sess, ver, requests, meets, visits, quotas] = await db.batch([
     db.prepare('DELETE FROM sync_op WHERE applied_at < ?').bind(now - SYNC_OP_DAYS * DAY),
@@ -52,6 +56,8 @@ export async function runCron(env, now = Date.now()) {
   out.meet_invites = meets.meta?.changes ?? 0;
   out.island_visits = visits.meta?.changes ?? 0;
   out.companion_quotas = quotas.meta?.changes ?? 0;
+  try { out.reminders = await reconcileReminders(env, now); }
+  catch { out.reminders = { scheduled: 0, failures: 1 }; }
   console.log('[cron]', JSON.stringify(out));
   return out;
 }

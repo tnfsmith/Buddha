@@ -38,7 +38,7 @@ const secured = (db) => ({
 export function createAuth(env, request, extraPlugins = []) {
   const url = new URL(request.url), origin = url.origin;
   const plugins = [
-    anonymous({ generateName: () => 'Khách', onLinkAccount: ({ anonymousUser, newUser }) => linkGuest(env.DB, anonymousUser.user, newUser.user) }),
+    anonymous({ generateName: () => 'Khách', onLinkAccount: ({ anonymousUser, newUser }) => linkGuest(env.DB, anonymousUser.user, newUser.user, env) }),
     bearer(),
     passkey({ rpID: url.hostname, rpName: 'Vân Đạo', origin }),
     secured(env.DB),
