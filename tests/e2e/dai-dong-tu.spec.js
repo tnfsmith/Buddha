@@ -57,8 +57,9 @@ for (const [name, vp] of [['máy tính 1280×800', { width: 1280, height: 800 }]
     await slow.poll(() => daisState(A).then((s) => s.view === 'far' && !s.tween)).toBe(true);
     st = await daisState(A);
     expect(st.camY).toBeLessThan(360);   // Toàn cảnh vẫn dưới tầm mắt Tôn tượng
-    // thấy trọn Tôn tượng: đỉnh đầu (460) và đài đều trong khung hình
-    const vis = await A.evaluate(() => { const w = window.__app.world, T = w.camera.position.constructor; return [new T(0, 455, -760), new T(0, 100, -585)].map((v) => { const p = w.project(v); return p.vis && p.y > 0 && p.y < w.h && p.x > 0 && p.x < w.w; }); });
+    // thấy trọn Tôn tượng: đỉnh đầu (460) và đài đều trong khung hình. Đã tắt vẽ (noDraw) nên tự cập nhật ma trận camera
+    // theo vị trí hiện tại; nếu không, phép chiếu dùng ma trận của khung hình cuối trước khi tắt vẽ (góc Cùng ngồi)
+    const vis = await A.evaluate(() => { const w = window.__app.world, T = w.camera.position.constructor; w.camera.updateMatrixWorld(); return [new T(0, 455, -760), new T(0, 100, -585)].map((v) => { const p = w.project(v); return p.vis && p.y > 0 && p.y < w.h && p.x > 0 && p.x < w.w; }); });
     expect(vis).toEqual([true, true]);
     if (SHOTS) await A.screenshot({ path: `/tmp/dais-${vp.width}-far.png` });
 
