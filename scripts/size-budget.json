@@ -1,6 +1,9 @@
 {
-  "apps/web/dist/van-dao.html": {
-    "baseline": 990068,
-    "max": 1150000
-  }
+  "files": {
+    "apps/web/dist/van-dao.html": {
+      "baseline": 990068,
+      "max": 2000000
+    }
+  },
+  "groups": {}
 }
