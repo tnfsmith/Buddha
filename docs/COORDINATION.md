@@ -1,10 +1,15 @@
 # Vân Đạo — phối hợp Codex và Claude
 
-Ngày cập nhật: 19/11/2026. Người tổng hợp duy nhất: **Codex**. Quyết định chủ dự án: Codex nhận việc Antigravity + Hermes; Claude tiếp tục độc lập phần của Claude.
+Ngày cập nhật: 20/11/2026. Người tổng hợp duy nhất: **Codex**. Quyết định chủ dự án: Codex nhận việc Antigravity + Hermes; Claude tiếp tục độc lập phần của Claude.
 
 **Quyết định nội dung mới của chủ dự án (#55):** bỏ điều kiện Hội đồng bắt buộc. Nội dung tham khảo có nguồn, phát hành theo quy trình biên tập/PR; Hội đồng/chuyên gia chỉ tư vấn tùy chọn. ADR 0003 thay các yêu cầu cũ còn xuất hiện trong bằng chứng lịch sử dưới đây. Quyết định đã ghi không có nghĩa mã UI đang chạy đã thay đổi.
 
 **Mốc bàn giao 19/11:** main và staging tại `6fca294` đã có API hồ sơ #117 và bộ nạp biến thể #118. Xem §23 và Issue/PR mới nhất để biết quyền sửa tệp và việc đang chờ.
+
+**Mốc bàn giao 20/11:** #152 và #157 đã vào `main` tại `273c2aa`, staging đã deploy. Codex kiểm bản ghép [#148 → #153 → #155](https://github.com/tnfsmith/Buddha/issues/151#issuecomment-7031379234) với main mới: 5/5 ca hồi quy đạt. Claude rebase chuỗi này; đối chiếu lại CI và preview theo head mới trước khi chủ dự án merge. Gói API Đồng tu #158 → #159 vẫn đi theo [#151](https://github.com/tnfsmith/Buddha/issues/151).
+
+- [#160](https://github.com/tnfsmith/Buddha/issues/160): Codex giữ hợp đồng §12 và phần Worker/ảnh R2 sau khi hợp đồng merge. Claude giữ việc đổi liên kết trong UI sau cùng mốc hợp đồng.
+- [#161](https://github.com/tnfsmith/Buddha/issues/161): Codex giữ công cụ ngân sách bước 1. Claude giữ build và UI tách tệp bước 2 sau #155, rồi Codex đo và bật ngân sách bản web ở bước 3.
 
 Đọc tệp này khi bắt đầu phiên; sau đó kiểm Issue/PR và `origin/main` hiện tại. Tệp là bản bàn giao có thời điểm, không thay bảng việc GitHub. Claude gửi cập nhật trong Issue/PR; Codex tổng hợp để tránh hai agent cùng sửa tệp này.
 

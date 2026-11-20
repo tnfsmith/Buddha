@@ -364,8 +364,8 @@ ReminderClock (#106) hiện chỉ nhận `reminder_id` của bảng nhắc đị
   - Phải là bạn đã kết nối, không chặn.
   - Mỗi cặp mỗi ngày một lời; trùng thì 409 `cheer_today`.
   - 201. Hạn mức 30/ngày.
-- **`GET /api/v1/companions`** thêm `cheers: [{ from: { id, tinh_danh, tag }, line, day?, completed?, at }]`: lời gửi tới mình trong 7 ngày, mới trước.
-- **`GET /me`** thêm `social.cheers`: số lời có `at > cheer_seen.seen_at`.
+- **`GET /api/v1/companions`** thêm `cheers: [{ from: { id, tinh_danh, tag }, line, day?, completed?, at }]`: lời gửi tới mình với `at > now - 7 ngày`, mới trước, loại lời của tài khoản bị chặn theo bất kỳ chiều nào.
+- **`GET /me`** thêm `social.cheers`: đếm trên cùng tập lời còn hạn, không chặn hai chiều, rồi lọc `at > cheer_seen.seen_at` (chưa có mốc thì coi là `0`). Áp dụng ngay cả khi cron chưa dọn.
 - **`POST /api/v1/cheers/seen`** `{ until: at }`: đánh dấu đã xem tới `until`. 204.
   - Mốc lưu ở bảng riêng, chỉ tăng: `seen_at = max(seen_at, min(until, now))`. Giới hạn ở giờ máy chủ để máy khách không đặt mốc tương lai.
   ```sql
@@ -386,17 +386,31 @@ ReminderClock (#106) hiện chỉ nhận `reminder_id` của bảng nhắc đị
 - Nhận lời (`accept` link, `respond`) **không** cần nhân vật, để người mới vẫn kết nối được.
 - `REASON_TEXT.need_character` = «Hãy tạo nhân vật và giữ hành trình trước khi mời bạn.»
 
-## 12. Liên kết chia sẻ ra ngoài và thẻ xem trước: không cần Worker
-- **Liên kết:** `/?ban=CODE`. Ứng dụng đổi `?ban=` thành `#ban=` khi mở rồi đi theo luồng có sẵn: hiện tên người mời qua `GET /companions/link/:code`, nhận qua `accept`.
-- **Đường dẫn:**
-  - `/` là tài nguyên tĩnh, không nằm trong `run_worker_first`. Yêu cầu không gọi Worker, nên mã không vào invocation logs dù observability đang bật.
-  - Không thêm `/moi/*`.
-- **Thẻ xem trước Open Graph chung cho mọi mã**, đặt sẵn trong `index.html` (máy khách, #155):
-  - `og:title` «Mời bạn tu cùng trên Vân Đạo»;
-  - `og:description` «Không gian tu tập 49 ngày: thiền 15 phút, nghe giảng, cùng bạn đồng tu.»
-  - Không có tên người mời trong thẻ, nên không cần phân biệt mã đúng hay sai, cũng không lo bộ nhớ đệm công khai.
-- **`og:image`** cần một ảnh PNG/JPG tĩnh, vì Facebook không nhận SVG. Codex hoặc chủ dự án chọn làn và đặt tệp ở `apps/web/public/`; thư mục này hiện chưa thuộc làn nào trong `.github/lanes.yml`.
-- **Có tên người mời trong thẻ Facebook** là một mức công khai mới. Chỉ làm khi chủ dự án xác nhận; khi đó cần thêm một hợp đồng riêng về trang Worker và bộ nhớ đệm.
+## 12. Liên kết chia sẻ ra ngoài và thẻ xem trước (#160)
+
+Chủ dự án duyệt thẻ có Tịnh danh và mã bốn số ngày 20/11/2026. Bất kỳ ai có liên kết mới đều có thể xem thẻ. Giao diện chia sẻ báo rõ điều này và để «Kèm tiến trình» tắt mặc định.
+
+### 12.1 Liên kết và đường dẫn
+
+- Liên kết mới: `/moi/CODE`, thêm `?d=1` khi người mời chọn «Kèm tiến trình». Dùng `normInviteCode` cho mã. `/?ban=CODE` và `/#ban=CODE` tiếp tục hoạt động với thẻ chung.
+- Máy khách nhận `/moi/CODE` như `?ban=`: chuyển mã vào luồng `#ban=` hiện có, dùng `replaceState` đưa đường dẫn về gốc để nhận lời qua `GET /companions/link/:code` và `accept`.
+- `GET /moi/:code` đi qua Worker (`run_worker_first: /moi/*` ở production và staging, gồm preview). Worker đọc tài nguyên `/` của `ASSETS` và dùng `HTMLRewriter` sửa metadata trong chính HTML gốc. Phản hồi giữ nguyên URL, nội dung ứng dụng và luồng nhận lời.
+- Tra mã và thông tin công khai chỉ bằng D1 của Worker đang phục vụ yêu cầu, giới hạn tần suất theo IP. Trang không cần phiên, không tạo hoặc nhận kết nối và không trừ lượt mời. Khi chưa tìm được bản ghi đủ điều kiện hoặc D1 tạm lỗi, trả trang với thẻ chung.
+
+### 12.2 Trường được hiển thị
+
+- Thẻ chung: `og:title` «Mời bạn tu cùng trên Vân Đạo», `og:description` «Không gian tu tập 49 ngày: thiền 15 phút, nghe giảng, cùng bạn đồng tu.», `og:url` là URL gốc của môi trường. Dùng cùng thẻ cho mã sai, hết lượt, hết hạn, đã thu hồi hoặc tài khoản Ẩn. HTML trả 200 khi tài nguyên ứng dụng có sẵn.
+- Với mã còn hạn, còn lượt và người mời có Tịnh danh, mã bốn số hợp lệ, `visibility != 'an'`: `og:title` «⟨Tịnh danh⟩ · ⟨mã 4 số⟩ mời bạn tu cùng trên Vân Đạo». `og:url` là URL chuẩn `/moi/CODE` trên đúng môi trường, thêm `?d=1` nếu yêu cầu có đúng một tham số `d` với giá trị `1`.
+- Thêm «Ngày ⟨day⟩ của hành trình Sơ nhập.» vào `og:description` khi có đúng `d=1`, người mời hiện bật `chia_se_tien_trinh` theo §10.1 và D1 có ngày của chu kỳ hiện hành. Mọi trường hợp khác giữ mô tả chung. Người có liên kết có thể tự thêm `d=1`; quyền hiển thị ngày luôn lấy từ cài đặt của người mời trên máy chủ.
+- Metadata dùng origin của môi trường phục vụ (bao gồm preview), thoát nội dung thuộc tính HTML. Thẻ chỉ mang tên, mã bốn số và ngày được chia sẻ. Không đưa email, ID nội bộ, thời điểm hoạt động, Kusala, nhật ký hoặc ghi chú vào thẻ.
+- `og:image` dùng chung một ảnh PNG 1200×630. Đặt ảnh có khóa phiên bản trong cả `vandao-media-staging` và `vandao-media`; Worker phục vụ `GET`/`HEAD` tại `/media/og/` bằng danh sách khóa ảnh cố định. Nhánh ảnh có cache immutable và vẫn giữ yêu cầu kiểm D1 cho mọi tệp bài giảng.
+
+### 12.3 Bộ nhớ đệm, nhật ký và nghiệm thu
+
+- HTML `/moi/*` luôn có `Cache-Control: private, no-store`, `Referrer-Policy: no-referrer` và `robots` `noindex`. Chỉ ảnh chung được lưu cache theo khóa phiên bản. Khi thu hồi/đổi mã hoặc chuyển sang Ẩn, lượt cào mới nhận thẻ chung. Facebook có thể vẫn hiển thị ảnh chụp thẻ đã cào trước đó cho đến khi họ làm mới bộ nhớ đệm.
+- Tắt [`observability.logs.invocation_logs`](https://developers.cloudflare.com/workers/observability/logs/workers-logs/) ở production và staging để tránh lưu URL có mã mời. Giữ log lỗi đã lược thông tin; lỗi route chỉ ghi tên loại lỗi cố định. Không ghi mã mời, URL đầy đủ, Tịnh danh hay ngày chia sẻ vào log hoặc Analytics.
+- Nghiệm thu Worker: mã hợp lệ, sai cú pháp, không tồn tại, hết lượt, hết hạn, thu hồi và người mời Ẩn; ma trận `d=1` và quyền chia sẻ; thoát ký tự HTML; không trừ lượt mời; kiểm headers, ảnh và xử lý lỗi D1.
+- Nghiệm thu tích hợp: Facebook Sharing Debugger trên preview và staging thấy tên, mã bốn số và ảnh cho mã thử hợp lệ; mã sai hiện thẻ chung. Điện thoại mở cả hai dạng liên kết và nhận lời qua luồng cũ. Hợp đồng merge trước khi Codex làm Worker/ảnh và Claude đổi URL phía khách.
 
 ## 13. Nghiệm thu phía máy chủ bổ sung
 - **Phiên:**
@@ -412,5 +426,6 @@ ReminderClock (#106) hiện chỉ nhận `reminder_id` của bảng nhắc đị
 - **Vòng đời:** xóa tài khoản → không còn phiên, ghế, khích lệ, mốc đã xem; cron xóa đúng hạn.
 - **Tiến trình:** bạn chưa bật và người lạ nhận cùng 404; đã bật → không có trường nào ngoài §10.2.
 - **Khích lệ:** lời thứ hai trong ngày → 409; người chặn không gửi được; `tien_trinh` lấy ngày từ `journey`, không lấy từ thân yêu cầu.
+- **Khích lệ rồi chặn:** cả danh sách và huy hiệu bỏ lời ngay khi chặn theo một trong hai chiều. Lời vừa chạm mốc 7 ngày cũng biến mất trước khi cron chạy.
 - **`need_character`:** đủ bốn đường dẫn §11; `accept` vẫn đạt.
 - **`need_character`:** `look_json = '{}'` cũng bị chặn.
