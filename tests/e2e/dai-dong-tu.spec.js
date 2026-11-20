@@ -7,6 +7,8 @@ import { slow, fakeServer, device, M } from './dong-tu-fake.js';
 test.use({ serviceWorkers: 'block' });
 test.skip(!!process.env.E2E_BASE_URL, 'máy chủ giả lập chỉ chạy với bản dựng cục bộ');
 const SHOTS = !!process.env.DT_SHOTS;   // DT_SHOTS=1: lưu ảnh để xem bằng mắt (không chạy trong CI)
+/** Vẽ bằng CPU (SwiftShader) rất chậm: sau khi đã đo lệnh vẽ thì bỏ bước vẽ, máy quay và nhãn vẫn cập nhật như thường */
+const noDraw = (page) => (SHOTS ? null : page.evaluate(() => { window.__app.world.renderer.render = () => {}; }));
 
 /** A và B đã là bạn; B mời A cùng ngồi thiền ở Đại Thiền Đường và A đã nhận lời, còn `lead` mili-giây tới giờ */
 function seeded(lead) {
@@ -49,6 +51,7 @@ for (const [name, vp] of [['máy tính 1280×800', { width: 1280, height: 800 }]
     await A.waitForTimeout(1500); st = await daisState(A);
     expect(st.calls).toBeLessThanOrEqual(120); expect(st.tris).toBeLessThanOrEqual(400_000);
     if (SHOTS) await A.screenshot({ path: `/tmp/dais-${vp.width}-near.png` });
+    await noDraw(A);
 
     await A.locator('#cam [data-cam="dais"]').click();
     await slow.poll(() => daisState(A).then((s) => s.view === 'far' && !s.tween)).toBe(true);
