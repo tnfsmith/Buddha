@@ -102,6 +102,14 @@ const webHtml = page(webFonts)
 if (webHtml.includes('__BUNDLE__') || !webHtml.includes(APP_URL)) throw new Error('index.template.html cần đúng <script>/*__BUNDLE__*/</script> (#161)');
 writeFileSync('public/index.html', webHtml);
 const VERSION = createHash('sha256').update(webHtml).digest('hex').slice(0, 12);
+// Câu nhắc theo hợp đồng reminder-clock §6 (đổi câu chữ là đổi app, không đổi máy chủ)
+const PUSH_TEXT = {
+  thien: 'Đến giờ ngồi thiền đã hẹn. Mời bạn về Đài Thiền.',
+  nhiem_vu: 'Việc nhỏ của hôm nay đã sẵn ở Bia Tích Lũy.',
+  ghi_nhan: 'Cuối ngày rồi. Mời bạn ghi nhận ba trục.',
+  uposatha: 'Hôm nay là ngày trai. Bạn có thể tự nguyện thọ trì.',
+  tong_ket_tuan: 'Mời bạn phản tỉnh tuần qua.',
+};
 writeFileSync('public/sw.js', `// Service worker Vân Đạo ${VERSION} — sinh bởi build.mjs, không sửa tay
 const CACHE = 'vandao-${VERSION}';
 const CORE = ['/', '/manifest.webmanifest', '/icon.svg', '/icon-maskable.svg'];
@@ -125,6 +133,24 @@ self.addEventListener('activate', (e) => {
     await c.put(LIST, new Response(JSON.stringify(ASSETS)));
     await self.clients.claim();
   })());
+});
+// #106 §6: nhắc Web Push chỉ mang \`kind\`; câu chữ do app biên tập, không có chữ riêng tư trong push
+const PUSH = ${JSON.stringify(PUSH_TEXT)};
+self.addEventListener('push', (e) => {
+  let d = null; try { d = e.data ? e.data.json() : null; } catch { d = null; }
+  const kind = d && Object.prototype.hasOwnProperty.call(PUSH, d.kind) ? d.kind : null;
+  if (!kind) return;
+  e.waitUntil(self.registration.showNotification('Vân Đạo', { body: PUSH[kind], tag: kind, renotify: false, icon: '/icon.svg', badge: '/icon.svg', data: { kind } }));
+});
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const kind = e.notification.data && e.notification.data.kind, to = kind === 'thien' ? '/#zone=pad' : '/#view=board';
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async (cs) => {
+    const c = cs.find((x) => new URL(x.url).origin === location.origin);
+    if (!c) return self.clients.openWindow(to);
+    await c.focus();
+    return c.navigate ? c.navigate(new URL(to, location.origin).href).catch(() => {}) : null;
+  }));
 });
 self.addEventListener('fetch', (e) => {
   const req = e.request, url = new URL(req.url);
