@@ -1,8 +1,10 @@
 // #151 (phần không cần API mới): chia sẻ mã mời lên Facebook / sao chép trên máy tính và điện thoại, liên kết dạng /?ban=,
 // điều kiện «tạo và lưu nhân vật trước khi mời», danh sách có tên và ID, «Xem nhanh» tiến trình bạn, các kiểu mời theo canMeet.
 import { test, expect } from '@playwright/test';
+import { closeContextsAfterEach } from './hooks.js';
 import { BASE, slow, fakeServer, device, P, openList } from './dong-tu-fake.js';
 
+closeContextsAfterEach();
 test.use({ serviceWorkers: 'block' });
 test.skip(!!process.env.E2E_BASE_URL, 'máy chủ giả lập chỉ chạy với bản dựng cục bộ');
 /** Bắt window.open thay vì mở cửa sổ thật */
