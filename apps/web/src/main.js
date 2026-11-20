@@ -12,7 +12,6 @@ import { nv, loadMissions, soNhapView, soNhapAct, todayBox, todayLeft, missionsS
 import { ct, loadVariants, variantsStale, variantHtml, dkCard, dkView, dkAct, dkPull } from './ui/duyen-khoi.js';
 import { ptCard, ptLine, ptView, ptAct, ptSaved } from './ui/phan-tinh.js';
 import { tierOpened, tierMigrate, tierLoad, tierBlock, tierAct } from './ui/tang-1.js';
-import { atInit, atCard, atView, atAct, atInput } from './ui/chung-thuc.js';
 import { registerPWA, persistStorage } from './boot.js';
 import { startMetrics } from './net/metrics.js';
 import { $, fmt, esc } from './ui/dom.js';
@@ -21,6 +20,7 @@ import { acct, record, recordProfile, recordPractice, syncNow } from './net/acco
 import { onDongTu, meet as dtMeet, visitAway } from './net/dong-tu.js';   // #125: đảo bạn thật (dongTu ở dòng dưới)
 import { tdInit, tdView, tdAct, tdStart, tdOn, tdSkip, tdAt } from './ui/tra-dao.js';
 import { MEET_KINDS, PRESENCE_TEXT, REASON_TEXT } from '@vandao/shared/dong-tu.js';
+import { atInit, atCard, atView, atAct, atInput } from './ui/chung-thuc.js';
 import { dtInit, dtView, dtAct, dtInput, dtOpen, dtBadge, dtGateLine, dtSyncOpen } from './ui/dong-tu.js';
 import { dongTu } from './net/dong-tu.js';
 
