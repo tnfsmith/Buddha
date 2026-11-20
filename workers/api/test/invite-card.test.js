@@ -4,7 +4,7 @@ import { INVITE_IMAGE_KEY } from '../src/routes/media.js';
 import { call, env, guest } from './helpers.js';
 
 const origin = 'https://pr-160-vandao-staging.vandao-staging.workers.dev';
-const html = '<!doctype html><html><head><meta property="og:title" content="cũ"><meta name="robots" content="index"></head><body>Vân Đạo</body></html>';
+const html = '<!doctype html><html><head><meta property="og:title" content="cũ"><meta property="og:type" content="website"><meta property="og:image:width" content="640"><meta name="robots" content="index"></head><body>Vân Đạo</body></html>';
 const assets = { fetch: request => {
   expect(request.url).toBe(origin + '/');
   expect(request.headers.get('Cookie')).toBeNull();
@@ -38,6 +38,10 @@ it('hiện tên và mã trên HTML gốc, dùng đúng origin và giữ nguyên 
   expect(body).toContain(meta('og:title', 'Tuệ An · 0123 mời bạn tu cùng trên Vân Đạo'));
   expect(body).toContain(meta('og:url', `${origin}/moi/${code}`));
   expect(body).toContain(meta('og:image', `${origin}/media/${INVITE_IMAGE_KEY}`));
+  expect(body).toContain(meta('og:image:width', '1200'));
+  expect(body).toContain(meta('og:image:height', '630'));
+  expect(body.match(/property="og:type"/g)).toHaveLength(1);
+  expect(body.match(/property="og:image:width"/g)).toHaveLength(1);
   expect(body).toContain('<meta name="robots" content="noindex">');
   expect(body).toContain('<body>Vân Đạo</body>');
   expect(body.match(/property="og:title"/g)).toHaveLength(1);
@@ -61,6 +65,13 @@ it('chỉ thêm ngày khi người mời bật cờ boolean và có đúng một
   for (const query of ['', '?d=0', '?d=1&d=1']) {
     expect(await (await request(page + query)).text()).not.toContain('Ngày 17');
   }
+  await env.DB.prepare('UPDATE journey SET day = 49, completed_at = ? WHERE user_id = ? AND is_current = 1').bind(Date.now(), uid).run();
+  const completed = await (await request(page + '?d=1')).text();
+  expect(completed).toContain('Đã hoàn thành chương trình Sơ nhập.');
+  expect(completed).not.toContain('Ngày 49');
+  expect(await (await request(page)).text()).not.toContain('Đã hoàn thành chương trình Sơ nhập.');
+  await settings(false);
+  expect(await (await request(page + '?d=1')).text()).not.toContain('Đã hoàn thành chương trình Sơ nhập.');
 });
 
 it('dùng thẻ chung cho mã hỏng, mất hiệu lực, hồ sơ Ẩn và D1 khác', async () => {
@@ -101,9 +112,15 @@ it('thoát tên trong thuộc tính và trả thẻ chung khi truy vấn D1 lỗ
   } finally { log.mockRestore(); }
 });
 
-it('giới hạn theo IP và áp dụng header riêng tư khi không có trang HTML', async () => {
-  const limited = await request('/moi/00000000', { RL_POLL: { limit: async () => ({ success: false }) } });
-  expect(limited.status).toBe(429);
+it('trả thẻ chung 200 khi vượt giới hạn theo IP và giữ header riêng tư nếu thiếu trang HTML', async () => {
+  const { code } = await hostInvite();
+  const limiter = vi.fn(async () => ({ success: false }));
+  const prepare = vi.fn();
+  const limited = await request(`/moi/${code}?d=1`, { RL_POLL: { limit: limiter }, DB: { prepare } }, { headers: { 'CF-Connecting-IP': '198.51.100.20' } });
+  expect(limited.status).toBe(200);
+  expect(await limited.text()).toContain(meta('og:title', 'Mời bạn tu cùng trên Vân Đạo'));
+  expect(limiter).toHaveBeenCalledWith({ key: 'RL_POLL:198.51.100.20' });
+  expect(prepare).not.toHaveBeenCalled();
   expect(limited.headers.get('Cache-Control')).toBe('private, no-store');
   const unavailable = await request('/moi/00000000', { ASSETS: undefined });
   expect(unavailable.status).toBe(503);

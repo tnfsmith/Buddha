@@ -1,7 +1,7 @@
 // #160: metadata thẻ mời, đọc từ D1 của chính môi trường đang phục vụ.
 import { Hono } from 'hono';
 import { normInviteCode } from '@vandao/shared/dong-tu.js';
-import { byIp } from '../guard.js';
+import { clientIp } from '../guard.js';
 import { INVITE_IMAGE_KEY } from './media.js';
 
 const inviteCard = new Hono();
@@ -20,14 +20,26 @@ function inviteCode(path) {
   catch { return null; }
 }
 
+async function mayReadInvite(c) {
+  const limiter = c.env.RL_POLL;
+  if (typeof limiter?.limit !== 'function') return true;
+  try {
+    return (await limiter.limit({ key: `RL_POLL:${clientIp(c)}` })).success;
+  } catch {
+    console.error('[Thẻ mời] rate limit');
+    return false;
+  }
+}
+
 async function publicInvite(db, code, includeDay) {
   if (!db || !code) return null;
   try {
-    // CASE bảo đảm chỉ đọc ngày ra khỏi D1 khi cả yêu cầu và quyền hiện tại cho phép.
+    // Chỉ trả tiến trình từ D1 khi cả yêu cầu và quyền hiện tại cho phép.
     return await db.prepare(`SELECT p.tinh_danh, p.tag,
-      CASE WHEN ?3 = 1 AND json_valid(p.settings_json) THEN
-        CASE WHEN json_type(p.settings_json, '$.dong_tu.chia_se_tien_trinh') = 'true' THEN j.day END
-      END AS day
+      CASE WHEN ?3 = 1 AND j.day IS NOT NULL AND json_valid(p.settings_json) THEN
+        CASE WHEN json_type(p.settings_json, '$.dong_tu.chia_se_tien_trinh') = 'true'
+          THEN json_object('day', j.day, 'completed', j.completed_at IS NOT NULL) END
+      END AS progress
       FROM invite i JOIN profile p ON p.user_id = i.owner_id
       LEFT JOIN journey j ON j.user_id = p.user_id AND j.is_current = 1 AND j.program = 'so-nhap-49'
       WHERE i.code = ?1 AND i.expires_at > ?2 AND i.uses_left > 0 AND p.visibility <> 'an'
@@ -44,7 +56,7 @@ inviteCard.use('*', async (c, next) => {
   for (const [name, value] of Object.entries(privacy)) c.header(name, value);
 });
 
-inviteCard.get('*', byIp('RL_POLL'), async (c) => {
+inviteCard.get('*', async (c) => {
   const url = new URL(c.req.url);
   const asset = await c.env.ASSETS?.fetch(new Request(new URL('/', url)));
   if (!asset?.ok || !asset.headers.get('Content-Type')?.includes('text/html')) return c.text('Vân Đạo đang tạm bận.', 503);
@@ -52,12 +64,22 @@ inviteCard.get('*', byIp('RL_POLL'), async (c) => {
   const code = inviteCode(url.pathname);
   const dayParams = url.searchParams.getAll('d');
   const includeDay = dayParams.length === 1 && dayParams[0] === '1';
-  const owner = await publicInvite(c.env.DB, code, includeDay);
+  // Trình cào nhận thẻ chung nếu vượt giới hạn. Không truy vấn D1 cho lượt đã bị giới hạn.
+  const owner = code && await mayReadInvite(c) ? await publicInvite(c.env.DB, code, includeDay) : null;
+  let summary = description;
+  if (owner?.progress) {
+    const progress = JSON.parse(owner.progress);
+    summary += progress.completed ? ' Đã hoàn thành chương trình Sơ nhập.' : ` Ngày ${progress.day} của hành trình Sơ nhập.`;
+  }
   const meta = {
+    'og:type': 'website',
+    'og:site_name': 'Vân Đạo',
     'og:title': owner ? `${owner.tinh_danh} · ${owner.tag} mời bạn tu cùng trên Vân Đạo` : title,
-    'og:description': owner?.day ? `${description} Ngày ${owner.day} của hành trình Sơ nhập.` : description,
+    'og:description': summary,
     'og:url': owner ? new URL(`/moi/${code}${includeDay ? '?d=1' : ''}`, url).href : new URL('/', url).href,
     'og:image': new URL(`/media/${INVITE_IMAGE_KEY}`, url).href,
+    'og:image:width': '1200',
+    'og:image:height': '630',
   };
   const tags = Object.entries(meta).map(([property, value]) => `<meta property="${property}" content="${escapeAttr(value)}">`);
   const rewriter = new globalThis.HTMLRewriter().on('head', {
