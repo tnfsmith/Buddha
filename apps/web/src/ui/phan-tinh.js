@@ -23,6 +23,9 @@ const keep = () => { try { localStorage.setItem(KEY, JSON.stringify(all)); } cat
 /** Tuần mới nhất đã tới lượt phản tỉnh: ngày 7 → tuần 1, … ngày 49 hay đã hoàn thành → tuần 7; chưa tới thì 0 */
 export const dueWeek = (S) => (S.completed ? 7 : Math.min(7, Math.floor((S.day || 0) / 7)));
 
+/** Tuần `w` đã lưu phản tỉnh trên máy này cho tài khoản và chu kỳ hiện tại (cổng Tầng 1 cần tuần 7, #107) */
+export const ptSaved = (S, w) => !!book(S).w[w];
+
 /** Lời mời ở Bia khi tuần mới nhất chưa phản tỉnh và hôm nay chưa bấm «Để sau» */
 export function ptCard(S, date) {
   const w = dueWeek(S), b = book(S);
