@@ -8,6 +8,7 @@ import { getPracticeProfile } from '../practice-profile.js';
 import { exportCompanions } from '../companions-data.js';
 import { deedView } from './deeds.js';
 import { INVITE_MS } from './attestation.js';
+import { readReminders } from '../reminder-data.js';
 
 const exportApp = new Hono();
 
@@ -64,6 +65,7 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
     db.prepare(`SELECT week, attester_label, note, status, confirmed_at
       FROM attestation WHERE attester_id = ? ORDER BY confirmed_at`).bind(user.id),
   ]);
+  const reminderState = await readReminders(db, user.id);
 
   c.header('Cache-Control', 'no-store');
   return c.json({
@@ -80,6 +82,8 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
     deeds: deeds.results.map(deedView),
     attestations: attestations.results,
     attestations_given: given.results,
+    reminders: (reminderState?.rows ?? []).map((row) => ({ ...row, active: Boolean(row.active) })),
+    reminder_paused_until: reminderState?.policy.paused_until ?? null,
     journeys: journeys?.results || [],
     kusala_entries: kusalaEntries?.results || [],
     practice_sessions: sessions?.results || [],

@@ -28,6 +28,20 @@ export async function linkGuest(db, guest, target) {
   moveAll.push(db.prepare('UPDATE OR IGNORE sync_op SET user_id = ? WHERE user_id = ?').bind(t, g),
     db.prepare('DELETE FROM sync_op WHERE user_id = ?').bind(g));
   moveAll.push(db.prepare('UPDATE attestation SET attester_id = CASE WHEN user_id = ?1 THEN NULL ELSE ?1 END WHERE attester_id = ?2').bind(t, g));
+  const reminderMove = crypto.randomUUID();
+  // Giữ lựa chọn của đích nếu đã có. Nếu mang lịch khách sang, cần opt-in lại ở đích.
+  moveAll.push(
+    db.prepare(`INSERT INTO reminder_setting (user_id, paused_until, write_id)
+      SELECT ?1, COALESCE((SELECT paused_until FROM reminder_setting WHERE user_id = ?2),
+        (SELECT MAX(paused_until) FROM reminder WHERE user_id = ?2)), ?3
+      WHERE NOT EXISTS (SELECT 1 FROM reminder WHERE user_id = ?1)
+        AND (EXISTS (SELECT 1 FROM reminder_setting WHERE user_id = ?2) OR EXISTS (SELECT 1 FROM reminder WHERE user_id = ?2))
+      ON CONFLICT(user_id) DO NOTHING`).bind(t, g, reminderMove),
+    db.prepare(`UPDATE reminder SET user_id = ?1, active = 0, next_at = NULL WHERE user_id = ?2
+      AND EXISTS (SELECT 1 FROM reminder_setting WHERE user_id = ?1 AND write_id = ?3)`).bind(t, g, reminderMove),
+    db.prepare('DELETE FROM reminder WHERE user_id = ?').bind(g),
+    db.prepare('DELETE FROM reminder_setting WHERE user_id = ?').bind(g),
+  );
   // Hồ sơ Duyên khởi theo tài khoản và không phụ thuộc chế độ gộp hành trình.
   moveAll.push(db.prepare(`UPDATE practice_profile SET user_id = ?1 WHERE user_id = ?2
     AND NOT EXISTS (SELECT 1 FROM practice_profile WHERE user_id = ?1)`).bind(t, g));

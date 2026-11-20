@@ -7,6 +7,7 @@ import { checkName } from '@vandao/shared';
 import { isValidTimeZone } from '../utils/time.js';
 import { nameKey, randomTag } from '../auth/session.js';
 import { readJson, bad, nameError, jsonCapped } from '../lib.js';
+import { refreshReminders } from '../reminder-data.js';
 
 const profileApp = new Hono();
 
@@ -133,6 +134,7 @@ profileApp.patch('/', authMiddleware, byUser('RL_API'), async (c) => {
   }
   // Better Auth hiện user.name trong hộp thoại passkey/Google → đi theo Tịnh danh "Tên · 1234"
   if (newName && newName !== current.tinh_danh) await db.prepare('UPDATE user SET name = ?, updatedAt = ? WHERE id = ?').bind(`${newName} · ${tag}`, now, user.id).run();
+  if (newTz !== current.tz) await refreshReminders(c.env, user.id, now);
 
   return c.json({
     success: true,

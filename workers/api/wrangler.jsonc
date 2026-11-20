@@ -41,7 +41,7 @@
   ],
   // T1.3 (#8): số liệu ẩn danh (FPS theo nhóm máy, lỗi JS) — Analytics Engine, gói Free 100.000 điểm/ngày
   "analytics_engine_datasets": [{ "binding": "METRICS", "dataset": "vd_metrics" }],
-  "vars": { "ENV_NAME": "production" },
+  "vars": { "ENV_NAME": "production", "REMINDERS_ENABLED": "0" },
   // Dọn dữ liệu hằng đêm 02:17 giờ Việt Nam (src/cron.js)
   "triggers": { "crons": ["17 19 * * *"] },
   "observability": { "enabled": true },
@@ -88,7 +88,7 @@
         { "name": "RL_TICKET", "namespace_id": "1006", "simple": { "limit": 20, "period": 60 } }
       ],
       "triggers": { "crons": ["17 19 * * *"] },
-      "vars": { "ENV_NAME": "staging" }
+      "vars": { "ENV_NAME": "staging", "REMINDERS_ENABLED": "0" }
     }
   }
 }
