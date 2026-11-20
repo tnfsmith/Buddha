@@ -37,8 +37,8 @@ Issue #151. Bổ sung cho `docs/thiet-ke/ban-dong-tu.md` (#121) và hợp đồn
 ### 3.1 Vị trí
 | | Giá trị | Lý do |
 |---|---|---|
-| Tâm đài | `(0, 100, −585)` | Trục giữa, cách tâm Tôn tượng 175 (cánh sen ngoài cùng ở 144, hàng hội chúng đầu ở 200) |
-| Độ cao | 100 | Ngang tòa sen: đài mây 75, đỉnh cánh sen ≈ 138. Hội chúng ngồi ở 3; mắt Ngài ở 370 |
+| Tâm đài | `(0, 100, −520)` | Trục giữa, ngay trước tòa sen: cách tâm Tôn tượng 240. Mũi cánh sen ngoài cùng ở ≈ 190 (cao ≈ 105), vành mây đỡ tòa sen tới ≈ 220 |
+| Độ cao | 100 | Ngang tòa sen: đài mây 75, cánh sen ngoài ≈ 105, cánh sen trong ≈ 133. Hội chúng ngồi ở 3; mắt Ngài ở 370 |
 | Hướng | Mọi chỗ quay về tâm Tôn tượng | Đối diện tòa sen |
 
 - **Chỗ ngồi:** 2–6 Vân Tọa xếp cung ngắn, cách nhau 7, cùng một khối mây đài. Thứ tự từ trái sang phải: chủ phiên, rồi các bạn theo thứ tự nhận lời. Mình luôn có chỗ: nhân vật của mình (`hallFig`) rời chỗ ở hội chúng (`SEAT`) lên đài khi phiên bắt đầu và trở về khi phiên tan.
@@ -53,7 +53,7 @@ Issue #151. Bổ sung cho `docs/thiet-ke/ban-dong-tu.md` (#121) và hợp đồn
   - Hết thời thiền (15 phút): đài tan.
   - Bạn chưa vào (máy chưa mở hoặc vào trễ) vẫn có chỗ, Vân Tọa sáng mờ, nhãn ghi «đang tới».
 - **Ngân sách:** ≤ 6 hình người (dùng `buildFigure` như bạn ở Vân Đảo) + 1 khối đài gộp từ hình Vân Tọa có sẵn.
-  - Không thêm texture.
+  - Không thêm shader; texture chỉ có ảnh mặt của mỗi nhân vật như ở Vân Đảo.
   - Khi đài không hiện thì 0 lệnh vẽ.
   - Mức 2 có đài 6 người phải còn trong ngân sách §12.2 (`perf.spec.js` thêm một dòng «Đại Thiền Đường + Đài Đồng Tu»).
 
