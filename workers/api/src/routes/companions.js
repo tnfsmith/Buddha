@@ -7,7 +7,7 @@ import { authMiddleware, nameKey } from '../auth/session.js';
 import { byIp, byUser } from '../guard.js';
 import { bad, readJson } from '../lib.js';
 import {
-  accepted, blocked, cancelPending, listCompanions, needCharacter, pair, savedCharacter, socialQuota, underCap, userIdOk,
+  accepted, blocked, cancelPending, companionProgress, listCompanions, needCharacter, pair, savedCharacter, socialQuota, underCap, userIdOk,
 } from '../companions-data.js';
 import { mountCompanionMeet } from './companions-meet.js';
 
@@ -30,6 +30,13 @@ app.onError((error, c) => {
 
 app.get('/companions', noStore, authMiddleware, byUser('RL_API'), async (c) =>
   c.json(await listCompanions(c.env.DB, who(c), Date.now())));
+
+app.get('/companions/:id/progress', ...quota('companion_progress', 60), async (c) => {
+  const id = idOf(c);
+  if (!userIdOk(id)) return missing(c);
+  const result = await companionProgress(c.env.DB, who(c), id, Date.now());
+  return result ? c.json(result) : missing(c);
+});
 
 app.get('/companions/link/:code', noStore, byIp('RL_POLL'), socialQuota('link_view', 30, HOUR), async (c) => {
   const code = codeOf(c);

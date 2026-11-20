@@ -6,6 +6,7 @@
 // - Máy chủ tự tính Kusala (@vandao/shared/kusala.js) và tiến ngày (@vandao/shared/schedule.js) theo ngày địa phương
 //   của từng thao tác, nên nhiều ngày ngoại tuyến vẫn khóa đúng 1 nấc mỗi ngày.
 import { byUser } from '../guard.js';
+import { mergeProfileSettings } from '../profile-settings.js';
 import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
 import { kusala, validFactor, KUSALA, DAYS } from '@vandao/shared';
@@ -32,9 +33,10 @@ syncApp.post('/', authMiddleware, byUser('RL_SYNC'), async (c) => {
   const ops = body.ops ?? [];
   if (ops.length > MAX_OPS) return bad(c, 'too_many_ops', `Tối đa ${MAX_OPS} thao tác mỗi lần đồng bộ`, 413);
 
-  const profileRow = await db.prepare(
+  const readProfile = db.prepare(
     'SELECT tinh_danh, tag, look_json, settings_json, island_json, tz, visibility, pref_seat, rev FROM profile WHERE user_id = ?',
-  ).bind(user.id).first();
+  ).bind(user.id);
+  const profileRow = await readProfile.first();
   if (!profileRow) return bad(c, 'profile_not_found', 'Hồ sơ không tồn tại', 404);
   const tz = profileRow.tz || 'Asia/Ho_Chi_Minh';
   const today = getLocalDate(now, tz);
@@ -113,10 +115,19 @@ syncApp.post('/', authMiddleware, byUser('RL_SYNC'), async (c) => {
           done,
         ]);
       } else if (op.type === 'profile.patch') {
-        const settings = p.settings === undefined ? profileRow.settings_json : jsonCapped({ ...JSON.parse(profileRow.settings_json || '{}'), ...p.settings });
+        const { json: settings, error } = mergeProfileSettings(profileRow.settings_json, p.settings);
         const island = p.island === undefined ? profileRow.island_json : jsonCapped(p.island);
-        if (settings === null || island === null) { reject(op, 'invalid_profile'); continue; }
-        await db.batch([db.prepare('UPDATE profile SET settings_json = ?, island_json = ?, rev = rev + 1, updated_at = ? WHERE user_id = ?').bind(settings, island, now, user.id), done]);
+        if (error || island === null) { reject(op, 'invalid_profile'); continue; }
+        const [saved] = await db.batch([
+          db.prepare('UPDATE profile SET settings_json = ?, island_json = ?, rev = rev + 1, updated_at = ? WHERE user_id = ? AND rev = ?')
+            .bind(settings, island, now, user.id, profileRow.rev),
+          db.prepare('INSERT INTO sync_op (user_id, op_id, applied_at) SELECT ?, ?, ? WHERE changes() > 0').bind(user.id, op.id, now),
+        ]);
+        if (!saved.meta.changes) {
+          Object.assign(profileRow, await readProfile.first());
+          reject(op, 'profile_changed', true);
+          continue;
+        }
         profileRow.settings_json = settings; profileRow.island_json = island; profileRow.rev += 1;
       } else if (op.type === 'journey.reset_cycle') {
         // "Trở về ngày 1" = chu kỳ mới (PROJECT_ROADMAP.md §4.3); Tịnh danh và diện mạo giữ nguyên

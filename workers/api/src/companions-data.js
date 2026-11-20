@@ -1,7 +1,7 @@
 import { INVITE_TTL_MS, MAX_COMPANIONS, REASON_TEXT, closenessOf, meetPhase, presenceOf, seenBucket } from '@vandao/shared/dong-tu.js';
 import { clientIp } from './guard.js';
 import { currentJourney, bad } from './lib.js';
-import { getLocalDate } from './utils/time.js';
+import { daysBetween, getLocalDate } from './utils/time.js';
 
 export const blocked = (a, b) => `EXISTS (
   SELECT 1 FROM user_block WHERE (blocker_id = ${a} AND blocked_id = ${b}) OR (blocker_id = ${b} AND blocked_id = ${a})
@@ -60,6 +60,27 @@ export async function socialCounts(db, uid, now) {
     (SELECT COUNT(*) FROM meet_invite WHERE to_id = ?1 AND status = 'cho' AND created_at >= ?3) AS invites`)
     .bind(uid, now, now - INVITE_TTL_MS).first();
   return { requests: r.requests, invites: r.invites };
+}
+
+export async function companionProgress(db, viewer, friend, now) {
+  const row = await db.prepare(`SELECT j.cycle, j.day, j.completed_at, j.sessions_done, j.sermons_done, p.tz,
+    MAX(
+      COALESCE((SELECT MAX(at) FROM kusala_entry WHERE user_id = ?2), 0),
+      COALESCE((SELECT MAX(at) FROM practice_event WHERE user_id = ?2), 0),
+      COALESCE((SELECT MAX(started_at) FROM practice_session WHERE user_id = ?2), 0)
+    ) AS last_at
+    FROM profile p JOIN journey j USING (user_id)
+    WHERE p.user_id = ?2 AND j.is_current = 1 AND p.visibility <> 'an'
+      AND json_type(p.settings_json, '$.dong_tu.chia_se_tien_trinh') = 'true'
+      AND ${accepted('?1', '?2')} AND NOT ${blocked('?1', '?2')}`).bind(viewer, friend).first();
+  if (!row) return null;
+  const { completed_at, tz, last_at, ...progress } = row;
+  let last_active = null;
+  if (last_at > 0) {
+    const days = daysBetween(getLocalDate(Math.min(now, last_at), tz), getLocalDate(now, tz));
+    last_active = days === 0 ? 'hom_nay' : days === 1 ? 'hom_qua' : days < 7 ? 'trong_tuan' : 'lau_hon';
+  }
+  return { ...progress, completed: completed_at !== null, last_active };
 }
 // Phép chiếu phía người gửi dùng cùng dạng với GET /companions.outgoing (§4, §6.8).
 export const companionOutgoing = (db, uid, now) => db.prepare(
