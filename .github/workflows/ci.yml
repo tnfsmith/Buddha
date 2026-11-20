@@ -58,14 +58,14 @@ jobs:
         with: { name: van-dao-html, path: apps/web/dist/van-dao.html, retention-days: 14 }
 
   smoke:
-    name: smoke (Playwright ${{ matrix.shard }}/3)
+    name: smoke (Playwright ${{ matrix.shard }}/${{ strategy.job-total }})
     needs: check
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4, 5]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -73,10 +73,11 @@ jobs:
       - run: npm ci
       - run: npm run build
       - name: Kiểm khói Playwright (WebGL SwiftShader)
-        # Mỗi runner dựng WebGL bằng một worker để các ca không tranh CPU.
-        run: npm run e2e:smoke -- --shard="$SMOKE_SHARD/3" --workers=1
+        # Chia theo từng ca để một tệp WebGL nặng không dồn hết vào một runner.
+        run: npm run e2e:smoke -- --fully-parallel --shard="$SMOKE_SHARD/$SMOKE_SHARDS" --workers=1
         env:
           SMOKE_SHARD: ${{ matrix.shard }}
+          SMOKE_SHARDS: ${{ strategy.job-total }}
 
   account:
     name: account (Worker + D1 cục bộ)
