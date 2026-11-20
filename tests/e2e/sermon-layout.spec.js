@@ -1,8 +1,10 @@
 // #139: bố cục khi nghe Thuyết giảng. Phụ đề (#sub) không bao giờ che bảng hay nút «Thu gọn»; trên điện thoại bảng sát
 // cuối màn hình kể cả khi thanh nhạc đã thu nhỏ (barmin); máy tính cũng có nút Thu gọn. Ca này chạy trong CI mọi PR.
 import { test, expect } from '@playwright/test';
+import { closeContextsAfterEach } from './hooks.js';
 
 const BASE = (process.env.E2E_BASE_URL || 'http://127.0.0.1:4173/').replace(/#.*$/, '').replace(/\/?$/, '/');
+closeContextsAfterEach();
 test.use({ serviceWorkers: 'block' });
 test.skip(!!process.env.E2E_BASE_URL, 'nội dung giảng giả lập chỉ chạy với bản dựng cục bộ');
 const slow = expect.configure({ timeout: 60_000 });

@@ -1,6 +1,7 @@
 // #104: Duyên khởi hành trình và gợi ý biến thể theo trục ở Bia Tích Lũy (hợp đồng #111 hồ sơ, #112 biến thể).
 // Máy chủ giả lập: /content trả biến thể kind=chuong_trinh; /practice/profile làm đúng GET/PUT + rev + 409 của #111.
 import { test, expect } from '@playwright/test';
+import { closeContextsAfterEach } from './hooks.js';
 
 const BASE = (process.env.E2E_BASE_URL || 'http://127.0.0.1:4173/').replace(/#.*$/, '').replace(/\/?$/, '/');
 /**
@@ -11,6 +12,7 @@ const booted = async (p) => {
   await p.waitForFunction(() => window.__app?.world?.renderer, null, { timeout: 150_000 });
   await p.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }); window.__app.world.update = () => {}; });
 };
+closeContextsAfterEach();
 test.use({ serviceWorkers: 'block' });
 test.skip(!!process.env.E2E_BASE_URL, 'máy chủ giả lập chỉ chạy với bản dựng cục bộ');
 const slow = expect.configure({ timeout: 60_000 });
