@@ -298,3 +298,9 @@ PR81 chưa merge/deploy; #82 phải cập nhật máy quay hướng chúng sanh 
 
 - #133, #134 và #137 đã vào `main@800deb1`. [#138](https://github.com/tnfsmith/Buddha/pull/138) chuyển về `main`, giữ năm tệp Worker của gói hiện diện, mời gặp và ghé đảo. Sau khi #138 lên staging, Claude dùng hai phiên thật để nghiệm thu #124. #130 còn chờ chốt cách xử lý khi dịch vụ Web Push có thể đã nhận yêu cầu nhưng kết nối mất trước phản hồi.
 - [#139/#140](https://github.com/tnfsmith/Buddha/pull/140) bổ sung quy tắc bố cục cho mọi PR giao diện. Lớp phủ trên `#panel`, gồm phụ đề Thuyết giảng và lớp phủ mới, đặt theo mép trên đo được của bảng qua `--subb` do `fitSub()` cập nhật. Thanh địa chỉ Chrome trên điện thoại có thể đổi vùng nhìn thấy, nên tránh đặt lớp phủ theo `vh` hay `bottom` cố định. Khi sửa `bottom` theo `barmin`, `pmin`, `stab` hoặc `sermon`, kiểm lại thẻ Thuyết giảng và nút Thu gọn. Giữ các ca hồi quy trong `tests/e2e/sermon-layout.spec.js` ở 412×860, 360×700 có `barmin` và 1280×800. Chủ dự án đã xác nhận trên Chrome Android rằng phụ đề nằm trên bảng và thao tác Thu gọn/Mở bảng hoạt động.
+
+## 27. API mở Tầng 1 và thứ tự Đồng tu — 20/11/2026
+
+- #169 đã chốt 49 ngày, ít nhất 30 thời thiền trọn và tự vấn tuần 7. Codex triển khai API, cấu hình phiên bản hóa và export trong nhánh `ag/107-tier-progress` theo [quyền sửa #107](https://github.com/tnfsmith/Buddha/issues/107#issuecomment-7043672982). D1 kiểm toàn bộ điều kiện cùng lúc ghi và giữ bằng chứng khi đổi chu kỳ sau khi mở. Câu trả lời tự vấn chỉ lưu trên thiết bị.
+- Claude giữ #171 và #174, nghiệm thu #174 với API thật sau khi hai nhánh phụ thuộc vào main. Chuỗi #142–#150 giữ trạng thái tạm dừng.
+- #166 và #167 đã vào main. Chuỗi Đồng tu của Claude là #153 → #155 → #168 → #175. #165 theo sau #155 và #167, rồi mới đến #172. Đảo bạn thật #177 đi sau #176 và cần kiểm hai phiên. Xem [bàn giao #108](https://github.com/tnfsmith/Buddha/issues/108#issuecomment-7043673471).
