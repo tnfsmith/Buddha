@@ -592,6 +592,7 @@ panel.addEventListener('click', (e) => {
   else if (act === 'visit') { const i = U.friend; world.setMode('island'); world.visit(i, () => { toast('Đã đến đảo của ' + world.friends[i].name + '.'); world.greet(i); render(); }); toast('Du vân theo vân lộ…'); }
   else if (act === 'gohome') { world.goHome(() => { toast('Đã về Vân Đảo của mình.'); U.view = 'home'; world.setMode('island'); render(); }); toast('Du vân trở về…'); }
   else if (act === 'xin-tham' || act === 'ghe-vang') void askVisit(world.friends[U.friend], act === 'ghe-vang');   // #125: bạn đồng tu thật
+  else if (act === 'tq') { clearTimeout(tourT); world.tourShow(U.friend, b.dataset.id); render(); } else if (act === 'tq-auto') tourAuto(U.friend, 'Đã tham quan hết các phân khu.');   // #125 §5.5: tham quan
   else if (act === 'sitwith') { world.sitWith(U.friend, 'thien', () => { if (!player.playing) togglePlay(); U.sit = { at: Date.now(), zone: null }; render(); }); toast('Hai người cùng an tọa, hướng về Tôn tượng.'); }   // #125: tới ngồi cạnh chủ đảo
   else if (act === 'sacca') { S.sacca++; save(); record('sacca.add'); if (world) world.burst(0xbfeee4, null, 0.5); toast('Thành thật nhận lỗi và nguyện phòng hộ ngày mai: mặt hồ trong trở lại.'); }
   else if (act === 'reset') { if (U.resetArm) { const keep = { name: S.name, look: S.look, tier1v: S.tier1v, tier1Legacy: S.tier1Legacy }; resetState(keep); save(); record('journey.reset_cycle'); U.resetArm = false; toast('Đã trở về ngày 1.'); } else U.resetArm = true; }
@@ -822,8 +823,21 @@ function islandMeet(inv) {
   if (U.mode !== 'island') setMode('island');
   U.friend = i; U.view = 'friend';
   if (A.where === i) { if (how) world.sitWith(i, how); render(); return true; }
-  world.visit(i, () => { if (how) world.sitWith(i, how); else world.greet(i); toast('Đã đến đảo của ' + world.friends[i].name + '.'); render(); }, how);
+  world.visit(i, () => { if (how) world.sitWith(i, how); else world.greet(i); toast('Đã đến đảo của ' + world.friends[i].name + '.'); render();
+    if (inv.kind === 'tham_quan') tourT = setTimeout(() => tourAuto(i, 'Đã tham quan đảo của ' + world.friends[i].name + '.'), 2600); }, how);   // chủ mời tham quan: giới thiệu lần lượt
   toast('Du vân theo vân lộ…'); render(); return true;
+}
+// «Tham quan» đảo bạn (#125 §5.5): các phân khu bạn đã mở theo ngày; bấm để xem, vòng sáng đánh dấu chỗ đang xem; lần lượt thì mỗi chỗ 4,5 giây
+const TOUR_NAME = { mon: 'Vân Môn', toa: 'Vân Tọa', bode: 'Cây Bồ-đề', ao: 'Ao sen ngọc', tra: 'Bàn trà đá', den: 'Đèn đá', loi: 'Lối đá', am: 'Am nhỏ', bia: 'Bia nhỏ' };
+let tourT = 0;
+function tourBlock(i) {
+  const st = world.tourStops(i), at = world.tourAt && world.tourAt.i === i ? world.tourAt.id : null; if (!st.length) return '';
+  return `<h3>Tham quan</h3><div class="seg wrap">${st.map((k) => `<button data-act="tq" data-id="${k}" class="${at === k ? 'on' : ''}">${TOUR_NAME[k]}</button>`).join('')}</div><div class="row"><button class="ghost" data-act="tq-auto">Tham quan lần lượt</button></div>`;
+}
+function tourAuto(i, msg) {
+  clearTimeout(tourT); const st = world.tourStops(i); let k = 0;
+  const next = () => { const A = world.av; if (A.where !== i || A.state === 'travel' || k >= st.length) { world.tourEnd(); render(); if (k >= st.length && msg && A.where === i) toast(msg); return; } world.tourShow(i, st[k++]); render(); tourT = setTimeout(next, 4500); };
+  next();
 }
 /** Tịnh danh của người kia trong một lời mời gặp (để ghi «Tuần trà cùng …») */
 function otherName(inv) { const id = String(String(inv.from) === String(acct.uid) ? inv.to : inv.from), c = ((dongTu.list && dongTu.list.companions) || []).find((x) => String(x.id) === id); return c ? c.tinh_danh : ''; }
@@ -837,7 +851,7 @@ function friendReal(f, away, gateOk, moving) {
     : !open ? `${esc(f.name)} đang Độc cư: cổng mây khép.` : !gateOk ? 'Cổng Vân Môn của bạn mở nửa từ ngày 29.' : f.here ? 'Gửi lời xin ghé thăm; khi bạn nhận lời, vân mây sẽ đưa bạn sang.' : canAway ? 'Bạn thân thiết đã cho phép ghé khi vắng.' : '';
   return `<h2>${esc(f.name)}</h2><p class="pali">Bạn đồng tu · ${esc(PRESENCE_TEXT[f.presence] || PRESENCE_TEXT.vang)}${c.completed ? ' · đã hoàn thành chương trình Sơ nhập' : c.day ? ` · ngày ${c.day}/49 của hành trình` : ''}</p>` +
     '<div class="row"><button class="btn" data-act="greet">Chắp tay chào</button><button class="btn alt" data-act="rejoice">Tùy hỷ công đức</button></div>' + (act ? `<div class="row">${act}</div>` : '') +
-    (note ? `<p class="muted">${note}</p>` : '') + (away ? tdView(false) : '') + '<p class="muted">Chào và tùy hỷ ở đây là cử chỉ trên Vân Đảo, không cộng điểm.</p><div class="row"><button class="ghost" data-act="home">← Vân Đảo</button></div>';
+    (note ? `<p class="muted">${note}</p>` : '') + (away ? tdView(false) + tourBlock(U.friend) : '') + '<p class="muted">Chào và tùy hỷ ở đây là cử chỉ trên Vân Đảo, không cộng điểm.</p><div class="row"><button class="ghost" data-act="home">← Vân Đảo</button></div>';
 }
 /** #125: Xin ghé thăm (lời mời xin_tham, đi khi bạn nhận lời) hoặc Ghé khi vắng (máy chủ kiểm canVisitAway rồi đi ngay) */
 async function askVisit(f, away) {
