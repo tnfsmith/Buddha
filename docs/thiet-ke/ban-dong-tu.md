@@ -1,5 +1,7 @@
 # Bạn đồng tu — thiết kế trải nghiệm và phân công (#121)
 
+> Phần mở rộng v2 (#151): Đài Đồng Tu ở Đại Thiền Đường, mời nhóm, hẹn giờ, chia sẻ, tiến trình bạn — xem `dong-tu-dai-thien-duong.md`.
+
 Chủ dự án giao ngày 18/11/2026. Claude thiết kế trải nghiệm, giao diện, 3D và luật dùng chung. Codex viết máy chủ, D1 và mô-đun mạng theo [hợp đồng](../contracts/ban-dong-tu.md). Luật dùng chung: `packages/shared/src/dong-tu.js`. Lộ trình: `PROJECT_ROADMAP.md` §10.4 và GĐ5 (T5.4–T5.8).
 
 ## 1. Yêu cầu của chủ dự án
