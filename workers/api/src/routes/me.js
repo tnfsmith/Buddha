@@ -1,6 +1,7 @@
 // workers/api/src/routes/me.js
 // Trạng thái tổng thể của hành giả (PROJECT_ROADMAP.md §5)
 import { byUser } from '../guard.js';
+import { profileSettingsView } from '../profile-settings.js';
 import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
 import { ZONE_UNLOCK, gateLevel } from '@vandao/shared';
@@ -27,7 +28,7 @@ export function computeUnlockedZones(day) {
 
 export const profileView = (p) => ({
   tinh_danh: p.tinh_danh, tag: p.tag,
-  look: JSON.parse(p.look_json || '{}'), settings: JSON.parse(p.settings_json || '{}'), island: JSON.parse(p.island_json || '{}'),
+  look: JSON.parse(p.look_json || '{}'), settings: profileSettingsView(p.settings_json, p.visibility), island: JSON.parse(p.island_json || '{}'),
   tz: p.tz, visibility: p.visibility, pref_seat: p.pref_seat, rev: p.rev,
 });
 

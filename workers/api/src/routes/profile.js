@@ -3,6 +3,7 @@
 import { byUser } from '../guard.js';
 import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
+import { mergeProfileSettings, profileSettingsView } from '../profile-settings.js';
 import { checkName } from '@vandao/shared';
 import { isValidTimeZone } from '../utils/time.js';
 import { nameKey, randomTag } from '../auth/session.js';
@@ -11,12 +12,15 @@ import { readJson, bad, nameError, jsonCapped } from '../lib.js';
 const profileApp = new Hono();
 
 profileApp.patch('/', authMiddleware, byUser('RL_API'), async (c) => {
+  const body = await readJson(c);
+  if (!body) return bad(c, 'invalid_body', 'Dữ liệu cập nhật không hợp lệ');
+  return patchProfile(c, body);
+});
+
+async function patchProfile(c, body, retry = 0) {
   const user = c.get('user');
   const db = c.env.DB;
   const now = Date.now();
-
-  const body = await readJson(c);
-  if (!body) return bad(c, 'invalid_body', 'Dữ liệu cập nhật không hợp lệ');
 
   const current = await db.prepare(
     `SELECT tinh_danh, tinh_danh_key, tag, look_json, settings_json, island_json, tz,
@@ -80,11 +84,9 @@ profileApp.patch('/', authMiddleware, byUser('RL_API'), async (c) => {
   }
 
   // 4. Cài đặt (settings)
-  let newSettingsJson = current.settings_json;
-  if (body.settings !== undefined) {
-    newSettingsJson = body.settings && typeof body.settings === 'object' && !Array.isArray(body.settings) ? jsonCapped({ ...JSON.parse(current.settings_json || '{}'), ...body.settings }) : null;
-    if (newSettingsJson === null) return bad(c, 'invalid_settings', 'Cài đặt phải là đối tượng JSON, tối đa 8 KB');
-  }
+  const { json: newSettingsJson, error: settingsError } = mergeProfileSettings(current.settings_json, body.settings);
+  if (settingsError === 'invalid_payload') return bad(c, settingsError, 'Cài đặt Bạn đồng tu không hợp lệ');
+  if (settingsError) return bad(c, settingsError, 'Cài đặt phải là đối tượng JSON, tối đa 8 KB');
 
   // 5. Vị trí đảo (island)
   let newIslandJson = current.island_json;
@@ -114,17 +116,22 @@ profileApp.patch('/', authMiddleware, byUser('RL_API'), async (c) => {
   let tag = current.tag;
   for (let attempt = 0; ; attempt++) {
     try {
-      await db.prepare(
+      const saved = await db.prepare(
         `UPDATE profile
          SET tinh_danh = ?, tinh_danh_key = ?, tag = ?, look_json = ?, settings_json = ?, island_json = ?,
              tz = ?, tz_changed_at = ?, name_changed_at = ?, visibility = ?, pref_seat = ?,
              rev = ?, updated_at = ?
-         WHERE user_id = ?`
+         WHERE user_id = ? AND rev = ?`
       ).bind(
         newName, newNameKey, tag, newLookJson, newSettingsJson, newIslandJson,
         newTz, tzChangedAt, nameChangedAt, newVisibility, newPrefSeat,
-        newRev, now, user.id
+        newRev, now, user.id, current.rev
       ).run();
+      // Nếu thiết bị khác vừa lưu hồ sơ, gộp lại yêu cầu này trên bản mới.
+      if (!saved.meta.changes) {
+        if (retry >= 2) return bad(c, 'profile_changed', 'Hồ sơ vừa thay đổi, hãy thử lại', 409);
+        return patchProfile(c, body, retry + 1);
+      }
       break;
     } catch (e) {
       if (attempt >= 4 || !/UNIQUE/i.test(String(e && e.message))) throw e;
@@ -140,7 +147,7 @@ profileApp.patch('/', authMiddleware, byUser('RL_API'), async (c) => {
       tinh_danh: newName,
       tag,
       look: JSON.parse(newLookJson),
-      settings: JSON.parse(newSettingsJson),
+      settings: profileSettingsView(newSettingsJson, newVisibility),
       island: JSON.parse(newIslandJson),
       tz: newTz,
       visibility: newVisibility,
@@ -148,6 +155,6 @@ profileApp.patch('/', authMiddleware, byUser('RL_API'), async (c) => {
       rev: newRev
     }
   });
-});
+}
 
 export default profileApp;
