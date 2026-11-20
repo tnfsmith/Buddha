@@ -42,6 +42,12 @@ Chủ dự án merge từng PR schema sau CI đạt; `deploy.yml` tuần tự h�
 
 Đây là phương án tuần tự hóa cho 0008 theo #33 cập nhật lần 2, **chưa hoàn thành cô lập dữ liệu #35**: preview không có migration vẫn dùng D1/KV staging. Không thử tài khoản/người dùng thật trên preview. Chưa cấp phát hay cleanup tài nguyên Cloudflare riêng; tác vụ đó giữ mở. Không dùng kết quả cổng này để tuyên bố hai preview đã có DB/KV độc lập.
 
+### Pilot D1/KV riêng theo PR (#35)
+
+- Cấp trước một D1 tên `vandao-core-preview-pr-N` và một KV tên `vandao-config-preview-pr-N` trong tài khoản staging. Trong biến repo `BUDDHA_PREVIEW_BINDINGS`, đặt đối tượng JSON theo số PR với dạng `{"142":{"d1":"<UUID của D1>","kv":"<ID KV>"}}`. Mỗi D1/KV chỉ thuộc một PR và cần bắt đầu từ dữ liệu thử. Giới hạn D1 Free theo tài khoản cần tính cả staging và các DB hiện có.
+- Workflow đọc hai tài nguyên để đối chiếu ID/tên trên Cloudflare trước khi áp migration. Token staging cần đọc KV, đọc và ghi D1 thử, và quyền upload version của Worker staging. Cấu hình tạm chỉ chứa DB/KV riêng đã xác nhận. Workflow áp migration, nạp danh mục và tải version cùng alias `pr-N`. R2 bài giảng staging tiếp tục phục vụ nội dung công khai.
+- Trong pilot, PR chưa có cặp riêng giữ cổng chuyển tiếp ở trên. Sau khi nghiệm thu hai PR cùng lúc, đặt `BUDDHA_PREVIEW_REQUIRE_ISOLATION=true` để mọi PR chưa có cặp chỉ chạy CI cục bộ. Gỡ ánh xạ sau khi PR đóng. Chỉ thu hồi tài nguyên thử khi biết rõ alias không còn được sử dụng và xác nhận đúng ID đã cấp cho PR. Workflow không tự cấp phát hoặc xóa D1/KV.
+
 ## Secret của Worker (đặt một lần, không nằm trong repo)
 
 | Secret | Bắt buộc | Dùng cho | Đặt bằng |
