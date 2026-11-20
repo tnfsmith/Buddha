@@ -31,6 +31,8 @@ for (const [name, vp] of [['máy tính', { width: 1280, height: 800 }], ['điệ
     const [[u, n, f]] = await A.evaluate(() => window.__opened);
     expect(u).toBe('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url));
     if (vp.width > 820) { expect(n).toBe('vandao-fb'); expect(f).toContain('width=600'); } else expect(n).toBe('_blank');
+    // Facebook đọc thẻ xem trước chung của trang (không theo mã, hợp đồng §12)
+    await expect(A.locator('meta[property="og:title"]')).toHaveAttribute('content', 'Mời bạn tu cùng trên Vân Đạo');
     await expect(P(A).locator('[data-act="dt-fb"]')).toBeInViewport();
     if (SHOTS) await A.screenshot({ path: `/tmp/moi-${vp.width}.png` });
     expect(A.errs).toEqual([]);
