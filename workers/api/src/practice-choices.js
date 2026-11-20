@@ -47,8 +47,11 @@ export async function getToday(db, userId, now, dayContext) {
     getPracticeProfile(db, userId), loadChoicesCatalog(db), dayPillars(db, userId, journey),
   ]);
   const scope = choiceScope(userId, journey, date);
-  const read = db.prepare(`SELECT pillar, variant_id, version, swapped_at
-    FROM practice_choice WHERE user_id = ?1 AND program = ?2 AND cycle = ?3 AND local_date = ?4`).bind(...scope);
+  // Kiểm lại trạng thái phát hành khi đọc lựa chọn, vì danh mục đã được tải trước bước này.
+  const read = db.prepare(`SELECT choice.pillar, choice.variant_id, choice.version, choice.swapped_at, item.id IS NOT NULL AS is_public
+    FROM practice_choice AS choice
+    LEFT JOIN content_item AS item ON item.id = choice.variant_id AND item.version = choice.version AND ${publicChoice}
+    WHERE choice.user_id = ?1 AND choice.program = ?2 AND choice.cycle = ?3 AND choice.local_date = ?4`).bind(...scope);
   const seeds = [];
   if (profile && variants.ready && !journey.completed_at) {
     for (const pillar of PILLARS) {
@@ -67,7 +70,7 @@ export async function getToday(db, userId, now, dayContext) {
   const byPillar = new Map(result.results.map((row) => [row.pillar, row]));
   const suggestions = Object.fromEntries(PILLARS.map((pillar) => {
     const row = byPillar.get(pillar);
-    const variant = !journey.completed_at && listedChoice(variants, row, profile, day, pillar);
+    const variant = row?.is_public && !journey.completed_at && listedChoice(variants, row, profile, day, pillar);
     return [pillar, { variant: variant ? pick(variant) : null, swapped: row?.swapped_at != null, confirmed: Boolean(confirmed[pillar]) }];
   }));
   return {

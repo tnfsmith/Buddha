@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { PILLARS, rankVariants, snapHash, variantCatalog } from '@vandao/shared/variant.js';
 import { contentRow, contentSql, parseContent } from '../../../scripts/content-data.mjs';
 import { linkGuest } from '../src/auth/link.js';
+import { getToday } from '../src/practice-choices.js';
 import { call, confirm, env, guest, json, sync } from './helpers.js';
 
 const base = '/api/v1/practice';
@@ -73,6 +74,24 @@ describe('gợi ý hôm nay', () => {
     expect(log.applied).toEqual(['practice-today-confirm']);
     expect((await get(token)).data.suggestions.duc).toMatchObject({ confirmed: true, variant: null });
     expect(await exported(token)).toContainEqual(expect.objectContaining({ variant_id: original.id, version: original.version }));
+  });
+
+  it('không trả gợi ý đã rút giữa lúc tải danh mục và lúc đọc lựa chọn đã lưu', async () => {
+    const { token, user } = await guest();
+    await put(token, profile);
+    const before = (await get(token)).data;
+    const original = rows.find((row) => row.id === before.suggestions.duc.variant.id);
+    const db = {
+      prepare: (sql) => env.DB.prepare(sql),
+      async batch(statements) {
+        await env.DB.exec(contentSql([{ ...original, version: 2, status: 'ngung' }]));
+        return env.DB.batch(statements);
+      },
+    };
+    const after = await getToday(db, user.id, Date.now());
+    expect(after.suggestions.duc).toEqual({ variant: null, swapped: false, confirmed: false });
+    expect(after.suggestions.thien).toEqual(before.suggestions.thien);
+    expect(await count(user.id)).toBe(3);
   });
 
   it('thiếu độ phủ hoặc đã hoàn thành thì không tạo gợi ý mới', async () => {

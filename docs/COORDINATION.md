@@ -296,5 +296,7 @@ PR81 chưa merge/deploy; #82 phải cập nhật máy quay hướng chúng sanh 
 
 ## 27. Gói Worker gợi ý Sơ nhập — 19/11/2026
 
+- Đã đóng [#121](https://github.com/tnfsmith/Buddha/issues/121#issuecomment-7029503176) vì phạm vi thiết kế v1 đã vào main qua #126. Máy chủ #122 đã qua kiểm D1; giữ Issue mở để ghi nghiệm thu hai phiên cùng Claude #124.
+- #142 kiểm lại trạng thái công khai ở bước đọc lựa chọn đã lưu, kể cả khi danh mục đổi giữa hai lần đọc. Giữ lựa chọn trong lịch sử và trả gợi ý tuần khi phiên bản bị rút. Preview migration 0012 chờ D1/KV riêng theo #35.
 - [#138](https://github.com/tnfsmith/Buddha/pull/138) đã vào `main@423d1bc`. Codex trả quyền gói Bạn đồng tu. Claude giữ [#124](https://github.com/tnfsmith/Buddha/issues/124) và nghiệm thu hai phiên thật sau khi staging có gói này.
 - Codex giữ [#105](https://github.com/tnfsmith/Buddha/issues/105#issuecomment-7012959770) cho ba gói Worker theo [hợp đồng #132](contracts/practice-today.md). Gói đầu thêm 0012, `GET /practice/today` và vòng đời lựa chọn. Gói sau nối `swap` trực tiếp và qua `/sync`, rồi `summary`. Claude giữ giao diện #104 và có thể nối sau khi các gói liên quan lên staging.
