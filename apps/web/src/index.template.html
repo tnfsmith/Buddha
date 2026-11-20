@@ -259,12 +259,18 @@ body.hall.barmin #panel{bottom:14px}
 /* Thẻ lời mời: máy tính đứng cạnh trái bảng; Đại Thiền Đường thì nằm trên thanh phát */
 #dtm{position:absolute;right:428px;bottom:14px;width:min(340px,calc(100vw - 28px));padding:12px 14px;z-index:6;background:rgba(255,251,243,.92);font-size:14px}
 #dtm b{font-family:var(--serif);font-size:16.5px}#dtm p{margin:4px 0 0}#dtm .row{margin-top:8px}
-body.hall:not(.sermon) #dtm{bottom:122px}
+/* Đại Thiền Đường trên máy tính: trên thanh phát. Chỉ máy tính: trên điện thoại thẻ luôn neo theo mép bảng đo được (--subb, #139) */
+@media (min-width:821px){body.hall:not(.sermon) #dtm{bottom:122px}}
 @media (min-width:1500px){#dtm{right:458px}}
+/* Màn thấp (điện thoại xoay ngang): trên bảng thu gọn chỉ còn ~120 px, nên thẻ thành hai dòng, nút bên phải, giữ dòng đếm ngược, bỏ dòng phụ.
+   Bảng đang mở thì không còn chỗ trên mép bảng: thẻ tạm ẩn (chấm số trên nút Bạn đồng tu vẫn còn), thu gọn bảng thì thẻ hiện lại */
+@media (max-width:820px) and (max-height:500px){#dtm{display:grid;grid-template-columns:1fr auto;column-gap:8px;align-items:center;padding:5px 10px}#dtm b{font-size:14px}#dtm p{font-size:12.5px;margin:0}#dtm p~p{display:none}#dtm .row{grid-column:2;grid-row:1/span 2;margin:0;flex-wrap:nowrap}#dtm .btn,#dtm .ghost{padding:5px 10px}body:not(.pmin) #dtm{display:none}}
 @media (max-width:820px){
   #dt{padding:6px 9px;font-size:13.5px}
   /* #139: lớp phủ trên bảng đặt theo mép trên đo được của bảng (--subb), không giả định vh hay bottom cố định */
   #dtm{left:8px;right:8px;width:auto;bottom:var(--subb,calc(44vh + 72px))}
+  /* Đại Thiền Đường: thẻ gọn hơn để không che cảnh giữa màn hình */
+  body.hall #dtm{padding:8px 11px;font-size:13.5px}body.hall #dtm b{font-size:15px}body.hall #dtm .row{margin-top:6px}
 }
 </style>
 </head>

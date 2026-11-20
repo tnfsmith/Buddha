@@ -302,3 +302,33 @@ test('đổi tài khoản trên cùng trang: mã mời và dữ liệu của ng�
   expect(Object.values(sv.links).map((k) => k.owner).sort()).toEqual([sv.U.a.id, sv.U.b.id].sort());
   expect(A.errs).toEqual([]);
 });
+
+// Codex review #148: ở Đại Thiền Đường trên điện thoại, thẻ hẹn cùng thiền phải neo theo mép bảng đo được (--subb, #139),
+// không chồng lên bảng (thu gọn hay mở), cả màn dọc lẫn ngang
+for (const [name, vp] of [['dọc 390×760', { width: 390, height: 760 }], ['ngang 740×360', { width: 740, height: 360 }]]) {
+  test(`Đại Thiền Đường, điện thoại ${name}: thẻ hẹn cùng thiền nằm trên mép bảng, không che bảng`, async ({ browser }) => {
+    test.setTimeout(240_000);
+    const sv = fakeServer(), now = Date.now(), { a, b } = sv.U;
+    sv.pairs.push({ a: b.id, b: a.id, sa: { than: false, away: false }, sb: { than: false, away: false }, at: now - 86_400_000 });
+    sv.invites.push({ id: 'mt-hall', from: b.id, to: a.id, kind: 'thien', place: 'dtd', status: 'dong_y', created_at: now - 20_000, responded_at: now - 5_000, start_at: now + 600_000 });
+    const A = await device(browser, sv, 'a', vp);
+    await slow(M(A)).toContainText('Cùng ngồi thiền với Minh An · 2210');
+    await A.locator('#tabs [data-m="hall"]').click();
+    await slow.poll(() => A.evaluate(() => document.body.classList.contains('hall'))).toBe(true);
+    const box = () => A.evaluate(() => {
+      const el = document.querySelector('#dtm'), c = el.getBoundingClientRect(), p = document.querySelector('#panel').getBoundingClientRect();
+      const hit = document.elementFromPoint(p.left + p.width / 2, p.top + 6);
+      return { shown: getComputedStyle(el).display !== 'none', cardTop: c.top, cardBottom: c.bottom, panelTop: p.top, panelHit: !!hit && !!hit.closest('#panel'), pmin: document.body.classList.contains('pmin') };
+    });
+    for (let i = 0; i < 2; i++) {   // bảng thu gọn và mở
+      await A.waitForTimeout(400);
+      const r = await box();
+      // màn thấp, bảng đang mở: không còn chỗ trên mép bảng nên thẻ tạm ẩn; mọi trường hợp khác thẻ phải hiện trọn trên mép bảng
+      if (vp.height > 500 || r.pmin) expect(r.shown).toBe(true); else expect(r.shown).toBe(false);
+      if (r.shown) { expect(r.cardBottom, `thẻ không chồng bảng (pmin=${r.pmin})`).toBeLessThanOrEqual(r.panelTop + 1); expect(r.cardTop).toBeGreaterThanOrEqual(0); }
+      expect(r.panelHit, 'chạm mép trên bảng vào bảng').toBe(true);
+      await A.locator('#panel .pm').click();
+    }
+    expect(A.errs).toEqual([]);
+  });
+}
