@@ -1,4 +1,4 @@
-import { INVITE_TTL_MS, MAX_COMPANIONS, closenessOf, meetPhase, presenceOf, seenBucket } from '@vandao/shared/dong-tu.js';
+import { INVITE_TTL_MS, MAX_COMPANIONS, REASON_TEXT, closenessOf, meetPhase, presenceOf, seenBucket } from '@vandao/shared/dong-tu.js';
 import { clientIp } from './guard.js';
 import { currentJourney, bad } from './lib.js';
 import { getLocalDate } from './utils/time.js';
@@ -11,6 +11,13 @@ export const accepted = (a, b) => `EXISTS (SELECT 1 FROM companion WHERE ${pair(
 export const underCap = (uid) => `(SELECT COUNT(*) FROM companion WHERE status = 'dong_y' AND (a = ${uid} OR b = ${uid})) < ${MAX_COMPANIONS}`;
 export const openIsland = (column) => `json_type(${column}, '$.open') = 'true'`;
 export const userIdOk = (id) => typeof id === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(id);
+export const savedCharacter = (uid) => `EXISTS (
+  SELECT 1 FROM profile AS character WHERE character.user_id = ${uid} AND trim(character.tinh_danh) <> ''
+    AND CASE WHEN json_valid(character.look_json) THEN json_type(character.look_json) = 'object'
+      AND json(character.look_json) <> '{}' ELSE 0 END
+)`;
+export const needCharacter = (c) => bad(c, 'need_character', REASON_TEXT.need_character, 409);
+export const hasCharacter = (db, uid) => db.prepare(`SELECT 1 WHERE ${savedCharacter('?')}`).bind(uid).first();
 export const inviteRow = "id, from_id AS 'from', to_id AS 'to', kind, place, status, created_at, responded_at, start_at";
 export const cancelPending = `UPDATE meet_invite SET status = 'huy'
   WHERE status IN ('cho','dong_y') AND ((from_id = ?1 AND to_id = ?2) OR (from_id = ?2 AND to_id = ?1))`;
