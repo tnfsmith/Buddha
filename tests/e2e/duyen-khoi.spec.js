@@ -3,6 +3,14 @@
 import { test, expect } from '@playwright/test';
 
 const BASE = (process.env.E2E_BASE_URL || 'http://127.0.0.1:4173/').replace(/#.*$/, '').replace(/\/?$/, '/');
+/**
+ * Chờ dựng xong cảnh rồi dừng vẽ (như tab ẩn). Các ca này chỉ kiểm giao diện 2D và dữ liệu; mỗi lần mở lại trang cũng phải
+ * dừng lại, nếu không SwiftShader vẽ cảnh 3D suốt ca và ca chạm trần 7 phút trên runner CI.
+ */
+const booted = async (p) => {
+  await p.waitForFunction(() => window.__app?.world?.renderer, null, { timeout: 150_000 });
+  await p.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }); window.__app.world.update = () => {}; });
+};
 test.use({ serviceWorkers: 'block' });
 test.skip(!!process.env.E2E_BASE_URL, 'máy chủ giả lập chỉ chạy với bản dựng cục bộ');
 const slow = expect.configure({ timeout: 60_000 });
@@ -57,8 +65,7 @@ async function device(browser, sv, { account = true, viewport = { width: 390, he
   const page = await ctx.newPage();
   page.errs = []; page.on('pageerror', (e) => page.errs.push(e.message));
   await page.goto(BASE + '#q=0&snap=1');
-  await page.waitForFunction(() => window.__app?.world?.renderer, null, { timeout: 150_000 });
-  await page.evaluate(() => Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }));
+  await booted(page);
   return page;
 }
 const P = (page) => page.locator('#panel');
@@ -121,7 +128,7 @@ test('chưa giữ hành trình: Duyên khởi lọc gợi ý theo hồ sơ, đ�
   expect(s.done).toEqual(before.done);
   // mở lại: cùng gợi ý, vẫn hết lượt đổi ở trục Đức
   await A.reload();
-  await A.waitForFunction(() => window.__app?.world?.renderer, null, { timeout: 150_000 });
+  await booted(A);
   await openBia(A);
   await slow(P(A)).toContainText('Gợi ý hôm nay theo Duyên khởi');
   expect(await texts(A)).toEqual(t);
@@ -167,7 +174,7 @@ async function switchTo(page, sv, uid) {
   sv.cur = uid;
   await page.evaluate((uid) => localStorage.setItem('vandao.acct', JSON.stringify({ uid, guest: false, cycle: 1 })), uid);
   await page.reload();
-  await page.waitForFunction(() => window.__app?.world?.renderer, null, { timeout: 150_000 });
+  await booted(page);
 }
 
 test('hai tài khoản cùng trình duyệt và hồ sơ trên máy: không chép hồ sơ sang tài khoản khác, đọc không tự ghi', async ({ browser }) => {
@@ -245,7 +252,7 @@ test('lựa chọn đã lưu theo đúng phiên bản (#46/#132): v1 bị rút k
   test.setTimeout(420_000);
   const sv = fakeServer();
   const A = await device(browser, sv, { account: false, seed: 2024 });   // hồ sơ rộng: Đức chọn sn49-w1-duc-c (v1)
-  const reopen = async () => { await A.reload(); await A.waitForFunction(() => window.__app?.world?.renderer, null, { timeout: 150_000 }); await openBia(A); await slow(P(A)).toContainText('Gợi ý hôm nay theo Duyên khởi'); };
+  const reopen = async () => { await A.reload(); await booted(A); await openBia(A); await slow(P(A)).toContainText('Gợi ý hôm nay theo Duyên khởi'); };
   await openBia(A);
   await P(A).locator('[data-act="dk-open"]').first().click();
   await P(A).locator('[data-act="dk-set"][data-k="minutes"][data-v="45"]').click();
