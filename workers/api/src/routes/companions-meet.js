@@ -1,6 +1,6 @@
 import { INVITE_TTL_MS, MEET_KINDS, PRESENCE, canMeet, canVisitAway, checkMeetPayload, meetStartAt } from '@vandao/shared/dong-tu.js';
 import { readJson } from '../lib.js';
-import { accepted, blocked, inviteRow, openIsland, pair, participant, relationship, userIdOk } from '../companions-data.js';
+import { accepted, blocked, hasCharacter, inviteRow, needCharacter, openIsland, pair, participant, relationship, savedCharacter, userIdOk } from '../companions-data.js';
 
 const DAY = 86_400_000;
 
@@ -20,6 +20,7 @@ export function mountCompanionMeet(app, { quota, fail, who, missing, empty }) {
     const checked = checkMeetPayload(await readJson(c));
     if (!checked.ok) return fail(c, checked.code);
     const db = c.env.DB, me = who(c), now = Date.now(), { to, kind, place } = checked.v;
+    if (!await hasCharacter(db, me)) return needCharacter(c);
     if (to === me) return fail(c, 'self');
     const rel = await relationship(db, me, to);
     if (!rel.accepted || rel.blocked) return fail(c, rel.blocked ? 'blocked' : 'not_companion', 409);
@@ -28,7 +29,7 @@ export function mountCompanionMeet(app, { quota, fail, who, missing, empty }) {
     const allowed = canMeet(kind, from, friend, rel, place);
     if (!allowed.ok) return fail(c, allowed.code, 409);
     const host = allowed.host === 'from' ? me : to;
-    const stillAllowed = `${accepted('?1','?2')} AND NOT ${blocked('?1','?2')} AND
+    const stillAllowed = `${savedCharacter('?1')} AND ${accepted('?1','?2')} AND NOT ${blocked('?1','?2')} AND
       (?3 = 'dtd' OR EXISTS (SELECT 1 FROM profile WHERE user_id = ?4 AND ${openIsland('island_json')}))`;
     const [, result] = await db.batch([
       db.prepare(`UPDATE meet_invite SET status = 'huy' WHERE from_id = ?1 AND to_id = ?2 AND status = 'cho'
@@ -38,6 +39,7 @@ export function mountCompanionMeet(app, { quota, fail, who, missing, empty }) {
         .bind(me, to, allowed.place, host, crypto.randomUUID(), kind, now),
     ]);
     if (result.results[0]) return c.json({ invite: result.results[0] }, 201);
+    if (!await hasCharacter(db, me)) return needCharacter(c);
     const latest = await relationship(db, me, to);
     return fail(c, latest.blocked ? 'blocked' : latest.accepted ? 'host_doc_cu' : 'not_companion', 409);
   });

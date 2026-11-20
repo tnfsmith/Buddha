@@ -7,7 +7,7 @@ import { authMiddleware, nameKey } from '../auth/session.js';
 import { byIp, byUser } from '../guard.js';
 import { bad, readJson } from '../lib.js';
 import {
-  accepted, blocked, cancelPending, listCompanions, pair, socialQuota, underCap, userIdOk,
+  accepted, blocked, cancelPending, listCompanions, needCharacter, pair, savedCharacter, socialQuota, underCap, userIdOk,
 } from '../companions-data.js';
 import { mountCompanionMeet } from './companions-meet.js';
 
@@ -53,14 +53,17 @@ app.post('/companions/link', ...quota('link_create', 10, DAY), async (c) => {
     // Xóa mã cũ và cấp mã trong cùng batch. Va chạm code làm rollback cả batch.
     try {
       const [, , result] = await db.batch([
-        db.prepare('DELETE FROM invite WHERE owner_id = ? AND (? = 1 OR expires_at <= ? OR uses_left = 0)')
+        db.prepare(`DELETE FROM invite WHERE owner_id = ?1 AND (?2 = 1 OR expires_at <= ?3 OR uses_left = 0)
+          AND ${savedCharacter('?1')}`)
           .bind(uid, Number(body.renew === true), now),
         db.prepare(`INSERT INTO invite (code, owner_id, uses_left, expires_at, created_at)
-          SELECT ?1, ?2, ?3, ?4, ?5 WHERE NOT EXISTS (SELECT 1 FROM invite WHERE owner_id = ?2)`)
+          SELECT ?1, ?2, ?3, ?4, ?5 WHERE ${savedCharacter('?2')}
+            AND NOT EXISTS (SELECT 1 FROM invite WHERE owner_id = ?2)`)
           .bind(code, uid, LINK_USES, now + LINK_TTL_MS, now),
-        db.prepare(`SELECT ${linkFields} FROM invite WHERE owner_id = ? ORDER BY created_at DESC, code LIMIT 1`).bind(uid),
+        db.prepare(`SELECT ${linkFields} FROM invite WHERE owner_id = ?1 AND ${savedCharacter('?1')}
+          ORDER BY created_at DESC, code LIMIT 1`).bind(uid),
       ]);
-      return c.json(result.results[0]);
+      return result.results[0] ? c.json(result.results[0]) : needCharacter(c);
     } catch (error) {
       if (!error.message?.includes('UNIQUE constraint failed: invite.code') || attempt === 3) throw error;
     }
@@ -117,9 +120,9 @@ app.post('/companions/request', noStore, authMiddleware, byUser('RL_API'),
   const q = c.get('friendQuery');
   const db = c.env.DB, uid = who(c), now = Date.now();
   const request = await db.prepare(`INSERT INTO companion_request (id, from_id, tinh_danh, tag, to_id, created_at, expires_at)
-    VALUES (?1, ?2, ?3, ?4, (SELECT p.user_id FROM profile p WHERE p.tinh_danh_key = ?5 AND p.tag = ?4
+    SELECT ?1, ?2, ?3, ?4, (SELECT p.user_id FROM profile p WHERE p.tinh_danh_key = ?5 AND p.tag = ?4
       AND p.user_id <> ?2 AND p.visibility <> 'an' AND json_type(p.settings_json,'$.dong_tu.cho_tim') IS NOT 'false'
-      AND NOT ${blocked('?2','p.user_id')} AND NOT ${accepted('?2','p.user_id')}), ?6, ?7)
+      AND NOT ${blocked('?2','p.user_id')} AND NOT ${accepted('?2','p.user_id')}), ?6, ?7 WHERE ${savedCharacter('?2')}
     ON CONFLICT(from_id, tinh_danh, tag) DO UPDATE SET
       id = CASE WHEN expires_at <= excluded.created_at THEN excluded.id ELSE companion_request.id END,
       to_id = CASE WHEN expires_at <= excluded.created_at THEN excluded.to_id ELSE companion_request.to_id END,
@@ -127,7 +130,7 @@ app.post('/companions/request', noStore, authMiddleware, byUser('RL_API'),
       expires_at = CASE WHEN expires_at <= excluded.created_at THEN excluded.expires_at ELSE companion_request.expires_at END,
       declined_at = CASE WHEN expires_at <= excluded.created_at THEN NULL ELSE companion_request.declined_at END
     RETURNING ${requestFields}`).bind(crypto.randomUUID(), uid, q.tinh_danh, q.tag, nameKey(q.tinh_danh), now, now + REQUEST_TTL_MS).first();
-  return c.json({ request }, 202);
+  return request ? c.json({ request }, 202) : needCharacter(c);
 });
 
 app.delete('/companions/requests/:id', ...quota('request_manage', 60), async (c) => {
