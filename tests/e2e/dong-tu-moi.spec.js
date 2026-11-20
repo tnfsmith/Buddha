@@ -166,3 +166,37 @@ test('hồ sơ máy chủ có Tịnh danh nhưng chưa có hình dáng: «Lưu n
   await slow(P(A).locator('[data-dt-code]')).toHaveText('K7M2-QX9A');
   expect(A.errs).toEqual([]);
 });
+
+test('Xem nhanh tiến trình (§10.2): bạn bật chia sẻ thì thấy số thời thiền, bài giảng, lần tu gần nhất; chưa bật thì báo; bật chia sẻ của mình chỉ gửi đúng một khóa', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const sv = fakeServer(10), { a, b } = sv.U;
+  sv.pairs.push({ a: b.id, b: a.id, sa: { than: false, away: false }, sb: { than: false, away: false }, at: Date.now() - 86_400_000 });
+  sv.days[b.id] = 10;
+  const A = await device(browser, sv, 'a', { width: 1280, height: 800 }, 10);
+  await slow(A.locator('#dt')).toBeVisible();
+  await openList(A);
+  const row = P(A).locator('.dtf', { has: A.locator('.dtid') }).first();
+  await slow(row).toContainText('Minh An');
+  await row.locator('[data-act="dt-peek"]').click();
+  const pk = P(A).locator('.dtpk');
+  await slow(pk).toContainText('Bạn ấy chưa bật chia sẻ tiến trình.');
+  await expect(pk).not.toContainText('thời thiền ·');
+  // bạn bật chia sẻ → mở lại Xem nhanh thì tải mới
+  sv.settings[b.id] = { dong_tu: { chia_se_tien_trinh: true } };
+  await row.locator('[data-act="dt-peek"]').click();
+  await row.locator('[data-act="dt-peek"]').click();
+  await slow(pk).toContainText('Đã ngồi 12 thời thiền · đã nghe 5 bài giảng.');
+  await expect(pk).toContainText('Tu tập gần nhất: hôm qua.');
+  await expect(pk).not.toContainText('Kusala');
+  // quyền riêng tư của mình: mặc định tắt; bật thì PATCH chỉ có khóa chia_se_tien_trinh
+  await P(A).locator('[data-act="dt-tab"][data-v="rieng"]').click();
+  const box = P(A).locator('[data-dt="chia_se_tien_trinh"]');
+  await slow(box).not.toBeChecked();
+  const n0 = sv.profiles.length;
+  await box.check();
+  await slow.poll(() => sv.profiles.length).toBe(n0 + 1);
+  expect(sv.profiles[n0]).toEqual({ settings: { dong_tu: { chia_se_tien_trinh: true } } });
+  expect(sv.settings[a.id].dong_tu).toMatchObject({ chia_se_tien_trinh: true });
+  await slow(box).toBeChecked();
+  expect(A.errs).toEqual([]);
+});

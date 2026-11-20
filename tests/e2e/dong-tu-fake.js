@@ -61,7 +61,7 @@ export function fakeServer(day = 1) {
         social: { requests: incomingReq(me, now).length, invites: sv.invites.filter((i) => i.to === me && meetPhase(i, now).phase === 'cho').length } });
     }
     if (p === '/api/v1/sync') return json({ applied: (body().ops || []).map((o) => o.id), rejected: [], state: { profile: prof(me), journey: { ...journey }, totals: { duc: 0, thien: 0, tue: 0, all: 0 }, unlocked_zones: {}, server_now: now, practice: 1 } });
-    if (p === '/api/v1/profile') { const b = body(); sv.profiles.push(b); if (b.look && Object.keys(b.look).length) sv.noLook.delete(me); if (b.tinh_danh) sv.blank.delete(me); if (b.settings) sv.settings[me] = { ...(sv.settings[me] || {}), ...b.settings }; if (b.island) sv.island[me] = b.island; return json({ success: true, profile: prof(me) }); }
+    if (p === '/api/v1/profile') { const b = body(); sv.profiles.push(b); if (b.look && Object.keys(b.look).length) sv.noLook.delete(me); if (b.tinh_danh) sv.blank.delete(me); if (b.settings) { const cur = sv.settings[me] || {}; sv.settings[me] = { ...cur, ...b.settings, dong_tu: { ...(cur.dong_tu || {}), ...((b.settings || {}).dong_tu || {}) } }; } if (b.island) sv.island[me] = b.island; return json({ success: true, profile: prof(me) }); }
     if (p === '/api/v1/content') return json({ items: [] });
     if (p === '/api/v1/practice/profile') return json({ profile: null, rev: 0 });
     if (p === '/api/v1/companions' && m === 'GET') return json(list(me, now));
@@ -97,6 +97,12 @@ export function fakeServer(day = 1) {
       if (body().accept) { sv.requests = sv.requests.filter((x) => x !== row); sv.pairs.push({ a: row.from, b: me, sa: { than: false, away: false }, sb: { than: false, away: false }, at: now }); }
       else row.declined_at = now;   // người gửi không được báo
       return json({ ok: true });
+    }
+    r = /^\/api\/v1\/companions\/([^/]+)\/progress$/.exec(p);   // §10.2: chỉ khi đã kết nối và bạn bật chia sẻ; còn lại 404 cùng dạng
+    if (r) {
+      const o = decodeURIComponent(r[1]);
+      if (!pairOf(me, o) || shared(o).chia_se_tien_trinh !== true) return err('not_found', 404);
+      return json({ cycle: 1, day: sv.days[o] ?? 1, completed: false, sessions_done: 12, sermons_done: 5, last_active: 'hom_qua' });
     }
     if (p === '/api/v1/presence') { sv.presence[me] = { state: body().state, updated_at: now }; return json(null, 204); }
     if (p === '/api/v1/meet') {

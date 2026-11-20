@@ -11,7 +11,7 @@ import {
   removeCompanion, report, respondMeet, respondRequest, requestByName, setCompanion, setPresence, unblock, withdrawRequest,
 } from '../net/dong-tu.js';
 import { acct } from '../net/account.js';
-import { getMe, updateProfile } from '../net/api.js';
+import { api, getMe, updateProfile } from '../net/api.js';
 import { ZONE_UNLOCK, gateLevel } from '@vandao/shared/schedule.js';
 import { esc } from './dom.js';
 import { qr } from './account.js';
@@ -24,7 +24,7 @@ const D = { uid: null, tab: 'list', pend: null };
 /** Mọi trạng thái riêng của một tài khoản. Đổi người (đăng xuất, đăng nhập người khác) thì xóa sạch, kể cả mã mời đã tạo. */
 function resetFor(uid) {
   Object.assign(D, {
-    uid, tab: D.tab === 'loi' ? 'loi' : 'list', sel: null, busy: '', err: '', msg: '', arm: '', link: null, me: null, blocks: null, q: '', peek: null, kem: false,
+    uid, tab: D.tab === 'loi' ? 'loi' : 'list', sel: null, busy: '', err: '', msg: '', arm: '', link: null, me: null, blocks: null, q: '', peek: null, prog: new Map(), kem: false,
     skew: 0, at: 0, lastLoad: 0, msgInv: null, cardKey: null, viewKey: '', openSynced: false,
     quietSeen: new Set(), chimed: new Set(), watch: new Set(), joined: new Set(), hide: new Set(), answered: new Set(),
   });
@@ -73,7 +73,7 @@ function invites() {
   }
   return out;
 }
-const prefs = () => { const s = (D.me && D.me.settings && D.me.settings.dong_tu) || {}; return { hien_trang_thai: s.hien_trang_thai !== false, cho_tim: s.cho_tim !== false, hien_ngay: s.hien_ngay !== false }; };
+const prefs = () => { const s = (D.me && D.me.settings && D.me.settings.dong_tu) || {}; return { hien_trang_thai: s.hien_trang_thai !== false, cho_tim: s.cho_tim !== false, hien_ngay: s.hien_ngay !== false, chia_se_tien_trinh: s.chia_se_tien_trinh === true }; };
 
 /** Số chấm trên nút: lời kết nối và lời mời gặp đang chờ mình. Không bao giờ là số bạn. */
 export function dtBadge() {
@@ -186,10 +186,30 @@ function row(c, I) {
 }
 /**
  * Xem nhanh (#151 §8) từ dữ liệu bạn đã cho hiện trong danh sách: ngày hành trình, phân khu Vân Đảo đã mở (suy từ ngày), chế độ cổng.
- * Không Kusala, không so sánh. Số thời thiền và buổi giảng cần bạn bật «Chia sẻ tiến trình» (API §10, Codex).
+ * Không Kusala, không so sánh. Số thời thiền, bài giảng đã nghe và lần tu gần nhất chỉ có khi bạn bật «Chia sẻ tiến trình»
+ * (hợp đồng §10.2: GET /companions/:id/progress; chưa bật hay không đủ điều kiện thì 404, cùng một dạng).
  */
+const LAST = { hom_nay: 'hôm nay', hom_qua: 'hôm qua', trong_tuan: 'trong tuần này', lau_hon: 'hơn một tuần trước' };
+async function loadProg(id) {
+  const uid = D.uid, had = D.prog.get(id);
+  if (!had || had.st !== 'ok') D.prog.set(id, { st: 'loading' });   // mở lại thì tải mới, giữ số cũ trong lúc chờ
+  let r;
+  try { const v = await api(`/api/v1/companions/${encodeURIComponent(id)}/progress`); r = v && typeof v === 'object' ? { st: 'ok', v } : { st: 'err' }; }
+  catch (e) { r = { st: e && e.status === 404 ? 'none' : 'err' }; }
+  if (!still(uid)) return;
+  D.prog.set(id, r); if (ctx.viewOpen()) ctx.render();
+}
+function progLines(id) {
+  const p = D.prog.get(id);
+  if (!p || p.st === 'loading') return ms('Đang tải tiến trình…');
+  if (p.st === 'none') return mu('Bạn ấy chưa bật chia sẻ tiến trình.');
+  if (p.st === 'err') return mu('Chưa tải được tiến trình.') + rw(bt('dt-prog', 'Thử lại', 'ghost', di(id)));
+  const v = p.v, n = (x) => (Number.isInteger(x) && x >= 0 ? x : 0);
+  return `<p>${esc(`Đã ngồi ${n(v.sessions_done)} thời thiền · đã nghe ${n(v.sermons_done)} bài giảng.`)}</p>` + (LAST[v.last_active] ? mu(esc(`Tu tập gần nhất: ${LAST[v.last_active]}.`)) : '');
+}
 function peek(c) {
-  const day = Number.isFinite(c.day) ? c.day : null, done = c.completed === true, bits = [];
+  const p = D.prog.get(c.id), pv = p && p.st === 'ok' ? p.v : null;
+  const day = pv && Number.isInteger(pv.day) ? pv.day : Number.isFinite(c.day) ? c.day : null, done = (pv ? pv.completed === true : false) || c.completed === true, bits = [];
   bits.push(done ? 'Đã hoàn thành chương trình 49 ngày.' : day ? `Ngày ${day} của hành trình 49 ngày.` : 'Bạn ấy không hiện ngày hành trình.');
   if (day || done) {
     const z = [['Tịnh Thất', 1], ['Đài Thiền', 1], ['Vườn Tâm Thức', 1], ['Bia Tích Lũy', 1], ['Trà Đạo Tỉnh Thức', ZONE_UNLOCK.tea]].filter(([, d]) => done || day >= d).map(([n]) => n);
@@ -198,7 +218,7 @@ function peek(c) {
     bits.push(`Vân Đảo đã mở: ${z.join(', ')}.`);
   }
   bits.push(`Cổng Vân Môn: ${c.open ? 'Nghênh khách' : 'Độc cư'}.`);
-  return `<div class="dtpk">${bits.map((b) => `<p>${esc(b)}</p>`).join('')}${mu(`Xem Vân Đảo bạn: sắp có (#125).`)}</div>`;
+  return `<div class="dtpk">${bits.map((b) => `<p>${esc(b)}</p>`).join('')}${progLines(c.id)}${mu(`Xem Vân Đảo bạn: sắp có (#125).`)}</div>`;
 }
 function togetherText({ inv, ph }) {
   const what = WHAT[inv.kind] || 'gặp nhau';
@@ -260,6 +280,7 @@ function privacyView() {
   h += box('hien_trang_thai', 'Hiện trạng thái với bạn đồng tu', an) + mu('Tắt thì bạn đồng tu không thấy bạn đang thiền, thưởng trà hay vắng mặt.') +
     box('cho_tim', 'Cho người khác gửi lời kết nối bằng Tịnh danh · mã', an) +
     box('hien_ngay', 'Hiện ngày hành trình với bạn đồng tu') +
+    box('chia_se_tien_trinh', 'Chia sẻ tiến trình với bạn đồng tu', an) + mu('Số thời thiền, số bài giảng đã nghe và lần tu gần nhất. Mặc định tắt; không chia sẻ Kusala, sổ việc hay nhật ký.') +
     (an ? '<p class="note">Quyền hiển thị đang «Ẩn»: không ai tìm được và thấy trạng thái của bạn.</p>' : '') +
     `${mu(`Cổng Vân Môn: ${ctx.S.open ? 'Nghênh khách' : 'Độc cư'}. Đổi ở phân khu Cổng Vân Môn.`)}<h3>Đã chặn</h3>`;
   const B = D.blocks;
@@ -466,7 +487,8 @@ export function dtAct(act, b) {
     if (D.arm !== 'renew') { D.arm = 'renew'; return ctx.render(); }
     D.arm = ''; return run('Đang tạo mã mới', async (ok) => { const k = await createLink(true); if (ok()) { D.link = k; D.msg = 'Đã tạo mã mới. Mã cũ không dùng được nữa.'; } });
   }
-  if (act === 'peek') { D.peek = D.peek === id ? null : id; return ctx.render(); }
+  if (act === 'peek') { D.peek = D.peek === id ? null : id; if (D.peek) void loadProg(id); return ctx.render(); }
+  if (act === 'prog') { void loadProg(id); return ctx.render(); }
   if (act === 'creator') return ctx.creator();
   // Lưu nhân vật: chờ chính yêu cầu ghi hồ sơ (Tịnh danh + hình dáng), rồi đọc lại /me để mở nút theo hồ sơ máy chủ
   if (act === 'save') return run('Đang lưu nhân vật', async (ok) => { await updateProfile({ tinh_danh: ctx.S.name, look: ctx.S.look }); if (ok()) await loadMe(); });
@@ -518,6 +540,13 @@ export function dtInput(t) {
   if (k === 'q') { D.q = t.value; return; }
   if (k === 'kem') { D.kem = t.checked; return; }
   if (k === 'than' || k === 'away') { const sel = D.sel; return run('Đang lưu', async () => { await setCompanion(sel, { [k]: t.checked }); }); }
+  if (k === 'chia_se_tien_trinh') {   // §10.1: PATCH gộp theo từng khóa, chỉ gửi khóa này
+    const on = t.checked;
+    return run('Đang lưu', async (ok) => {
+      const r = await updateProfile({ settings: { dong_tu: { chia_se_tien_trinh: on } } });
+      if (ok()) D.me = r && r.profile ? r.profile : { ...D.me, settings: { ...(D.me.settings || {}), dong_tu: { ...prefs(), chia_se_tien_trinh: on } } };
+    });
+  }
   if (k in prefs()) {
     const next = { ...prefs(), [k]: t.checked };
     return run('Đang lưu', async (ok) => {
