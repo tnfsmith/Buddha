@@ -6,7 +6,7 @@ Ngày cập nhật: 20/11/2026. Người tổng hợp duy nhất: **Codex**. Quy
 
 **Mốc bàn giao 19/11:** main và staging tại `6fca294` đã có API hồ sơ #117 và bộ nạp biến thể #118. Xem §23 và Issue/PR mới nhất để biết quyền sửa tệp và việc đang chờ.
 
-**Mốc bàn giao 20/11:** #152 và #157 đã vào `main` tại `273c2aa`, staging đã deploy. Codex kiểm bản ghép [#148 → #153 → #155](https://github.com/tnfsmith/Buddha/issues/151#issuecomment-7031379234) với main mới: 5/5 ca hồi quy đạt. Claude rebase chuỗi này; đối chiếu lại CI và preview theo head mới trước khi chủ dự án merge. Gói API Đồng tu #158 → #159 vẫn đi theo [#151](https://github.com/tnfsmith/Buddha/issues/151).
+**Mốc bàn giao 20/11:** #152 và #157 đã vào `main` tại `273c2aa`. [CI main](https://github.com/tnfsmith/Buddha/actions/runs/44675021631) hết 40 phút ở nhóm Playwright 1/3; staging chưa deploy bản này. Codex nhận bản vá cân lại nhóm ở [#156](https://github.com/tnfsmith/Buddha/issues/156#issuecomment-7031447632). Bản ghép [#148 → #153 → #155](https://github.com/tnfsmith/Buddha/issues/151#issuecomment-7031379234) với main mới đạt 5/5 ca hồi quy. Claude rebase chuỗi này; đối chiếu lại CI và preview theo head mới trước khi chủ dự án merge. Gói API Đồng tu #158 → #159 vẫn đi theo [#151](https://github.com/tnfsmith/Buddha/issues/151).
 
 - [#160](https://github.com/tnfsmith/Buddha/issues/160): Codex giữ hợp đồng §12 và phần Worker/ảnh R2 sau khi hợp đồng merge. Claude giữ việc đổi liên kết trong UI sau cùng mốc hợp đồng.
 - [#161](https://github.com/tnfsmith/Buddha/issues/161): Codex giữ công cụ ngân sách bước 1. Claude giữ build và UI tách tệp bước 2 sau #155, rồi Codex đo và bật ngân sách bản web ở bước 3.
