@@ -12,6 +12,7 @@ import { nv, loadMissions, soNhapView, soNhapAct, todayBox, todayLeft, missionsS
 import { ct, loadVariants, variantsStale, variantHtml, dkCard, dkView, dkAct, dkPull } from './ui/duyen-khoi.js';
 import { ptCard, ptLine, ptView, ptAct, ptSaved } from './ui/phan-tinh.js';
 import { tierOpened, tierMigrate, tierLoad, tierBlock, tierAct } from './ui/tang-1.js';
+import { atInit, atCard, atView, atAct, atInput } from './ui/chung-thuc.js';
 import { registerPWA, persistStorage } from './boot.js';
 import { startMetrics } from './net/metrics.js';
 import { $, fmt, esc } from './ui/dom.js';
@@ -432,11 +433,14 @@ function render() {
       (away ? '<button class="btn alt" data-act="sitwith">Mời cùng tọa thiền</button><button class="btn alt" data-act="gohome">Về đảo của mình</button>' : `<button class="btn alt" data-act="visit" ${gateOk && !moving && world.av.where === 'home' ? '' : 'disabled'}>Du vân sang thăm</button>`) + '</div>' +
       (!away && !gateOk ? '<p class="note">Cổng Vân Môn mở nửa từ ngày 29. Muốn thử ngay, kéo thanh “Xem trước tiến trình” tới ngày 29 trở lên.</p>' : '') +
       `<p class="muted">Bạn đồng tu trong bản này là mô phỏng. Tùy hỷ ở đây là cử chỉ; điểm Thiện chỉ ghi khi bạn thật sự giúp người ngoài đời.</p><div class="row"><button class="ghost" data-act="home">← Vân Đảo</button></div>`;
+  } else if (U.view === 'attest') {
+    h = atView();   // #104: người nhận liên kết chứng thực tuần
   } else if (U.view === 'board') {
     h = `<h2>Bia Tích Lũy</h2><p class="pali">Ngày ${d}/49 · Tuần ${wk}: ${esc(W.title)}</p>${bars()}`;
     // #93: việc còn lại hôm nay và trạng thái đồng bộ giữa các thiết bị
     h += todayBox(S, today(), S.completed || allDone(d) ? 0 : 3 - Object.keys(S.done[d] || {}).length) + '<span id="nv-chinh"></span>' + dkCard() + ptCard(S, today()) + tierBlock(S, ptSaved(S, 7));   // #107: cổng Tầng 1
     if (ct.state === 'idle') loadVariants().then(render);
+    h += atCard(S);   // #104: chứng thực tuần (ui/chung-thuc.js), chỉ ngày 7, 14, …, 49
     const tdy = S.tu[today()] || {}, ev = passiveLines(tdy);
     if (library.state === 'idle') loadSermons().then(render);
     PILLARS.forEach((p) => {
@@ -520,6 +524,7 @@ function closeCreator(saved) { if (!saved && world) { world.setLook(S.look); } i
 panel.addEventListener('input', (e) => {
   const t = e.target;
   if (t.dataset.dt !== undefined) return dtInput(t);
+  if (t.dataset.at !== undefined) return atInput(t);
   if (t.dataset.bn !== undefined) { S.birds.n = +t.value; const o = panel.querySelector('[data-bnv]'); if (o) o.textContent = S.birds.n; save(); return; }
   if (t.dataset.bvol !== undefined) { S.birds.vol = +t.value; const o = panel.querySelector('[data-bvv]'); if (o) o.textContent = S.birds.vol > 0 ? Math.round(S.birds.vol * 100) + '%' : 'tắt'; save(); return; }
   if (t.dataset.tts !== undefined) { S.tts = t.checked; save(); return; }
@@ -556,6 +561,7 @@ panel.addEventListener('click', (e) => {
   if (act !== 'reset') U.resetArm = false;
   if (act.startsWith('acct-')) return accountAct(act.slice(5), b);   // T2.3: Giữ hành trình, Tài khoản (ui/account.js)
   if (act.startsWith('dt-')) return dtAct(act.slice(3), b);   // #124: Bạn đồng tu (ui/dong-tu.js)
+  if (act.startsWith('at-')) return atAct(act.slice(3), b);   // #104: chứng thực tuần (ui/chung-thuc.js)
   if (act === 'nv-jump') { const t = panel.querySelector('#' + b.dataset.to); if (t) t.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
   if (act.startsWith('tg-')) { void tierAct(act, render, toast); return; }   // #107: ui/tang-1.js
   if (act.startsWith('pt-')) { const r = ptAct(act, b, S, today()); if (r.view) U.view = r.view; if (r.msg) toast(r.msg); render(); return; }   // #104: ui/phan-tinh.js, chỉ trên máy
@@ -903,6 +909,8 @@ if (world) {
     if (key) { const i = world.friends.findIndex((f) => (f.id || 's' + f.sim) === key); if (i >= 0) U.friend = i; else U.view = 'home'; render(); } });
   Object.assign(window.__app, { goMeet, together, tdSkip, tdAt, acct, dongTu, openFriend, visitToast });   // kiểm thử e2e gặp trên đảo, tuần trà (#125)
 }
+// #104: mở bằng liên kết chứng thực tuần thì hiện màn chứng thực (mã đã được script đầu trang lấy khỏi URL)
+atInit({ render, toast, show: () => { U.view = 'attest'; U.zone = null; document.body.classList.remove('pmin'); render(); }, close: () => { U.view = 'home'; render(); } });
 // #93: tải danh mục việc sớm để nhắc việc còn lại trong ngày; quay lại app sau một lúc thì nhắc lại
 stateReady.then(() => { if (S.name) return loadMissions().then(() => setTimeout(remind, 4000)); }).catch(() => {});
 window.addEventListener('focus', () => setTimeout(remind, 1500));
