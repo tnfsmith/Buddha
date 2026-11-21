@@ -22,6 +22,18 @@ function toDraft(v) {
   const by = Object.fromEntries((v.reminders || []).map((r) => [r.kind, r]));
   return REMINDER_KINDS.map((k) => { const r = by[k]; return { kind: k, local_hm: r ? r.local_hm : HM0[k], days_mask: r ? r.days_mask : k === 'tong_ket_tuan' ? 1 : 127, active: !!(r && r.active) }; });
 }
+/**
+ * API nhắc (#149/#150) đã lên chưa: null = chưa biết, true = có, false = chưa có (route trả 404). Chưa có thì ẩn dòng ở Bia
+ * và màn nhắc, để UI có thể gộp trước API mà không hiện tính năng hỏng; API lên thì lần mở ứng dụng sau tự hiện.
+ */
+let HAS = null, probing = false;
+async function probe(render) {
+  if (probing || HAS !== null) return;
+  probing = true;
+  try { await api('/api/v1/reminders'); HAS = true; }
+  catch (e) { HAS = !(e && e.status === 404); }   // 401 khi chưa đăng nhập: route có, tính năng có
+  probing = false; render();
+}
 async function load(render) {
   const uid = R.uid;
   try {
@@ -29,12 +41,18 @@ async function load(render) {
     if (R.uid !== uid) return;
     R.view = v; R.draft = toDraft(v); R.pause = null; R.here = here; R.err = '';
   }
-  catch { if (R.uid !== uid) return; R.err = 'Chưa tải được lịch nhắc.'; }
+  catch (e) {
+    if (e && e.status === 404) HAS = false;
+    if (R.uid !== uid) return;
+    R.err = 'Chưa tải được lịch nhắc.';
+  }
   render();
 }
 /** Dòng ngắn ở Bia Tích Lũy (tải lịch một lần khi đã giữ hành trình) */
 export function nhLine(render) {
   follow();
+  if (HAS === false) return '';
+  if (!acct.on) { if (HAS === null) { void probe(render); return ''; } }
   if (!acct.on) return '<p class="muted">Nhắc nhở: giữ hành trình để bật · <button class="link" data-act="nh-open">Xem</button></p>';
   if (!R.view && !R.err && !R.loading) { R.loading = true; void load(render).finally(() => { R.loading = false; }); }
   const on = R.view ? R.view.reminders.filter((r) => r.active).length : 0;
@@ -45,6 +63,7 @@ export function nhView(render) {
   follow();
   let h = '<h2>Nhắc nhở</h2><p class="muted">Mặc định tắt. Tối đa hai nhắc mỗi ngày, không nhắc từ 21:30 đến 05:00. Lời nhắc nhẹ nhàng, không đếm ngày bỏ lỡ.</p>';
   const back = '<div class="row"><button class="ghost" data-act="board">← Bia Tích Lũy</button></div>';
+  if (HAS === false) return h + '<p class="note">Tính năng nhắc nhở đang được cập nhật.</p>' + back;
   if (!acct.on) return h + '<p class="note">Giữ hành trình để bật nhắc trên các thiết bị của bạn.</p><div class="row"><button class="btn" data-act="acct-open">Giữ hành trình của tôi</button></div>' + back;
   if (!R.view) { if (!R.err && !R.loading) { R.loading = true; void load(render).finally(() => { R.loading = false; }); } return h + (R.err ? `<p class="note" role="alert">${R.err}</p><div class="row"><button class="ghost" data-act="nh-reload">Thử lại</button></div>` : '<p class="muted" role="status">Đang tải…</p>') + back; }
   const v = R.view, D = R.draft, on = D.filter((r) => r.active).length, dis = R.busy ? ' disabled' : '';

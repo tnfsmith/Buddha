@@ -48,10 +48,16 @@ function fakeServer({ push = true } = {}) {
 }
 
 /** Trang đã dựng cảnh (dừng vẽ: ca chỉ kiểm giao diện 2D). `perm`: kết quả xin quyền thông báo. */
-async function open(browser, sv, { account = true, perm = 'granted' } = {}) {
+async function open(browser, sv, { account = true, perm = 'granted', noApi = false, calls404 = [] } = {}) {
   const ctx = await browser.newContext({ viewport: { width: 412, height: 860 }, serviceWorkers: 'block' });
   if (sv) await ctx.route('**/api/**', (r) => sv.handle(r));
-  else await ctx.route('**/api/**', (r) => r.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: { code: 'not_found' } }) }));
+  else await ctx.route('**/api/**', (r) => {
+    // chưa giữ hành trình: route nhắc có (401 khi chưa đăng nhập), trừ khi `noApi` (API nhắc chưa lên → 404)
+    const reminders = r.request().url().includes('/api/v1/reminders');
+    if (reminders) calls404.push(r.request().url());
+    return reminders && !noApi ? r.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: { code: 'unauthorized' } }) })
+      : r.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: { code: 'not_found' } }) });
+  });
   await ctx.addInitScript(({ LOOK, account, perm, ENDPOINT }) => {
     if (!localStorage.getItem('vandao.seeded')) {
       localStorage.setItem('vandao.seeded', '1');
@@ -181,15 +187,29 @@ test('nhắc nhở: máy chủ chưa bật push hoặc người dùng không cho
   expect(page.errs).toEqual([]);
 });
 
-test('nhắc nhở: chưa giữ hành trình → mời giữ hành trình, không gọi API nhắc', async ({ browser }) => {
+test('nhắc nhở: chưa giữ hành trình → mời giữ hành trình; chỉ dò API nhắc một lần, không gọi push', async ({ browser }) => {
   test.setTimeout(300_000);
-  const page = await open(browser, null, { account: false }), P = page.locator('#panel');
-  const calls = []; page.on('request', (r) => { if (r.url().includes('/api/v1/reminders') || r.url().includes('/push/')) calls.push(r.url()); });
+  const probes = [], page = await open(browser, null, { account: false, calls404: probes }), P = page.locator('#panel');
+  const calls = []; page.on('request', (r) => { if (r.url().includes('/push/')) calls.push(r.url()); });
   await page.locator('#panel [data-act="board"]').first().click();
   await slow(P).toContainText('Nhắc nhở: giữ hành trình để bật');
   await P.locator('[data-act="nh-open"]').click();
   await expect(P).toContainText('Giữ hành trình để bật nhắc');
   await expect(P.locator('[data-act="acct-open"]').last()).toBeVisible();
   expect(calls).toEqual([]);
+  expect(probes.length).toBe(1);
+  expect(page.errs).toEqual([]);
+});
+
+test('nhắc nhở: API nhắc chưa lên (404) → Bia không hiện dòng nhắc, màn nhắc báo đang cập nhật, không gọi lặp', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const probes = [], page = await open(browser, null, { account: false, noApi: true, calls404: probes }), P = page.locator('#panel');
+  await page.locator('#panel [data-act="board"]').first().click();
+  await slow(P.locator('h2', { hasText: 'Bia Tích Lũy' })).toBeVisible();
+  await expect.poll(() => probes.length).toBe(1);
+  await expect(P).not.toContainText('Nhắc nhở');
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));   // vẽ lại sau đồng bộ: không dò lại
+  await page.waitForTimeout(3000);
+  expect(probes.length).toBe(1);
   expect(page.errs).toEqual([]);
 });
