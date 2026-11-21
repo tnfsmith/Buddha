@@ -56,7 +56,6 @@ export const HO_TRI_REASON_TEXT = Object.freeze({
   invalid_reply: 'Lời trả lời cần có từ 1 đến 600 ký tự.',
   need_adult_confirmation: 'Hãy xác nhận đủ 18 tuổi và đồng ý điều khoản cộng đồng.',
   terms_changed: 'Điều khoản cộng đồng đã đổi. Hãy đọc và xác nhận lại.',
-  need_gate: 'Bảng Hộ Trì mở khi Cổng Vân Môn mở nửa.',
   moderation_unavailable: 'Chưa thể sàng lọc nội dung. Hãy thử lại sau.',
   has_phone: 'Hãy bỏ số điện thoại khỏi nội dung.',
   has_address: 'Chỉ ghi khu vực đến tỉnh hoặc thành phố.',
