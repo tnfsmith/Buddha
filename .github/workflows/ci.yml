@@ -82,15 +82,15 @@ jobs:
   account:
     name: account (Worker + D1 cục bộ)
     runs-on: ubuntu-latest
-    # Hai ca hiện có giới hạn 15 + 10 phút; thêm thời gian cài/dựng, không tăng timeout của ca.
-    timeout-minutes: 30
+    # Ba ca có tổng giới hạn 40 phút; cả job cần thêm thời gian cài và dựng Worker.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with: { node-version: 26, cache: npm }
       - run: npm ci
       - run: npm run build
-      - name: Hai ca tài khoản đầy đủ, không giả lập API và không được bỏ qua
+      - name: Ba ca tài khoản và Bạn đồng tu với Worker thật, không được bỏ qua
         run: node scripts/account-ci.mjs
       - name: Lưu kết quả tài khoản của đúng commit
         if: always()
