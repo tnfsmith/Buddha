@@ -524,11 +524,11 @@ function closeCreator(saved) { if (!saved && world) { world.setLook(S.look); } i
 panel.addEventListener('input', (e) => {
   const t = e.target;
   if (t.dataset.dt !== undefined) return dtInput(t);
-  if (t.dataset.at !== undefined) return atInput(t);
   if (t.dataset.bn !== undefined) { S.birds.n = +t.value; const o = panel.querySelector('[data-bnv]'); if (o) o.textContent = S.birds.n; save(); return; }
   if (t.dataset.bvol !== undefined) { S.birds.vol = +t.value; const o = panel.querySelector('[data-bvv]'); if (o) o.textContent = S.birds.vol > 0 ? Math.round(S.birds.vol * 100) + '%' : 'tắt'; save(); return; }
   if (t.dataset.tts !== undefined) { S.tts = t.checked; save(); return; }
   if (t.dataset.vandu !== undefined) { S.vandu = t.checked; save(); return; }
+  if (t.dataset.at !== undefined) return atInput(t);   // #104: lời chứng thực (ui/chung-thuc.js)
   if (t.id === 'sim') { U.sim = +t.value; U.tier = null; $('#simv').textContent = t.value; $('#simt').textContent = WEEKS[Math.ceil(U.sim / 7) - 1].reward; return; }
   if (t.id === 'nm') { U.draft.name = t.value; const nb = nameBlock(t.value); $('#nmBox').innerHTML = nb.html; const b = panel.querySelector('[data-act="saveLook"]'); if (b) b.disabled = !nb.c.ok; return; }
   if (t.dataset.opt === 'height') { U.draft.look.height = +t.value; applyDraft(); return; }
