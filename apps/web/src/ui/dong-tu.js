@@ -4,7 +4,8 @@
 // Lời mời gặp không hiện và không có âm khi đang thiền; xuất thiền rồi mới hiện, kèm dòng «trong lúc bạn thiền».
 import {
   INVITE_TTL_MS, LINES, MAX_COMPANIONS, MEET_KINDS, PRESENCE_TEXT, REASON_TEXT, SEEN_TEXT,
-  canMeet, inviteFromHash, isMeetKind, meetPhase, parseFriendQuery, showInviteCode,
+  SESSION_AHEAD_MS, SESSION_MAX, SESSION_MIN_LEAD_MS, SESSION_OPEN_MAX, SESSION_REMIND_MS, SESSION_STEP_MS,
+  canMeet, inviteFromHash, isMeetKind, meetPhase, parseFriendQuery, sessionPhase, showInviteCode,
 } from '@vandao/shared/dong-tu.js';
 import {
   block, cancelMeet, createLink, dongTu, linkInfo, listBlocks, loadCompanions, meet, observeDongTuMe, onDongTu, pushSocialPrefs,
@@ -15,6 +16,7 @@ import { api, getMe, updateProfile } from '../net/api.js';
 import { ZONE_UNLOCK, gateLevel } from '@vandao/shared/schedule.js';
 import { esc } from './dom.js';
 import { qr } from './account.js';
+import { ceilStep, icsDownload, localInput, whenText } from './hen-ics.js';
 
 /**
  * Trạng thái màn. `tab`: list · moi (mã mời) · tim (tìm bạn) · ban (một bạn) · bao (báo cáo) · rieng (quyền riêng tư) ·
@@ -26,9 +28,11 @@ function resetFor(uid) {
   Object.assign(D, {
     uid, tab: D.tab === 'loi' ? 'loi' : 'list', sel: null, busy: '', err: '', msg: '', arm: '', link: null, me: null, blocks: null, q: '', peek: null, prog: new Map(), progReq: new Map(), kem: false,
     skew: 0, at: 0, lastLoad: 0, msgInv: null, cardKey: null, viewKey: '', openSynced: false,
-    quietSeen: new Set(), chimed: new Set(), watch: new Set(), joined: new Set(), hide: new Set(), answered: new Set(),
+    quietSeen: new Set(), chimed: new Set(), watch: new Set(), joined: new Set(), hide: new Set(), answered: new Set(), hen: freshHen(),
   });
 }
+/** Ô hẹn giờ đồng tu: bạn được chọn, «gio» (hẹn giờ) hoặc «ngay», giờ địa phương trong ô datetime-local */
+function freshHen() { return { pick: new Set(), when: 'gio', at: localInput(ceilStep(Date.now() + 30 * 60_000)) }; }
 resetFor(null);
 /** Gọi ở mọi lối vào: tài khoản đổi thì trạng thái cũ không được lọt sang người mới */
 const follow = () => { if (acct.uid !== D.uid) resetFor(acct.uid); };
@@ -38,10 +42,13 @@ let ctx = null;
 
 const L = (k) => { const v = dongTu.list && dongTu.list[k]; return Array.isArray(v) ? v : []; };
 const now = () => Date.now() + D.skew;
-const who = (p) => `${esc(p.tinh_danh)} · ${esc(p.tag)}`;
+// Bạn đồng tu có thể chưa tạo nhân vật (§11: kết nối không đòi Tịnh danh): không hiện «null», ghi rõ chưa đặt
+const nm = (p) => (p && p.tinh_danh) || 'Chưa đặt Tịnh danh';
+const label = (p) => (p && p.tinh_danh ? `${p.tinh_danh} · ${p.tag}` : `ID ${p.tag} (chưa đặt Tịnh danh)`);
+const who = (p) => esc(label(p));
 const friend = (id) => L('companions').find((c) => c.id === id) || null;
 const nameOf = (id) => { const c = friend(id); return c ? who(c) : 'Bạn đồng tu'; };
-const plainName = (id) => { const c = friend(id); return c ? `${c.tinh_danh} · ${c.tag}` : 'bạn đồng tu'; };
+const plainName = (id) => { const c = friend(id); return c ? label(c) : 'bạn đồng tu'; };
 const other = (inv) => (inv.from === acct.uid ? inv.to : inv.from);
 const clock = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 const mins = (ms) => `${Math.max(1, Math.ceil(ms / 60_000))} phút`;
@@ -59,6 +66,7 @@ const ERR = {
   link_invalid: 'Mã mời không còn hiệu lực.', link_expired: 'Mã mời đã hết hạn.', link_used_up: 'Mã mời đã dùng hết lượt.',
   already_companion: 'Hai bạn đã kết nối đồng tu.', self: 'Đây là mã mời của chính bạn.',
   unauthorized: 'Phiên đã hết. Hãy mở Tài khoản để đăng nhập lại.',
+  session_closed: 'Hẹn này đã kết thúc hoặc đã hủy.', invalid_payload: 'Giờ hẹn hoặc danh sách bạn chưa hợp lệ.',
 };
 const human = (e) => ERR[e && e.code] || REASON_TEXT[e && e.code] || 'Chưa thực hiện được. Hãy thử lại.';
 
@@ -73,6 +81,28 @@ function invites() {
   }
   return out;
 }
+/**
+ * Hẹn đồng tu (#151, hợp đồng §9): phiên mình chủ trì hoặc có ghế, chưa hủy, chưa qua thời thiền. Ghế mình đã từ chối/rời thì không hiện.
+ * `going`: mình sẽ ngồi (chủ phiên, hoặc ghế đã nhận lời). Khóa trong D.joined/hide/watch có tiền tố «s:» để không trùng id lời mời gặp.
+ */
+/**
+ * Máy chủ có API phiên (§9.3) khi GET /companions trả mảng `sessions`. Chưa có (bản API cũ) thì ẩn nút hẹn giờ: UI có thể
+ * lên trước API mà không gọi route chưa triển khai; API lên sau thì nút tự hiện ở lần tải danh sách kế tiếp.
+ */
+const hasSessions = () => !!dongTu.list && Array.isArray(dongTu.list.sessions);
+const SEAT = { moi: 'chờ trả lời', nhan: 'đã nhận lời', tu_choi: 'không tham gia', roi: 'không tham gia' };
+function sessions() {
+  const t = now(), out = [];
+  for (const s of L('sessions')) {
+    if (!s || !s.host || !Array.isArray(s.seats) || !Number.isFinite(s.start_at)) continue;
+    const host = s.host.id === acct.uid, seat = host ? null : s.seats.find((x) => x && x.id === acct.uid) || null;
+    if (!host && (!seat || seat.status === 'tu_choi' || seat.status === 'roi')) continue;
+    const ph = sessionPhase(s, t);
+    if (ph === 'xong' || ph === 'huy' || D.hide.has('s:' + s.id)) continue;
+    out.push({ s, host, seat, ph, going: host || seat.status === 'nhan' });
+  }
+  return out.sort((a, b) => a.s.start_at - b.s.start_at);
+}
 const prefs = () => { const s = (D.me && D.me.settings && D.me.settings.dong_tu) || {}; return { hien_trang_thai: s.hien_trang_thai !== false, cho_tim: s.cho_tim !== false, hien_ngay: s.hien_ngay !== false, chia_se_tien_trinh: s.chia_se_tien_trinh === true }; };
 
 /** Số chấm trên nút: lời kết nối và lời mời gặp đang chờ mình. Không bao giờ là số bạn. */
@@ -80,7 +110,7 @@ export function dtBadge() {
   follow();
   if (!dongTu.on) return 0;
   if (!dongTu.list) return (dongTu.social.requests || 0) + (dongTu.social.invites || 0);
-  return L('incoming').length + invites().incoming.length;
+  return L('incoming').length + invites().incoming.length + sessions().filter((x) => x.seat && x.seat.status === 'moi').length;
 }
 
 // ───────── Các màn ─────────
@@ -100,6 +130,7 @@ export function dtView() {
   if (D.tab === 'moi') return inviteView();
   if (D.tab === 'tim') return findView();
   if (D.tab === 'rieng') return privacyView();
+  if (D.tab === 'hen') return henView();
   const f = friend(D.sel);
   if (D.tab === 'ban' && f) return friendView(f);
   if (D.tab === 'bao' && f) return reportView(f);
@@ -140,10 +171,12 @@ function kinds(c) {
 function listView() {
   const g = ready();
   const x = g.ok ? '' : ' disabled';
-  let h = '<h2>Bạn đồng tu</h2>' + gateNote(g) + rw(bt('dt-tab', 'Mời bạn tu cùng', 'btn', ' data-v="moi"' + x), bt('dt-tab', 'Tìm bạn', 'btn alt', ' data-v="tim"' + x)) + status();
+  let h = '<h2>Bạn đồng tu</h2>' + gateNote(g) + rw(bt('dt-tab', 'Mời bạn tu cùng', 'btn', ' data-v="moi"' + x), bt('dt-tab', 'Tìm bạn', 'btn alt', ' data-v="tim"' + x),
+    hasSessions() ? bt('dt-tab', 'Hẹn giờ đồng tu', 'btn alt', ' data-v="hen"' + (g.ok && L('companions').length ? '' : ' disabled')) : '') + status();
   if (!dongTu.list) return h + ms('Đang tải danh sách…') + foot();
-  const I = invites(), cs = L('companions'), inc = L('incoming'), og = L('outgoing');
+  const I = invites(), cs = L('companions'), inc = L('incoming'), og = L('outgoing'), SS = sessions();
   if (I.incoming.length) h += `<h3>Lời mời đang chờ (${I.incoming.length})</h3>` + I.incoming.map(incomingRow).join('');
+  if (SS.length) h += '<h3>Hẹn đồng tu</h3>' + SS.map(sesRow).join('');
   if (inc.length) h += `<h3>Lời kết nối (${inc.length})</h3>` + inc.map(reqRow).join('');
   const than = cs.filter((c) => c.closeness === 'than'), quen = cs.filter((c) => c.closeness !== 'than');
   if (than.length) h += '<h3>Thân thiết</h3>' + than.map((c) => row(c, I)).join('');
@@ -178,7 +211,7 @@ function meetBlock(c, I) {
     (chk.quiet ? mu('Bạn ấy đang tọa thiền: lời mời sẽ hiện khi bạn ấy xuất thiền.') : '');
 }
 /** Tên và ID: ID là mã 4 số công khai, cùng dạng người khác gõ khi tìm («Tịnh danh · mã») */
-const nameId = (p) => `<b>${esc(p.tinh_danh)}</b> <span class="dtid">ID ${esc(p.tag)}</span>`;
+const nameId = (p) => `<b>${esc(nm(p))}</b> <span class="dtid">ID ${esc(p.tag)}</span>`;
 function row(c, I) {
   const open = D.peek === c.id;
   return `<div class="dtf" data-id="${esc(c.id)}"><button class="dtn" data-act="dt-ban" data-id="${esc(c.id)}">${dot(c)}${nameId(c)}<span>${esc(presenceLine(c))}</span></button>${meetBlock(c, I)}` +
@@ -236,9 +269,66 @@ const reqRow = (r) => { const x = di(r.id) + dis(); return `<div class="dtf"><di
 // Người gửi chỉ thấy «đã gửi» tới khi bên kia đồng ý hoặc hết hạn: không có tín hiệu từ chối hay «không tìm thấy» (hợp đồng §4)
 const outRow = (r) => `<div class="dtf"><div class="dtn"><b>${who(r)}</b><span>Đã gửi lời kết nối · chờ người ấy đồng ý</span></div>${rw(bt('dt-withdraw', 'Rút lại', 'ghost', di(r.id) + dis()))}</div>`;
 
+// ───────── Hẹn đồng tu nhóm (#151 §4–§5, hợp đồng §9) ─────────
+function sesRow({ s, host, seat, ph, going }) {
+  const x = di(s.id) + dis(), arm = D.arm === 'sc:' + s.id;
+  const t = ph === 'hen' ? esc(whenText(s.start_at)) : ph === 'sap' ? `bắt đầu sau ${left(s.start_at, 'c')}` : 'đang diễn ra';
+  let h = `<div class="dtf dts"><div class="dtn"><b>Cùng ngồi thiền ở Đại Thiền Đường</b><span>${t}</span></div>` +
+    mu(host ? 'Bạn chủ trì.' : `Chủ hẹn: ${who(s.host)}`) + `<ul class="dtsl">${s.seats.map((p) => `<li>${who(p)} · ${SEAT[p.status] || ''}</li>`).join('')}</ul>`;
+  if (seat && seat.status === 'moi') h += rw(bt('dt-s-yes', 'Nhận lời', 'btn', x), bt('dt-s-no', 'Để lúc khác', 'btn alt', x));
+  else if (ph === 'dang' && !D.joined.has('s:' + s.id)) h += rw(bt('dt-s-join', 'Vào ngồi cùng', 'btn', di(s.id)));
+  else if (going) {
+    h += rw(ph === 'hen' ? bt('dt-ics', 'Thêm vào lịch', 'ghost', di(s.id)) : '',
+      host ? bt('dt-s-cancel', arm ? 'Bấm lần nữa để hủy hẹn' : 'Hủy hẹn', 'ghost', x) : bt('dt-s-leave', 'Không tham gia nữa', 'ghost', x));
+    if (arm) h += mu('Mọi người được mời sẽ thấy hẹn đã hủy.');
+  }
+  return h + '</div>';
+}
+function henView() {
+  const g = ready(), H = D.hen;
+  let h = '<h2>Hẹn giờ đồng tu</h2>';
+  if (!hasSessions()) return h + mu('Tính năng hẹn giờ đang được cập nhật.') + back();
+  if (!g.ok) return h + gateNote(g) + back();
+  h += mu(`Cùng ngồi một thời thiền 15 phút trên Đài Đồng Tu ở Đại Thiền Đường. Mời từ 1 đến ${SESSION_MAX - 1} bạn, hẹn trước tối đa 7 ngày.`) + status();
+  if (sessions().filter((y) => y.host).length >= SESSION_OPEN_MAX) return h + `<p class="note">Bạn đang có ${SESSION_OPEN_MAX} hẹn sắp tới. Hãy chờ một hẹn qua, hoặc hủy bớt.</p>` + back();
+  const cs = L('companions'), n = H.pick.size, full = n >= SESSION_MAX - 1;
+  if (!cs.length) return h + mu('Chưa có bạn đồng tu để hẹn.') + back();
+  h += '<h3>Mời ai</h3>' + cs.map((c) => {
+    const on = H.pick.has(c.id), off = (!on && full) || !!D.busy;
+    return `<label class="chk"><input type="checkbox" data-dt="hen-ban" data-id="${esc(c.id)}"${on ? ' checked' : ''}${off ? ' disabled' : ''}> ${who(c)}` +
+      (H.when === 'ngay' && c.presence === 'vang' ? ' <span class="muted">· đang vắng, sẽ không được mời</span>' : '') + '</label>';
+  }).join('') + (full ? mu(`Đã chọn đủ ${SESSION_MAX - 1} bạn.`) : '');
+  const t = now(), radio = (v, text) => `<label class="chk"><input type="radio" name="dthw" data-dt="hen-when" value="${v}"${H.when === v ? ' checked' : ''}${dis()}> ${text}</label>`;
+  h += '<h3>Khi nào</h3>' + radio('gio', 'Hẹn giờ') +
+    `<input type="datetime-local" data-dt="hen-at" aria-label="Giờ hẹn" step="${SESSION_STEP_MS / 1000}" min="${localInput(ceilStep(t + SESSION_MIN_LEAD_MS))}" max="${localInput(t + SESSION_AHEAD_MS)}" value="${esc(H.at)}"${H.when === 'gio' && !D.busy ? '' : ' disabled'}>` +
+    radio('ngay', 'Ngay, bắt đầu sau 1 phút (chỉ mời bạn đang ở Vân Đạo)');
+  h += rw(bt('dt-hen', n ? `Gửi lời hẹn tới ${n} bạn` : 'Hãy chọn ít nhất một bạn', 'btn', n && !D.busy ? '' : ' disabled'));
+  return h + mu('Khi ứng dụng đang mở, bạn được nhắc lúc còn 10 phút và 1 phút. «Thêm vào lịch» để lịch của máy nhắc trước 10 phút.') + back();
+}
+/** Tạo phiên: giờ địa phương trong ô → UTC ms; máy chủ kiểm lại mọi điều kiện (§9.3) */
+function henSend() {
+  const H = D.hen, ids = [...H.pick].filter((id) => friend(id));
+  let start = 'ngay';
+  if (H.when === 'gio') {
+    const t = H.at ? new Date(H.at).getTime() : NaN, n = now();
+    if (!Number.isFinite(t) || t % SESSION_STEP_MS) { D.err = 'Hãy chọn giờ theo bước 5 phút.'; return ctx.render(); }
+    if (t < n + SESSION_MIN_LEAD_MS || t > n + SESSION_AHEAD_MS) { D.err = 'Giờ hẹn phải từ 1 phút tới 7 ngày nữa.'; return ctx.render(); }
+    start = t;
+  }
+  return run('Đang gửi lời hẹn', async (ok) => {
+    const r = await api('/api/v1/sessions', { method: 'POST', body: { start_at: start, invitees: ids } });
+    if (!ok()) return;
+    const sk = (r && Array.isArray(r.skipped) ? r.skipped : []).map((x) => plainName(typeof x === 'string' ? x : x && x.id));
+    D.hen = freshHen(); D.tab = 'list'; reload();
+    D.msg = `Đã gửi lời hẹn${start === 'ngay' ? ' cùng ngồi ngay' : ' ' + whenText(start)}.` + (sk.length ? ` Chưa mời ${sk.join(', ')} vì đang vắng.` : '');
+  });
+}
+const reload = () => { D.lastLoad = Date.now(); void loadCompanions().catch(() => {}); };
+const sesById = (id) => sessions().find((x) => x.s.id === id) || null;
+
 function friendView(c) {
   const me = c.me || {}, than = c.closeness === 'than';
-  return `<h2>${esc(c.tinh_danh)}</h2><p class="pali">ID ${esc(c.tag)} · bạn đồng tu ${than ? 'thân thiết' : 'quen biết'}</p><p>${dot(c)} ${esc(presenceLine(c))}</p>${meetBlock(c, invites())}${status()}
+  return `<h2>${esc(nm(c))}</h2><p class="pali">ID ${esc(c.tag)} · bạn đồng tu ${than ? 'thân thiết' : 'quen biết'}</p><p>${dot(c)} ${esc(presenceLine(c))}</p>${meetBlock(c, invites())}${status()}
     <h3>Các kiểu mời</h3>${kinds(c)}<h3>Xem nhanh</h3>${peek(c)}
     <h3>Mức gần gũi</h3><label class="chk"><input type="checkbox" data-dt="than"${me.than ? ' checked' : ''}${dis()}> Thân thiết</label>
     ${mu(`Hai người cùng chọn thì thành thân thiết. Không có nấc nào tự lên theo số lần gặp.`)}` +
@@ -326,15 +416,32 @@ function card(I = invites()) {
   const quiet = ctx.quiet();
   if (dongTu.on && quiet) { for (const x of I.incoming) if (!D.chimed.has(x.inv.id)) D.quietSeen.add(x.inv.id); }
   else if (dongTu.on) {
-    const tog = I.together.find((x) => !D.joined.has(x.inv.id) && !D.hide.has(x.inv.id));
+    const tog = I.together.find((x) => !D.joined.has(x.inv.id) && !D.hide.has(x.inv.id)), sc = tog ? null : sesCard();
     const inc = ctx.viewOpen() ? null : I.incoming.find((x) => !D.hide.has(x.inv.id));
     if (tog) { key = `g${tog.inv.id}:${tog.ph.phase}:${tog.inv.kind}`; h = togetherCard(tog); }
+    else if (sc) { key = sc.key; h = sc.h; if (!D.chimed.has(key)) { D.chimed.add(key); ctx.sfx('gift'); } }
     else if (inc) {
       key = `i${inc.inv.id}:${I.incoming.length}:${D.quietSeen.has(inc.inv.id) ? 'q' : ''}`; h = incomingCard(inc, I.incoming.length);
       if (!D.chimed.has(inc.inv.id)) { D.chimed.add(inc.inv.id); ctx.sfx('gift'); }   // một tiếng ngân nhỏ, chỉ khi không thiền
     }
   }
   if (key !== D.cardKey) { D.cardKey = key; el.innerHTML = h; el.hidden = !h; }
+}
+/** Thẻ nhắc hẹn (§9.4): lúc còn 10 phút, lúc còn 1 phút, và khi đang diễn ra mà mình chưa vào. «Để sau» ẩn tới mốc kế tiếp. */
+function sesCard() {
+  const t = now();
+  for (const x of sessions()) {
+    if (!x.going) continue;
+    const k = 's:' + x.s.id, rest = x.s.start_at - t;
+    const mark = x.ph === 'dang' ? (D.joined.has(k) ? '' : 'dang') : rest <= SESSION_REMIND_MS[1] ? '1' : rest <= SESSION_REMIND_MS[0] ? '10' : '';
+    if (!mark || D.hide.has(k + ':' + mark)) continue;
+    const later = bt('dt-hide', 'Để sau', 'ghost', ` data-id="${esc(k + ':' + mark)}"`);
+    const h = mark === 'dang' ? '<b>Hẹn đồng tu đang diễn ra</b><p>Tại Đại Thiền Đường</p>' + rw(bt('dt-s-join', 'Vào ngồi cùng', 'btn', di(x.s.id)), later)
+      : `<b>Sắp tới giờ đồng tu</b><p>Cùng ngồi thiền ở Đại Thiền Đường · bắt đầu sau ${left(x.s.start_at, mark === '1' ? 'c' : 'm')}</p>` +
+        (mark === '1' ? '<p class="muted dtx">Đến giờ, thời thiền tự bắt đầu.</p>' : '') + rw(bt('dt-go', 'Vào Đại Thiền Đường', 'btn', ` data-s="${esc(x.s.id)}"`), later);
+    return { key: k + ':' + mark, h };
+  }
+  return null;
 }
 /**
  * Người ngồi Đài Đồng Tu lúc này (#151): lời mời `thien` · `dtd` đã nhận, từ 60 giây trước giờ tới hết thời thiền. Chủ phiên ngồi trước.
@@ -343,12 +450,23 @@ function card(I = invites()) {
  */
 function daisPeople(I) {
   const x = I.together.find((t) => t.inv.kind === 'thien' && t.inv.place === 'dtd');
-  if (!x) return [];
+  if (!x) return sesDais();
   return [x.inv.from, x.inv.to].map((id) => {
     if (id === acct.uid) return { key: id, me: true };
     const c = friend(id); if (!c) return null;
-    return { key: id, name: `${c.tinh_danh} · ${c.tag}`, look: c.look || {}, here: x.ph.phase === 'sap' || c.presence == null || c.presence === 'thien' };
+    return { key: id, name: label(c), look: c.look || {}, here: x.ph.phase === 'sap' || c.presence == null || c.presence === 'thien' };
   }).filter(Boolean);
+}
+/** Đài của hẹn nhóm: chủ phiên trước, rồi người đã nhận lời (tối đa SESSION_MAX). Người không là bạn của mình: không biết hiện diện, coi như đã ngồi. */
+function sesDais() {
+  const y = sessions().find((z) => z.going && (z.ph === 'sap' || z.ph === 'dang'));
+  if (!y) return [];
+  const ppl = [y.s.host, ...y.s.seats.filter((p) => p && p.status === 'nhan')].slice(0, SESSION_MAX);
+  return ppl.map((p) => {
+    if (p.id === acct.uid) return { key: p.id, me: true };
+    const c = friend(p.id);
+    return { key: p.id, name: label(p), look: (c && c.look) || p.look || {}, here: y.ph === 'sap' || !c || c.presence == null || c.presence === 'thien' };
+  });
 }
 /** Cập nhật đếm ngược tại chỗ (không dựng lại thẻ/bảng, để nút đang chọn không mất tiêu điểm) */
 function updateLeft() {
@@ -378,15 +496,28 @@ function tick() {
     // vừa tới giờ khi máy đang theo dõi đếm ngược: tự bắt đầu cho cả hai; trễ (máy ngủ, mất mạng) thì để người dùng bấm «Vào ngồi cùng»
     if (D.watch.has(inv.id) && !D.hide.has(inv.id) && t - inv.start_at < 10_000) start(inv, t - inv.start_at);
   }
+  // Hẹn nhóm: cùng cách với lời mời gặp. Đã bấm «Để sau» ở mốc 1 phút thì không tự kéo vào; thẻ «đang diễn ra» cho vào sau.
+  const SS = sessions();
+  for (const x of SS) {
+    const k = 's:' + x.s.id;
+    if (!x.going) continue;
+    if (x.ph === 'sap') { D.watch.add(k); continue; }
+    if (x.ph !== 'dang' || D.joined.has(k)) continue;
+    if (ctx.quiet()) { D.joined.add(k); continue; }
+    if (D.watch.has(k) && !D.hide.has(k + ':1') && t - x.s.start_at < 10_000) startS(x.s, t - x.s.start_at);
+  }
   // Danh sách tự tải lại: 10 giây khi đang chờ bạn trả lời hoặc sắp bắt đầu; 15 giây khi đang cùng thiền (Đài Đồng Tu cần hiện diện mới
   // để thấy bạn vào muộn, kể cả khi màn Bạn đồng tu đã đóng); 30 giây khi màn đang mở (hợp đồng §5). Tab ẩn thì ngừng, để nhiều tab không
   // cùng ăn hạn mức; quay lại thì GET /me của net/account.js và nhịp này tải tiếp. loadCompanions đã gộp lượt gọi đang chạy.
-  const wait = I.outgoing.length || I.together.some((x) => x.ph.phase === 'sap'), sit = I.together.some((x) => x.ph.phase === 'dang');
-  const gap = wait ? 10_000 : sit ? 15_000 : ctx.viewOpen() ? 30_000 : 0;
+  // Hẹn nhóm sắp tới (còn ≤ 11 phút) thì 30 giây, để thấy người nhận lời muộn hay hẹn bị hủy trước khi nhắc
+  const wait = I.outgoing.length || I.together.some((x) => x.ph.phase === 'sap') || SS.some((x) => x.going && x.ph === 'sap');
+  const sit = I.together.some((x) => x.ph.phase === 'dang') || SS.some((x) => x.going && x.ph === 'dang');
+  const soon = SS.some((x) => x.going && x.ph === 'hen' && x.s.start_at - t <= SESSION_REMIND_MS[0] + 60_000);
+  const gap = wait ? 10_000 : sit ? 15_000 : ctx.viewOpen() || soon ? 30_000 : 0;
   if (gap && document.visibilityState === 'visible' && Date.now() - D.lastLoad > gap) { D.lastLoad = Date.now(); void loadCompanions().catch(() => {}); }
   card(I);
   if (ctx.dais) ctx.dais(daisPeople(I));
-  const vk = ['together', 'incoming', 'outgoing'].map((k) => I[k].map((x) => x.inv.id + x.ph.phase).join(',')).join('|');
+  const vk = ['together', 'incoming', 'outgoing'].map((k) => I[k].map((x) => x.inv.id + x.ph.phase).join(',')).join('|') + '|' + SS.map((x) => x.s.id + x.ph).join(',');
   if (vk !== D.viewKey) { D.viewKey = vk; if (ctx.viewOpen()) ctx.render(); }
   updateLeft();
 }
@@ -394,6 +525,13 @@ function start(inv, elapsed) {
   D.joined.add(inv.id);
   ctx.together(inv, Math.max(0, elapsed));
   ctx.toast(`Bắt đầu ${WHAT[inv.kind] || 'thực hành'} với ${plainName(other(inv))}.`);
+  card();
+}
+
+function startS(s, elapsed) {
+  D.joined.add('s:' + s.id);
+  ctx.together(s, Math.max(0, elapsed));
+  ctx.toast('Bắt đầu thời thiền đồng tu ở Đại Thiền Đường.');
   card();
 }
 
@@ -478,7 +616,7 @@ const findInv = (id) => L('invites').find((x) => x && x.id === id);
 export function dtAct(act, b) {
   follow();
   const id = b.dataset.id;
-  if (act !== 'renew' && act !== 'remove' && act !== 'block') D.arm = '';
+  if (act !== 'renew' && act !== 'remove' && act !== 'block' && act !== 's-cancel') D.arm = '';
   if (act === 'open') return open('list');
   if (act === 'close') { D.tab = 'list'; return ctx.close(); }
   if (act === 'tab') return open(b.dataset.v);
@@ -520,7 +658,24 @@ export function dtAct(act, b) {
     }, fromCard);
   }
   if (act === 'cancel') return run('Đang hủy lời mời', async (ok) => { await cancelMeet(id); if (!ok()) return; D.hide.add(id); }, !!b.closest('#dtm'));
-  if (act === 'go') { const inv = findInv(id); if (inv) ctx.go(inv); return; }
+  if (act === 'go') { const x = b.dataset.s ? sesById(b.dataset.s) : null, inv = x ? x.s : findInv(id); if (inv) ctx.go(inv); return; }
+  if (act === 'hen') return henSend();
+  if (act === 's-yes' || act === 's-no' || act === 's-leave') {
+    const yes = act === 's-yes';
+    return run(yes ? 'Đang nhận lời' : 'Đang trả lời', async (ok) => {
+      await api(`/api/v1/sessions/${encodeURIComponent(id)}/respond`, { method: 'POST', body: { accept: yes } });
+      if (!ok()) return;
+      if (!yes) D.hide.add('s:' + id);   // ẩn ngay, không đợi danh sách tải lại
+      reload(); D.msg = yes ? 'Đã nhận lời hẹn. Khi ứng dụng đang mở, bạn được nhắc trước giờ.' : 'Đã báo không tham gia.';
+    }, !!b.closest('#dtm'));
+  }
+  if (act === 's-cancel') {
+    if (D.arm !== 'sc:' + id) { D.arm = 'sc:' + id; return ctx.render(); }
+    D.arm = '';
+    return run('Đang hủy hẹn', async (ok) => { await api(`/api/v1/sessions/${encodeURIComponent(id)}/cancel`, { method: 'POST' }); if (!ok()) return; D.hide.add('s:' + id); reload(); D.msg = 'Đã hủy hẹn.'; });
+  }
+  if (act === 's-join') { const x = sesById(id); if (x) startS(x.s, now() - x.s.start_at); return; }
+  if (act === 'ics') { const x = sesById(id); if (x) icsDownload(x.s, { host: location.host || 'vandao', url: location.origin + '/' }); return; }
   if (act === 'join') { const inv = findInv(id); if (inv) start(inv, now() - inv.start_at); return; }
   if (act === 'hide') { D.hide.add(id); return card(); }
   if (act === 'remove' || act === 'block') {
@@ -542,6 +697,9 @@ export function dtInput(t) {
   const k = t.dataset.dt;
   if (k === 'q') { D.q = t.value; return; }
   if (k === 'kem') { D.kem = t.checked; return; }
+  if (k === 'hen-ban') { const id = t.dataset.id; if (t.checked && D.hen.pick.size < SESSION_MAX - 1) D.hen.pick.add(id); else D.hen.pick.delete(id); D.err = ''; return ctx.render(); }
+  if (k === 'hen-when') { D.hen.when = t.value === 'ngay' ? 'ngay' : 'gio'; D.err = ''; return ctx.render(); }
+  if (k === 'hen-at') { D.hen.at = t.value; D.err = ''; return; }
   if (k === 'than' || k === 'away') { const sel = D.sel; return run('Đang lưu', async () => { await setCompanion(sel, { [k]: t.checked }); }); }
   if (k === 'chia_se_tien_trinh') {   // §10.1: PATCH gộp theo từng khóa, chỉ gửi khóa này
     const on = t.checked;
