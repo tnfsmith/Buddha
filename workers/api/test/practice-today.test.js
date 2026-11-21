@@ -3,6 +3,7 @@ import { PILLARS, rankVariants, snapHash, variantCatalog } from '@vandao/shared/
 import { contentRow, contentSql, parseContent } from '../../../scripts/content-data.mjs';
 import { linkGuest } from '../src/auth/link.js';
 import { getToday } from '../src/practice-choices.js';
+import { changePracticeChoice } from '../src/practice-swap.js';
 import { call, confirm, env, guest, json, sync } from './helpers.js';
 
 const base = '/api/v1/practice';
@@ -19,11 +20,98 @@ const get = (token) => call(base + '/today', {}, token).then(json);
 const put = (token, p, rev = 0) => call(base + '/profile', { method: 'PUT', body: JSON.stringify({ profile: p, rev }) }, token).then(json);
 const exported = (token) => call('/api/v1/export', {}, token).then(json).then((r) => r.data.practice_choices);
 const count = async (userId) => (await env.DB.prepare('SELECT COUNT(*) AS n FROM practice_choice WHERE user_id = ?').bind(userId).first()).n;
+const swap = (token, input) => call(base + '/swap', { method: 'POST', body: JSON.stringify(input) }, token).then(json);
+const inputOf = ({ cycle, day, date, suggestions }, op_id, pillar = 'duc') => {
+  const { id, version } = suggestions[pillar].variant;
+  return { op_id, cycle, day, date, pillar, current: { id, version } };
+};
+const syncSwap = (token, { op_id, ...payload }, at = Date.now()) => sync(token, [{ id: op_id, payload, type: 'practice.swap', at }]);
 
 beforeEach(async () => {
   expect(rows).toHaveLength(63);
   await env.DB.prepare("DELETE FROM content_item WHERE kind = 'chuong_trinh'").run();
   await env.DB.exec(contentSql(rows));
+});
+
+describe('đổi gợi ý trực tiếp và qua outbox', () => {
+  it('hai thiết bị chỉ đổi một lần; gửi lại bằng cả hai đường và phát hiện ID dùng lại', async () => {
+    const { token, user } = await guest();
+    await put(token, profile);
+    const today = (await get(token)).data;
+    const a = inputOf(today, 'swap-direct'), b = inputOf(today, 'swap-outbox');
+    const [direct, offline] = await Promise.all([swap(token, a), syncSwap(token, b)]);
+    const directWon = direct.status === 200;
+    expect(offline.applied).toEqual(directWon ? [] : [b.op_id]);
+    if (directWon) expect(offline.rejected[0]).toMatchObject({ code: 'practice_swap_used', retry: false });
+    else expect(direct.data.error.code).toBe('practice_swap_used');
+
+    const winner = directWon ? a : b;
+    const after = (await get(token)).data;
+    expect(after.suggestions.duc).toMatchObject({ swapped: true, confirmed: false });
+    expect(after.suggestions.duc.variant.text).not.toBe(today.suggestions.duc.variant.text);
+    expect(await count(user.id)).toBe(3);
+    expect((await swap(token, winner)).data).toEqual(after);
+    expect((await syncSwap(token, winner)).applied).toEqual([winner.op_id]);
+    const reuse = await syncSwap(token, { ...inputOf(today, winner.op_id, 'thien') });
+    expect(reuse.rejected[0]).toMatchObject({ code: 'practice_swap_id_conflict', retry: false });
+    const wrongType = await sync(token, [{ id: winner.op_id, type: 'sacca.add', at: Date.now() }]);
+    expect(wrongType.rejected[0].code).toBe('practice_swap_id_conflict');
+    expect(wrongType.state.totals.all).toBe(0);
+    expect(wrongType.state.journey.sacca_count).toBe(0);
+  });
+
+  it('ca xác nhận và lựa chọn đã đổi từ chối mà không tiêu thêm lượt', async () => {
+    const { token } = await guest();
+    await put(token, profile);
+    const today = (await get(token)).data;
+    const a = inputOf(today, 'after-confirm');
+    await sync(token, [confirm('confirmed-before-swap', Date.now(), today.day, 'duc')]);
+    expect((await swap(token, a)).data.error.code).toBe('practice_pillar_confirmed');
+    const b = inputOf(today, 'wrong-choice', 'tue');
+    expect((await swap(token, { ...b, current: { ...b.current, version: 99 } })).data.error.code).toBe('practice_choice_changed');
+    expect((await swap(token, b)).status).toBe(200);
+  });
+
+  it('qua ngày hoặc reset chỉ xác nhận thao tác cũ đã thắng, không áp thao tác khác lên ngày mới', async () => {
+    const { token, user } = await guest();
+    await put(token, profile);
+    const today = (await get(token)).data;
+    const a = inputOf(today, 'won-before-midnight'), b = inputOf(today, 'unsent-before-midnight', 'thien');
+    expect((await swap(token, a)).status).toBe(200);
+    const tomorrow = Date.now() + 86_400_000;
+    expect(await changePracticeChoice(env.DB, user.id, a, tomorrow)).toEqual({ ok: true });
+    expect(await changePracticeChoice(env.DB, user.id, b, tomorrow)).toMatchObject({ code: 'stale_day' });
+    await sync(token, [{ id: 'swap-reset', type: 'journey.reset_cycle', at: Date.now() }]);
+    expect((await syncSwap(token, a)).applied).toEqual([a.op_id]);
+    expect((await syncSwap(token, b)).rejected[0]).toMatchObject({ code: 'stale_cycle', retry: false });
+    expect((await get(token)).data.suggestions.duc.swapped).toBe(false);
+  });
+
+  it('danh mục thiếu độ phủ chặn đổi và giữ nguyên lựa chọn đã chốt', async () => {
+    const { token } = await guest();
+    await put(token, profile);
+    const today = (await get(token)).data;
+    const a = inputOf(today, 'no-alternative');
+    await env.DB.prepare('DELETE FROM content_item WHERE id = ?').bind(rows.at(-1).id).run();
+    expect((await swap(token, a)).data.error.code).toBe('practice_no_alternative');
+    expect((await get(token)).data.suggestions.duc.swapped).toBe(false);
+    await env.DB.exec(contentSql([rows.at(-1)]));
+    expect((await swap(token, a)).status).toBe(200);
+  });
+
+  it('gộp khách không mất lựa chọn khi hai tài khoản dùng trùng một ID', async () => {
+    const from = await guest(), to = await guest();
+    await put(from.token, profile);
+    await put(to.token, profile);
+    const first = inputOf((await get(from.token)).data, 'same-id-in-two-accounts');
+    const second = inputOf((await get(to.token)).data, first.op_id);
+    expect((await swap(from.token, first)).status).toBe(200);
+    expect((await swap(to.token, second)).status).toBe(200);
+    const kept = (await get(from.token)).data.suggestions.duc;
+    await linkGuest(env.DB, from.user, to.user);
+    expect((await get(to.token)).data.suggestions.duc).toEqual(kept);
+    expect((await syncSwap(to.token, first)).applied).toEqual([first.op_id]);
+  });
 });
 
 describe('gợi ý hôm nay', () => {

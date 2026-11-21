@@ -34,7 +34,7 @@ export const stillCurrent = `EXISTS (
   ) AND EXISTS (SELECT 1 FROM practice_profile WHERE user_id = ?1 AND updated_at = ?6)`;
 
 export function listedChoice(variants, row, profile, day, pillar) {
-  const variant = row && variants.versions.get(`${row.variant_id}@${row.version}`);
+  const variant = row?.day === day && variants.versions.get(`${row.variant_id}@${row.version}`);
   return variant && variant.week === weekOfDay(day) && variant.pillar === pillar && fitsProfile(variant, profile)
     ? variant : null;
 }
@@ -48,7 +48,8 @@ export async function getToday(db, userId, now, dayContext) {
   ]);
   const scope = choiceScope(userId, journey, date);
   // Kiểm lại trạng thái phát hành khi đọc lựa chọn, vì danh mục đã được tải trước bước này.
-  const read = db.prepare(`SELECT choice.pillar, choice.variant_id, choice.version, choice.swapped_at, item.id IS NOT NULL AS is_public
+  const read = db.prepare(`SELECT choice.day, choice.pillar, choice.variant_id, choice.version, choice.swapped_at,
+      item.id IS NOT NULL AS is_public
     FROM practice_choice AS choice
     LEFT JOIN content_item AS item ON item.id = choice.variant_id AND item.version = choice.version AND ${publicChoice}
     WHERE choice.user_id = ?1 AND choice.program = ?2 AND choice.cycle = ?3 AND choice.local_date = ?4`).bind(...scope);
