@@ -160,7 +160,14 @@ export const BIO = { mode: 'samadhi', at: 0 };
 
 // Trình phát thời gian thực: đồng hồ AudioContext là đồng hồ chủ cho cả cảnh 3D.
 export class Player {
-  constructor() { this.T0 = 0; this.C0 = 0; this.playing = false; this.ctx = null; this.eng = null; this.scheduled = false; this.volume = 0.9; this.bin = true; this.bio = 'samadhi'; this.onend = null; }
+  constructor() { this.T0 = 0; this.C0 = 0; this.playing = false; this.ctx = null; this.eng = null; this.scheduled = false; this.volume = 0.9; this.bin = true; this.bio = 'samadhi'; this.onend = null; this.sat = 0; this.satAt = null; this.lastSat = 0; }
+
+  /**
+   * Số giây đã thực sự phát của thời đang chạy (#107, hợp đồng mở Tầng 1 §1): đếm theo đồng hồ AudioContext lúc đang phát,
+   * nên kéo thanh thời gian (tua tới) không cộng thêm. `lastSat` giữ giá trị của thời vừa viên mãn cho onend.
+   */
+  get practiced() { return this.sat + (this.satAt !== null && this.ctx ? Math.max(0, this.ctx.currentTime - this.satAt) : 0); }
+  _satStop() { if (this.satAt !== null && this.ctx) this.sat += Math.max(0, this.ctx.currentTime - this.satAt); this.satAt = null; }
 
   ensure() {
     if (this.ctx) return;
@@ -186,19 +193,19 @@ export class Player {
     this.ensure();
     const c = this.ctx;
     await c.resume();
-    if (this.time >= DUR - 0.05) { this.T0 = 0; this.scheduled = false; }
+    if (this.time >= DUR - 0.05) { this.T0 = 0; this.scheduled = false; this.sat = 0; }
     if (!this.scheduled) {
       const when = c.currentTime + 0.08;
       this.eng.schedule(this.T0, when); this.C0 = when; this.scheduled = true;
       this._ramp(1, 0.4, when);
     } else this._ramp(1, 0.3);
-    this.playing = true;
+    this.playing = true; this._satStop(); this.satAt = c.currentTime;
     if (this.bio !== 'samadhi') this.eng.setBio(this.bio);
   }
 
   pause() {
     if (!this.ctx || !this.playing) return;
-    this.playing = false;
+    this.playing = false; this._satStop();
     if (this._seeking) { clearTimeout(this._st); this._seeking = false; this.scheduled = false; }
     this._ramp(0, 0.12);
     setTimeout(() => { if (!this.playing) this.ctx.suspend(); }, 200);
@@ -227,7 +234,7 @@ export class Player {
   }
 
   _end() {
-    this.playing = false; this.T0 = DUR; this.scheduled = false;
+    this.playing = false; this.T0 = DUR; this.scheduled = false; this._satStop(); this.lastSat = this.sat; this.sat = 0;
     this._ramp(0, 0.1);
     setTimeout(() => { if (!this.playing) this.ctx.suspend(); }, 200);
     if (this.onend) this.onend();
