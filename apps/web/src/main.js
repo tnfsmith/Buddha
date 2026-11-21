@@ -17,9 +17,10 @@ import { startMetrics } from './net/metrics.js';
 import { $, fmt, esc } from './ui/dom.js';
 import { accountView, accountAct, accountHint, accountOn, accountInit } from './ui/account.js';
 import { acct, record, recordProfile, recordPractice, syncNow } from './net/account.js';
-import { dtInit, dtView, dtAct, dtInput, dtOpen, dtBadge, dtGateLine, dtSyncOpen } from './ui/dong-tu.js';
-import { dongTu, onDongTu, meet as dtMeet, visitAway } from './net/dong-tu.js';
+import { onDongTu, meet as dtMeet, visitAway } from './net/dong-tu.js';   // #125: đảo bạn thật (dongTu ở dòng dưới)
 import { MEET_KINDS, PRESENCE_TEXT, REASON_TEXT } from '@vandao/shared/dong-tu.js';
+import { dtInit, dtView, dtAct, dtInput, dtOpen, dtBadge, dtGateLine, dtSyncOpen } from './ui/dong-tu.js';
+import { dongTu } from './net/dong-tu.js';
 
 
 // #151/#160: liên kết mời chia sẻ ra ngoài dạng /moi/MÃ[?d=1] (hợp đồng §12) hoặc /?ban=MÃ (dạng cũ; Facebook có thể bỏ phần sau #).
