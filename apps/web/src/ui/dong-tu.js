@@ -116,6 +116,8 @@ function cheers() {
 }
 // Nguồn duy nhất: social.cheers mà net/dong-tu.js giữ từ GET /me (#185). Sau POST /cheers/seen, giữ 0 tới khi GET /me của chính
 // màn trả về (máy chủ đã tính mốc đã xem); lời đến sau đó thì lần /me kế báo đúng, kể cả khi số đếm bằng số trước (review #184).
+/** Máy chủ có API khích lệ (§10.3) khi GET /companions trả mảng `cheers`; chưa có thì ẩn khối, không gọi route chưa triển khai */
+const hasCheers = () => !!dongTu.list && Array.isArray(dongTu.list.cheers);
 const cheerUnseen = () => (D.cheerHold ? 0 : Number(dongTu.social.cheers) || 0);
 const CHEER_RETRY_MS = 15_000;
 const cheerText = (c) => (c.line !== 'tien_trinh' ? CHEER_LINES[c.line]
@@ -136,7 +138,7 @@ async function cheerSeen(until) {
 }
 function cheerList() {
   const CH = cheers();
-  if (!CH.length) return '';
+  if (!hasCheers() || !CH.length) return '';
   const fresh = Math.max(D.cheerMark, cheerUnseen());
   if (cheerUnseen() > 0 && CH[0].at > D.cheerSeenAt) void cheerSeen(CH[0].at);
   return '<h3>Lời khích lệ</h3>' + CH.map((c, i) => `<div class="dtf"><div class="dtn"><b>${who(c.from)}</b><span>«${esc(cheerText(c))}» · ${ago(c.at)}${i < fresh ? ' · <b class="dtnew">mới</b>' : ''}</span></div></div>`).join('');
@@ -374,7 +376,7 @@ const sesById = (id) => sessions().find((x) => x.s.id === id) || null;
 function friendView(c) {
   const me = c.me || {}, than = c.closeness === 'than';
   return `<h2>${esc(nm(c))}</h2><p class="pali">ID ${esc(c.tag)} · bạn đồng tu ${than ? 'thân thiết' : 'quen biết'}</p><p>${dot(c)} ${esc(presenceLine(c))}</p>${meetBlock(c, invites())}${status()}
-    <h3>Các kiểu mời</h3>${kinds(c)}<h3>Khích lệ</h3>${cheerBlock(c)}<h3>Xem nhanh</h3>${peek(c)}
+    <h3>Các kiểu mời</h3>${kinds(c)}${hasCheers() ? `<h3>Khích lệ</h3>${cheerBlock(c)}` : ''}<h3>Xem nhanh</h3>${peek(c)}
     <h3>Mức gần gũi</h3><label class="chk"><input type="checkbox" data-dt="than"${me.than ? ' checked' : ''}${dis()}> Thân thiết</label>
     ${mu(`Hai người cùng chọn thì thành thân thiết. Không có nấc nào tự lên theo số lần gặp.`)}` +
     (than ? `<label class="chk"><input type="checkbox" data-dt="away"${me.away ? ' checked' : ''}${dis()}> Cho bạn ấy ghé Vân Đảo của mình khi mình vắng</label>${mu(`Chỉ có tác dụng khi Cổng Vân Môn của bạn ở chế độ Nghênh khách.`)}` : '') +

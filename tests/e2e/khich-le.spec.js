@@ -97,3 +97,21 @@ test('chấm khích lệ: đã xem → GET /me lỗi → tự thử lại, lời
   await expect.poll(async () => { await poll(); return dot.textContent(); }, { timeout: 45_000, intervals: [3000] }).toBe('1');
   expect(B.errs).toEqual([]);
 });
+
+test('API chưa có khích lệ (chưa có trường cheers): ẩn khối Khích lệ, không gọi route khích lệ', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const sv = fakeServer(12), { a, b } = sv.U;
+  pair(sv, b.id, a.id); sv.noCheersApi = true;
+  const B = await device(browser, sv, 'b', { width: 412, height: 860 }, 12);
+  await openList(B);
+  await P(B).locator(`[data-act="dt-ban"][data-id="${a.id}"]`).first().click();
+  await slow(P(B).locator('h3', { hasText: 'Xem nhanh' })).toBeVisible();
+  await expect(P(B).locator('h3', { hasText: 'Khích lệ' })).toHaveCount(0);
+  await expect(P(B).locator('[data-act="dt-cheer"]')).toHaveCount(0);
+  sv.noCheersApi = false;
+  await relist(B);
+  await P(B).locator(`[data-act="dt-ban"][data-id="${a.id}"]`).first().click();
+  await slow(P(B).locator('[data-act="dt-cheer"]')).toHaveCount(5);
+  expect(sv.log.some((l) => l.includes('cheer'))).toBe(false);
+  expect(B.errs).toEqual([]);
+});
