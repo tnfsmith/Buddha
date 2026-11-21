@@ -10,7 +10,8 @@ import { PASSIVE, MIN_VANDU, heardEnough, listenCode, logPassive, lotus, weakest
 import { PARAMI } from '@vandao/shared/parami.js';
 import { nv, loadMissions, soNhapView, soNhapAct, todayBox, todayLeft, missionsStale } from './ui/so-nhap.js';
 import { ct, loadVariants, variantsStale, variantHtml, dkCard, dkView, dkAct, dkPull } from './ui/duyen-khoi.js';
-import { ptCard, ptLine, ptView, ptAct } from './ui/phan-tinh.js';
+import { ptCard, ptLine, ptView, ptAct, ptSaved } from './ui/phan-tinh.js';
+import { tierOpened, tierMigrate, tierLoad, tierBlock, tierAct } from './ui/tang-1.js';
 import { registerPWA, persistStorage } from './boot.js';
 import { startMetrics } from './net/metrics.js';
 import { $, fmt, esc } from './ui/dom.js';
@@ -109,12 +110,12 @@ try { world = new World($('#gl'), S.look, hash.q !== undefined ? +hash.q : undef
 
 // ───────── Trạng thái cảnh ─────────
 function islandState() {
-  const tier = U.tier ?? (S.completed ? 1 : 0), d = U.sim ?? S.day, wk = Math.ceil(d / 7), p = (d - 1) / 48, up = tier >= 1;
+  const tier = U.tier ?? (tierOpened(S) ? 1 : 0), d = U.sim ?? S.day, wk = Math.ceil(d / 7), p = (d - 1) / 48, up = tier >= 1;
   return { tier, mist: up ? 0.1 : 0.75 - 0.6 * p, bodhi: up ? 1 : 0.04 + 0.96 * p, water: Math.min(1, d / 7), clarity: wk >= 2 || up ? 1 : 0,
     lotus: up ? 12 : Math.min(12, Math.floor(d / 4)), goldCount: tier >= 2 ? 12 : wk >= 4 || up ? 7 : 0, gold: wk >= 4 || up ? 1 : 0,
     tea: d >= 15 || up, gate: d >= 43 || up ? 1 : d >= 29 ? 0.5 : 0, open: S.open, stream: up, sky: wk >= 6 && !up ? 0.6 : 0, lv: up ? 1 : Math.max(0, Math.min(1, p)), day: d, ref: reflectState() };
 }
-const unlocked = (z) => (U.tier ?? (S.completed ? 1 : 0)) >= 1 || (U.sim ?? S.day) >= z.unlock;
+const unlocked = (z) => (U.tier ?? (tierOpened(S) ? 1 : 0)) >= 1 || (U.sim ?? S.day) >= z.unlock;
 function visAt(t) {
   const g = (k) => valueAt(TR[k], t);
   const v = { breath: g('vBreath'), amber: g('vAmber'), night: g('vNight'), beams: g('vBeams'), fila: g('vFila'), calm: g('vCalm'), haloWhite: g('vHaloWhite'), rainbow: g('vRainbow'), jade: g('vJade'), merit: g('vMerit') };
@@ -342,6 +343,7 @@ function tichLuy() {
     `<p class="muted">49 ngày qua: ${days} ngày có thực hành · nhịp thiền 7 ngày: ${mins} phút · đã nghe trọn: Lời Phật dạy ${hd['loi-phat-day'].size}${nL ? '/' + nL : ''}, Đường Xưa ${hd['duong-xua'].size}${nD ? '/' + nD : ''}</p>` + ptLine(S);
 }
 function render() {
+  if (U.view === 'board' || (U.view === 'zone' && U.zone === 'gate')) void tierLoad(render);   // #107: tình trạng cổng Tầng 1 (tối đa mỗi phút một lần)
   const d = S.day, wk = Math.ceil(d / 7), W = WEEKS[wk - 1], keep = panel.scrollTop;
   // thẻ Thuyết giảng: ẩn thanh phát thời thiền (trừ khi thời thiền đang phát) cho đỡ rối (#79)
   document.body.classList.toggle('stab', U.mode === 'hall' && U.hallTab === 'sermon' && !player.playing);
@@ -370,7 +372,7 @@ function render() {
       `<p class="note">Nên dùng tai nghe để nghe rõ hướng của chuông. Trình duyệt chỉ cho phát âm thanh sau khi bạn bấm ▶.</p>
       <p class="muted">Số thời thiền đã ngồi trọn: ${S.sessions}. Những người ngồi quanh là mô phỏng; bản nhiều người cần máy chủ.</p>`;
   } else if (U.mode === 'journey') {
-    const cur = U.tier ?? (S.completed ? 1 : 0);
+    const cur = U.tier ?? (tierOpened(S) ? 1 : 0);
     h = `<h2>Các tầng tỉnh thức</h2>
       <p class="note">Tên tầng là biểu trưng để định hướng thực hành. Ứng dụng không chứng nhận quả vị; tiến trình đo bằng giới, thiền và việc thiện ngoài đời.</p>
       <div class="row"><button class="btn alt" data-act="overview">Toàn cảnh</button><button class="btn alt" data-act="realm">Toàn cõi</button><button class="btn alt" data-act="mine">Vân Đảo của tôi ở tầng này</button></div>` +
@@ -425,7 +427,7 @@ function render() {
   } else if (U.view === 'board') {
     h = `<h2>Bia Tích Lũy</h2><p class="pali">Ngày ${d}/49 · Tuần ${wk}: ${esc(W.title)}</p>${bars()}`;
     // #93: việc còn lại hôm nay và trạng thái đồng bộ giữa các thiết bị
-    h += todayBox(S, today(), S.completed || allDone(d) ? 0 : 3 - Object.keys(S.done[d] || {}).length) + '<span id="nv-chinh"></span>' + dkCard() + ptCard(S, today());
+    h += todayBox(S, today(), S.completed || allDone(d) ? 0 : 3 - Object.keys(S.done[d] || {}).length) + '<span id="nv-chinh"></span>' + dkCard() + ptCard(S, today()) + tierBlock(S, ptSaved(S, 7));   // #107: cổng Tầng 1
     if (ct.state === 'idle') loadVariants().then(render);
     const tdy = S.tu[today()] || {}, ev = passiveLines(tdy);
     if (library.state === 'idle') loadSermons().then(render);
@@ -467,7 +469,7 @@ function render() {
       (['kuti', 'pad', 'tea'].includes(z.id) && ok ? `<h3>Vân Du</h3><label class="chk"><input type="checkbox" data-vandu ${S.vandu ? 'checked' : ''}> Khi tọa thiền, máy quay rời chỗ ngồi đi viếng cảnh</label>
         <p class="muted">Ngồi yên càng lâu, cảnh càng xa: ${VD.slice(1).map((v) => v[0] + ' (' + v[1] + '′)').join(', ')}. Vân Du chỉ đếm thời gian ngồi yên; đó không phải thước đo tầng thiền hay quả vị. Chạm vào cảnh để xả thiền hoặc ngồi tiếp.</p>` : '') +
       (z.action === 'gate' && ok ? `<p class="muted">Hiện tại: ${S.open ? 'Nghênh khách. Bấm tên một bạn đồng tu ở đảo bên để chào hoặc sang thăm.' : 'Độc cư.'}</p>` : '') +
-      (z.action === 'gate' ? dtGateLine() : '');
+      (z.action === 'gate' ? dtGateLine() + tierBlock(S, ptSaved(S, 7)) : '');
   } else {
     const sim = U.sim ?? d;
     h = `<h2>Vân Đảo của ${esc(S.name || 'bạn')}</h2><p class="pali">Sơ nhập Tịnh Cảnh · ngày ${d}/49 · tuần ${wk}: ${esc(W.title)}</p>${bars()}
@@ -547,6 +549,7 @@ panel.addEventListener('click', (e) => {
   if (act.startsWith('acct-')) return accountAct(act.slice(5), b);   // T2.3: Giữ hành trình, Tài khoản (ui/account.js)
   if (act.startsWith('dt-')) return dtAct(act.slice(3), b);   // #124: Bạn đồng tu (ui/dong-tu.js)
   if (act === 'nv-jump') { const t = panel.querySelector('#' + b.dataset.to); if (t) t.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
+  if (act.startsWith('tg-')) { void tierAct(act, render, toast); return; }   // #107: ui/tang-1.js
   if (act.startsWith('pt-')) { const r = ptAct(act, b, S, today()); if (r.view) U.view = r.view; if (r.msg) toast(r.msg); render(); return; }   // #104: ui/phan-tinh.js, chỉ trên máy
   if (act.startsWith('dk-')) { const end = (r) => { if (r.view) U.view = r.view; if (r.msg) toast(r.msg); save(); render(); }, r = dkAct(act, b, S, today()); if (r && r.then) r.then(end); else end(r); return; }   // #104: ui/duyen-khoi.js
   if (act.startsWith('nv-')) { const msg = soNhapAct(act, b, S, today()); save(); if (msg) { toast(msg); if (world && /cánh sen|Đã giữ|thọ trì|giữ nguyện/.test(msg)) world.burst(0xf3d27a, null, 0.7); } render(); return; }   // đợt C (#91): ui/so-nhap.js
@@ -581,7 +584,7 @@ panel.addEventListener('click', (e) => {
   else if (act === 'gohome') { world.goHome(() => { toast('Đã về Vân Đảo của mình.'); U.view = 'home'; world.setMode('island'); render(); }); toast('Du vân trở về…'); }
   else if (act === 'sitwith') { world.fig.setPose('sit'); world.av.state = 'sit'; world.av.rotTo = Math.atan2(-world.av.pos.x, -760 - world.av.pos.z); if (!player.playing) togglePlay(); U.sit = { at: Date.now(), zone: null }; toast('Hai người cùng an tọa, hướng về Tôn tượng.'); }
   else if (act === 'sacca') { S.sacca++; save(); record('sacca.add'); if (world) world.burst(0xbfeee4, null, 0.5); toast('Thành thật nhận lỗi và nguyện phòng hộ ngày mai: mặt hồ trong trở lại.'); }
-  else if (act === 'reset') { if (U.resetArm) { const keep = { name: S.name, look: S.look }; resetState(keep); save(); record('journey.reset_cycle'); U.resetArm = false; toast('Đã trở về ngày 1.'); } else U.resetArm = true; }
+  else if (act === 'reset') { if (U.resetArm) { const keep = { name: S.name, look: S.look, tier1v: S.tier1v, tier1Legacy: S.tier1Legacy }; resetState(keep); save(); record('journey.reset_cycle'); U.resetArm = false; toast('Đã trở về ngày 1.'); } else U.resetArm = true; }
   else if (act === 'confirm') {
     const card = b.closest('.task'), key = card.dataset.p, c = readCard(card), E = kusala(c);
     S.done[S.day] = S.done[S.day] || {}; S.done[S.day][key] = { E, ...c, at: Date.now() };
@@ -740,7 +743,8 @@ if (hash.view === 'creator') openCreator();
 if (hash.at && world && World.NODES[hash.at]) { const n = World.NODES[hash.at]; world.av.pos.set(n[0], 0, n[1]); world.av.pos.y = World.floorH(n[0], n[1]); world.snap = true; }
 if (hash.zone) goZone(hash.zone);
 if (world && world.tween && hash.snap !== undefined) world.tween.k = 0.999;
-window.__app = { player, world, offlineProbe, amb, probeSong, probeSfx, SONGS, state: () => S, U, stateReady, sermon, library, voiceLabel: (j) => aiVoiceLabel(providerOf(j)) };
+if (tierMigrate(S)) save();   // #107: máy đã ở Tầng 1 trước khi có cổng máy chủ thì giữ quyền đã mở (#169, mặc định điểm 3)
+window.__app = { tier: () => (U.tier ?? (tierOpened(S) ? 1 : 0)), player, world, offlineProbe, amb, probeSong, probeSfx, SONGS, state: () => S, U, stateReady, sermon, library, voiceLabel: (j) => aiVoiceLabel(providerOf(j)) };
 registerPWA();
 startMetrics();   // T1.3 (#8): số liệu ẩn danh, chỉ khi chạy qua http(s) và không bật Do Not Track
 if (S.name) persistStorage();
