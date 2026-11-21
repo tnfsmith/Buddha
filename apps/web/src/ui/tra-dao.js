@@ -27,13 +27,14 @@ const elapsed = () => (T ? (now() - T.t0) / 1000 : 0);
 
 /** Bắt đầu một tuần trà. elapsed (giây): đã trôi từ giờ hẹn chung; two: uống cùng bạn; name: Tịnh danh của bạn */
 export function tdStart({ two = false, elapsed: e0 = 0, name = '' } = {}) {
-  T = { t0: now() - Math.max(0, Math.min(TRA_SEC - 1, e0)) * 1000, two, name, cues: new Set() };
+  const late = Math.max(0, Math.min(TRA_SEC - 1, e0));
+  T = { t0: now() - late * 1000, late, two, name, cues: new Set() };
   clearInterval(timer); timer = setInterval(tick, 250); tick(); C.render();
 }
-/** Dừng (người dùng bấm Kết thúc) hoặc trọn tuần trà (done) */
+/** Dừng (người dùng bấm Kết thúc) hoặc trọn tuần trà (done). Trọn thì báo C.done(số phút có mặt, uống cùng bạn) để tự ghi nhận tra_dao */
 export function tdStop(done = false) {
-  if (!T) return; clearInterval(timer); T = null; if (C.world) C.world.tea = null;
-  if (done) { C.sfx('gift', { k: 0.6 }); C.toast('Tuần trà đã trọn. Cảm ơn bạn đã ngồi cùng chén trà.'); }
+  if (!T) return; clearInterval(timer); const t = T; T = null; if (C.world) C.world.tea = null;
+  if (done) { C.sfx('gift', { k: 0.6 }); C.toast('Tuần trà đã trọn. Cảm ơn bạn đã ngồi cùng chén trà.'); if (C.done) C.done(Math.round((TRA_SEC - t.late) / 6) / 10, t.two); }
   C.render();
 }
 

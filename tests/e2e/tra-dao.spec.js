@@ -21,6 +21,8 @@ async function open(page) {
 const tea = (page) => page.evaluate(() => { const W = window.__app.world; return { tea: W.tea && { cups: W.tea.cups.map((x) => Math.round(x * 100) / 100), pour: W.tea.pour && W.tea.pour.cup, two: W.tea.two }, sfx: window.__sfx.slice(), guest: W.guest && W.guest.how }; });
 // tua tới đúng giây thứ s của tuần trà (thời gian thật giữa các bước không làm lệch mốc)
 const at = (page, s) => page.evaluate((x) => window.__app.tdSkip(x - window.__app.tdAt()), s);
+/** Sổ tự ghi nhận trên máy (nhiem-vu-so-nhap §6): mục tra_dao của các ngày, và tổng Kusala để chắc không đổi */
+const tuTra = (page) => page.evaluate(() => { const s = window.__app.state(); return { tra: Object.values(s.tu || {}).map((d) => d.tra_dao).filter(Boolean), totals: JSON.stringify(s.totals) }; });
 
 test('một mình: pha trà, rót một chén (ấm nghiêng, dòng trà), ngắm mây, hồi hướng, trọn 10 phút; âm thanh đúng mốc', async ({ page }) => {
   test.setTimeout(240_000);
@@ -46,8 +48,12 @@ test('một mình: pha trà, rót một chén (ấm nghiêng, dòng trà), ngắ
   await expect(P.locator('#td-step')).toHaveText('Ngắm mây');
   await at(page, 541);   // 541 s
   await expect(P.locator('#td-step')).toHaveText('Hồi hướng');
+  const k0 = (await tuTra(page)).totals;
+  expect((await tuTra(page)).tra).toEqual([]);
   await at(page, 601);
   await expect(page.locator('#toast')).toContainText('Tuần trà đã trọn');
+  // hết một tuần trà: tự ghi nhận tra_dao (10 phút có mặt), không cộng Kusala
+  expect(await tuTra(page)).toEqual({ tra: [{ n: 1, min: 10, refs: ['tra-dao'] }], totals: k0 });
   t = await tea(page);
   expect(t.tea).toBeNull();
   expect(t.sfx).toEqual(['chime', 'pour:3', 'pour:9', 'chime', 'gift']);
@@ -73,9 +79,14 @@ test('hai người: lời mời Trà Đạo trên đảo mình — khách ngồi
   expect((await tea(page)).tea.cups).toEqual([1, 1]);
   await P.locator('[data-act="td-stop"]').click();
   expect((await tea(page)).tea).toBeNull();
+  expect((await tuTra(page)).tra).toEqual([]);   // kết thúc giữa chừng: không ghi nhận
 
   // vào rất trễ (200 s): thẳng tới Ngắm mây, hai chén đã đầy
   await page.evaluate(() => window.__app.together({ id: 'i2', kind: 'tra', place: 'dao', from: 'me', to: 'u1', start_at: Date.now() }, 200_000));
   await slow(P.locator('#td-step')).toHaveText('Ngắm mây');
   expect((await tea(page)).tea).toMatchObject({ cups: [1, 1], pour: null, two: true });
+  // uống cùng tới hết tuần trà: ghi số phút thật có mặt (vào ở giây 200 → 6,7 phút)
+  await at(page, 601);
+  await expect(page.locator('#toast')).toContainText('Tuần trà đã trọn');
+  expect((await tuTra(page)).tra).toEqual([{ n: 1, min: 6.7, refs: ['tra-dao-hai'] }]);
 });

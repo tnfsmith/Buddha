@@ -860,7 +860,8 @@ dtInit({
 });
 dtMark();
 // #125: tuần trà (ui/tra-dao.js): âm thanh theo âm lượng nhạc, máy quay ngắm mây ở bàn trà nhà mình
-tdInit({ world, sfx: (k, o) => amb.sfx(k, o, S.music.vol), toast, render, gaze: () => { if (world) world.teaGaze(); } });
+tdInit({ world, sfx: (k, o) => amb.sfx(k, o, S.music.vol), toast, render, gaze: () => { if (world) world.teaGaze(); },
+  done: (min, two) => { logTu('tra_dao', min, two ? 'tra-dao-hai' : 'tra-dao'); save(); } });   // nhiem-vu-so-nhap §6: hết một tuần trà (không Kusala)
 // #125: bạn đồng tu thật dựng đảo gần Vân Đảo; danh sách đổi (kết bạn, hiện diện, ngày) thì cập nhật cảnh, giữ đúng bạn đang mở
 if (world) {
   onDongTu(() => { const cur = U.view === 'friend' && world.friends[U.friend], key = cur && (cur.id || 's' + cur.sim);
