@@ -13,7 +13,7 @@ test.skip(!!process.env.E2E_BASE_URL, 'máy chủ giả lập chỉ chạy với
 
 /** Máy chủ giả: tài khoản, đồng bộ và ba đường dẫn tier-progress. sv.full / sv.done49 / sv.reflected điều khiển điều kiện. */
 function fake(day) {
-  const sv = { day, full: 29, done49: day >= 49, reflected: false, opened: null, cycle: 1, calls: [], offline: false };
+  const sv = { day, full: 29, done49: day >= 49, reflected: false, opened: null, cycle: 1, calls: [], offline: false, failGet: false };
   const snap = () => {
     const ok = sv.done49 && sv.full >= 30 && sv.reflected;
     return { tier: 1, cycle: sv.cycle, status: sv.opened ? 'da_mo' : ok ? 'du_dieu_kien' : 'dang_tu',
@@ -35,7 +35,7 @@ function fake(day) {
     if (p === '/api/v1/content') return json({ items: [] });
     if (p.startsWith('/api/v1/tier-progress/1')) {
       sv.calls.push(`${m} ${p.slice(23) || '/'}`);
-      if (m === 'GET') return json(snap());
+      if (m === 'GET') return sv.failGet ? err('internal', 500) : json(snap());
       const b = body();
       if (b.cycle !== sv.cycle) return err('cycle_conflict', 409);
       if (p.endsWith('/reflection')) { if (!sv.done49) return err('reflection_too_early', 409); sv.reflected = true; return json(snap()); }
@@ -109,6 +109,28 @@ test('chu kỳ đổi ở thiết bị khác: tải lại cổng ngay, không gi
   const gets = () => sv.calls.filter((c) => c.startsWith('GET')).length, before = gets();
   await expect.poll(async () => { await page.evaluate(() => window.dispatchEvent(new Event('online'))); return gets(); }, { timeout: 40_000, intervals: [4500] }).toBeGreaterThan(before);
   await expect(tg.locator('[data-act="tg-open"]')).toHaveCount(0);   // ảnh chụp chu kỳ 1 không còn cho mở
+  expect(sv.calls.filter((c) => c.startsWith('POST'))).toEqual([]);
+  expect(page.errs).toEqual([]);
+});
+test('chu kỳ đổi và API tạm lỗi: tự tải lại đúng một lần, không gọi lặp; bỏ điều kiện chu kỳ cũ, có Thử lại (review #174)', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const sv = fake(49); sv.full = 30; sv.reflected = true;
+  const page = await open(browser, sv, { S: { day: 49, completed: true, tier1v: 1 } });
+  await bia(page);
+  const tg = P(page).locator('.tg');
+  await slow(tg.locator('[data-act="tg-open"]')).toBeVisible();
+  sv.cycle = 2; sv.day = 1; sv.done49 = false; sv.reflected = false; sv.failGet = true;
+  const gets = () => sv.calls.filter((c) => c.startsWith('GET')).length, before = gets();
+  await expect.poll(async () => { await page.evaluate(() => window.dispatchEvent(new Event('online'))); return gets(); }, { timeout: 40_000, intervals: [4500] }).toBeGreaterThan(before);
+  await slow(tg).toContainText('Chu kỳ đã đổi trên thiết bị khác. Chưa tải được tình trạng cổng.');
+  await expect(tg.locator('[data-act="tg-open"]')).toHaveCount(0);
+  // Bia vẽ lại nhiều lần (mở lại, đồng bộ) vẫn không tự gọi thêm: chờ đủ lâu để vòng lặp cũ lộ ra
+  for (let i = 0; i < 3; i++) { await page.evaluate(() => window.dispatchEvent(new Event('online'))); await bia(page); await page.waitForTimeout(2500); }
+  expect(gets() - before).toBe(1);
+  sv.failGet = false;
+  await tg.locator('[data-act="tg-reload"]').click();
+  await expect.poll(gets).toBe(before + 2);
+  await expect(tg).toHaveCount(0);   // chu kỳ 2 mới ngày 1: chưa tới tuần 7
   expect(sv.calls.filter((c) => c.startsWith('POST'))).toEqual([]);
   expect(page.errs).toEqual([]);
 });
