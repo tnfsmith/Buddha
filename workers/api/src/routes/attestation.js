@@ -30,6 +30,28 @@ attestationApp.use('*', async (c, next) => {
   await next();
 });
 
+attestationApp.get('/', authMiddleware, byUser('RL_API'), async (c) => {
+  const { results } = await c.env.DB.prepare(`SELECT j.cycle, a.week, a.status, a.created_at,
+    a.attester_label, a.note, a.confirmed_at
+    FROM journey j LEFT JOIN attestation a ON a.user_id = j.user_id AND a.cycle = j.cycle
+    WHERE j.user_id = ? AND j.program = ? AND j.is_current = 1
+    ORDER BY a.week`).bind(c.get('user').id, VARIANT_PROGRAM).all();
+  if (!results.length) return bad(c, 'journey_not_found', 'Chưa có hành trình.', 404);
+  const now = Date.now();
+  const weeks = results.filter((row) => row.week !== null).map((row) => {
+    const expiresAt = row.created_at + INVITE_MS;
+    return {
+      week: row.week,
+      status: row.status === 'cho' && expiresAt <= now ? 'het_han' : row.status,
+      expires_at: expiresAt,
+      attester_label: row.attester_label,
+      note: row.note,
+      confirmed_at: row.confirmed_at,
+    };
+  });
+  return c.json({ cycle: results[0].cycle, weeks });
+});
+
 attestationApp.post('/invite', authMiddleware, byUser('RL_API'), async (c) => {
   const input = await readJson(c);
   const { week, op_id } = input ?? {};
