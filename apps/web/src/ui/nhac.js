@@ -23,15 +23,16 @@ function toDraft(v) {
   return REMINDER_KINDS.map((k) => { const r = by[k]; return { kind: k, local_hm: r ? r.local_hm : HM0[k], days_mask: r ? r.days_mask : k === 'tong_ket_tuan' ? 1 : 127, active: !!(r && r.active) }; });
 }
 /**
- * API nhắc (#149/#150) đã lên chưa: null = chưa biết, true = có, false = chưa có (route trả 404). Chưa có thì ẩn dòng ở Bia
- * và màn nhắc, để UI có thể gộp trước API mà không hiện tính năng hỏng; API lên thì lần mở ứng dụng sau tự hiện.
+ * API nhắc (#149/#150) đã lên chưa: null = chưa biết, true = có, false = chưa có. Hỏi GET /api/health (luôn 200) xem
+ * `features` có 'reminders' không, thay vì gọi thử route nhắc: route chưa có trả 404 và trình duyệt ghi lỗi console.
+ * Chưa có thì ẩn dòng ở Bia và màn nhắc, để UI gộp được trước API; API lên (khai báo trong /api/health) thì tự hiện.
  */
 let HAS = null, probing = false;
 async function probe(render) {
   if (probing || HAS !== null) return;
   probing = true;
-  try { await api('/api/v1/reminders'); HAS = true; }
-  catch (e) { HAS = !(e && e.status === 404); }   // 401 khi chưa đăng nhập: route có, tính năng có
+  try { const h = await api('/api/health'); HAS = !!(h && Array.isArray(h.features) && h.features.includes('reminders')); }
+  catch { HAS = false; }
   probing = false; render();
 }
 async function load(render) {
@@ -52,7 +53,7 @@ async function load(render) {
 export function nhLine(render) {
   follow();
   if (!acct.available || HAS === false) return '';   // bản HTML đơn (file://) không có máy chủ: không dò, không hiện
-  if (!acct.on) { if (HAS === null) { void probe(render); return ''; } }
+  if (HAS === null) { void probe(render); return ''; }
   if (!acct.on) return '<p class="muted">Nhắc nhở: giữ hành trình để bật · <button class="link" data-act="nh-open">Xem</button></p>';
   if (!R.view && !R.err && !R.loading) { R.loading = true; void load(render).finally(() => { R.loading = false; }); }
   const on = R.view ? R.view.reminders.filter((r) => r.active).length : 0;
@@ -63,7 +64,7 @@ export function nhView(render) {
   follow();
   let h = '<h2>Nhắc nhở</h2><p class="muted">Mặc định tắt. Tối đa hai nhắc mỗi ngày, không nhắc từ 21:30 đến 05:00. Lời nhắc nhẹ nhàng, không đếm ngày bỏ lỡ.</p>';
   const back = '<div class="row"><button class="ghost" data-act="board">← Bia Tích Lũy</button></div>';
-  if (HAS === false) return h + '<p class="note">Tính năng nhắc nhở đang được cập nhật.</p>' + back;
+  if (HAS !== true) { if (HAS === null && acct.available) void probe(render); return h + '<p class="note">Tính năng nhắc nhở đang được cập nhật.</p>' + back; }
   if (!acct.on) return h + '<p class="note">Giữ hành trình để bật nhắc trên các thiết bị của bạn.</p><div class="row"><button class="btn" data-act="acct-open">Giữ hành trình của tôi</button></div>' + back;
   if (!R.view) { if (!R.err && !R.loading) { R.loading = true; void load(render).finally(() => { R.loading = false; }); } return h + (R.err ? `<p class="note" role="alert">${R.err}</p><div class="row"><button class="ghost" data-act="nh-reload">Thử lại</button></div>` : '<p class="muted" role="status">Đang tải…</p>') + back; }
   const v = R.view, D = R.draft, on = D.filter((r) => r.active).length, dis = R.busy ? ' disabled' : '';

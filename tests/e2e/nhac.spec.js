@@ -28,6 +28,7 @@ function fakeServer({ push = true } = {}) {
     const req = route.request(), u = new URL(req.url()), p = u.pathname, m = req.method();
     const json = (b, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(b) });
     const bad = (code, status = 400) => json({ error: { code, message: code } }, status);
+    if (p === '/api/health') return json({ status: 'ok', features: ['reminders'] });
     if (p === '/api/v1/me') return json({ user: { id: 'u-tue-thai', isAnonymous: false }, ...state(), guest_purge_after: null, ...(u.searchParams.get('entries') ? { entries: [] } : {}) });
     if (p === '/api/v1/sync') return json({ applied: (req.postDataJSON().ops || []).map((o) => o.id), rejected: [], state: state() });
     if (p === '/api/v1/reminders' && m === 'GET') { sv.gets += 1; return json(view()); }
@@ -52,11 +53,11 @@ async function open(browser, sv, { account = true, perm = 'granted', noApi = fal
   const ctx = await browser.newContext({ viewport: { width: 412, height: 860 }, serviceWorkers: 'block' });
   if (sv) await ctx.route('**/api/**', (r) => sv.handle(r));
   else await ctx.route('**/api/**', (r) => {
-    // chưa giữ hành trình: route nhắc có (401 khi chưa đăng nhập), trừ khi `noApi` (API nhắc chưa lên → 404)
-    const reminders = r.request().url().includes('/api/v1/reminders');
-    if (reminders) calls404.push(r.request().url());
-    return reminders && !noApi ? r.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: { code: 'unauthorized' } }) })
-      : r.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: { code: 'not_found' } }) });
+    // chưa giữ hành trình: /api/health khai báo 'reminders', trừ khi `noApi` (API nhắc chưa lên)
+    const url = r.request().url();
+    if (url.includes('/api/health')) { calls404.push(url); return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ok', ...(noApi ? {} : { features: ['reminders'] }) }) }); }
+    if (url.includes('/api/v1/reminders')) calls404.push(url);
+    return r.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: { code: 'not_found' } }) });
   });
   await ctx.addInitScript(({ LOOK, account, perm, ENDPOINT }) => {
     if (!localStorage.getItem('vandao.seeded')) {
@@ -201,7 +202,7 @@ test('nhắc nhở: chưa giữ hành trình → mời giữ hành trình; chỉ
   expect(page.errs).toEqual([]);
 });
 
-test('nhắc nhở: API nhắc chưa lên (404) → Bia không hiện dòng nhắc, màn nhắc báo đang cập nhật, không gọi lặp', async ({ browser }) => {
+test('nhắc nhở: API nhắc chưa lên (/api/health không khai báo) → Bia không hiện dòng nhắc, không gọi route nhắc, không dò lặp', async ({ browser }) => {
   test.setTimeout(300_000);
   const probes = [], page = await open(browser, null, { account: false, noApi: true, calls404: probes }), P = page.locator('#panel');
   await page.locator('#panel [data-act="board"]').first().click();
@@ -211,5 +212,6 @@ test('nhắc nhở: API nhắc chưa lên (404) → Bia không hiện dòng nh�
   await page.evaluate(() => window.dispatchEvent(new Event('online')));   // vẽ lại sau đồng bộ: không dò lại
   await page.waitForTimeout(3000);
   expect(probes.length).toBe(1);
+  expect(probes[0]).toContain('/api/health');   // không gọi route nhắc chưa có (404 sẽ ghi lỗi console)
   expect(page.errs).toEqual([]);
 });
