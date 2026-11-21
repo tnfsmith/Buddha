@@ -562,10 +562,10 @@ panel.addEventListener('click', (e) => {
   if (act.startsWith('dt-')) return dtAct(act.slice(3), b);   // #124: Bạn đồng tu (ui/dong-tu.js)
   if (act === 'nv-jump') { const t = panel.querySelector('#' + b.dataset.to); if (t) t.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
   if (act.startsWith('tg-')) { void tierAct(act, render, toast); return; }   // #107: ui/tang-1.js
-  if (act.startsWith('ht-')) return htAct(act.slice(3), b);   // T5.2 #195: Bảng Hộ Trì (ui/ho-tri.js)
   if (act.startsWith('pt-')) { const r = ptAct(act, b, S, today()); if (r.view) U.view = r.view; if (r.msg) toast(r.msg); render(); return; }   // #104: ui/phan-tinh.js, chỉ trên máy
   if (act.startsWith('td-')) return tdAct(act.slice(3), () => { if (!(U.view === 'zone' && U.zone === 'tea' && world && world.av.state === 'sit')) goZone('tea'); });   // #125: tuần trà (ui/tra-dao.js)
   if (act.startsWith('dk-')) { const end = (r) => { if (r.view) U.view = r.view; if (r.msg) toast(r.msg); save(); render(); }, r = dkAct(act, b, S, today()); if (r && r.then) r.then(end); else end(r); return; }   // #104: ui/duyen-khoi.js
+  if (act.startsWith('ht-')) return htAct(act.slice(3), b);   // T5.2 #195: Bảng Hộ Trì (ui/ho-tri.js)
   if (act.startsWith('nv-')) { const msg = soNhapAct(act, b, S, today()); save(); if (msg) { toast(msg); if (world && /cánh sen|Đã giữ|thọ trì|giữ nguyện/.test(msg)) world.burst(0xf3d27a, null, 0.7); } render(); return; }   // đợt C (#91): ui/so-nhap.js
   if (['board', 'sit', 'visit'].includes(act) && meditating()) return move(() => { const again = panel.querySelector('[data-act="' + act + '"]'); if (again) again.click(); });
   if (act === 'kuti-sit') { const sat = () => { world.setFace(S.kface || 0); savePos(); U.sit = { at: Date.now(), zone: 'kuti' }; toast('Đã an tọa tại Tịnh Thất.'); render(); };
