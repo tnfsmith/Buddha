@@ -232,15 +232,16 @@ function inviteView() {
   let h = '<h2>Mời bạn tu cùng</h2>' + mu('Người bạn mở liên kết hoặc quét mã là hai bạn kết nối.') + status();
   if (!k) return h + (D.busy ? '' : rw(bt('dt-link', 'Tạo mã mời'))) + back();
   const share = typeof navigator !== 'undefined' && !!navigator.share;
-  h += `<div class="dtq">${qr(shareUrl(), 'Mã QR mời bạn tu cùng')}<div class="dtc" data-dt-code>${esc(showInviteCode(k.code))}</div>${mu(`Còn ${k.uses_left} lượt · hết hạn ngày ${date(k.expires_at)}`)}</div>` +
+  h += `<div class="dtq">${qr(shareUrl(false), 'Mã QR mời bạn tu cùng')}<div class="dtc" data-dt-code>${esc(showInviteCode(k.code))}</div>${mu(`Còn ${k.uses_left} lượt · hết hạn ngày ${date(k.expires_at)}`)}</div>` +
     `<label class="chk"><input type="checkbox" data-dt="kem"${D.kem ? ' checked' : ''}> Kèm tiến trình của mình (${esc(progressLine())})</label>` +
     `<div class="row dtsh">${bt('dt-copy', 'Sao chép')}${bt('dt-fb', 'Facebook', 'btn fb')}${share ? bt('dt-share', 'Chia sẻ…', 'btn alt') : ''}</div>` +
-    mu('Facebook chỉ nhận liên kết; «Sao chép» chép cả câu mời.') +
+    mu('Ai có liên kết cũng thấy Tịnh danh · mã của bạn trên thẻ xem trước. Facebook chỉ nhận liên kết; «Sao chép» chép cả câu mời.') +
     rw(bt('dt-renew', D.arm === 'renew' ? 'Bấm lần nữa: mã cũ sẽ không dùng được' : 'Tạo mã mới', 'ghost', dis()));
   return h + guestNote() + back();
 }
 // Liên kết chia sẻ ra ngoài dạng /?ban=MÃ: Facebook có thể bỏ phần sau dấu #; ứng dụng đổi lại thành #ban= khi mở (main.js)
-const shareUrl = () => `${location.origin}/?ban=${encodeURIComponent(D.link.code)}`;
+// Hợp đồng §12 (#160): /moi/MÃ có thẻ xem trước mang Tịnh danh · mã; ?d=1 khi kèm tiến trình (máy chủ vẫn xét quyền chia sẻ của mình)
+const shareUrl = (d = D.kem) => `${location.origin}/moi/${encodeURIComponent(D.link.code)}${d ? '?d=1' : ''}`;
 /** Một câu về tiến trình của mình để chia sẻ (không Kusala, không so sánh; hoàn thành thì chỉ nói «đã hoàn thành chương trình») */
 const progressLine = () => (ctx.S.completed ? 'Mình đã hoàn thành chương trình 49 ngày' : `Mình đang ở ngày ${ctx.S.day || 1} của hành trình 49 ngày`);
 const shareText = () => (D.kem ? `${progressLine()} trên Vân Đạo. ` : '') + `Mời bạn cùng tu tập với mình trên Vân Đạo: ${shareUrl()}`;
@@ -340,6 +341,9 @@ function tick() {
   // thì báo; còn mã (lỗi tạm) thì chờ tiếp
   if (D.pend && D.pend.on && dongTu.list && Date.now() - D.pend.at > 15_000) {
     if (inviteFromHash(location.hash)) D.pend.at = Date.now();
+    // Mã đã rời địa chỉ nhưng danh sách chưa có người mời: tải lại danh sách một lần và chờ thêm trước khi báo lỗi
+    // (máy chậm có thể nhận lời xong mà lượt tải danh sách sau đó chưa về kịp)
+    else if (!D.pend.again) { D.pend.again = true; D.pend.at = Date.now(); void loadCompanions().catch(() => {}); }
     else { D.pend = null; ctx.toast('Chưa kết nối được bằng mã mời này. Mã có thể đã hết hạn, hết lượt, hoặc là mã của chính bạn.'); if (D.tab === 'loi') { D.tab = 'list'; if (ctx.viewOpen()) ctx.render(); } }
   }
   const I = invites(), t = now();
