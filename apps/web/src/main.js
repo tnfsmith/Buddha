@@ -144,8 +144,10 @@ $('#bio').addEventListener('click', (e) => {
 });
 // Tự ghi nhận (#88): thời thiền viên mãn; đang Vân Du trên đảo đủ 5 phút thì ghi thêm Vân Du
 player.onend = () => { const vd = S.vandu && U.mode === 'island' && sitMin() >= MIN_VANDU ? Math.round(sitMin()) : 0;
-  logTu('thoi_thien', 15, U.mode === 'hall' ? 'dai-thien-duong' : 'dai-thien'); if (vd) logTu('van_du', vd);
-  U.sit = null; S.sessions++; save(); record('session.done', { kind: 'thien15', duration_s: 900 }); toast('Sādhu! Thời thiền đã viên mãn. Hồi hướng công đức.'); render(); };
+  // #107: ghi số phút thực sự đã ngồi theo đồng hồ âm thanh (tua tới không cộng); ≥ 12 phút mới là «thời trọn» khi xét mở Tầng 1
+  const sat = player.lastSat, min = Math.min(15, Math.floor(sat / 60));
+  logTu('thoi_thien', min, U.mode === 'hall' ? 'dai-thien-duong' : 'dai-thien'); if (vd) logTu('van_du', vd);
+  U.sit = null; S.sessions++; save(); record('session.done', { kind: 'thien15', duration_s: Math.min(900, Math.round(sat)) }); toast('Sādhu! Thời thiền đã viên mãn. Hồi hướng công đức.'); render(); };
 /** Mở Bia: kéo ngay bản mới nhất từ các thiết bị khác và danh mục việc nếu đã cũ (#93) */
 function boardFresh() {
   if (missionsStale()) loadMissions(true).then(() => { if (U.view === 'board') render(); });
