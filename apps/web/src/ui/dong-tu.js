@@ -85,6 +85,11 @@ function invites() {
  * Hẹn đồng tu (#151, hợp đồng §9): phiên mình chủ trì hoặc có ghế, chưa hủy, chưa qua thời thiền. Ghế mình đã từ chối/rời thì không hiện.
  * `going`: mình sẽ ngồi (chủ phiên, hoặc ghế đã nhận lời). Khóa trong D.joined/hide/watch có tiền tố «s:» để không trùng id lời mời gặp.
  */
+/**
+ * Máy chủ có API phiên (§9.3) khi GET /companions trả mảng `sessions`. Chưa có (bản API cũ) thì ẩn nút hẹn giờ: UI có thể
+ * lên trước API mà không gọi route chưa triển khai; API lên sau thì nút tự hiện ở lần tải danh sách kế tiếp.
+ */
+const hasSessions = () => !!dongTu.list && Array.isArray(dongTu.list.sessions);
 const SEAT = { moi: 'chờ trả lời', nhan: 'đã nhận lời', tu_choi: 'không tham gia', roi: 'không tham gia' };
 function sessions() {
   const t = now(), out = [];
@@ -167,7 +172,7 @@ function listView() {
   const g = ready();
   const x = g.ok ? '' : ' disabled';
   let h = '<h2>Bạn đồng tu</h2>' + gateNote(g) + rw(bt('dt-tab', 'Mời bạn tu cùng', 'btn', ' data-v="moi"' + x), bt('dt-tab', 'Tìm bạn', 'btn alt', ' data-v="tim"' + x),
-    bt('dt-tab', 'Hẹn giờ đồng tu', 'btn alt', ' data-v="hen"' + (g.ok && L('companions').length ? '' : ' disabled'))) + status();
+    hasSessions() ? bt('dt-tab', 'Hẹn giờ đồng tu', 'btn alt', ' data-v="hen"' + (g.ok && L('companions').length ? '' : ' disabled')) : '') + status();
   if (!dongTu.list) return h + ms('Đang tải danh sách…') + foot();
   const I = invites(), cs = L('companions'), inc = L('incoming'), og = L('outgoing'), SS = sessions();
   if (I.incoming.length) h += `<h3>Lời mời đang chờ (${I.incoming.length})</h3>` + I.incoming.map(incomingRow).join('');
@@ -282,6 +287,7 @@ function sesRow({ s, host, seat, ph, going }) {
 function henView() {
   const g = ready(), H = D.hen;
   let h = '<h2>Hẹn giờ đồng tu</h2>';
+  if (!hasSessions()) return h + mu('Tính năng hẹn giờ đang được cập nhật.') + back();
   if (!g.ok) return h + gateNote(g) + back();
   h += mu(`Cùng ngồi một thời thiền 15 phút trên Đài Đồng Tu ở Đại Thiền Đường. Mời từ 1 đến ${SESSION_MAX - 1} bạn, hẹn trước tối đa 7 ngày.`) + status();
   if (sessions().filter((y) => y.host).length >= SESSION_OPEN_MAX) return h + `<p class="note">Bạn đang có ${SESSION_OPEN_MAX} hẹn sắp tới. Hãy chờ một hẹn qua, hoặc hủy bớt.</p>` + back();

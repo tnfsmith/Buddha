@@ -17,7 +17,7 @@ export function fakeServer(day = 1) {
   };
   // days: ngày hành trình bạn cho hiện (mặc định 1); blank: người chưa tạo nhân vật (#151 §7);
   // noLook: hồ sơ máy chủ có Tịnh danh nhưng chưa có hình dáng; hold[đường dẫn]: Promise thì yêu cầu đó chờ đến khi nó xong (máy chủ chậm)
-  const sv = { U, settings: {}, island: {}, presence: {}, links: {}, pairs: [], requests: [], invites: [], log: [], n: 0, days: {}, blank: new Set(), noLook: new Set(), hold: {}, profiles: [], sessions: [], sessionPosts: [] };
+  const sv = { U, settings: {}, island: {}, presence: {}, links: {}, pairs: [], requests: [], invites: [], log: [], n: 0, days: {}, blank: new Set(), noLook: new Set(), hold: {}, profiles: [], sessions: [], sessionPosts: [], noSessionsApi: false };
   const byId = (id) => Object.values(U).find((u) => u.id === id);
   const prof = (id) => ({ ...byId(id), ...(sv.blank.has(id) ? { tinh_danh: null } : {}), look: sv.blank.has(id) || sv.noLook.has(id) ? {} : LOOK, settings: sv.settings[id] || {}, island: sv.island[id] || {}, tz: 'Asia/Ho_Chi_Minh', visibility: 'dong_tu', pref_seat: null, rev: 3 });
   const journey = { program: 'so-nhap-49', cycle: 1, day, started_on: ymd(), last_done_on: null, completed_at: null, sacca_count: 0, sessions_done: 0, sermons_done: 0, rev: 1 };
@@ -38,7 +38,7 @@ export function fakeServer(day = 1) {
       outgoing: sv.requests.filter((r) => r.from === me && r.expires_at > now).map((r) => ({ id: r.id, tinh_danh: r.tinh_danh, tag: r.tag, at: r.at, expires_at: r.expires_at })),
       invites: sv.invites.filter((i) => (i.from === me || i.to === me) && live(i, now)),
       // §9.3: phiên mình chủ trì hoặc có ghế, còn hẹn, start_at > now − 15 phút
-      sessions: sv.sessions.filter((x) => x.status === 'hen' && x.start_at > now - 15 * 60_000 && (x.host === me || x.seats.some((q) => q.id === me))).map(sessionView),
+      ...(sv.noSessionsApi ? {} : { sessions: sv.sessions.filter((x) => x.status === 'hen' && x.start_at > now - 15 * 60_000 && (x.host === me || x.seats.some((q) => q.id === me))).map(sessionView) }),
       visits: [], server_now: now,
     };
   }

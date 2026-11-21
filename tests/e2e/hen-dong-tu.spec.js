@@ -127,3 +127,20 @@ test('nhắc trong ứng dụng lúc còn 10 phút và 1 phút; tới giờ tự
   await expect(M(A)).toBeHidden();   // đang thiền: không hiện thẻ
   expect(A.errs).toEqual([]);
 });
+
+test('API chưa có phiên (bản cũ, chưa có trường sessions): ẩn nút hẹn giờ, không gọi /api/v1/sessions', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const sv = fakeServer(), { a, b } = sv.U;
+  pair(sv, a.id, b.id); sv.noSessionsApi = true;
+  const A = await device(browser, sv, 'a', { width: 412, height: 860 });
+  await openList(A);
+  await slow(P(A)).toContainText('Minh An ID 2210');
+  await expect(P(A).locator('[data-act="dt-tab"][data-v="hen"]')).toHaveCount(0);
+  await expect(P(A)).not.toContainText('Hẹn đồng tu');
+  // máy chủ lên bản có phiên: lần tải danh sách kế tiếp nút tự hiện
+  sv.noSessionsApi = false;
+  await relist(A);
+  await slow(P(A).locator('[data-act="dt-tab"][data-v="hen"]')).toBeVisible();
+  expect(sv.log.some((l) => l.includes('/sessions'))).toBe(false);
+  expect(A.errs).toEqual([]);
+});
