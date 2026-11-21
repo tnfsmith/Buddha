@@ -73,7 +73,8 @@ export function fakeServer(day = 1) {
     if (p === '/api/v1/profile') { const b = body(); sv.profiles.push(b); if (b.look && Object.keys(b.look).length) sv.noLook.delete(me); if (b.tinh_danh) sv.blank.delete(me); if (b.settings) { const cur = sv.settings[me] || {}; sv.settings[me] = { ...cur, ...b.settings, dong_tu: { ...(cur.dong_tu || {}), ...((b.settings || {}).dong_tu || {}) } }; } if (b.island) sv.island[me] = b.island; return json({ success: true, profile: prof(me) }); }
     if (p === '/api/v1/content') return json({ items: [] });
     if (p === '/api/v1/practice/profile') return json({ profile: null, rev: 0 });
-    if (p === '/api/v1/companions' && m === 'GET') return json(list(me, now));
+    // listLag (ms): danh sách về muộn, để GET /me lúc mở màn chắc chắn xong trước POST /cheers/seen
+    if (p === '/api/v1/companions' && m === 'GET') { if (sv.listLag) await new Promise((r) => setTimeout(r, sv.listLag)); return json(list(me, Date.now())); }
     if (['/api/v1/companions/link', '/api/v1/companions/request', '/api/v1/meet'].includes(p) && m === 'POST' && (sv.blank.has(me) || sv.noLook.has(me))) return err('need_character', 409);   // hợp đồng §11
     if (p === '/api/v1/companions/link' && m === 'POST') {
       let k = Object.values(sv.links).find((l) => l.owner === me && l.uses_left > 0);

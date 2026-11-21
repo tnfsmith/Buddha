@@ -2,7 +2,7 @@
 // «mới» theo social.cheers của GET /me, đánh dấu đã xem bằng POST /cheers/seen. Không chữ tự do, không đếm, không xếp hạng.
 import { test, expect } from '@playwright/test';
 import { closeContextsAfterEach } from './hooks.js';
-import { P, device, fakeServer, openList, relist, slow } from './dong-tu-fake.js';
+import { P, closeView, device, fakeServer, openList, relist, slow } from './dong-tu-fake.js';
 
 closeContextsAfterEach();
 test.use({ serviceWorkers: 'block' });
@@ -51,5 +51,30 @@ test('khích lệ: lời nhận 7 ngày có «mới» rồi đánh dấu đã xe
   await slow(P(B).locator('[role="alert"]')).toHaveText('Hôm nay bạn đã gửi lời khích lệ cho bạn ấy.');
   await expect(P(B).locator('[data-act="dt-cheer"]')).toHaveCount(0);
   expect(sv.cheers.filter((x) => x.from === b.id && x.to === c.id)).toHaveLength(1);
+  expect(B.errs).toEqual([]);
+});
+
+test('chấm khích lệ theo /me: 1 → đã xem → 0 → một lời mới → 1, kể cả khi số đếm bằng số trước (review #184)', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const sv = fakeServer(12), { a, b, c } = sv.U;
+  pair(sv, b.id, a.id); pair(sv, b.id, c.id);
+  const B = await device(browser, sv, 'b', { width: 412, height: 860 }, 12);
+  const dot = B.locator('#dt .n'), poll = () => B.evaluate(() => window.dispatchEvent(new Event('online')));
+  await slow(B.locator('#dt')).toBeVisible();
+  // Nhịp Codex mô tả: /me báo 1, danh sách về muộn hơn GET /me của màn, nên POST /cheers/seen đi sau mọi GET /me đang chờ
+  sv.cheers.push({ from: a.id, to: b.id, day: ymd(Date.now()), line: 'tuy_hy', at: Date.now() });
+  sv.listLag = 8000;
+  await poll();
+  await expect.poll(() => dot.textContent(), { timeout: 20_000, intervals: [250] }).toBe('1');
+  await openList(B);   // danh sách tải lại còn đang chờ: GET /me của màn xong trước, POST /cheers/seen đi sau
+  await expect.poll(() => sv.seenPosts.length, { timeout: 20_000 }).toBe(1);
+  await slow(dot).toHaveText('');
+  await closeView(B); sv.listLag = 0;
+  // lời mới đến trước lần /me kế: máy chủ lại báo 1 như lần trước
+  sv.cheers.push({ from: c.id, to: b.id, day: ymd(Date.now()), line: 'nho_ban', at: Date.now() });
+  await expect.poll(async () => { await poll(); return dot.textContent(); }, { timeout: 40_000, intervals: [4500] }).toBe('1');
+  await openList(B);
+  await slow(P(B)).toContainText('«Mình nhớ bạn, khi nào rảnh mình cùng ngồi một thời nhé.» · hôm nay · mới');
+  await expect.poll(() => sv.seenPosts.length).toBe(2);
   expect(B.errs).toEqual([]);
 });
