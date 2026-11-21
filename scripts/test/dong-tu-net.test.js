@@ -106,4 +106,39 @@ describe('mạng Bạn đồng tu #123', () => {
     expect(net.dongTu.on).toBe(false);
     expect(net.dongTu.list).toBeNull();
   });
+  it('giữ phiên hẹn và khích lệ, tải lại sau phản hồi cũ, đặt về 0 khi đổi tài khoản', async () => {
+    net.setDongTuAccount(uid);
+    net.observeDongTuMe(uid, enabled());
+    await net.loadCompanions();
+    expect(net.dongTu.social).toEqual({ requests: 0, invites: 0, sessions: 0, cheers: 0 });
+
+    let release;
+    fetch.mockImplementationOnce((url, options) => {
+      seen.push([url, options.method, null]);
+      return new Promise((resolve) => { release = resolve; });
+    });
+    const old = net.loadCompanions();
+    const current = enabled();
+    Object.assign(current.social, { sessions: 2, cheers: 1 });
+    net.observeDongTuMe(uid, current);
+    expect(net.dongTu.social).toMatchObject({ sessions: 2, cheers: 1 });
+    release(Response.json({ server_now: 101 }));
+    await old;
+    await vi.advanceTimersByTimeAsync(0);
+    expect(seen.filter(([path]) => path.endsWith('/companions'))).toHaveLength(3);
+
+    net.observeDongTuMe(uid, current);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(seen.filter(([path]) => path.endsWith('/companions'))).toHaveLength(3);
+
+    current.social.cheers = 3;
+    net.observeDongTuMe(uid, current);
+    await net.loadCompanions();
+    expect(seen.filter(([path]) => path.endsWith('/companions'))).toHaveLength(4);
+
+    net.setDongTuAccount('guest-00002');
+    net.observeDongTuMe(uid, current);
+    expect(net.dongTu.social).toMatchObject({ sessions: 0, cheers: 0 });
+    expect(net.dongTu.list).toBeNull();
+  });
 });
