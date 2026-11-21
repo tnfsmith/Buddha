@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Chạy đúng hai ca tài khoản hiện có bằng Worker/workerd + D1 riêng, không đụng Cloudflare từ xa.
+// Chạy ba ca tài khoản và Bạn đồng tu bằng Worker/workerd + D1 riêng, không đụng Cloudflare từ xa.
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { mkdtemp, readFile, writeFile, rm, mkdir } from 'node:fs/promises';
@@ -57,20 +57,20 @@ try {
   if (!health.ok || (await health.json()).service !== 'vandao-api') throw new Error('Worker kiểm thử chưa sẵn sàng');
   await mkdir(dirname(reportPath), { recursive: true });
   await rm(reportPath, { force: true });
-  console.log(`Tài khoản: Worker/D1 cục bộ riêng tại ${browserUrl.origin}; chạy đủ hai ca với API thật.`);
+  console.log(`Tài khoản: Worker/D1 cục bộ riêng tại ${browserUrl.origin}; chạy đủ ba ca với API thật.`);
   const code = await new Promise((done, reject) => {
     // Không qua npm/npx/shell: đường dẫn Windows có dấu & và khoảng trắng giữ nguyên.
-    child = spawn(process.execPath, [require.resolve('@playwright/test/cli'), 'test', 'tests/e2e/account.spec.js',
+    child = spawn(process.execPath, [require.resolve('@playwright/test/cli'), 'test', 'tests/e2e/account.spec.js', 'tests/e2e/dong-tu-that.spec.js',
       '--grep', 'đầy đủ với Worker thật', '--workers=1', '--retries=0', '--reporter=list,json', '--trace=retain-on-failure'], {
       cwd: root, stdio: 'inherit', windowsHide: true,
-      env: { ...process.env, E2E_ACCOUNT: browserUrl.href, E2E_BASE_URL: browserUrl.href, PLAYWRIGHT_JSON_OUTPUT_NAME: reportPath },
+      env: { ...process.env, E2E_ACCOUNT: browserUrl.href, E2E_BASE_URL: browserUrl.href, E2E_DONG_TU_UPTO: '', PLAYWRIGHT_JSON_OUTPUT_NAME: reportPath },
     });
     child.once('error', reject);
     child.once('exit', (status) => done(status ?? 1));
   });
   if (code !== 0) throw new Error(`Kiểm thử tài khoản thất bại (mã ${code})`);
   checkAccountReport(JSON.parse(await readFile(reportPath, 'utf8')));
-  console.log('Tài khoản: 2/2 ca đầy đủ thành công, không skip.');
+  console.log('Tài khoản và Bạn đồng tu: 3/3 ca đầy đủ thành công, không skip.');
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;
