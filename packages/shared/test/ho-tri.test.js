@@ -9,6 +9,7 @@ describe('hợp đồng Hộ Trì', () => {
   it('giữ fixture cho máy chủ giả cùng phiên bản và mã lỗi với helper', () => {
     const fixture = JSON.parse(readFileSync(new URL('../../../docs/contracts/ho-tri-fixture.json', import.meta.url), 'utf8'));
     expect(fixture.me.community.v).toBe(HO_TRI_V);
+    expect(fixture.me).toMatchObject({ journey: { day: 1 }, community: { allowed: true, reason: null } });
     expect(checkHelpPost(fixture.create_post).ok).toBe(true);
     expect(fixture.help_detail.item.replies).toBe(fixture.help_detail.replies.length);
     expect(fixture.help.items[0].author).toBeNull();

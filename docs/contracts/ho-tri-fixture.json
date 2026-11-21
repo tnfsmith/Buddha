@@ -1,6 +1,7 @@
 {
   "server_now": 1795233600000,
   "me": {
+    "journey": { "day": 1 },
     "community": {
       "v": 1, "terms_version": "test-v1", "terms_url": "/dieu-khoan-cong-dong/test-v1.html",
       "accepted_version": "test-v1", "adult_confirmed": true, "allowed": true, "reason": null,
@@ -144,9 +145,6 @@
     },
     "terms_changed": {
       "error": { "code": "terms_changed", "message": "Điều khoản cộng đồng đã đổi. Hãy đọc và xác nhận lại." }
-    },
-    "need_gate": {
-      "error": { "code": "need_gate", "message": "Bảng Hộ Trì mở khi Cổng Vân Môn mở nửa." }
     },
     "help_closed": {
       "error": { "code": "help_closed", "message": "Bài này đã đóng hoặc hết hạn." }
