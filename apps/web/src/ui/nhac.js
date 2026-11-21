@@ -51,7 +51,7 @@ async function load(render) {
 /** Dòng ngắn ở Bia Tích Lũy (tải lịch một lần khi đã giữ hành trình) */
 export function nhLine(render) {
   follow();
-  if (HAS === false) return '';
+  if (!acct.available || HAS === false) return '';   // bản HTML đơn (file://) không có máy chủ: không dò, không hiện
   if (!acct.on) { if (HAS === null) { void probe(render); return ''; } }
   if (!acct.on) return '<p class="muted">Nhắc nhở: giữ hành trình để bật · <button class="link" data-act="nh-open">Xem</button></p>';
   if (!R.view && !R.err && !R.loading) { R.loading = true; void load(render).finally(() => { R.loading = false; }); }
