@@ -8,7 +8,7 @@
 
 import { archiveOpenedTier } from '../tier-progress.js';
 
-const MOVE = ['practice_session', 'device'];
+const MOVE = ['practice_session', 'device', 'deed_log'];
 
 /** Có tiến trình: đã đặt Tịnh danh, đã xác nhận Kusala, đã ngồi thiền hoặc đã qua ngày 1 / chu kỳ 1 */
 export async function hasProgress(db, uid) {
