@@ -28,7 +28,7 @@ export function fakeServer(day = 1) {
   function list(me, now) {
     const companions = sv.pairs.filter((p) => p.a === me || p.b === me).map((p) => {
       const o = p.a === me ? p.b : p.a, mine = p.a === me ? p.sa : p.sb, theirs = p.a === me ? p.sb : p.sa, hide = shared(o).hien_trang_thai === false;
-      return { id: o, tinh_danh: byId(o).tinh_danh, tag: byId(o).tag, look: LOOK, closeness: closenessOf(mine.than, theirs.than), me: mine, them: theirs,
+      return { id: o, tinh_danh: sv.blank.has(o) ? null : byId(o).tinh_danh, tag: byId(o).tag, look: LOOK, closeness: closenessOf(mine.than, theirs.than), me: mine, them: theirs,
         presence: hide ? null : presenceOf(sv.presence[o], now), seen: hide ? null : seenBucket(sv.presence[o] && sv.presence[o].updated_at, now),
         day: sv.days[o] ?? 1, completed: false, open: (sv.island[o] || {}).open === true, accepted_at: p.at };
     });
@@ -42,7 +42,7 @@ export function fakeServer(day = 1) {
       visits: [], server_now: now,
     };
   }
-  const person = (id) => ({ id, tinh_danh: byId(id).tinh_danh, tag: byId(id).tag, look: LOOK });
+  const person = (id) => ({ id, tinh_danh: sv.blank.has(id) ? null : byId(id).tinh_danh, tag: byId(id).tag, look: LOOK });
   const sessionView = (x) => ({ id: x.id, host: person(x.host), kind: 'thien', place: 'dtd', start_at: x.start_at, created_at: x.created_at, status: x.status, seats: x.seats.map((q) => ({ ...person(q.id), status: q.status })) });
   // who: id cố định, hoặc hàm trả về người đang đăng nhập trên trang (null khi đã đăng xuất), cho ca đổi tài khoản
   sv.handle = async (route, who) => {

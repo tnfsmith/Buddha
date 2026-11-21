@@ -87,13 +87,15 @@ test('hẹn giờ nhóm: chọn 2 bạn, bước 5 phút, nhận lời, tệp l�
   await relist(B);
   await expect(row(B)).toHaveCount(0);
 
-  // «Ngay»: C không có hiện diện (vắng) thì không được mời, máy chủ trả trong skipped
+  // «Ngay»: C không có hiện diện (vắng) thì không được mời, máy chủ trả trong skipped. C chưa tạo nhân vật: không hiện «null»
+  sv.blank.add(c.id); await relist(A);
   await P(A).locator('[data-act="dt-tab"][data-v="hen"]').click();
   await pick(A, b.id).check(); await pick(A, c.id).check();
   await P(A).locator('[data-dt="hen-when"][value="ngay"]').check();
-  await expect(P(A).locator('label', { hasText: 'Hải Đăng' })).toContainText('đang vắng, sẽ không được mời');
+  await expect(P(A).locator('label', { hasText: 'ID 3307 (chưa đặt Tịnh danh)' })).toContainText('đang vắng, sẽ không được mời');
   await P(A).locator('[data-act="dt-hen"]').click();
-  await slow(P(A)).toContainText('Đã gửi lời hẹn cùng ngồi ngay. Chưa mời Hải Đăng · 3307 vì đang vắng.');
+  await slow(P(A)).toContainText('Đã gửi lời hẹn cùng ngồi ngay. Chưa mời ID 3307 (chưa đặt Tịnh danh) vì đang vắng.');
+  await expect(P(A)).not.toContainText('null');
   expect(sv.sessionPosts[1]).toEqual({ start_at: 'ngay', invitees: [b.id, c.id] });
   expect([...A.errs, ...B.errs]).toEqual([]);
 });

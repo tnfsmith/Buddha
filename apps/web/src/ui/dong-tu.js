@@ -42,10 +42,13 @@ let ctx = null;
 
 const L = (k) => { const v = dongTu.list && dongTu.list[k]; return Array.isArray(v) ? v : []; };
 const now = () => Date.now() + D.skew;
-const who = (p) => `${esc(p.tinh_danh)} · ${esc(p.tag)}`;
+// Bạn đồng tu có thể chưa tạo nhân vật (§11: kết nối không đòi Tịnh danh): không hiện «null», ghi rõ chưa đặt
+const nm = (p) => (p && p.tinh_danh) || 'Chưa đặt Tịnh danh';
+const label = (p) => (p && p.tinh_danh ? `${p.tinh_danh} · ${p.tag}` : `ID ${p.tag} (chưa đặt Tịnh danh)`);
+const who = (p) => esc(label(p));
 const friend = (id) => L('companions').find((c) => c.id === id) || null;
 const nameOf = (id) => { const c = friend(id); return c ? who(c) : 'Bạn đồng tu'; };
-const plainName = (id) => { const c = friend(id); return c ? `${c.tinh_danh} · ${c.tag}` : 'bạn đồng tu'; };
+const plainName = (id) => { const c = friend(id); return c ? label(c) : 'bạn đồng tu'; };
 const other = (inv) => (inv.from === acct.uid ? inv.to : inv.from);
 const clock = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 const mins = (ms) => `${Math.max(1, Math.ceil(ms / 60_000))} phút`;
@@ -203,7 +206,7 @@ function meetBlock(c, I) {
     (chk.quiet ? mu('Bạn ấy đang tọa thiền: lời mời sẽ hiện khi bạn ấy xuất thiền.') : '');
 }
 /** Tên và ID: ID là mã 4 số công khai, cùng dạng người khác gõ khi tìm («Tịnh danh · mã») */
-const nameId = (p) => `<b>${esc(p.tinh_danh)}</b> <span class="dtid">ID ${esc(p.tag)}</span>`;
+const nameId = (p) => `<b>${esc(nm(p))}</b> <span class="dtid">ID ${esc(p.tag)}</span>`;
 function row(c, I) {
   const open = D.peek === c.id;
   return `<div class="dtf" data-id="${esc(c.id)}"><button class="dtn" data-act="dt-ban" data-id="${esc(c.id)}">${dot(c)}${nameId(c)}<span>${esc(presenceLine(c))}</span></button>${meetBlock(c, I)}` +
@@ -319,7 +322,7 @@ const sesById = (id) => sessions().find((x) => x.s.id === id) || null;
 
 function friendView(c) {
   const me = c.me || {}, than = c.closeness === 'than';
-  return `<h2>${esc(c.tinh_danh)}</h2><p class="pali">ID ${esc(c.tag)} · bạn đồng tu ${than ? 'thân thiết' : 'quen biết'}</p><p>${dot(c)} ${esc(presenceLine(c))}</p>${meetBlock(c, invites())}${status()}
+  return `<h2>${esc(nm(c))}</h2><p class="pali">ID ${esc(c.tag)} · bạn đồng tu ${than ? 'thân thiết' : 'quen biết'}</p><p>${dot(c)} ${esc(presenceLine(c))}</p>${meetBlock(c, invites())}${status()}
     <h3>Các kiểu mời</h3>${kinds(c)}<h3>Xem nhanh</h3>${peek(c)}
     <h3>Mức gần gũi</h3><label class="chk"><input type="checkbox" data-dt="than"${me.than ? ' checked' : ''}${dis()}> Thân thiết</label>
     ${mu(`Hai người cùng chọn thì thành thân thiết. Không có nấc nào tự lên theo số lần gặp.`)}` +
@@ -445,7 +448,7 @@ function daisPeople(I) {
   return [x.inv.from, x.inv.to].map((id) => {
     if (id === acct.uid) return { key: id, me: true };
     const c = friend(id); if (!c) return null;
-    return { key: id, name: `${c.tinh_danh} · ${c.tag}`, look: c.look || {}, here: x.ph.phase === 'sap' || c.presence == null || c.presence === 'thien' };
+    return { key: id, name: label(c), look: c.look || {}, here: x.ph.phase === 'sap' || c.presence == null || c.presence === 'thien' };
   }).filter(Boolean);
 }
 /** Đài của hẹn nhóm: chủ phiên trước, rồi người đã nhận lời (tối đa SESSION_MAX). Người không là bạn của mình: không biết hiện diện, coi như đã ngồi. */
@@ -456,7 +459,7 @@ function sesDais() {
   return ppl.map((p) => {
     if (p.id === acct.uid) return { key: p.id, me: true };
     const c = friend(p.id);
-    return { key: p.id, name: `${p.tinh_danh} · ${p.tag}`, look: (c && c.look) || p.look || {}, here: y.ph === 'sap' || !c || c.presence == null || c.presence === 'thien' };
+    return { key: p.id, name: label(p), look: (c && c.look) || p.look || {}, here: y.ph === 'sap' || !c || c.presence == null || c.presence === 'thien' };
   });
 }
 /** Cập nhật đếm ngược tại chỗ (không dựng lại thẻ/bảng, để nút đang chọn không mất tiêu điểm) */
