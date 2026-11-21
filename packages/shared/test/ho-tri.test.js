@@ -12,6 +12,17 @@ describe('hợp đồng Hộ Trì', () => {
     expect(checkHelpPost(fixture.create_post).ok).toBe(true);
     expect(fixture.help_detail.item.replies).toBe(fixture.help_detail.replies.length);
     expect(fixture.help.items[0].author).toBeNull();
+    expect(fixture.me.community.terms_url).toContain(fixture.me.community.terms_version);
+    expect(fixture.me_guide.community.guide).toBe(true);
+    expect(fixture.me_legacy).not.toHaveProperty('community');
+    expect(fixture.help_detail.my_match.other).toBeNull();
+    expect(fixture.owner_matches.items.every((row) => !Object.hasOwn(row.other, 'tag'))).toBe(true);
+    expect(fixture.match.other.tag).toBe('0472');
+    const views = [
+      ...fixture.help.items, ...fixture.help_mine.items, fixture.create_published.item, fixture.create_pending.item,
+      fixture.help_detail.item, ...fixture.help_detail.replies, fixture.help_phap_detail.item, ...fixture.help_phap_detail.replies,
+    ];
+    expect(views.every((row) => !row.author || !Object.hasOwn(row.author, 'tag'))).toBe(true);
     for (const [code, { error }] of Object.entries(fixture.errors)) {
       expect(error).toEqual({ code, message: HO_TRI_REASON_TEXT[code] });
     }

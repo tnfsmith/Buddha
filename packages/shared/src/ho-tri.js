@@ -6,7 +6,7 @@ export const HELP_KINDS = Object.freeze({
   hoi_phap: 'Hỏi Pháp',
   tuy_hy: 'Tùy hỷ',
 });
-export const HELP_LIMITS = Object.freeze({ titleMin: 5, titleMax: 80, bodyMax: 1000, replyMax: 600 });
+export const HELP_LIMITS = Object.freeze({ titleMin: 5, titleMax: 80, bodyMax: 1000, replyMax: 600, sourceRefMax: 240 });
 
 // Mã cấp tỉnh theo Quyết định 19/2025/QĐ-TTg. Giữ tiền tố vn_ trong wire.
 export const HELP_AREAS = Object.freeze({
@@ -66,6 +66,7 @@ export const HO_TRI_REASON_TEXT = Object.freeze({
   not_found: 'Không tìm thấy nội dung này.',
   help_closed: 'Bài này đã đóng hoặc hết hạn.',
   match_conflict: 'Đề nghị đã đổi trạng thái. Hãy tải lại.',
+  rate_limited: 'Bạn thao tác quá nhanh. Hãy thử lại sau.',
   event_full: 'Sự kiện đã đủ chỗ.',
   event_closed: 'Sự kiện đã đóng hoặc bị hủy.',
 });

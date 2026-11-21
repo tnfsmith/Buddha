@@ -2,50 +2,51 @@
   "server_now": 1795233600000,
   "me": {
     "community": {
-      "v": 1,
-      "terms_version": "test-v1",
-      "accepted_version": "test-v1",
-      "adult_confirmed": true,
-      "allowed": true,
-      "reason": null,
-      "guide": false,
-      "help_replies": 1,
-      "help_matches": 1
+      "v": 1, "terms_version": "test-v1", "terms_url": "/dieu-khoan-cong-dong/test-v1.html",
+      "accepted_version": "test-v1", "adult_confirmed": true, "allowed": true, "reason": null,
+      "guide": false, "help_replies": 1, "help_matches": 1
     }
   },
   "needs_consent": {
     "community": {
-      "v": 1,
-      "terms_version": "test-v1",
-      "accepted_version": null,
-      "adult_confirmed": false,
-      "allowed": false,
-      "reason": "need_adult_confirmation",
-      "guide": false,
-      "help_replies": 0,
-      "help_matches": 0
+      "v": 1, "terms_version": "test-v1", "terms_url": "/dieu-khoan-cong-dong/test-v1.html",
+      "accepted_version": null, "adult_confirmed": false, "allowed": false,
+      "reason": "need_adult_confirmation", "guide": false, "help_replies": 0, "help_matches": 0
     }
   },
+  "me_guide": {
+    "community": {
+      "v": 1, "terms_version": "test-v1", "terms_url": "/dieu-khoan-cong-dong/test-v1.html",
+      "accepted_version": "test-v1", "adult_confirmed": true, "allowed": true, "reason": null,
+      "guide": true, "help_replies": 0, "help_matches": 0
+    }
+  },
+  "me_legacy": { "dong_tu": 1 },
   "create_post": {
-    "kind": "can_giup",
-    "title": "Cần người cùng học",
-    "body": "Mình muốn học cách ghi chép sau khi đọc sách.",
-    "area": "vn_79",
-    "anonymous": true
+    "kind": "can_giup", "title": "Cần người cùng học",
+    "body": "Mình muốn học cách ghi chép sau khi đọc sách.", "area": "vn_79", "anonymous": true
+  },
+  "create_published": {
+    "item": {
+      "id": "help-a", "kind": "can_giup", "title": "Cần người cùng học",
+      "body": "Mình muốn học cách ghi chép sau khi đọc sách.", "area": "vn_79", "author": null,
+      "created_at": 1795230000000, "expires_at": 1795492800000, "replies": 0, "match": "mo", "status": "hien"
+    }
+  },
+  "create_pending": {
+    "item": {
+      "id": "help-b", "kind": "hoi_phap", "title": "Cách giữ tâm tỉnh thức",
+      "body": "Mình nên bắt đầu quan sát điều gì trong sinh hoạt?", "area": "truc_tuyen",
+      "author": { "tinh_danh": "Tuệ An" }, "created_at": 1795231800000, "expires_at": 1795492800000,
+      "replies": 0, "match": "mo", "status": "cho_duyet", "hidden_reason": null
+    }
   },
   "help": {
     "items": [
       {
-        "id": "help-a",
-        "kind": "can_giup",
-        "title": "Cần người cùng học",
-        "body": "Mình muốn học cách ghi chép sau khi đọc sách.",
-        "area": "vn_79",
-        "author": null,
-        "created_at": 1795230000000,
-        "expires_at": 1795492800000,
-        "replies": 1,
-        "match": "mo"
+        "id": "help-a", "kind": "can_giup", "title": "Cần người cùng học",
+        "body": "Mình muốn học cách ghi chép sau khi đọc sách.", "area": "vn_79", "author": null,
+        "created_at": 1795230000000, "expires_at": 1795492800000, "replies": 1, "match": "mo"
       }
     ],
     "next_cursor": null
@@ -53,18 +54,16 @@
   "help_mine": {
     "items": [
       {
-        "id": "help-b",
-        "kind": "hoi_phap",
-        "title": "Cách giữ tâm tỉnh thức",
-        "body": "Mình nên bắt đầu quan sát điều gì trong sinh hoạt?",
-        "area": "truc_tuyen",
-        "author": { "tinh_danh": "Tuệ An", "tag": "0183" },
-        "created_at": 1795231800000,
-        "expires_at": 1795492800000,
-        "replies": 0,
-        "match": "mo",
-        "status": "cho_duyet",
-        "hidden_reason": null
+        "id": "help-c", "kind": "tuy_hy", "title": "Một việc nhỏ hôm nay",
+        "body": "Mình chia sẻ về một việc đã làm.", "area": null,
+        "author": { "tinh_danh": "Tuệ An" }, "created_at": 1795232100000, "expires_at": 1795492800000,
+        "replies": 0, "match": "mo", "status": "an", "hidden_reason": "content_hidden"
+      },
+      {
+        "id": "help-b", "kind": "hoi_phap", "title": "Cách giữ tâm tỉnh thức",
+        "body": "Mình nên bắt đầu quan sát điều gì trong sinh hoạt?", "area": "truc_tuyen",
+        "author": { "tinh_danh": "Tuệ An" }, "created_at": 1795231800000, "expires_at": 1795492800000,
+        "replies": 0, "match": "mo", "status": "cho_duyet", "hidden_reason": null
       }
     ],
     "next_cursor": null
@@ -72,41 +71,69 @@
   "help_detail": {
     "item": {
       "id": "help-a", "kind": "can_giup", "title": "Cần người cùng học",
-      "body": "Mình muốn học cách ghi chép sau khi đọc sách.",
-      "area": "vn_79", "author": null, "created_at": 1795230000000,
-      "expires_at": 1795492800000, "replies": 1, "match": "mo"
+      "body": "Mình muốn học cách ghi chép sau khi đọc sách.", "area": "vn_79", "author": null,
+      "created_at": 1795230000000, "expires_at": 1795492800000, "replies": 1, "match": "mo"
     },
     "replies": [
       {
-        "id": "reply-a",
-        "body": "Mình có thể hướng dẫn cách viết một ghi chú ngắn.",
-        "source_ref": null,
-        "author": { "tinh_danh": "Minh An", "tag": "0472" },
-        "created_at": 1795232400000
+        "id": "reply-a", "body": "Mình có thể hướng dẫn cách viết một ghi chú ngắn.",
+        "source_ref": null, "author": { "tinh_danh": "Minh An" }, "created_at": 1795232400000
       }
     ],
-    "actions": { "can_reply": true, "can_match": true, "can_report": true, "can_block": false }
+    "actions": { "can_reply": true, "can_match": true, "can_report": true, "can_block": false, "can_close": false, "can_delete": false },
+    "my_match": {
+      "id": "match-a", "post_id": "help-a", "state": "de_nghi",
+      "me_done": false, "other_done": false, "other": null
+    }
+  },
+  "help_phap_detail": {
+    "item": {
+      "id": "help-d", "kind": "hoi_phap", "title": "Quan sát thân trong sinh hoạt",
+      "body": "Có bài kinh nào để mình đọc thêm?", "area": "truc_tuyen", "author": { "tinh_danh": "Tuệ An" },
+      "created_at": 1795230000000, "expires_at": 1795492800000, "replies": 1, "match": "mo"
+    },
+    "replies": [
+      {
+        "id": "reply-d", "body": "Có thể đọc phần quán thân trong nguồn tham khảo.",
+        "source_ref": "MN 10 — Kinh Niệm Xứ", "author": { "tinh_danh": "Minh An" }, "created_at": 1795232400000
+      }
+    ],
+    "actions": { "can_reply": false, "can_match": false, "can_report": true, "can_block": true, "can_close": false, "can_delete": false },
+    "my_match": null
+  },
+  "owner_matches": {
+    "items": [
+      {
+        "id": "match-a", "post_id": "help-a", "state": "de_nghi",
+        "me_done": false, "other_done": false, "other": { "tinh_danh": "Minh An" }
+      },
+      {
+        "id": "match-b", "post_id": "help-a", "state": "de_nghi",
+        "me_done": false, "other_done": false, "other": { "tinh_danh": "Tịnh An" }
+      }
+    ]
   },
   "match": {
-    "id": "match-a",
-    "post_id": "help-a",
-    "state": "nhan",
-    "me_done": true,
-    "other_done": false,
-    "other": { "tinh_danh": "Minh An", "tag": "0472" }
+    "id": "match-a", "post_id": "help-a", "state": "nhan",
+    "me_done": true, "other_done": false, "other": { "tinh_danh": "Minh An", "tag": "0472" }
+  },
+  "match_finished": {
+    "id": "match-a", "post_id": "help-a", "state": "xong",
+    "me_done": true, "other_done": true, "other": { "tinh_danh": "Minh An", "tag": "0472" }
   },
   "events": {
     "items": [
       {
-        "id": "event-a",
-        "title": "Cùng dọn rác tại công viên",
-        "area": "vn_79",
-        "starts_at": 1795406400000,
-        "ends_at": 1795413600000,
-        "capacity": 10,
-        "rsvp_count": 3,
-        "my": null,
+        "id": "event-a", "title": "Cùng dọn rác tại công viên", "description": "Cùng nhặt rác quanh lối đi.",
+        "place": "Công viên Mẫu", "area": "vn_79", "starts_at": 1795406400000, "ends_at": 1795413600000,
+        "capacity": 10, "rsvp_count": 3, "my": null,
         "organizer": { "kind": "partner", "name": "Đối tác mẫu", "verified": true }
+      },
+      {
+        "id": "event-b", "title": "Sắp xếp sách cùng nhóm", "description": "Phân loại sách cho góc đọc chung.",
+        "place": "Thư viện Mẫu", "area": "vn_01", "starts_at": 1795492800000, "ends_at": 1795500000000,
+        "capacity": 8, "rsvp_count": 2, "my": "dang_ky",
+        "organizer": { "kind": "group", "name": "Nhóm mẫu", "verified": true }
       }
     ],
     "next_cursor": null
@@ -115,8 +142,26 @@
     "moderation_unavailable": {
       "error": { "code": "moderation_unavailable", "message": "Chưa thể sàng lọc nội dung. Hãy thử lại sau." }
     },
+    "terms_changed": {
+      "error": { "code": "terms_changed", "message": "Điều khoản cộng đồng đã đổi. Hãy đọc và xác nhận lại." }
+    },
+    "need_gate": {
+      "error": { "code": "need_gate", "message": "Bảng Hộ Trì mở khi Cổng Vân Môn mở nửa." }
+    },
+    "help_closed": {
+      "error": { "code": "help_closed", "message": "Bài này đã đóng hoặc hết hạn." }
+    },
+    "match_conflict": {
+      "error": { "code": "match_conflict", "message": "Đề nghị đã đổi trạng thái. Hãy tải lại." }
+    },
     "event_full": {
       "error": { "code": "event_full", "message": "Sự kiện đã đủ chỗ." }
+    },
+    "event_closed": {
+      "error": { "code": "event_closed", "message": "Sự kiện đã đóng hoặc bị hủy." }
+    },
+    "rate_limited": {
+      "error": { "code": "rate_limited", "message": "Bạn thao tác quá nhanh. Hãy thử lại sau." }
     }
   }
 }
