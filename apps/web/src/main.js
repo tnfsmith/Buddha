@@ -22,6 +22,7 @@ import { tdInit, tdView, tdAct, tdStart, tdOn, tdSkip, tdAt } from './ui/tra-dao
 import { MEET_KINDS, PRESENCE_TEXT, REASON_TEXT } from '@vandao/shared/dong-tu.js';
 import { dtInit, dtView, dtAct, dtInput, dtOpen, dtBadge, dtGateLine, dtSyncOpen } from './ui/dong-tu.js';
 import { dongTu } from './net/dong-tu.js';
+import { nhLine, nhView, nhInput, nhAct } from './ui/nhac.js';
 
 
 // #151/#160: liên kết mời chia sẻ ra ngoài dạng /moi/MÃ[?d=1] (hợp đồng §12) hoặc /?ban=MÃ (dạng cũ; Facebook có thể bỏ phần sau #).
@@ -393,6 +394,8 @@ function render() {
     h = dkView();
   } else if (U.view === 'phantinh') {
     h = ptView(S);
+  } else if (U.view === 'nhac') {
+    h = nhView(render);   // #106: cài đặt nhắc
   } else if (U.view === 'creator') {
     const D = U.draft, k = D.look, nb = nameBlock(D.name);
     h = `<h2>Nhân vật của bạn</h2>${S.name ? '' : '<div class="row"><button class="ghost" data-act="acct-open" data-v="have">Tôi đã có hành trình</button></div>'}
@@ -435,7 +438,7 @@ function render() {
   } else if (U.view === 'board') {
     h = `<h2>Bia Tích Lũy</h2><p class="pali">Ngày ${d}/49 · Tuần ${wk}: ${esc(W.title)}</p>${bars()}`;
     // #93: việc còn lại hôm nay và trạng thái đồng bộ giữa các thiết bị
-    h += todayBox(S, today(), S.completed || allDone(d) ? 0 : 3 - Object.keys(S.done[d] || {}).length) + '<span id="nv-chinh"></span>' + dkCard() + ptCard(S, today()) + tierBlock(S, ptSaved(S, 7));   // #107: cổng Tầng 1
+    h += todayBox(S, today(), S.completed || allDone(d) ? 0 : 3 - Object.keys(S.done[d] || {}).length) + '<span id="nv-chinh"></span>' + dkCard() + ptCard(S, today()) + tierBlock(S, ptSaved(S, 7)) + nhLine(render);   // #107: cổng Tầng 1 · #106: nhắc nhở
     if (ct.state === 'idle') loadVariants().then(render);
     const tdy = S.tu[today()] || {}, ev = passiveLines(tdy);
     if (library.state === 'idle') loadSermons().then(render);
@@ -520,6 +523,7 @@ function closeCreator(saved) { if (!saved && world) { world.setLook(S.look); } i
 panel.addEventListener('input', (e) => {
   const t = e.target;
   if (t.dataset.dt !== undefined) return dtInput(t);
+  if (t.dataset.nh !== undefined) { if (nhInput(t)) render(); return; }   // #106: ui/nhac.js
   if (t.dataset.bn !== undefined) { S.birds.n = +t.value; const o = panel.querySelector('[data-bnv]'); if (o) o.textContent = S.birds.n; save(); return; }
   if (t.dataset.bvol !== undefined) { S.birds.vol = +t.value; const o = panel.querySelector('[data-bvv]'); if (o) o.textContent = S.birds.vol > 0 ? Math.round(S.birds.vol * 100) + '%' : 'tắt'; save(); return; }
   if (t.dataset.tts !== undefined) { S.tts = t.checked; save(); return; }
@@ -558,6 +562,8 @@ panel.addEventListener('click', (e) => {
   if (act.startsWith('dt-')) return dtAct(act.slice(3), b);   // #124: Bạn đồng tu (ui/dong-tu.js)
   if (act === 'nv-jump') { const t = panel.querySelector('#' + b.dataset.to); if (t) t.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
   if (act.startsWith('tg-')) { void tierAct(act, render, toast); return; }   // #107: ui/tang-1.js
+  if (act === 'nh-open') { U.view = 'nhac'; render(); return; }
+  if (act.startsWith('nh-')) { void nhAct(act, render, toast); return; }   // #106: ui/nhac.js
   if (act.startsWith('pt-')) { const r = ptAct(act, b, S, today()); if (r.view) U.view = r.view; if (r.msg) toast(r.msg); render(); return; }   // #104: ui/phan-tinh.js, chỉ trên máy
   if (act.startsWith('td-')) return tdAct(act.slice(3), () => { if (!(U.view === 'zone' && U.zone === 'tea' && world && world.av.state === 'sit')) goZone('tea'); });   // #125: tuần trà (ui/tra-dao.js)
   if (act.startsWith('dk-')) { const end = (r) => { if (r.view) U.view = r.view; if (r.msg) toast(r.msg); save(); render(); }, r = dkAct(act, b, S, today()); if (r && r.then) r.then(end); else end(r); return; }   // #104: ui/duyen-khoi.js
