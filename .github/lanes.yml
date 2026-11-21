@@ -32,6 +32,7 @@ shared:
   - scripts/import-content.mjs
   - scripts/test/content-data.test.js
   - workers/api/test/content-import.test.js
+  - content/program/so-nhap-49/tier-unlock.js  # #107: cấu hình Hermes được Worker nạp lúc đóng gói
   - packages/shared/**
   - apps/web/src/{main,boot,state,data}.js
   - apps/web/src/ui/**

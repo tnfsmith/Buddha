@@ -5,6 +5,9 @@ import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
 import { getPracticeProfile } from '../practice-profile.js';
 import { exportCompanions } from '../companions-data.js';
+import { exportSessions } from '../companion-sessions.js';
+import { exportCheers } from '../companion-cheers.js';
+import { exportTierProgress } from '../tier-progress.js';
 
 const exportApp = new Hono();
 
@@ -50,6 +53,7 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
     snap, profile_rev, chosen_at, swapped_at FROM practice_choice WHERE user_id = ? ORDER BY program, cycle, date, pillar`)
     .bind(user.id).all();
   const companions = await exportCompanions(db, user.id, now);
+  const tiers = await exportTierProgress(db, user.id);
 
   c.header('Cache-Control', 'no-store');
   return c.json({
@@ -64,11 +68,14 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
     practice_profile: practice.profile ? { ...practice.profile, updated_at: practice.rev } : null,
     practice_choices: choices.results,
     journeys: journeys?.results || [],
+    tier_progress: tiers,
     kusala_entries: kusalaEntries?.results || [],
     practice_sessions: sessions?.results || [],
     practice_events: (events?.results || []).map(({ value_json, ...e }) => ({ ...e, value: value_json === null ? null : JSON.parse(value_json) })),
     consents: consents?.results || [],
     ...companions,
+    dong_tu_sessions: await exportSessions(db, user.id),
+    cheers: await exportCheers(db, user.id, now),
   });
 });
 

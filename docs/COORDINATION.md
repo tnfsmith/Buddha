@@ -1,10 +1,15 @@
 # Vân Đạo — phối hợp Codex và Claude
 
-Ngày cập nhật: 19/11/2026. Người tổng hợp duy nhất: **Codex**. Quyết định chủ dự án: Codex nhận việc Antigravity + Hermes; Claude tiếp tục độc lập phần của Claude.
+Ngày cập nhật: 21/11/2026. Người tổng hợp duy nhất: **Codex**. Quyết định chủ dự án: Codex nhận việc Antigravity + Hermes; Claude tiếp tục độc lập phần của Claude.
 
 **Quyết định nội dung mới của chủ dự án (#55):** bỏ điều kiện Hội đồng bắt buộc. Nội dung tham khảo có nguồn, phát hành theo quy trình biên tập/PR; Hội đồng/chuyên gia chỉ tư vấn tùy chọn. ADR 0003 thay các yêu cầu cũ còn xuất hiện trong bằng chứng lịch sử dưới đây. Quyết định đã ghi không có nghĩa mã UI đang chạy đã thay đổi.
 
 **Mốc bàn giao 19/11:** main và staging tại `6fca294` đã có API hồ sơ #117 và bộ nạp biến thể #118. Xem §23 và Issue/PR mới nhất để biết quyền sửa tệp và việc đang chờ.
+
+**Mốc bàn giao 20/11:** #152, #157 và #164 đã vào `main` tại `88db5ab`. #164 chia Playwright thành năm nhóm sau khi `273c2aa` hết thời gian ở nhóm 1/3. Theo dõi [CI main](https://github.com/tnfsmith/Buddha/actions/runs/44688870273) và deploy staging ở [#156](https://github.com/tnfsmith/Buddha/issues/156). Bản ghép [#148 → #153 → #155](https://github.com/tnfsmith/Buddha/issues/151#issuecomment-7031379234) đạt 5/5 ca hồi quy. Claude cập nhật chuỗi theo [bàn giao](https://github.com/tnfsmith/Buddha/issues/151#issuecomment-7032615899), Codex kiểm CI và preview theo head mới. Gói API Đồng tu đi theo thứ tự #158 → #159.
+
+- [#160](https://github.com/tnfsmith/Buddha/issues/160): Codex giữ hợp đồng §12 và phần Worker/ảnh R2 sau khi hợp đồng merge. Claude giữ việc đổi liên kết trong UI sau cùng mốc hợp đồng.
+- [#161](https://github.com/tnfsmith/Buddha/issues/161): Codex giữ công cụ ngân sách bước 1. Claude giữ build và UI tách tệp bước 2 sau #155, rồi Codex đo và bật ngân sách bản web ở bước 3.
 
 Đọc tệp này khi bắt đầu phiên; sau đó kiểm Issue/PR và `origin/main` hiện tại. Tệp là bản bàn giao có thời điểm, không thay bảng việc GitHub. Claude gửi cập nhật trong Issue/PR; Codex tổng hợp để tránh hai agent cùng sửa tệp này.
 
@@ -294,9 +299,29 @@ PR81 chưa merge/deploy; #82 phải cập nhật máy quay hướng chúng sanh 
 - #133, #134 và #137 đã vào `main@800deb1`. [#138](https://github.com/tnfsmith/Buddha/pull/138) chuyển về `main`, giữ năm tệp Worker của gói hiện diện, mời gặp và ghé đảo. Sau khi #138 lên staging, Claude dùng hai phiên thật để nghiệm thu #124. #130 còn chờ chốt cách xử lý khi dịch vụ Web Push có thể đã nhận yêu cầu nhưng kết nối mất trước phản hồi.
 - [#139/#140](https://github.com/tnfsmith/Buddha/pull/140) bổ sung quy tắc bố cục cho mọi PR giao diện. Lớp phủ trên `#panel`, gồm phụ đề Thuyết giảng và lớp phủ mới, đặt theo mép trên đo được của bảng qua `--subb` do `fitSub()` cập nhật. Thanh địa chỉ Chrome trên điện thoại có thể đổi vùng nhìn thấy, nên tránh đặt lớp phủ theo `vh` hay `bottom` cố định. Khi sửa `bottom` theo `barmin`, `pmin`, `stab` hoặc `sermon`, kiểm lại thẻ Thuyết giảng và nút Thu gọn. Giữ các ca hồi quy trong `tests/e2e/sermon-layout.spec.js` ở 412×860, 360×700 có `barmin` và 1280×800. Chủ dự án đã xác nhận trên Chrome Android rằng phụ đề nằm trên bảng và thao tác Thu gọn/Mở bảng hoạt động.
 
-## 27. Gói Worker gợi ý Sơ nhập — 19/11/2026
+## 27. API mở Tầng 1 và thứ tự Đồng tu — 20/11/2026
 
-- Đã đóng [#121](https://github.com/tnfsmith/Buddha/issues/121#issuecomment-7029503176) vì phạm vi thiết kế v1 đã vào main qua #126. Máy chủ #122 đã qua kiểm D1; giữ Issue mở để ghi nghiệm thu hai phiên cùng Claude #124.
-- #142 kiểm lại trạng thái công khai ở bước đọc lựa chọn đã lưu, kể cả khi danh mục đổi giữa hai lần đọc. Giữ lựa chọn trong lịch sử và trả gợi ý tuần khi phiên bản bị rút. Preview migration 0012 chờ D1/KV riêng theo #35.
-- [#138](https://github.com/tnfsmith/Buddha/pull/138) đã vào `main@423d1bc`. Codex trả quyền gói Bạn đồng tu. Claude giữ [#124](https://github.com/tnfsmith/Buddha/issues/124) và nghiệm thu hai phiên thật sau khi staging có gói này.
-- Codex giữ [#105](https://github.com/tnfsmith/Buddha/issues/105#issuecomment-7012959770) cho ba gói Worker theo [hợp đồng #132](contracts/practice-today.md). Gói đầu thêm 0012, `GET /practice/today` và vòng đời lựa chọn. Gói sau nối `swap` trực tiếp và qua `/sync`, rồi `summary`. Claude giữ giao diện #104 và có thể nối sau khi các gói liên quan lên staging.
+- #169 đã chốt 49 ngày, ít nhất 30 thời thiền trọn và tự vấn tuần 7. Codex triển khai API, cấu hình phiên bản hóa và export trong nhánh `ag/107-tier-progress` theo [quyền sửa #107](https://github.com/tnfsmith/Buddha/issues/107#issuecomment-7043672982). D1 kiểm toàn bộ điều kiện cùng lúc ghi và giữ bằng chứng khi đổi chu kỳ sau khi mở. Câu trả lời tự vấn chỉ lưu trên thiết bị.
+- Claude giữ #171 và #174, nghiệm thu #174 với API thật sau khi hai nhánh phụ thuộc vào main. Chuỗi #142–#150 giữ trạng thái tạm dừng.
+- #166 và #167 đã vào main. Chuỗi Đồng tu của Claude là #153 → #155 → #168 → #175. #165 theo sau #155 và #167, rồi mới đến #172. Đảo bạn thật #177 đi sau #176 và cần kiểm hai phiên. Xem [bàn giao #108](https://github.com/tnfsmith/Buddha/issues/108#issuecomment-7043673471).
+
+## 28. GĐ5 Đồng tu v2 và nghiệm thu hai phiên — 21/11/2026
+
+Mốc kiểm `39aca6d` sau khi #175 vào main. #185 đã merge trước đó và #172 đã merge riêng cho GĐ3. Tình trạng branch, CI, preview và xác nhận máy thật lấy theo commit gần nhất tại từng PR. Chủ dự án thực hiện merge và tag.
+
+| Người giữ | Phạm vi | Phụ thuộc và bàn giao |
+|---|---|---|
+| Claude | #175 → #183 → #184, UI Đồng tu v2 | #175 đã merge sau CI, preview và kiểm điện thoại tại [PR #175](https://github.com/tnfsmith/Buddha/pull/175#issuecomment-7062239731). Gộp #183 sau #175 và API #187. Gộp #184 sau #183 và API khích lệ §10.3. Khi API sẵn sàng, Claude nghiệm thu với Worker/D1 thật. [#151](https://github.com/tnfsmith/Buddha/issues/151) |
+| Claude 2 | #177 → #180 → #181 → #186 → #188, 3D và kiểm Worker thật | Phiên đang giữ chuỗi cập nhật từ #177 theo main, rồi chạy lại CI và preview theo thứ tự. #188 chỉ giữ bài Playwright hai phiên. T5.7 đã đạt hai phiên staging và đóng #124. T5.8 tiếp tục ở #125. Runner dùng Worker/D1 cục bộ để chạy toàn bộ ca. [#125](https://github.com/tnfsmith/Buddha/issues/125) · [#124](https://github.com/tnfsmith/Buddha/issues/124) |
+| Codex | Worker/D1 #187 và API khích lệ §10.3 | #187 dùng 0012 và đã ghép UI #183 đạt 19/19 với D1 cục bộ. Preview migration cần cặp D1/KV theo #35. API khích lệ #192 (0013) xếp sau #187, đã kiểm 12/12 ca hẹn nhóm và khích lệ trên Worker/D1. Claude kiểm lại #184 với API thật, gồm ca mất mạng sau khi đánh dấu đã xem. [Bàn giao API](https://github.com/tnfsmith/Buddha/issues/151#issuecomment-7062209071) |
+| Codex | Runner CI #189 và hai tệp tài liệu dùng chung | Runner đã đạt 3/3 ca trước khi mở rộng test T5.7. Đã cập nhật theo #188 và chặn chế độ chỉ T5.7 trong CI. Sau #188, đổi base về main và chạy lại CI. Quyền sửa roadmap và tệp này trả khi PR tài liệu merge hoặc đóng. [Bằng chứng runner](https://github.com/tnfsmith/Buddha/pull/189#issuecomment-7062067463) |
+
+- Hai phiên Claude cùng làn `claude/`. Phạm vi giữ theo Issue, nhánh và tệp. Các nhánh có UI dùng chung đi đúng thứ tự trong cùng chuỗi. Ai tiếp quản cần nhận bàn giao rõ về SHA, tệp và ca kiểm trước khi đổi nhánh. Lần kiểm 21/11 ghép #184 và #188 không xung đột tệp. Sau mỗi lượt gộp, phiên giữ chuỗi còn lại cập nhật main và chạy lại CI, preview và ca giao nhau trước khi đề nghị merge.
+- #178 tiếp tục phụ thuộc #146 đang tạm dừng. Migration GĐ3 chưa merge đổi số theo main khi mở lại. Không sửa migration đã merge.
+- [#122](https://github.com/tnfsmith/Buddha/issues/122) và [#124](https://github.com/tnfsmith/Buddha/issues/124) đã đóng sau [hai phiên staging](https://github.com/tnfsmith/Buddha/issues/124#issuecomment-7062366269) và CI main. Thẻ mời #160 đã có tiêu đề và ảnh PNG trên staging. Tiếp tục kiểm Facebook Sharing Debugger ở #160.
+- T5.9 thực hiện sau khi staging có chuỗi hoàn chỉnh. Kết quả trình duyệt tự động và hai người thật ghi riêng. T5.1 đang chốt hợp đồng ở [#191](https://github.com/tnfsmith/Buddha/issues/191). T5.2 chờ API, T5.3 chờ luồng kiểm duyệt. Phạm vi tag theo quyết định chủ dự án ở #151.
+
+## 29. Mở lại chuỗi chứng thực tuần — 21/11/2026
+
+- Codex giữ Worker/D1 #142–#146 theo [#105](https://github.com/tnfsmith/Buddha/issues/105) và [bàn giao Claude 2](https://github.com/tnfsmith/Buddha/pull/146#issuecomment-7063092301). Trình tự là #187 (0012) → #192 (0013) → #142 (0014) → #143 → #144 → #145 → #146 (0015). Preview của từng PR cần D1/KV riêng theo #35. Không sửa migration đã merge. #149–#150 tiếp tục tạm dừng; migration lịch nhắc sẽ lấy số kế tiếp khi mở lại.
+- #142 giữ kiểm dữ liệu công khai khi đọc lựa chọn đã lưu. #143 đồng bộ đổi gợi ý và #144 tổng kết theo [hợp đồng #132](contracts/practice-today.md). Claude giữ UI #104. Claude 2 giữ #178 và nối kết quả từ `GET /api/v1/attest` theo hợp đồng #146; nghiệm thu mời, xác nhận, đọc kết quả với máy chủ thật sau khi API lên staging.

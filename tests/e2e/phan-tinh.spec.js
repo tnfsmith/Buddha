@@ -1,7 +1,14 @@
 // #104: Phản tỉnh tuần — chỉ lưu trên máy, theo tài khoản và chu kỳ; không gửi đi, không tính điểm.
 import { test, expect } from '@playwright/test';
+import { closeContextsAfterEach } from './hooks.js';
 
 const BASE = (process.env.E2E_BASE_URL || 'http://127.0.0.1:4173/').replace(/#.*$/, '').replace(/\/?$/, '/');
+/** Chờ dựng xong cảnh rồi dừng vẽ: ca chỉ kiểm giao diện 2D và dữ liệu trên máy, mỗi lần mở lại trang cũng dừng */
+const booted = async (p) => {
+  await p.waitForFunction(() => window.__app?.world?.renderer, null, { timeout: 150_000 });
+  await p.evaluate(() => { window.__app.world.update = () => {}; });
+};
+closeContextsAfterEach();
 test.use({ serviceWorkers: 'block' });
 test.skip(!!process.env.E2E_BASE_URL, 'chỉ chạy với bản dựng cục bộ');
 const slow = expect.configure({ timeout: 60_000 });
@@ -21,7 +28,7 @@ test('phản tỉnh tuần 1: mời ở ngày 8, giữ chữ khi chọn mức, l
   page.on('pageerror', (e) => errs.push(e.message));
   page.on('request', (r) => { const b = r.postData(); if (b) sent.push(b); if (r.url().includes(encodeURIComponent(SECRET.slice(0, 8)))) sent.push(r.url()); });
   await page.goto(BASE + '#q=0&snap=1');
-  await page.waitForFunction(() => window.__app?.world?.renderer, null, { timeout: 150_000 });
+  await booted(page);
   const P = page.locator('#panel');
   await page.locator('#panel [data-act="board"]').first().click();
   await slow(P).toContainText('Phản tỉnh tuần 1.');
@@ -42,7 +49,7 @@ test('phản tỉnh tuần 1: mời ở ngày 8, giữ chữ khi chọn mức, l
 
   // mở lại sau khi tải lại trang: còn nguyên
   await page.reload();
-  await page.waitForFunction(() => window.__app?.world?.renderer, null, { timeout: 150_000 });
+  await booted(page);
   await page.locator('#panel [data-act="board"]').first().click();
   await slow(P.locator('[data-act="pt-open"][data-w="1"]')).toBeVisible();
   await P.locator('[data-act="pt-open"][data-w="1"]').click();
@@ -71,7 +78,7 @@ test('đổi chu kỳ khi biểu mẫu đang mở: Lưu/Xóa chỉ vào sổ chu
   const page = await ctx.newPage();
   const errs = []; page.on('pageerror', (e) => errs.push(e.message));
   await page.goto(BASE + '#q=0&snap=1');
-  await page.waitForFunction(() => window.__app?.world?.renderer, null, { timeout: 150_000 });
+  await booted(page);
   const P = page.locator('#panel');
   const book = () => page.evaluate(() => JSON.parse(localStorage.getItem('vandao.pt.v1') || '{}'));
   const cycle = (seed, day) => page.evaluate(([seed, day]) => { const S = window.__app.state(); S.seed = seed; S.day = day; }, [seed, day]);

@@ -2,8 +2,32 @@ import { describe, it, expect } from 'vitest';
 import {
   makeInviteCode, normInviteCode, showInviteCode, inviteUrl, inviteFromHash, parseFriendQuery, closenessOf, presenceOf, seenBucket,
   canTravel, canMeet, canVisitAway, checkMeetPayload, meetPhase, meetStartAt, nearIsles,
-  MEET_KINDS, LINES, REASON_TEXT, ONLINE_MS, INVITE_TTL_MS, MEET_LEAD_MS, NEAR_ISLES,
+  CHEER_LINES, MEET_KINDS, LINES, REASON_TEXT, ONLINE_MS, INVITE_TTL_MS, MEET_LEAD_MS, NEAR_ISLES,
+  SESSION_AHEAD_MS, SESSION_MAX, SESSION_MIN_LEAD_MS, SESSION_OPEN_MAX, SESSION_REMIND_MS, SESSION_STEP_MS, sessionPhase,
 } from '../src/dong-tu.js';
+
+describe('phiên đồng tu v2', () => {
+  it('giữ các giới hạn lịch hẹn đã duyệt trong #152', () => {
+    expect(SESSION_MAX).toBe(6);
+    expect(SESSION_AHEAD_MS).toBe(7 * 86_400_000);
+    expect(SESSION_MIN_LEAD_MS).toBe(MEET_LEAD_MS);
+    expect(SESSION_STEP_MS).toBe(300_000);
+    expect(SESSION_OPEN_MAX).toBe(3);
+    expect(SESSION_REMIND_MS).toEqual([600_000, 60_000]);
+    expect(Object.keys(CHEER_LINES)).toEqual(['tuy_hy', 'cung_giu', 'nho_ban', 'cam_on', 'tien_trinh']);
+    expect(CHEER_LINES.tien_trinh).toBeNull();
+  });
+
+  it('chuyển pha đúng mốc 60 giây, giờ bắt đầu và 15 phút', () => {
+    const session = { start_at: 1_800_000, status: 'hen' };
+    expect(sessionPhase(session, 1_739_999)).toBe('hen');
+    expect(sessionPhase(session, 1_740_000)).toBe('sap');
+    expect(sessionPhase(session, 1_800_000)).toBe('dang');
+    expect(sessionPhase(session, 2_699_999)).toBe('dang');
+    expect(sessionPhase(session, 2_700_000)).toBe('xong');
+    expect(sessionPhase({ ...session, status: 'huy' }, 1_800_000)).toBe('huy');
+  });
+});
 
 describe('mã mời và liên kết', () => {
   it('8 ký tự Crockford, không I L O U, chuẩn hóa lỗi gõ thường gặp', () => {

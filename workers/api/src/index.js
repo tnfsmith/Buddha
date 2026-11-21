@@ -6,14 +6,17 @@ import meApp from './routes/me.js';
 import profileApp from './routes/profile.js';
 import practiceProfileApp from './routes/practice-profile.js';
 import practiceApp from './routes/practice.js';
+import tierProgressApp from './routes/tier-progress.js';
 import syncApp from './routes/sync.js';
 import exportApp from './routes/export.js';
 import accountApp from './routes/account.js';
 import rtApp from './routes/rt.js';
 import contentApp from './routes/content.js';
 import companionsApp from './routes/companions.js';
+import companionSessionsApp from './routes/companion-sessions.js';
 import metricsApp from './routes/metrics.js';
 import mediaApp from './routes/media.js';
+import inviteCard from './routes/invite-card.js';
 import { byIp, turnstile } from './guard.js';
 import { runCron } from './cron.js';
 
@@ -58,23 +61,31 @@ app.route('/api/v1/me', meApp);
 app.route('/api/v1/profile', profileApp);
 app.route('/api/v1/practice/profile', practiceProfileApp);
 app.route('/api/v1/practice', practiceApp);
+app.route('/api/v1/tier-progress', tierProgressApp);
 app.route('/api/v1/sync', syncApp);
 app.route('/api/v1/export', exportApp);
 app.route('/api/v1/account', accountApp);
 app.route('/api/v1/rt', rtApp);
 app.route('/api/v1/content', contentApp);
 app.route('/api/v1/metrics', metricsApp);
+app.route('/api/v1/sessions', companionSessionsApp);
 app.route('/api/v1', companionsApp);
 
 // Đường dẫn /api/* không tồn tại: trả 404 JSON, không rơi xuống trang SPA
 app.all('/api/*', (c) => c.json({ error: { code: 'not_found', message: 'Không có API này' } }, 404));
 
 app.route('/media', mediaApp);
+app.route('/moi', inviteCard);
 
 // Chuyển tiếp các request tĩnh không thuộc /api/* hoặc /media/* cho Static Assets (apps/web)
 app.all('*', async (c) => {
+  // Static Assets đã phục vụ tệp có thật trước Worker. Tệp thiếu không được thay bằng trang SPA.
+  if (c.req.path.startsWith('/assets/')) return c.text('Not Found', 404, { 'Cache-Control': 'no-store' });
   if (c.env?.ASSETS && typeof c.env.ASSETS.fetch === 'function') {
-    return c.env.ASSETS.fetch(c.req.raw);
+    const response = await c.env.ASSETS.fetch(c.req.raw);
+    if (response.status !== 404 || !['GET', 'HEAD'].includes(c.req.method)) return response;
+    await response.body?.cancel();
+    return c.env.ASSETS.fetch(new Request(new URL('/', c.req.url), { method: c.req.method }));
   }
   return c.text('Not Found', 404);
 });
