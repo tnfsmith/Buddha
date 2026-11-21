@@ -10,10 +10,7 @@ const linkUrl = (code) => '/companions/link/' + code;
 const idPath = (id) => encodeURIComponent(id);
 const visible = () => typeof document !== 'undefined' && document.visibilityState === 'visible';
 
-const EMPTY_SOCIAL = Object.freeze({ requests: 0, invites: 0, sessions: 0, cheers: 0 });
-const SOCIAL_KEYS = Object.keys(EMPTY_SOCIAL);
-
-export const dongTu = { on: false, list: null, social: EMPTY_SOCIAL, at: 0 };
+export const dongTu = { on: false, list: null, social: { requests: 0, invites: 0 }, at: 0 };
 const listeners = new Set();
 export function onDongTu(fn) {
   listeners.add(fn);
@@ -55,7 +52,7 @@ export function setDongTuAccount(uid) {
     account = uid;
     epoch++;
     presence = 'online';
-    Object.assign(dongTu, { on: false, list: null, social: EMPTY_SOCIAL, at: 0 });
+    Object.assign(dongTu, { on: false, list: null, social: { requests: 0, invites: 0 }, at: 0 });
     adjustHeartbeat();
     notify();
   }
@@ -67,10 +64,10 @@ export function observeDongTuMe(uid, me) {
   if (!account || account !== uid || me?.user?.id !== uid) return;
   const enabled = me.dong_tu === 1;
   const social = enabled
-    ? Object.fromEntries(SOCIAL_KEYS.map((key) => [key, Number(me.social?.[key]) || 0]))
-    : EMPTY_SOCIAL;
+    ? { requests: Number(me.social?.requests) || 0, invites: Number(me.social?.invites) || 0 }
+    : { requests: 0, invites: 0 };
   const changed = enabled !== dongTu.on;
-  const refresh = changed || SOCIAL_KEYS.some((key) => social[key] !== dongTu.social[key]);
+  const refresh = changed || social.requests !== dongTu.social.requests || social.invites !== dongTu.social.invites;
   dongTu.on = enabled;
   dongTu.social = social;
   if (changed) {
@@ -80,21 +77,9 @@ export function observeDongTuMe(uid, me) {
   }
   if (refresh) {
     notify();
-    if (enabled) refreshCompanions();
+    if (enabled) void loadCompanions().catch(() => {});
   }
   if (enabled) void flushInvite();
-}
-
-function refreshCompanions() {
-  const generation = epoch;
-  if (listRequest?.epoch !== generation) {
-    void loadCompanions().catch(() => {});
-    return;
-  }
-  // Số mới có thể đến khi yêu cầu cũ đang chạy. Tải lại sau khi yêu cầu đó kết thúc.
-  void listRequest.promise.catch(() => {}).then(() => {
-    if (generation === epoch) return loadCompanions();
-  }).catch(() => {});
 }
 
 async function request(path, method = 'GET', body) {
