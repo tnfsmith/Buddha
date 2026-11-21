@@ -1,6 +1,7 @@
 // workers/api/src/routes/me.js
 // Trạng thái tổng thể của hành giả (PROJECT_ROADMAP.md §5)
 import { byUser } from '../guard.js';
+import { profileSettingsView } from '../profile-settings.js';
 import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
 import { ZONE_UNLOCK, gateLevel } from '@vandao/shared';
@@ -10,6 +11,8 @@ import { bad, currentJourney, kusalaTotals } from '../lib.js';
 import { guestPurgeAfter } from '../cron.js';
 
 import { socialCounts } from '../companions-data.js';
+import { countPendingSessions } from '../companion-sessions.js';
+import { countUnreadCheers } from '../companion-cheers.js';
 
 const meApp = new Hono();
 
@@ -27,7 +30,7 @@ export function computeUnlockedZones(day) {
 
 export const profileView = (p) => ({
   tinh_danh: p.tinh_danh, tag: p.tag,
-  look: JSON.parse(p.look_json || '{}'), settings: JSON.parse(p.settings_json || '{}'), island: JSON.parse(p.island_json || '{}'),
+  look: JSON.parse(p.look_json || '{}'), settings: profileSettingsView(p.settings_json, p.visibility), island: JSON.parse(p.island_json || '{}'),
   tz: p.tz, visibility: p.visibility, pref_seat: p.pref_seat, rev: p.rev,
 });
 
@@ -39,11 +42,14 @@ meApp.get('/', authMiddleware, byUser('RL_API'), async (c) => {
   if (!profileRow) return bad(c, 'profile_not_found', 'Chưa có hồ sơ hành giả', 404);
   // Ngày hành trình tiến theo luật chung tới hôm nay (ngày địa phương của người dùng)
   const J = await currentJourney(db, user.id, getLocalDate(now, profileRow.tz), now);
+  const [social, sessions, cheers] = await Promise.all([
+    socialCounts(db, user.id, now), countPendingSessions(db, user.id, now), countUnreadCheers(db, user.id, now),
+  ]);
   return c.json({
     user,
     practice: PRACTICE_V,
     dong_tu: 1,
-    social: await socialCounts(db, user.id, now),
+    social: { ...social, sessions, cheers },
     profile: profileView(profileRow),
     journey: J,
     totals: J ? await kusalaTotals(db, user.id, J) : { duc: 0, thien: 0, tue: 0, all: 0 },

@@ -6,6 +6,9 @@ import { authMiddleware } from '../auth/session.js';
 import { getPracticeProfile } from '../practice-profile.js';
 import { exportCompanions } from '../companions-data.js';
 import { deedView } from './deeds.js';
+import { exportSessions } from '../companion-sessions.js';
+import { exportCheers } from '../companion-cheers.js';
+import { exportTierProgress } from '../tier-progress.js';
 
 const exportApp = new Hono();
 
@@ -53,6 +56,7 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
   const companions = await exportCompanions(db, user.id, now);
   const deeds = await db.prepare(`SELECT id, local_date AS date, punna, parami_json, scope, shared, at
     FROM deed_log WHERE user_id = ? ORDER BY at, id`).bind(user.id).all();
+  const tiers = await exportTierProgress(db, user.id);
 
   c.header('Cache-Control', 'no-store');
   return c.json({
@@ -68,11 +72,14 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
     practice_choices: choices.results,
     deeds: deeds.results.map(deedView),
     journeys: journeys?.results || [],
+    tier_progress: tiers,
     kusala_entries: kusalaEntries?.results || [],
     practice_sessions: sessions?.results || [],
     practice_events: (events?.results || []).map(({ value_json, ...e }) => ({ ...e, value: value_json === null ? null : JSON.parse(value_json) })),
     consents: consents?.results || [],
     ...companions,
+    dong_tu_sessions: await exportSessions(db, user.id),
+    cheers: await exportCheers(db, user.id, now),
   });
 });
 

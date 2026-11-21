@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { closeContextsAfterEach } from './hooks.js';
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -35,6 +36,7 @@ const live = (page) => page.evaluate(() => ({ on: window.__app.sermon.on, sub: d
 /** Tua tiến trình giảng (đảnh lễ 6,5 giây) để tới ý đầu tiên */
 const skip = (page, sec) => page.evaluate((n) => { for (let i = 0; i < n * 20; i++) window.__app.sermon.tick(0.05); }, sec);
 
+closeContextsAfterEach();
 test('bản dựng không còn chứa bảy bài tóm lược chưa duyệt', async ({ request }) => {
   const html = await (await request.get(BASE)).text();
   expect(html).toContain('Vân Đạo');

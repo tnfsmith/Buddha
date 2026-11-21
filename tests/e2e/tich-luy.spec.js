@@ -59,7 +59,7 @@ test('sổ tự ghi nhận: nghe trọn ghi nhận, nghe lướt (tua qua) khôn
   expect(day.nghe_duong_xua.refs).toEqual(['co-tieng']); expect(day.hoi_huong.n).toBeGreaterThanOrEqual(1);
   await slow(page.locator('#panel [data-sut="co-tieng"] .heard')).toHaveText('❀ đã nghe');
   // thời thiền viên mãn
-  await page.evaluate(() => window.__app.player.onend());
+  await page.evaluate(() => { const P = window.__app.player; P.lastSat = 900; P.onend(); });   // thời trọn 15 phút (#107: onend ghi số phút đã phát)
   expect(await page.evaluate((t) => window.__app.state().tu[t].thoi_thien, today())).toMatchObject({ n: 1, min: 15 });
   // Bia Tích Lũy (mở lại trang, dữ liệu còn trên máy): bằng chứng ở trục Tuệ (không tự hoàn thành), tự ghi nhận hôm nay, hoa sen, lịch, sổ nghe
   await page.goto('about:blank'); await open(page);

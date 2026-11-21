@@ -11,6 +11,7 @@ export const PASSIVE = Object.freeze({
   nghe_duong_xua: Object.freeze({ name: 'Nghe Đường Xưa', punna: 'dhammassavana', parami: Object.freeze(['panna', 'metta']) }),
   hoi_huong: Object.freeze({ name: 'Hồi hướng', punna: 'pattidana', parami: Object.freeze(['dana', 'metta']) }),
   van_du: Object.freeze({ name: 'Vân Du', punna: 'bhavana', parami: Object.freeze(['upekkha']) }),
+  tra_dao: Object.freeze({ name: 'Trà Đạo Tỉnh Thức', punna: 'sila', parami: Object.freeze(['nekkhamma']) }),   // hết một tuần trà (#125 §5.7)
 });
 export const isPassive = (c) => Object.hasOwn(PASSIVE, c);
 

@@ -6,6 +6,8 @@
 //   đánh số tiếp sau chu kỳ lớn nhất của đích. Không mất dữ liệu. (T2.3 có thể hỏi người dùng muốn giữ bản nào.)
 // Mọi câu lệnh chạy trong một db.batch (giao dịch D1).
 
+import { archiveOpenedTier } from '../tier-progress.js';
+
 const MOVE = ['practice_session', 'device', 'deed_log'];
 
 /** Có tiến trình: đã đặt Tịnh danh, đã xác nhận Kusala, đã ngồi thiền hoặc đã qua ngày 1 / chu kỳ 1 */
@@ -44,15 +46,17 @@ export async function linkGuest(db, guest, target) {
     ).bind(g).all()).results || [];
     const top = {};
     for (const r of (await db.prepare('SELECT program, MAX(cycle) AS c FROM journey WHERE user_id = ? GROUP BY program').bind(t).all()).results || []) top[r.program] = r.c;
-    const stmts = [];
+    const stmts = [], remapped = [];
     for (const j of js) {
       const nc = (top[j.program] = (top[j.program] || 0) + 1);
+      remapped.push({ program: j.program, old: j.cycle, next: nc });
       stmts.push(
         db.prepare('UPDATE kusala_entry SET user_id = ?, cycle = ? WHERE user_id = ? AND program = ? AND cycle = ?').bind(t, nc, g, j.program, j.cycle),
         db.prepare('UPDATE practice_event SET user_id = ?, cycle = ? WHERE user_id = ? AND program = ? AND cycle = ?').bind(t, nc, g, j.program, j.cycle),
         db.prepare('UPDATE journey SET user_id = ?, cycle = ?, is_current = 0, updated_at = ? WHERE user_id = ? AND program = ? AND cycle = ?').bind(t, nc, now, g, j.program, j.cycle),
       );
     }
+    if (remapped.length) stmts.push(archiveOpenedTier(db, g, t, remapped));
     await db.batch([...stmts, ...moveAll]);
   }
   // Đích vẫn là tài khoản khách (chưa gắn passkey/Google/mã khôi phục): plugin không tự xóa khách cũ → xóa ở đây
