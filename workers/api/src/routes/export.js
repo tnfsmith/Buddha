@@ -5,6 +5,7 @@ import { Hono } from 'hono';
 import { authMiddleware } from '../auth/session.js';
 import { getPracticeProfile } from '../practice-profile.js';
 import { exportCompanions } from '../companions-data.js';
+import { exportTierProgress } from '../tier-progress.js';
 
 const exportApp = new Hono();
 
@@ -47,6 +48,7 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
   ).bind(user.id).all();
   const practice = await getPracticeProfile(db, user.id);
   const companions = await exportCompanions(db, user.id, now);
+  const tiers = await exportTierProgress(db, user.id);
 
   c.header('Cache-Control', 'no-store');
   return c.json({
@@ -60,6 +62,7 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
     } : null,
     practice_profile: practice.profile ? { ...practice.profile, updated_at: practice.rev } : null,
     journeys: journeys?.results || [],
+    tier_progress: tiers,
     kusala_entries: kusalaEntries?.results || [],
     practice_sessions: sessions?.results || [],
     practice_events: (events?.results || []).map(({ value_json, ...e }) => ({ ...e, value: value_json === null ? null : JSON.parse(value_json) })),
