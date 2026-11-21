@@ -2,10 +2,12 @@
 // Xuất toàn bộ dữ liệu người dùng (Luật BVDLCN 91/2025, GDPR - PROJECT_ROADMAP.md §5, §15)
 import { perDay } from '../guard.js';
 import { Hono } from 'hono';
+import { VARIANT_PROGRAM } from '@vandao/shared/variant.js';
 import { authMiddleware } from '../auth/session.js';
 import { getPracticeProfile } from '../practice-profile.js';
 import { exportCompanions } from '../companions-data.js';
 import { deedView } from './deeds.js';
+import { INVITE_MS } from './attestation.js';
 import { exportSessions } from '../companion-sessions.js';
 import { exportCheers } from '../companion-cheers.js';
 import { exportTierProgress } from '../tier-progress.js';
@@ -57,6 +59,15 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
   const deeds = await db.prepare(`SELECT id, local_date AS date, punna, parami_json, scope, shared, at
     FROM deed_log WHERE user_id = ? ORDER BY at, id`).bind(user.id).all();
   const tiers = await exportTierProgress(db, user.id);
+  const [attestations, given] = await db.batch([
+    db.prepare(`SELECT cycle, week, attester_label, note,
+      CASE WHEN status = 'cho' AND (created_at <= ?1 OR NOT EXISTS (
+        SELECT 1 FROM journey WHERE user_id = ?2 AND is_current = 1 AND cycle = attestation.cycle AND program = ?3
+      )) THEN 'het_han' ELSE status END AS status, created_at, confirmed_at
+      FROM attestation WHERE user_id = ?2 ORDER BY cycle, week`).bind(now - INVITE_MS, user.id, VARIANT_PROGRAM),
+    db.prepare(`SELECT week, attester_label, note, status, confirmed_at
+      FROM attestation WHERE attester_id = ? ORDER BY confirmed_at`).bind(user.id),
+  ]);
 
   c.header('Cache-Control', 'no-store');
   return c.json({
@@ -71,6 +82,8 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
     practice_profile: practice.profile ? { ...practice.profile, updated_at: practice.rev } : null,
     practice_choices: choices.results,
     deeds: deeds.results.map(deedView),
+    attestations: attestations.results,
+    attestations_given: given.results,
     journeys: journeys?.results || [],
     tier_progress: tiers,
     kusala_entries: kusalaEntries?.results || [],

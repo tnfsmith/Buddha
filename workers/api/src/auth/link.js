@@ -6,6 +6,7 @@
 //   đánh số tiếp sau chu kỳ lớn nhất của đích. Không mất dữ liệu. (T2.3 có thể hỏi người dùng muốn giữ bản nào.)
 // Mọi câu lệnh chạy trong một db.batch (giao dịch D1).
 
+import { VARIANT_PROGRAM } from '@vandao/shared/variant.js';
 import { archiveOpenedTier } from '../tier-progress.js';
 
 const MOVE = ['practice_session', 'device', 'deed_log'];
@@ -27,6 +28,7 @@ export async function linkGuest(db, guest, target) {
   // ID do thiết bị đặt. Khi hai sổ có cùng ID, giữ dấu của đích và dọn dấu còn lại của khách.
   moveAll.push(db.prepare('UPDATE OR IGNORE sync_op SET user_id = ? WHERE user_id = ?').bind(t, g),
     db.prepare('DELETE FROM sync_op WHERE user_id = ?').bind(g));
+  moveAll.push(db.prepare('UPDATE attestation SET attester_id = CASE WHEN user_id = ?1 THEN NULL ELSE ?1 END WHERE attester_id = ?2').bind(t, g));
   // Hồ sơ Duyên khởi theo tài khoản và không phụ thuộc chế độ gộp hành trình.
   moveAll.push(db.prepare(`UPDATE practice_profile SET user_id = ?1 WHERE user_id = ?2
     AND NOT EXISTS (SELECT 1 FROM practice_profile WHERE user_id = ?1)`).bind(t, g));
@@ -36,6 +38,7 @@ export async function linkGuest(db, guest, target) {
     await db.batch([
       ...['kusala_entry', 'practice_event', 'journey', 'profile', 'tier_progress'].map((tb) => db.prepare(`DELETE FROM ${tb} WHERE user_id = ?`).bind(t)),
       ...['profile', 'journey', 'kusala_entry', 'practice_event', 'tier_progress'].map((tb) => db.prepare(`UPDATE ${tb} SET user_id = ? WHERE user_id = ?`).bind(t, g)),
+      db.prepare('UPDATE attestation SET user_id = ? WHERE user_id = ?').bind(t, g),
       ...moveAll,
     ]);
   } else {
@@ -53,6 +56,10 @@ export async function linkGuest(db, guest, target) {
       stmts.push(
         db.prepare('UPDATE kusala_entry SET user_id = ?, cycle = ? WHERE user_id = ? AND program = ? AND cycle = ?').bind(t, nc, g, j.program, j.cycle),
         db.prepare('UPDATE practice_event SET user_id = ?, cycle = ? WHERE user_id = ? AND program = ? AND cycle = ?').bind(t, nc, g, j.program, j.cycle),
+        db.prepare(`UPDATE attestation SET user_id = ?, cycle = ?,
+          token_hash = CASE WHEN status = 'cho' THEN NULL ELSE token_hash END,
+          status = CASE WHEN status = 'cho' THEN 'het_han' ELSE status END
+          WHERE user_id = ? AND cycle = ? AND ? = ?`).bind(t, nc, g, j.cycle, j.program, VARIANT_PROGRAM),
         db.prepare('UPDATE journey SET user_id = ?, cycle = ?, is_current = 0, updated_at = ? WHERE user_id = ? AND program = ? AND cycle = ?').bind(t, nc, now, g, j.program, j.cycle),
       );
     }
