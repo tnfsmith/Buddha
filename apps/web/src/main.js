@@ -748,6 +748,17 @@ if (hash.at && world && World.NODES[hash.at]) { const n = World.NODES[hash.at]; 
 if (hash.zone) goZone(hash.zone);
 if (world && world.tween && hash.snap !== undefined) world.tween.k = 0.999;
 if (tierMigrate(S)) save();   // #107: máy đã ở Tầng 1 trước khi có cổng máy chủ thì giữ quyền đã mở (#169, mặc định điểm 3)
+// #106 §6: bấm thông báo nhắc mở /#view=board (Bia Tích Lũy) hoặc /#zone=pad (Đài Thiền). Đọc một lần rồi bỏ khỏi địa chỉ,
+// giữ các tham số hash khác. Chạy khi mở trang và khi service worker đưa tab đang mở tới địa chỉ mới.
+function deepLink() {
+  const h = new URLSearchParams(location.hash.slice(1)), z = h.get('zone'), v = h.get('view');
+  const to = v === 'board' ? 'stele' : z === 'pad' ? 'pad' : null;
+  if (!to || !world) return;
+  h.delete('zone'); h.delete('view'); const rest = h.toString();
+  history.replaceState(history.state, '', location.pathname + location.search + (rest ? '#' + rest : ''));
+  stateReady.then(() => goZone(to), () => goZone(to));
+}
+deepLink(); window.addEventListener('hashchange', deepLink);
 window.__app = { tier: () => (U.tier ?? (tierOpened(S) ? 1 : 0)), player, world, offlineProbe, amb, probeSong, probeSfx, SONGS, state: () => S, U, stateReady, sermon, library, voiceLabel: (j) => aiVoiceLabel(providerOf(j)) };
 registerPWA();
 startMetrics();   // T1.3 (#8): số liệu ẩn danh, chỉ khi chạy qua http(s) và không bật Do Not Track
