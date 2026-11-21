@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import {
-  LINK_TTL_MS, LINK_USES, REQUEST_TTL_MS, REQUESTS_PER_DAY, makeInviteCode, normInviteCode, parseFriendQuery,
+  CHEER_LINES, LINK_TTL_MS, LINK_USES, REQUEST_TTL_MS, REQUESTS_PER_DAY, makeInviteCode, normInviteCode, parseFriendQuery,
 } from '@vandao/shared/dong-tu.js';
 import { getAuth } from '../auth/index.js';
 import { authMiddleware, nameKey } from '../auth/session.js';
@@ -11,6 +11,7 @@ import {
 } from '../companions-data.js';
 import { mountCompanionMeet } from './companions-meet.js';
 import { listSessions } from '../companion-sessions.js';
+import { listCheers, markCheersSeen, sendCheer } from '../companion-cheers.js';
 
 const app = new Hono();
 const MINUTE = 60_000, HOUR = 60 * MINUTE, DAY = 24 * HOUR;
@@ -31,8 +32,28 @@ app.onError((error, c) => {
 
 app.get('/companions', noStore, authMiddleware, byUser('RL_API'), async (c) => {
   const db = c.env.DB, uid = who(c), now = Date.now();
-  const [list, sessions] = await Promise.all([listCompanions(db, uid, now), listSessions(db, uid, now)]);
-  return c.json({ ...list, sessions });
+  const [list, sessions, cheers] = await Promise.all([listCompanions(db, uid, now), listSessions(db, uid, now), listCheers(db, uid, now)]);
+  return c.json({ ...list, sessions, cheers });
+});
+
+app.post('/companions/:id/cheer', ...quota('cheer_send', 30, DAY), async (c) => {
+  const target = idOf(c), uid = who(c);
+  if (!userIdOk(target) || target === uid) return missing(c);
+  const body = await readJson(c);
+  if (!body || Object.keys(body).length !== 1 || typeof body.line !== 'string'
+      || !Object.hasOwn(CHEER_LINES, body.line)) return fail(c, 'invalid_payload');
+  const error = await sendCheer(c.env.DB, uid, target, body.line, Date.now());
+  if (error === 'not_found') return missing(c);
+  if (error === 'cheer_today') return fail(c, error, 409);
+  return c.json({ ok: true }, 201);
+});
+
+app.post('/cheers/seen', ...quota('cheer_seen', 60), async (c) => {
+  const body = await readJson(c);
+  if (!body || Object.keys(body).length !== 1 || !Number.isSafeInteger(body.until) || body.until < 0)
+    return fail(c, 'invalid_payload');
+  await markCheersSeen(c.env.DB, who(c), body.until, Date.now());
+  return empty(c);
 });
 
 app.get('/companions/:id/progress', ...quota('companion_progress', 60), async (c) => {

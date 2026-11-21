@@ -12,6 +12,7 @@ import { guestPurgeAfter } from '../cron.js';
 
 import { socialCounts } from '../companions-data.js';
 import { countPendingSessions } from '../companion-sessions.js';
+import { countUnreadCheers } from '../companion-cheers.js';
 
 const meApp = new Hono();
 
@@ -41,11 +42,14 @@ meApp.get('/', authMiddleware, byUser('RL_API'), async (c) => {
   if (!profileRow) return bad(c, 'profile_not_found', 'Chưa có hồ sơ hành giả', 404);
   // Ngày hành trình tiến theo luật chung tới hôm nay (ngày địa phương của người dùng)
   const J = await currentJourney(db, user.id, getLocalDate(now, profileRow.tz), now);
+  const [social, sessions, cheers] = await Promise.all([
+    socialCounts(db, user.id, now), countPendingSessions(db, user.id, now), countUnreadCheers(db, user.id, now),
+  ]);
   return c.json({
     user,
     practice: PRACTICE_V,
     dong_tu: 1,
-    social: { ...await socialCounts(db, user.id, now), sessions: await countPendingSessions(db, user.id, now) },
+    social: { ...social, sessions, cheers },
     profile: profileView(profileRow),
     journey: J,
     totals: J ? await kusalaTotals(db, user.id, J) : { duc: 0, thien: 0, tue: 0, all: 0 },
