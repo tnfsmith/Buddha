@@ -26,10 +26,10 @@ test('mọi khúc Vân Nhạc: không tiếng tạch, không vỡ tiếng, âm l
   }
 });
 
-test('hiệu ứng âm của cảnh (chuông gió, Tùy Hỷ, gió mây, mây hạ xuống, bước lên mây): không tiếng tạch, không vỡ tiếng, tắt về 0', async ({ page }) => {
+test('hiệu ứng âm của cảnh (chuông gió, Tùy Hỷ, gió mây, mây hạ xuống, bước lên mây, rót trà): không tiếng tạch, không vỡ tiếng, tắt về 0', async ({ page }) => {
   test.setTimeout(120_000);
   await page.goto(url('q=0&snap=1')); await ready(page);
-  for (const kind of ['chime', 'gift', 'cloud']) {
+  for (const kind of ['chime', 'gift', 'cloud', 'pour']) {   // pour: rót trà trong tuần trà (#125)
     const r = await page.evaluate((k) => window.__app.probeSfx(k, 7), kind);
     expect(r.clicks, kind + ' tiếng tạch').toBe(0);
     expect(r.peak, kind + ' đỉnh').toBeLessThan(0.5);
