@@ -121,11 +121,12 @@ test('tham quan (lời mời tham_quan): tới nơi thì giới thiệu lần l�
   await open(page);
   const list = [comp(0, { closeness: 'than', presence: 'online', day: 33 }), comp(1, { presence: 'online', day: 5 })];
   await page.evaluate((l) => { const a = window.__app; a.acct.uid = 'me'; a.dongTu.list = { companions: l }; a.world.setCompanions(l); }, list);
+  // ghi thứ tự các chặng giới thiệu: không phụ thuộc nhịp hỏi của kiểm thử khi máy chậm (mỗi chặng 4,5 giây)
+  await page.evaluate(() => { const W = window.__app.world, f0 = W.tourShow.bind(W); window.__tour = []; W.tourShow = (i, id) => { window.__tour.push(id); return f0(i, id); }; });
   const r = await page.evaluate(() => { const a = window.__app, W = a.world; a.goMeet({ id: 't1', kind: 'tham_quan', place: 'dao', from: 'u0', to: 'me' }); window.__run(); const i = W.friends.findIndex((f) => f.id === 'u0'), j = W.friends.findIndex((f) => f.id === 'u1'); return { i, stops: W.tourStops(i), small: W.tourStops(j) }; });
   expect(r.stops).toEqual(['mon', 'toa', 'bode', 'ao', 'tra', 'den', 'loi', 'am']);   // ngày 33: chưa có Bia nhỏ (ngày 40)
   expect(r.small).toEqual(['mon', 'toa', 'bode']);   // ngày 5: chỉ Vân Môn, Vân Tọa, cây Bồ-đề
-  await expect.poll(() => page.evaluate(() => window.__app.world.tourAt && window.__app.world.tourAt.id), { timeout: 20_000 }).toBe('mon');
-  await expect.poll(() => page.evaluate(() => window.__app.world.tourAt && window.__app.world.tourAt.id), { timeout: 20_000 }).toBe('toa');
+  await expect.poll(() => page.evaluate(() => window.__tour.slice(0, 2)), { timeout: 30_000 }).toEqual(['mon', 'toa']);
   const P = page.locator('#panel');
   await expect(P.locator('[data-act="tq"]')).toHaveCount(8);
   await P.locator('[data-act="tq"][data-id="tra"]').click();
