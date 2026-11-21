@@ -459,6 +459,81 @@ vA=smoothstep(0.,.08,f)*(1.-f)*(ty<.5?uOn.x:ty<1.5?uOn.y:uOn.z)*mix(.55,.5,tea);
   add(new THREE.Mesh(new THREE.PlaneGeometry(1.45, 2.9), H.steleMat), St).position.set(0, 1.62, 0.3);
   rock(ROCK[2], 0, 0.05, 0, 1.4, 0.35, 0.8, 0, 0, 0, St);
 
+  // Đợt E (#104): Vân Đảo phản chiếu sổ tu tập trên máy (docs/noi-dung/nhiem-vu-so-nhap.md §8). Mỗi loại một InstancedMesh = một lệnh vẽ, không đổ bóng.
+  // - Đèn mây dọc lối đi (≤ 33): mỗi chương Đường Xưa đã nghe trọn thắp một đèn, từ chân thềm Tịnh Thất ra Cổng Vân Môn rồi các nhánh.
+  // - Nụ sen ở Hồ Sen (≤ 49): mỗi ngày giữ đủ năm giới nở một nụ; khác 12 hoa sen phần thưởng theo tuần.
+  // - Hoa sen 10 cánh Ba-la-mật: nhỏ trên đỉnh Bia, và nằm sát nền quanh chỗ ngồi khi thiền. Độ sáng mỗi cánh theo lotus().norm (cân bằng, không phải điểm).
+  //   Cánh luôn ở mặt đất hoặc trên Bia, không bao giờ thành vòng sáng sau đầu nhân vật (AGENTS.md 1.6).
+  { const LN = 33, BN = 49, uLit = { value: 0 }, uBud = { value: 0 }, v3 = new THREE.Vector3();
+    const paint = (g, f) => { const p = g.attributes.position, c = new Float32Array(p.count * 3); for (let i = 0; i < p.count; i++) c.set(f(p.getY(i)), i * 3); g.setAttribute('color', new THREE.BufferAttribute(c, 3)); return g.index ? g.toNonIndexed() : g; };
+    const grow = (u) => `float li = float(gl_InstanceID), gs = clamp(${u} - li, 0., 1.); gs = gs*gs*(3. - 2.*gs); transformed *= gs;`;
+    // đèn: lõi ấm (màu đỉnh > 1 thành phát sáng, bloom tỏa) nằm trên hai cụm mây nhỏ; lơ lửng nhịp chậm, đèn mới lớn dần rồi sáng
+    const puff = (s, x, y, z) => { const g = mergeVerts(new THREE.IcosahedronGeometry(s, 0)); g.scale(1, 0.62, 1); g.translate(x, y, z); g.computeVertexNormals(); return paint(g, () => [0.97, 0.95, 0.92]); };
+    const core = mergeVerts(new THREE.IcosahedronGeometry(0.17, 0)); core.scale(1, 1.18, 1); core.translate(0, 0.16, 0); core.computeVertexNormals();
+    const lampG = mergeGeometries([paint(core, () => [2.3, 1.62, 0.78]), puff(0.2, -0.13, -0.02, 0.02), puff(0.17, 0.14, -0.04, -0.03)].map((g) => { g.deleteAttribute('uv'); return g; }));
+    const lampM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 });
+    lampM.onBeforeCompile = (sh) => { sh.uniforms.uTime = U.uTime; sh.uniforms.uLit = uLit; sh.uniforms.uNight = U.uNight;
+      sh.vertexShader = 'uniform float uTime, uLit; varying float vLi;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>\n ${grow('uLit')} vLi = li; transformed.y += sin(uTime*.8 + li*1.7)*.07 - (1. - gs)*.5;`);
+      sh.fragmentShader = 'uniform float uTime, uNight; varying float vLi;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n vec3 hot = max(diffuseColor.rgb - 1., 0.); diffuseColor.rgb = min(diffuseColor.rgb, vec3(1.));')
+        .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance = hot*(1. + .22*sin(uTime*1.6 + vLi*2.3))*(1. + .8*uNight) + vec3(.05,.045,.04);'); };
+    lampM.customProgramCacheKey = () => 'vd-den-may';
+    // vị trí: so le hai bên lối đi, cách tim lối 1,55; tránh Bia, cổng, các đài, vườn tâm thức, cây và đèn đá
+    const ROUTE = [[[-13, 5.2], [-7.5, 3]], [[-7.5, 3], [2, -1]], [[2, -1], [9, 6]], [[9, 6], [14, 14]], [[9, 6], [18, 3]], [[18, 3], [24, 2]], [[2, -1], [6, -6]], [[-7.5, 3], [-13, 8]], [[-13, 8], [-18.6, 6]]];
+    const AVOID = [[10.5, 10, 1.9], [15.5, 15.5, 2.8], [-15.6, 7, 1.7], [-18.4, 9.6, 1.5], [-22, 5, 1.6], [-25.6, 1.2, 1.2], [-17.6, 2.6, 1.2], [-24.6, 9.6, 1.2], [-20.4, -0.6, 1.2], [-18.2, 13.2, 1.2], ...DECKS.map((D) => [D.x, D.z, D.r + 1])];
+    const ok = (x, z, got) => free(x, z, 0.2) && AVOID.every(([ax, az, ar]) => Math.hypot(x - ax, z - az) > ar) && got.every(([gx, gz]) => Math.hypot(x - gx, z - gz) > 1.3);
+    const spots = [];
+    for (const [gap, flip] of [[2.1, 1], [2.1, -1], [1.5, 1]]) { let side = flip; for (const [a, b] of ROUTE) { const L = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.max(1, Math.round(L / gap)), ux = (b[0] - a[0]) / L, uz = (b[1] - a[1]) / L;
+      for (let i = 0; i < n && spots.length < LN; i++) { const t = (i + 0.5) / n, x = a[0] + (b[0] - a[0]) * t - uz * 1.55 * side, z = a[1] + (b[1] - a[1]) * t + ux * 1.55 * side; side = -side; if (ok(x, z, spots)) spots.push([x, z]); } } }
+    const lam = add(new THREE.InstancedMesh(lampG, lampM, spots.length));
+    spots.forEach(([x, z], i) => { d.position.set(x, groundH(x, z) + 1.55 + 0.25 * r(), z); d.rotation.set(0, r() * 6.28, 0); d.scale.setScalar(1.3); d.updateMatrix(); lam.setMatrixAt(i, d.matrix); });
+    lam.computeBoundingSphere(); lam.count = 0; lam.visible = false;
+    // nụ sen: búp hồng gốc xanh trên cuống ngắn, lá nhỏ sát mặt nước; mọc theo xoắn ốc tránh 12 hoa và lá sẵn có, đung đưa như hoa
+    const budP = [[0, 0], [0.075, 0.04], [0.12, 0.14], [0.1, 0.26], [0.05, 0.35], [0, 0.41]].map(([x, y]) => new THREE.Vector2(x, y));
+    const bc = (y) => { const k = Math.min(1, y / 0.41); return k < 0.25 ? [0.62 + 0.9 * k, 0.74 - 0.5 * k, 0.5 + 0.2 * k] : [0.95 - 0.12 * k, 0.6 - 0.25 * k, 0.74 - 0.12 * k]; };
+    const stem = new THREE.CylinderGeometry(0.016, 0.02, 0.16, 3, 1, true); stem.translate(0, -0.07, 0);
+    const leaf = new THREE.CircleGeometry(0.24, 7, 0.4, 5.5); leaf.rotateX(-Math.PI / 2); leaf.translate(0.16, -0.13, 0.05);
+    const budG = mergeGeometries([paint(new THREE.LatheGeometry(budP, 5), bc), paint(stem, () => [0.36, 0.55, 0.3]), paint(leaf, () => [0.29, 0.53, 0.31])].map((g) => { g.deleteAttribute('uv'); return g; }));
+    const budM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.65, side: THREE.DoubleSide });
+    budM.onBeforeCompile = (sh) => { sh.uniforms.uTime = U.uTime; sh.uniforms.uBud = uBud;
+      sh.vertexShader = 'uniform float uTime, uBud;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>\n ${grow('uBud')} transformed.xz += vec2(sin(uTime*1.05 + li*2.3), cos(uTime*.85 + li*1.1))*(.01 + .07*max(transformed.y, 0.));`);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance = vec3(.08,.012,.03);'); };
+    budM.customProgramCacheKey = () => 'vd-nu-sen';
+    const taken = []; for (let i = 0; i < 12; i++) { const a = i * 2.4, rr = 0.22 + (i % 4) * 0.2, x = POND.x + Math.cos(a) * rr * POND.rx, z = POND.z + Math.sin(a) * rr * POND.rz; taken.push([x, z, 0.75], [x + 0.5, z, 0.85]); }
+    const buds = [];
+    for (let j = 0; j < 400 && buds.length < BN; j++) { const q = Math.min(0.86, (0.18 + 0.66 * Math.sqrt((j + 0.5) / 160)) * (0.9 + 0.2 * r())), a = j * 2.39996 + 0.9 + (r() - 0.5) * 0.6, x = POND.x + Math.cos(a) * q * POND.rx, z = POND.z + Math.sin(a) * q * POND.rz;
+      if (taken.every(([tx, tz, tr]) => Math.hypot(x - tx, z - tz) > tr) && buds.every(([bx, bz]) => Math.hypot(x - bx, z - bz) > 0.5)) buds.push([x, z]); }
+    const bud = add(new THREE.InstancedMesh(budG, budM, buds.length));
+    buds.forEach(([x, z], i) => { d.position.set(x, wy + 0.13, z); d.rotation.set((r() - 0.5) * 0.2, r() * 6.28, (r() - 0.5) * 0.2); d.scale.setScalar(0.9 + 0.3 * r()); d.updateMatrix(); bud.setMatrixAt(i, d.matrix); });
+    bud.computeBoundingSphere(); bud.count = 0; bud.visible = false;
+    // hoa sen 10 cánh: cùng một cánh dẹt, xếp theo thứ tự PARAMI như hình ở «Tích lũy tu học»; cánh nhạt là màu đá, cánh sáng vàng ấm
+    const ps = new THREE.Shape(); ps.moveTo(0, 0); ps.quadraticCurveTo(0.17, 0.2, 0, 0.5); ps.quadraticCurveTo(-0.17, 0.2, 0, 0);
+    const petalG = new THREE.ShapeGeometry(ps, 4); petalG.rotateX(-Math.PI / 2); petalG.deleteAttribute('uv');
+    const DIM = C('#3d3426'), GOLD = new THREE.Color(1.9, 1.42, 0.58), RDIM = new THREE.Color(0.9, 0.85, 0.74), RGOLD = new THREE.Color(1.55, 1.08, 0.34), pc = new THREE.Color();   // trên Bia: đá → vàng phát sáng; quanh chỗ ngồi: kem → vàng
+    const petals = (base, cup, mat) => { const m = new THREE.InstancedMesh(petalG, mat, 10); d.rotation.order = 'YXZ';
+      for (let i = 0; i < 10; i++) { const a = (i / 10) * Math.PI * 2; d.position.set(Math.sin(a) * base, 0, Math.cos(a) * base); d.rotation.set(cup, a + Math.PI, 0); d.scale.setScalar(1); d.updateMatrix(); m.setMatrixAt(i, d.matrix); m.setColorAt(i, DIM); }
+      d.rotation.order = 'XYZ'; m.computeBoundingSphere(); return m; };
+    const steleL = petals(0.05, 0.5, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
+    St.add(steleL); steleL.position.set(0, 3.47, 0.04); steleL.rotation.x = 0.42; steleL.scale.setScalar(1.15); steleL.visible = false;
+    const ringM = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true, opacity: 0, depthWrite: false });
+    const ring = add(petals(0.8, 0.32, ringM)); ring.scale.setScalar(1.25); ring.renderOrder = 4; ring.visible = false;
+    let key = null, ringA = 0, wall = 0;
+    H.reflect = (R, dt, sitAt) => {
+      // nhịp theo đồng hồ thật, không theo dt đã chặn của khung: máy chậm (SwiftShader, máy yếu) vẫn sáng đèn, nở nụ đúng nhịp
+      const now = performance.now(), e = wall ? Math.min(1, (now - wall) / 1000) : 0; wall = now;
+      const nl = Math.min(lam.instanceMatrix.count, R ? R.lamps | 0 : 0), nb = Math.min(bud.instanceMatrix.count, R ? R.buds | 0 : 0);
+      // mở app: hiện ngay; trong phiên, đèn hay nụ mới (thêm 1–2) lớn dần trong khoảng 1,7 giây
+      const to = (cur, n) => (n < cur || n - cur > 2 ? n : Math.min(n, cur + e * 0.6));
+      uLit.value = to(uLit.value, nl); uBud.value = to(uBud.value, nb);
+      lam.count = Math.max(0, Math.ceil(uLit.value - 1e-3)); lam.visible = lam.count > 0; bud.count = Math.max(0, Math.ceil(uBud.value - 1e-3)); bud.visible = bud.count > 0;
+      const p = R && R.petals, k = p ? p.map((x) => Math.round(x * 20)).join() : '';
+      if (k !== key) { key = k; for (let i = 0; i < 10; i++) { const v = p ? Math.max(0, Math.min(1, p[i] || 0)) : 0; steleL.setColorAt(i, pc.copy(DIM).lerp(GOLD, v)); ring.setColorAt(i, pc.copy(RDIM).lerp(RGOLD, v)); }
+        steleL.instanceColor.needsUpdate = ring.instanceColor.needsUpdate = true; }
+      steleL.visible = !!p;
+      ringA += ((sitAt && p && p.some((x) => x > 0) ? 1 : 0) - ringA) * Math.min(1, e * 1.2); ringM.opacity = 0.85 * ringA; ring.visible = ringA > 0.01;
+      if (sitAt) ring.position.copy(G.worldToLocal(v3.copy(sitAt))).add(v3.set(0, 0.1, 0));
+    };
+    H.reflectInfo = () => ({ lamps: lam.count, lampMax: lam.instanceMatrix.count, buds: bud.count, budMax: bud.instanceMatrix.count, stele: steleL.visible, ring: Math.round(ringA * 100) / 100, petals: key }); }
+
   // Suối chảy từ Hồ Sen ra thác (rộng dần theo lượng nước)
   { const pts = [[-5.3, 13.7], [-6.5, 15.6], [-7.5, 17.6], [-8.0, 19.4], [-8.1, 20.6]].map(([x, z]) => new THREE.Vector3(x, 0, z)), cv = new THREE.CatmullRomCurve3(pts), N = 40, pos = [], uv = [], side = [], idx = [];
     for (let i = 0; i <= N; i++) { const t = i / N, c = cv.getPoint(t), tg = cv.getTangent(t), nx = tg.z, nz = -tg.x, y = Math.max(groundH(c.x, c.z), groundH(c.x + nx * 0.7, c.z + nz * 0.7), groundH(c.x - nx * 0.7, c.z - nz * 0.7)) + 0.07 - t * t * 0.5;

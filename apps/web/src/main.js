@@ -6,7 +6,7 @@ import { Sermon, library, loadSermons, LOAT, LOAT0, loatTabs, aiVoiceLabel, prov
 import { Ambient, SONGS, SONG, MOODS, GROUPS, songsOf, pickSong, probeSong, probeSfx } from './music.js';
 import { OPTIONS, PRESETS, checkName, suggestNames } from './people.js';
 import { S, mem, save, allDone, today, resetState, stateReady, fixMusic } from './state.js';
-import { PASSIVE, MIN_VANDU, heardEnough, listenCode, logPassive, lotus, weakest, calendar, weekSitMinutes, heardIds } from '@vandao/shared/missions.js';
+import { PASSIVE, MIN_VANDU, heardEnough, listenCode, logPassive, lotus, weakest, calendar, weekSitMinutes, heardIds, fullGioi } from '@vandao/shared/missions.js';
 import { PARAMI } from '@vandao/shared/parami.js';
 import { nv, loadMissions, soNhapView, soNhapAct, todayBox, todayLeft, missionsStale } from './ui/so-nhap.js';
 import { ct, loadVariants, variantsStale, variantHtml, dkCard, dkView, dkAct, dkPull } from './ui/duyen-khoi.js';
@@ -59,6 +59,13 @@ function logTu(code, minutes = 0, ref = '') {
 }
 /** Tự ghi nhận nghe Pháp (#88): nghe thật ≥ 70 % bài (giọng đọc hoặc đọc trọn bằng chữ); nghe ≥ 80 % hồi hướng. Không cộng Kusala. */
 function heardLog(r) { if (!r) return; if (heardEnough(r.ratio, 1)) logTu(listenCode(r.loat), 0, r.id); if (r.rite) logTu('hoi_huong'); }
+/** Đợt E (#104): Vân Đảo phản chiếu sổ trên máy — số chương Đường Xưa đã nghe trọn, số ngày giữ đủ năm giới, 10 cánh sen. Tính lại tối đa mỗi giây. */
+let refAt = 0, refV = null;
+function reflectState() {
+  const n = performance.now(); if (refV && n - refAt < 1000) return refV; refAt = n;
+  const L = lotus(S.tu, S.done, S.sacca, S.viec);
+  return (refV = { lamps: heardIds(S.tu)['duong-xua'].size, buds: Object.values(S.viec || {}).filter(fullGioi).length, petals: Object.keys(PARAMI).map((k) => L.norm[k] || 0) });
+}
 // Nghe lần lượt (#79): mọi bài của loạt đang chọn, từ bài đang chọn tới cuối; lời mở đầu trước bài đầu, lời kết sau bài cuối
 function sermonAll() { const ids = inLoat().map((x) => x.id); if (!ids.length) return; const k = Math.max(0, ids.indexOf(U.sutta)); U.queue = { ids, k, k0: k }; queuePlay(); }
 function queuePlay() { const q = U.queue, last = q.k === q.ids.length - 1, nx = !last && library.items.find((x) => x.id === q.ids[q.k + 1]);
@@ -105,7 +112,7 @@ function islandState() {
   const tier = U.tier ?? (S.completed ? 1 : 0), d = U.sim ?? S.day, wk = Math.ceil(d / 7), p = (d - 1) / 48, up = tier >= 1;
   return { tier, mist: up ? 0.1 : 0.75 - 0.6 * p, bodhi: up ? 1 : 0.04 + 0.96 * p, water: Math.min(1, d / 7), clarity: wk >= 2 || up ? 1 : 0,
     lotus: up ? 12 : Math.min(12, Math.floor(d / 4)), goldCount: tier >= 2 ? 12 : wk >= 4 || up ? 7 : 0, gold: wk >= 4 || up ? 1 : 0,
-    tea: d >= 15 || up, gate: d >= 43 || up ? 1 : d >= 29 ? 0.5 : 0, open: S.open, stream: up, sky: wk >= 6 && !up ? 0.6 : 0, lv: up ? 1 : Math.max(0, Math.min(1, p)), day: d };
+    tea: d >= 15 || up, gate: d >= 43 || up ? 1 : d >= 29 ? 0.5 : 0, open: S.open, stream: up, sky: wk >= 6 && !up ? 0.6 : 0, lv: up ? 1 : Math.max(0, Math.min(1, p)), day: d, ref: reflectState() };
 }
 const unlocked = (z) => (U.tier ?? (S.completed ? 1 : 0)) >= 1 || (U.sim ?? S.day) >= z.unlock;
 function visAt(t) {

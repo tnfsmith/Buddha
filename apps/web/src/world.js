@@ -75,7 +75,7 @@ export const ANCHORS = {
   garden: { node: 'garden', label: [-21, 5, 15.5], cam: [[-2, 22, 36], [-13, 15.5, 7]] },
   tea: { node: 'tea', label: [8, -9, 8.5], cam: [[17, 19.5, 6], [7, 13.6, -8.5]], sit: true, seatH: 0.2, face: Math.atan2(7 - 5.852, -8.5 + 6.923) },
   gate: { node: 'gate', label: [17, 17, 3.2], cam: [[34, 19, 38], [16, 14, 15]] },
-  stele: { node: 'stele', label: [10.5, 10, 6.2], cam: [[19, 18, 28], [10, 14, 10]] },
+  stele: { node: 'stele', label: [10.5, 10, 6.2], cam: [[13.5, 18, 27.5], [10, 14, 10]] },   // lệch trái khỏi trụ và màn mây Cổng Vân Môn (cổng xoay ở #116), vẫn nhìn mặt Bia
 };
 const NODES = { kuti: [-13, -5.6], kDoor: [-13, -0.9], kFoot: [-13, 5.6], mid: [2, -1], fork: [9, 6], gate: [13.5, 13.5], stele: [9.4, 12.6], padA: [20, 2.8], pad: [26.5, 2], teaA: [5.2, -3.6], tea: [5.852, -6.923], gA: [-7.5, 3], gG: [-13, 8], gB: [-15.6, 7], garden: [-18.6, 6] };
 const EDGES = [['kuti', 'kDoor'], ['kDoor', 'kFoot'], ['kFoot', 'gA'], ['kFoot', 'gG'], ['mid', 'fork'], ['fork', 'gate'], ['gate', 'stele'], ['fork', 'stele'], ['fork', 'padA'], ['padA', 'pad'], ['mid', 'teaA'], ['teaA', 'tea'], ['mid', 'gA'], ['gA', 'gG'], ['gG', 'gB'], ['gB', 'garden']];
@@ -969,6 +969,7 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     // hạt công đức vàng bay lên khắp đảo (nhiều dần theo tiến trình, rộ lên lúc hồi hướng), ánh lấp lánh tán Bồ-đề và mặt hồ: một hệ Points
     H.motes.material.uniforms.uK.value.set((0.3 + 0.7 * isl.bodhi) * (1 + v.merit), (isl.tier >= 2 ? 1 : 0.6 * isl.gold) * (0.6 + 0.4 * Math.sin(this.time * 2)) + 1.3 * jy, isl.water > 0.3 ? isl.water * (1 - 0.3 * v.night) : 0, tg.scale.x);
     H.setLotus(isl.lotus, isl.goldCount);
+    { const A = this.av; H.reflect(this.refTest || isl.ref, dt, A.state === 'sit' && A.where === 'home' && this.mode !== 'hall' ? A.pos : null); }   // đợt E (#104): đèn mây, nụ sen, hoa sen 10 cánh; refTest chỉ dùng khi kiểm thử
     H.water.uniforms.uClar.value = isl.clarity; H.water.uniforms.uWater.value = isl.water; H.evolve(isl.lv === undefined ? 1 : isl.lv, isl, this.time); this._birds(dt);
     H.tea.visible = isl.tea; DECKS[1].on = !!isl.tea; H.veil.scale.setScalar(Math.max(0.001, 1 - isl.gate * (isl.open ? 1 : 0.35)));
     const lux = isl.tier >= 3, pm = H.pv.mats;
