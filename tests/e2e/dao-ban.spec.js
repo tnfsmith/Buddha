@@ -137,6 +137,36 @@ test('tham quan (lời mời tham_quan): tới nơi thì giới thiệu lần l�
   expect(await page.evaluate(() => ({ at: window.__app.world.tourAt, mark: window.__app.world.tourMark.visible }))).toEqual({ at: null, mark: false });
 });
 
+test('ghé khi vắng (§5.5): chủ thấy ai đã ghé — báo một lần mỗi người mỗi ngày, thẻ bạn ghi lần ghé gần nhất', async ({ page }) => {
+  test.setTimeout(180_000);
+  await open(page);
+  const list = [comp(0, { closeness: 'than' }), comp(1), comp(2)];
+  const r = await page.evaluate((l) => {
+    const a = window.__app, A = a.world.av, iso = (x) => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+    const t = iso(new Date()), y = iso(new Date(Date.now() - 3 * 864e5));
+    a.acct.uid = 'me'; a.dongTu.on = true;
+    // máy chủ trả mới nhất trước; khách lạ (đã hủy kết nối) không có tên thì không nêu
+    a.dongTu.list = { companions: l, visits: [{ guest: 'u0', day: t }, { guest: 'u1', day: t }, { guest: 'x9', day: t }, { guest: 'u0', day: y }, { guest: 'u2', day: y }] };
+    a.world.setCompanions(l);
+    const first = a.visitToast(), again = a.visitToast();
+    a.acct.uid = 'other'; const s0 = A.state; A.state = 'travel'; const travel = a.visitToast(); A.state = s0;   // đang du vân: để lần sau
+    const other = a.visitToast();   // tài khoản khác trên cùng máy vẫn được báo
+    a.acct.uid = 'me';
+    return { first, again, travel, other, y: +y.slice(8) + '/' + +y.slice(5, 7) };
+  }, list);
+  expect(r.first).toBe('Tuệ Thái và Minh An đã ghé thăm Vân Đảo hôm nay khi bạn vắng.');
+  expect(r.again).toBe('');
+  expect(r.travel).toBe('');
+  expect(r.other).toBe(r.first);
+  await expect(page.locator('#toast')).toHaveText(r.first);
+  const card = (id) => page.evaluate((x) => { const a = window.__app; a.openFriend(a.world.friends.findIndex((f) => f.id === x)); return document.querySelector('#panel').innerText; }, id);
+  expect(await card('u0')).toContain('Đã ghé thăm đảo bạn hôm nay khi bạn vắng.');
+  expect(await card('u2')).toContain(`Đã ghé thăm đảo bạn ngày ${r.y} khi bạn vắng.`);
+  // tắt Bạn đồng tu thì không còn dòng nào
+  await page.evaluate(() => { window.__app.dongTu.on = false; });
+  expect(await card('u0')).not.toContain('Đã ghé thăm');
+});
+
 test.describe('ngân sách điện thoại với tám đảo bạn thật', () => {
   test.use({ viewport: { width: 390, height: 800 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   test('ngày 49, tám bạn thật đủ hiện diện, phản chiếu đầy đủ: mức 0 vẫn trong §12.2', async ({ page }) => {

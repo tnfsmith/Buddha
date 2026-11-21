@@ -851,7 +851,27 @@ function friendReal(f, away, gateOk, moving) {
     : !open ? `${esc(f.name)} đang Độc cư: cổng mây khép.` : !gateOk ? 'Cổng Vân Môn của bạn mở nửa từ ngày 29.' : f.here ? 'Gửi lời xin ghé thăm; khi bạn nhận lời, vân mây sẽ đưa bạn sang.' : canAway ? 'Bạn thân thiết đã cho phép ghé khi vắng.' : '';
   return `<h2>${esc(f.name)}</h2><p class="pali">Bạn đồng tu · ${esc(PRESENCE_TEXT[f.presence] || PRESENCE_TEXT.vang)}${c.completed ? ' · đã hoàn thành chương trình Sơ nhập' : c.day ? ` · ngày ${c.day}/49 của hành trình` : ''}</p>` +
     '<div class="row"><button class="btn" data-act="greet">Chắp tay chào</button><button class="btn alt" data-act="rejoice">Tùy hỷ công đức</button></div>' + (act ? `<div class="row">${act}</div>` : '') +
-    (note ? `<p class="muted">${note}</p>` : '') + (away ? tdView(false) + tourBlock(U.friend) : '') + '<p class="muted">Chào và tùy hỷ ở đây là cử chỉ trên Vân Đảo, không cộng điểm.</p><div class="row"><button class="ghost" data-act="home">← Vân Đảo</button></div>';
+    (note ? `<p class="muted">${note}</p>` : '') + (!away && f.id && visitLine(f.id) ? `<p class="muted">${esc(visitLine(f.id))}</p>` : '') + (away ? tdView(false) + tourBlock(U.friend) : '') + '<p class="muted">Chào và tùy hỷ ở đây là cử chỉ trên Vân Đảo, không cộng điểm.</p><div class="row"><button class="ghost" data-act="home">← Vân Đảo</button></div>';
+}
+// #125 §5.5: ai đã ghé khi mình vắng (GET /companions → visits: 7 ngày, `day` theo ngày của chủ đảo, mới nhất trước)
+const VISIT_KEY = 'vandao.visits.v1';
+const visitsOf = (id) => ((dongTu.on && dongTu.list && Array.isArray(dongTu.list.visits) && dongTu.list.visits) || []).filter((v) => v && String(v.guest) === String(id));
+function visitLine(id) {
+  const d = String((visitsOf(id)[0] || {}).day || ''); if (!/^\d{4}-\d\d-\d\d$/.test(d)) return '';
+  return d === today() ? 'Đã ghé thăm đảo bạn hôm nay khi bạn vắng.' : `Đã ghé thăm đảo bạn ngày ${+d.slice(8)}/${+d.slice(5, 7)} khi bạn vắng.`;
+}
+/** Báo một lần cho mỗi người mỗi ngày (ghi «tài khoản|khách|ngày» trên máy); đang thiền, đang nghe hay đang du vân thì để lần sau */
+function visitToast() {
+  const L = dongTu.on && dongTu.list, vs = L && Array.isArray(L.visits) ? L.visits : [];
+  if (!vs.length || player.playing || meditating() || U.vd || (world && world.av.state === 'travel')) return '';
+  let seen = []; try { seen = JSON.parse(localStorage.getItem(VISIT_KEY) || '[]'); } catch (e) { void e; } if (!Array.isArray(seen)) seen = [];
+  const key = (v) => acct.uid + '|' + v.guest + '|' + v.day, fresh = vs.filter((v) => v && v.day === today() && !seen.includes(key(v)));
+  if (!fresh.length) return '';
+  try { localStorage.setItem(VISIT_KEY, JSON.stringify([...fresh.map(key), ...seen].slice(0, 60))); } catch (e) { void e; }
+  const comps = L.companions || [], names = [...new Set(fresh.map((v) => (comps.find((c) => String(c.id) === String(v.guest)) || {}).tinh_danh).filter(Boolean))];
+  if (!names.length) return '';
+  const who = names.length > 2 ? `${names.slice(0, 2).join(', ')} và ${names.length - 2} bạn khác` : names.join(' và '), msg = `${who} đã ghé thăm Vân Đảo hôm nay khi bạn vắng.`;
+  toast(msg); return msg;
 }
 /** #125: Xin ghé thăm (lời mời xin_tham, đi khi bạn nhận lời) hoặc Ghé khi vắng (máy chủ kiểm canVisitAway rồi đi ngay) */
 async function askVisit(f, away) {
@@ -879,9 +899,9 @@ tdInit({ world, sfx: (k, o) => amb.sfx(k, o, S.music.vol), toast, render, gaze: 
 // #125: bạn đồng tu thật dựng đảo gần Vân Đảo; danh sách đổi (kết bạn, hiện diện, ngày) thì cập nhật cảnh, giữ đúng bạn đang mở
 if (world) {
   onDongTu(() => { const cur = U.view === 'friend' && world.friends[U.friend], key = cur && (cur.id || 's' + cur.sim);
-    world.setCompanions((dongTu.on && dongTu.list && dongTu.list.companions) || []);
+    world.setCompanions((dongTu.on && dongTu.list && dongTu.list.companions) || []); visitToast();
     if (key) { const i = world.friends.findIndex((f) => (f.id || 's' + f.sim) === key); if (i >= 0) U.friend = i; else U.view = 'home'; render(); } });
-  Object.assign(window.__app, { goMeet, together, tdSkip, tdAt, acct, dongTu });   // kiểm thử e2e gặp trên đảo, tuần trà (#125)
+  Object.assign(window.__app, { goMeet, together, tdSkip, tdAt, acct, dongTu, openFriend, visitToast });   // kiểm thử e2e gặp trên đảo, tuần trà (#125)
 }
 // #93: tải danh mục việc sớm để nhắc việc còn lại trong ngày; quay lại app sau một lúc thì nhắc lại
 stateReady.then(() => { if (S.name) return loadMissions().then(() => setTimeout(remind, 4000)); }).catch(() => {});
