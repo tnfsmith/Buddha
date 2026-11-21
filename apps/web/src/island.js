@@ -453,8 +453,9 @@ vA=smoothstep(0.,.08,f)*(1.-f)*(ty<.5?uOn.x:ty<1.5?uOn.y:uOn.z)*mix(.55,.5,tea);
   const Tea = (H.tea = add(new THREE.Group())); Tea.position.set(7, deckBase(DECKS[1]) + 0.6, -8.5);
   { const dk = (H.teaDeck = deck(DECKS[1])); dk.position.set(0, -0.6, 0); Tea.add(dk); dk.userData.seat.visible = false; }
   add(M(new THREE.CylinderGeometry(1.15, 1.15, 0.14, 28), STONE, '#b9b2a4', 0, 0.52), Tea); add(M(new THREE.CylinderGeometry(0.42, 0.6, 0.46, 14), STONE, '#a39c8e', 0, 0.23), Tea);
-  add(M(new THREE.SphereGeometry(0.19, 12, 8), MATTE, '#7a4a34', 0, 0.74, 0, 0), Tea).scale.y = 0.85;
-  add(M(new THREE.CylinderGeometry(0.02, 0.035, 0.2, 6), MATTE, '#7a4a34', 0.2, 0.78, 0, 0), Tea).rotation.z = -1.0;
+  // ấm trà: thân và vòi một khối, giữ riêng (không gộp) để rót được trong tuần trà (#125, Bạn đồng tu §5.7)
+  { const body = new THREE.SphereGeometry(0.19, 12, 8); body.scale(1, 0.85, 1); const sp = new THREE.CylinderGeometry(0.02, 0.035, 0.2, 6); sp.rotateZ(-1.0); sp.translate(0.2, 0.04, 0);
+    H.teapot = add(new THREE.Mesh(mergeGeometries([hue(body, '#7a4a34'), hue(sp, '#7a4a34')]), MATTE), Tea); H.teapot.position.set(0, 0.74, 0); H.teapot.rotation.order = 'YXZ'; }
   [0.6, 2.2, 3.8, 5.4].forEach((a) => { add(M(new THREE.CylinderGeometry(0.075, 0.05, 0.08, 10), MATTE, '#f2ede2', Math.cos(a) * 0.72, 0.63, Math.sin(a) * 0.72, 0), Tea);
     add(M(new THREE.CylinderGeometry(0.56, 0.5, 0.2, 16), STONE, '#b3ac9e', Math.cos(a) * 1.95, 0.1, Math.sin(a) * 1.95), Tea); });
   // chum nước rửa tay bên bàn trà: cùng mặt nước với Hồ Sen
@@ -479,6 +480,26 @@ vA=smoothstep(0.,.08,f)*(1.-f)*(ty<.5?uOn.x:ty<1.5?uOn.y:uOn.z)*mix(.55,.5,tea);
   H.steleMat = new THREE.MeshBasicMaterial({ map: steleTex(), color: new THREE.Color(2.0, 1.7, 1.2), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
   add(new THREE.Mesh(new THREE.PlaneGeometry(1.45, 2.9), H.steleMat), St).position.set(0, 1.62, 0.3);
   rock(ROCK[2], 0, 0.05, 0, 1.4, 0.35, 0.8, 0, 0, 0, St);
+
+  // Tuần trà (#125, Bạn đồng tu §5.7): world.js gọi H.teaRitual mỗi khung với world.tea = { cups: [0..1, 0..1], pour: { cup, k } | null } (ui/tra-dao.js).
+  // Ấm nâng lên, quay vòi về chén, nghiêng rót; dòng trà mảnh nối vòi với chén; mặt nước trà dâng dần. Chỉ hiện khi đang có tuần trà.
+  { const CUP = [2.2, 5.4].map((a) => new THREE.Vector3(Math.cos(a) * 0.72, 0.6, Math.sin(a) * 0.72)), TIP = new THREE.Vector3(0.284, 0.094, 0), up = new THREE.Vector3(0, 1, 0);
+    const lg = new THREE.CircleGeometry(0.062, 12); lg.rotateX(-Math.PI / 2);
+    const liq = new THREE.InstancedMesh(lg, new THREE.MeshStandardMaterial({ color: '#b0702a', roughness: 0.25, emissive: '#3a1c06', emissiveIntensity: 0.6 }), 2); liq.visible = false; Tea.add(liq);
+    const sg = new THREE.CylinderGeometry(0.011, 0.007, 1, 5, 1, true); sg.translate(0, -0.5, 0);
+    const stream = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ color: '#c98a3e', transparent: true, opacity: 0.75, depthWrite: false })); stream.visible = false; Tea.add(stream);
+    const d = new THREE.Object3D(), tip = new THREE.Vector3(), dir = new THREE.Vector3(); let pk = 0;
+    H.teaRitual = (st) => {
+      const pot = H.teapot, on = !!st, cups = on ? st.cups || [] : [];
+      liq.visible = on && cups.some((x) => x > 0);
+      if (liq.visible) { CUP.forEach((p, i) => { const k = Math.max(0, Math.min(1, cups[i] || 0)); d.position.set(p.x, p.y + 0.015 + 0.05 * k, p.z); d.scale.setScalar(k > 0 ? 0.55 + 0.45 * k : 0.0001); d.updateMatrix(); liq.setMatrixAt(i, d.matrix); }); liq.instanceMatrix.needsUpdate = true; }
+      const P = on && st.pour, k = P ? Math.max(0, Math.min(1, P.k)) : 0; pk += (k - pk) * 0.25;
+      const c = CUP[P ? P.cup : 0], a = Math.atan2(c.z, c.x);
+      pot.position.set(Math.cos(a) * 0.3 * pk, 0.74 + 0.16 * pk, Math.sin(a) * 0.3 * pk); pot.rotation.set(0, -a * Math.min(1, pk * 3), -0.95 * pk);
+      stream.visible = !!P && pk > 0.85;
+      if (stream.visible) { pot.updateMatrix(); tip.copy(TIP).applyMatrix4(pot.matrix); dir.copy(c).setY(c.y + 0.06 + 0.04 * (cups[P.cup] || 0)).sub(tip); stream.position.copy(tip); stream.scale.set(1, dir.length(), 1); stream.quaternion.setFromUnitVectors(up, dir.normalize().negate()); }
+    };
+    H.teaInfo = () => ({ cups: liq.visible ? CUP.map((_, i) => { liq.getMatrixAt(i, d.matrix); return +new THREE.Vector3().setFromMatrixScale(d.matrix).x.toFixed(2); }) : [0, 0], stream: stream.visible, tilt: +(-H.teapot.rotation.z).toFixed(2) }); }
 
   // Đợt E (#104): Vân Đảo phản chiếu sổ tu tập trên máy (docs/noi-dung/nhiem-vu-so-nhap.md §8). Mỗi loại một InstancedMesh = một lệnh vẽ, không đổ bóng.
   // - Đèn mây dọc lối đi (≤ 33): mỗi chương Đường Xưa đã nghe trọn thắp một đèn, từ chân thềm Tịnh Thất ra Cổng Vân Môn rồi các nhánh.
@@ -575,7 +596,7 @@ void main(){ float sp = 0.5 + 1.1*uFlow; float n = fbm(vec2(vUv.x*3.0, vUv.y*9.0
   bakeLocal(tree.group, [tree.leaves]);
   bakeLocal(H.veil, [], [], { transparent: true }); bakeLocal(Gt, [H.veil], [], { transparent: true });
   bakeLocal(pv.group, [], [pv.mats.roof, pv.mats.wood, pv.altar.material]);
-  bakeLocal(pu.lamps); bakeLocal(pu.flowers); bakeLocal(pu.incense); bakeLocal(Tea, [H.teaDeck]);
+  bakeLocal(pu.lamps); bakeLocal(pu.flowers); bakeLocal(pu.incense); bakeLocal(Tea, [H.teaDeck, H.teapot]);
   bakeLocal(G, [land, pv.group, padDeck, Tea, H.stairs, H.stairPosts, H.stairRough, tree.group, H.veil]);
   return H;
 }

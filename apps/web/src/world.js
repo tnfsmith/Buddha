@@ -901,6 +901,12 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     if (f.here === false) g.visible = false;   // chạy sau lượt ẩn theo khoảng cách trong update()
     f.fig.group.scale.y = f.fig.group.scale.x * (1 + 0.012 * breath); });
   }
+  /** Tuần trà «ngắm mây» (#125): máy quay ra sau chỗ ngồi bàn trà, nhìn qua bàn trà ra biển mây và Tôn tượng; người dùng đang tự xoay thì để yên */
+  teaGaze() {
+    if ((this.mode !== 'zone' && this.mode !== 'island') || this.av.where !== 'home' || this.dir) return;
+    const io = this.home.group.position.y, y = floorH(5.852, -6.923) + io;
+    this.flyTo(V(3.6, y + 3.2, -2.8), V(9.6, y + 0.9, -24), 54, 4);
+  }
   // Chỗ khách khi gặp trên đảo bạn: thiền ngồi cạnh Vân Tọa của chủ (cùng hướng Tôn tượng); trà ngồi bên kia bàn trà, chủ ngồi bên này
   _meetSpot(i, how) {
     const f = this.friends[i], S = f.isle.size / 13, at = (p) => p.setY(f.ground(p.x, p.z));
@@ -1066,6 +1072,7 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     // hạt công đức vàng bay lên khắp đảo (nhiều dần theo tiến trình, rộ lên lúc hồi hướng), ánh lấp lánh tán Bồ-đề và mặt hồ: một hệ Points
     H.motes.material.uniforms.uK.value.set((0.3 + 0.7 * isl.bodhi) * (1 + v.merit), (isl.tier >= 2 ? 1 : 0.6 * isl.gold) * (0.6 + 0.4 * Math.sin(this.time * 2)) + 1.3 * jy, isl.water > 0.3 ? isl.water * (1 - 0.3 * v.night) : 0, tg.scale.x);
     H.setLotus(isl.lotus, isl.goldCount);
+    H.teaRitual(this.tea || null);   // #125: tuần trà (ui/tra-dao.js đặt world.tea)
     { const A = this.av; H.reflect(this.refTest || isl.ref, dt, A.state === 'sit' && A.where === 'home' && this.mode !== 'hall' ? A.pos : null); }   // đợt E (#104): đèn mây, nụ sen, hoa sen 10 cánh; refTest chỉ dùng khi kiểm thử
     H.water.uniforms.uClar.value = isl.clarity; H.water.uniforms.uWater.value = isl.water; H.evolve(isl.lv === undefined ? 1 : isl.lv, isl, this.time); this._birds(dt);
     H.tea.visible = isl.tea; DECKS[1].on = !!isl.tea; H.veil.scale.setScalar(Math.max(0.001, 1 - isl.gate * (isl.open ? 1 : 0.35)));
