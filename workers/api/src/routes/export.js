@@ -6,6 +6,7 @@ import { authMiddleware } from '../auth/session.js';
 import { getPracticeProfile } from '../practice-profile.js';
 import { exportCompanions } from '../companions-data.js';
 import { exportSessions } from '../companion-sessions.js';
+import { exportCheers } from '../companion-cheers.js';
 import { exportTierProgress } from '../tier-progress.js';
 
 const exportApp = new Hono();
@@ -70,6 +71,7 @@ exportApp.get('/', authMiddleware, perDay('export', 2), async (c) => {
     consents: consents?.results || [],
     ...companions,
     dong_tu_sessions: await exportSessions(db, user.id),
+    cheers: await exportCheers(db, user.id, now),
   });
 });
 

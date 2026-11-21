@@ -7,6 +7,8 @@
 // Mỗi lần chạy xử lý tối đa BATCH tài khoản để giữ trong giới hạn CPU/ghi D1 của gói Free; phần còn lại chạy đêm sau.
 // Log chỉ ghi số lượng, không ghi định danh (AGENTS.md §5).
 
+import { CHEER_TTL_MS } from './companion-cheers.js';
+
 export const DAY = 24 * 60 * 60 * 1000;
 export const GUEST_IDLE_DAYS = 90, SYNC_OP_DAYS = 30, BATCH = 200;
 
@@ -38,7 +40,7 @@ export async function runCron(env, now = Date.now()) {
   ).bind(now - GUEST_IDLE_DAYS * DAY, BATCH).all()).results || [];
   out.deleted_idle_guests = await deleteUsers(db, idle.map((r) => r.id));
 
-  const [ops, sess, ver, requests, meets, visits, quotas, companionSessions] = await db.batch([
+  const [ops, sess, ver, requests, meets, visits, quotas, companionSessions, cheers] = await db.batch([
     db.prepare('DELETE FROM sync_op WHERE applied_at < ?').bind(now - SYNC_OP_DAYS * DAY),
     db.prepare('DELETE FROM session WHERE expiresAt < ?').bind(now),
     db.prepare('DELETE FROM verification WHERE expiresAt < ?').bind(now),
@@ -49,6 +51,7 @@ export async function runCron(env, now = Date.now()) {
     db.prepare(
       'DELETE FROM dong_tu_session WHERE id IN (SELECT id FROM dong_tu_session WHERE start_at < ? ORDER BY start_at LIMIT ?) RETURNING 1',
     ).bind(now - 30 * DAY, BATCH),
+    db.prepare('DELETE FROM cheer WHERE at <= ?').bind(now - CHEER_TTL_MS),
   ]);
   out.sync_ops = ops.meta?.changes ?? 0; out.sessions = sess.meta?.changes ?? 0; out.verifications = ver.meta?.changes ?? 0;
   out.companion_requests = requests.meta?.changes ?? 0;
@@ -56,6 +59,7 @@ export async function runCron(env, now = Date.now()) {
   out.island_visits = visits.meta?.changes ?? 0;
   out.companion_quotas = quotas.meta?.changes ?? 0;
   out.dong_tu_sessions = companionSessions.results?.length ?? 0;
+  out.cheers = cheers.meta?.changes ?? 0;
   console.log('[cron]', JSON.stringify(out));
   return out;
 }
