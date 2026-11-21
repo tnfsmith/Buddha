@@ -12,6 +12,7 @@ import accountApp from './routes/account.js';
 import rtApp from './routes/rt.js';
 import contentApp from './routes/content.js';
 import companionsApp from './routes/companions.js';
+import companionSessionsApp from './routes/companion-sessions.js';
 import metricsApp from './routes/metrics.js';
 import mediaApp from './routes/media.js';
 import inviteCard from './routes/invite-card.js';
@@ -65,6 +66,7 @@ app.route('/api/v1/account', accountApp);
 app.route('/api/v1/rt', rtApp);
 app.route('/api/v1/content', contentApp);
 app.route('/api/v1/metrics', metricsApp);
+app.route('/api/v1/sessions', companionSessionsApp);
 app.route('/api/v1', companionsApp);
 
 // Đường dẫn /api/* không tồn tại: trả 404 JSON, không rơi xuống trang SPA

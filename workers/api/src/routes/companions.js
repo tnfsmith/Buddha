@@ -10,6 +10,7 @@ import {
   accepted, blocked, cancelPending, companionProgress, listCompanions, needCharacter, pair, savedCharacter, socialQuota, underCap, userIdOk,
 } from '../companions-data.js';
 import { mountCompanionMeet } from './companions-meet.js';
+import { listSessions } from '../companion-sessions.js';
 
 const app = new Hono();
 const MINUTE = 60_000, HOUR = 60 * MINUTE, DAY = 24 * HOUR;
@@ -28,8 +29,11 @@ app.onError((error, c) => {
   return fail(c, 'internal_error', 500);
 });
 
-app.get('/companions', noStore, authMiddleware, byUser('RL_API'), async (c) =>
-  c.json(await listCompanions(c.env.DB, who(c), Date.now())));
+app.get('/companions', noStore, authMiddleware, byUser('RL_API'), async (c) => {
+  const db = c.env.DB, uid = who(c), now = Date.now();
+  const [list, sessions] = await Promise.all([listCompanions(db, uid, now), listSessions(db, uid, now)]);
+  return c.json({ ...list, sessions });
+});
 
 app.get('/companions/:id/progress', ...quota('companion_progress', 60), async (c) => {
   const id = idOf(c);
