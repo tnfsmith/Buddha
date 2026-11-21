@@ -52,7 +52,7 @@ test('hai thiết bị: tìm bạn, kết nối bằng liên kết, mời cùng 
   await B.evaluate(() => { location.hash = '#ban=K7M2-QX9A'; });
   await slow(B.locator('#toast')).toContainText('Đã kết nối đồng tu với Tuệ Thái · 5696');
   await slow.poll(() => B.evaluate(() => location.hash)).not.toContain('ban=');   // mã đã dùng thì rời khỏi địa chỉ
-  await listUntil(A, 'Minh An · 2210');
+  await listUntil(A, 'Minh An ID 2210');   // danh sách ghi tên và ID (#151)
   await expect(P(A)).toContainText('Quen biết');
 
   // ── 3. B đang thiền: A thấy ghi chú, lời mời không hiện và không có âm ở B cho tới khi xuất thiền

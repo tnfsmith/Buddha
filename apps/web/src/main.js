@@ -20,6 +20,13 @@ import { dtInit, dtView, dtAct, dtInput, dtOpen, dtBadge, dtGateLine, dtSyncOpen
 import { dongTu } from './net/dong-tu.js';
 
 
+// #151: liên kết mời chia sẻ ra ngoài dạng /?ban=MÃ (Facebook có thể bỏ phần sau #). Đổi về #ban= trước khi đọc hash và trước khi
+// net/dong-tu.js nhận mã (lúc khởi động tài khoản), giữ các tham số hash khác nếu có
+{
+  const q = new URLSearchParams(location.search), b = q.get('ban');
+  if (b) { q.delete('ban'); const rest = q.toString(), h = location.hash.slice(1); history.replaceState(null, '', location.pathname + (rest ? '?' + rest : '') + '#' + (h ? h + '&' : '') + 'ban=' + encodeURIComponent(b)); }
+}
+
 // ───────── Lưu trạng thái trên máy: xem state.js ─────────
 
 const U = { mode: 'island', view: 'home', zone: null, tier: null, sim: null, bio: 'samadhi', bioAt: 0, quietManual: false, idleAt: performance.now(), drag: null, resetArm: false, friend: null, draft: null, pose: 'stand', chips: suggestNames(6) };
@@ -763,6 +770,7 @@ dtInit({
   S, render, toast, cardEl: $('#dtm'), badge: dtMark, presence, together, go: goMeet,
   // #151: Đài Đồng Tu trong Đại Thiền Đường; mình mang Tịnh danh và hình dáng đang dùng
   dais: (people) => { if (!world) return; if (world.setDais(people.map((p) => (p.me ? { ...p, name: S.name || 'Bạn', look: S.look } : p)))) daisCam(); },
+  creator: () => openCreator(),   // #151: phải tạo và lưu nhân vật trước khi mời bạn
   show: () => { if (U.view === 'creator') { closeCreator(false); if (world) world.setMode('island'); } if (U.view !== 'dongtu') U.back = U.view; U.view = 'dongtu'; document.body.classList.remove('pmin'); panel.scrollTop = 0; render(); dtMark(); },
   close: () => { U.view = ['home', 'zone', 'board', 'friend'].includes(U.back) && (U.back !== 'zone' || U.zone) ? U.back : 'home'; render(); dtMark(); },
   viewOpen: () => U.view === 'dongtu',
