@@ -320,3 +320,8 @@ Mốc kiểm `39aca6d` sau khi #175 vào main. #185 đã merge trước đó và
 - #178 tiếp tục phụ thuộc #146 đang tạm dừng. Migration GĐ3 chưa merge đổi số theo main khi mở lại. Không sửa migration đã merge.
 - [#122](https://github.com/tnfsmith/Buddha/issues/122) và [#124](https://github.com/tnfsmith/Buddha/issues/124) đã đóng sau [hai phiên staging](https://github.com/tnfsmith/Buddha/issues/124#issuecomment-7062366269) và CI main. Thẻ mời #160 đã có tiêu đề và ảnh PNG trên staging. Tiếp tục kiểm Facebook Sharing Debugger ở #160.
 - T5.9 thực hiện sau khi staging có chuỗi hoàn chỉnh. Kết quả trình duyệt tự động và hai người thật ghi riêng. T5.1 đang chốt hợp đồng ở [#191](https://github.com/tnfsmith/Buddha/issues/191). T5.2 chờ API, T5.3 chờ luồng kiểm duyệt. Phạm vi tag theo quyết định chủ dự án ở #151.
+
+## 29. Mở lại chuỗi chứng thực tuần — 21/11/2026
+
+- Codex giữ Worker/D1 #142–#146 theo [#105](https://github.com/tnfsmith/Buddha/issues/105) và [bàn giao Claude 2](https://github.com/tnfsmith/Buddha/pull/146#issuecomment-7063092301). Trình tự là #187 (0012) → #192 (0013) → #142 (0014) → #143 → #144 → #145 → #146 (0015). Preview của từng PR cần D1/KV riêng theo #35. Không sửa migration đã merge. #149–#150 tiếp tục tạm dừng; migration lịch nhắc sẽ lấy số kế tiếp khi mở lại.
+- #142 giữ kiểm dữ liệu công khai khi đọc lựa chọn đã lưu. #143 đồng bộ đổi gợi ý và #144 tổng kết theo [hợp đồng #132](contracts/practice-today.md). Claude giữ UI #104. Claude 2 giữ #178 và nối kết quả từ `GET /api/v1/attest` theo hợp đồng #146; nghiệm thu mời, xác nhận, đọc kết quả với máy chủ thật sau khi API lên staging.
