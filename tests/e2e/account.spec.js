@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { closeContextsAfterEach } from './hooks.js';
 
 // T2.3 (#12): "Giữ hành trình" / "Tôi đã có hành trình" / trang Tài khoản.
 //  - Nhóm 1 luôn chạy: giao diện với API giả lập (page.route), không cần máy chủ.
@@ -7,6 +8,7 @@ import { test, expect } from '@playwright/test';
 const BASE = (process.env.E2E_BASE_URL || 'http://127.0.0.1:4173/').replace(/#.*$/, '').replace(/\/?$/, '/');
 const FULL = process.env.E2E_ACCOUNT ? process.env.E2E_ACCOUNT.replace(/\/?$/, '/') : null;
 const DAYMS = 86400000;
+closeContextsAfterEach();
 test.use({ serviceWorkers: 'block' });
 
 // cảnh 3D vẽ bằng CPU trên máy CI nên mỗi bước giao diện có thể mất vài chục giây

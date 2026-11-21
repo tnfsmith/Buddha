@@ -24,6 +24,22 @@ export const REQUEST_TTL_MS = 14 * 86_400_000;
 /** Số Vân Đảo bạn đồng tu dựng gần đảo mình (còn lại chỉ hiện trong danh sách): thân thiết trước, rồi quen biết */
 export const NEAR_ISLES = Object.freeze({ than: 4, quen: 4 });
 
+export const SESSION_MAX = 6;
+export const SESSION_AHEAD_MS = 7 * 86_400_000;
+export const SESSION_MIN_LEAD_MS = MEET_LEAD_MS;
+export const SESSION_STEP_MS = 5 * 60_000;
+export const SESSION_OPEN_MAX = 3;
+export const SESSION_REMIND_MS = Object.freeze([600_000, 60_000]);
+
+// `tien_trinh` dùng ngày và trạng thái hoàn thành từ hành trình đã lưu.
+export const CHEER_LINES = Object.freeze({
+  tuy_hy: 'Tùy hỷ công phu của bạn.',
+  cung_giu: 'Mình cùng giữ thời thiền ngày mai nhé.',
+  nho_ban: 'Mình nhớ bạn, khi nào rảnh mình cùng ngồi một thời nhé.',
+  cam_on: 'Cảm ơn bạn đã cùng tu tập.',
+  tien_trinh: null,
+});
+
 /**
  * Các kiểu gặp. `host`: bên có Vân Đảo làm nơi gặp ('from' = người mời, 'to' = người nhận); `place` 'dtd' = Đại Thiền Đường (không phải du vân).
  * `min`: số phút của hoạt động cùng giờ (null = không giới hạn, kết thúc khi khách về).
@@ -165,8 +181,17 @@ export function meetPhase(inv, now) {
 /** Giờ bắt đầu khi lời mời được nhận (máy chủ đặt): hoạt động cùng giờ sau MEET_LEAD_MS, ghé thăm thì ngay */
 export const meetStartAt = (kind, acceptedAt) => (isMeetKind(kind) && MEET_KINDS[kind].synced ? acceptedAt + MEET_LEAD_MS : acceptedAt);
 
+export function sessionPhase(session, now) {
+  if (session.status === 'huy') return 'huy';
+  const left = session.start_at - now;
+  if (left > SESSION_MIN_LEAD_MS) return 'hen';
+  if (left > 0) return 'sap';
+  return left > -MEET_KINDS.thien.min * 60_000 ? 'dang' : 'xong';
+}
+
 /** Lý do không mời được, để hiện cạnh nút bị khóa */
 export const REASON_TEXT = Object.freeze({
+  need_character: 'Hãy tạo nhân vật và giữ hành trình trước khi mời bạn.',
   blocked: 'Không thể mời người này.',
   not_companion: 'Hai bạn chưa kết nối đồng tu.',
   friend_away: 'Bạn đang vắng mặt.',

@@ -2,9 +2,11 @@
 // Máy chủ giả lập dùng chung cho hai "máy" (hai context trình duyệt), làm đúng hợp đồng #94: thao tác `practice.event`,
 // `journey.rev` tăng sau mỗi sự kiện, `/me?entries=1` trả `events`, báo `practice: 1` khi đã hỗ trợ.
 import { test, expect } from '@playwright/test';
+import { closeContextsAfterEach } from './hooks.js';
 import { checkPracticeEvent, foldPractice } from '../../packages/shared/src/practice.js';
 
 const BASE = (process.env.E2E_BASE_URL || 'http://127.0.0.1:4173/').replace(/#.*$/, '').replace(/\/?$/, '/');
+closeContextsAfterEach();
 test.use({ serviceWorkers: 'block' });
 test.skip(!!process.env.E2E_BASE_URL, 'máy chủ giả lập chỉ chạy với bản dựng cục bộ');
 const slow = expect.configure({ timeout: 60_000 });
