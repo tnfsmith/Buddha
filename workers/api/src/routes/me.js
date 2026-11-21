@@ -11,6 +11,7 @@ import { bad, currentJourney, kusalaTotals } from '../lib.js';
 import { guestPurgeAfter } from '../cron.js';
 
 import { socialCounts } from '../companions-data.js';
+import { countPendingSessions } from '../companion-sessions.js';
 
 const meApp = new Hono();
 
@@ -44,7 +45,7 @@ meApp.get('/', authMiddleware, byUser('RL_API'), async (c) => {
     user,
     practice: PRACTICE_V,
     dong_tu: 1,
-    social: await socialCounts(db, user.id, now),
+    social: { ...await socialCounts(db, user.id, now), sessions: await countPendingSessions(db, user.id, now) },
     profile: profileView(profileRow),
     journey: J,
     totals: J ? await kusalaTotals(db, user.id, J) : { duc: 0, thien: 0, tue: 0, all: 0 },
