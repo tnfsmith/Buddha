@@ -219,7 +219,7 @@ export function dtGateLine() {
 // ───────── Thẻ lời mời (lớp phủ trên bảng, luật #139: điện thoại đặt theo --subb) ─────────
 function togetherCard({ inv, ph }) {
   const nm = nameOf(other(inv)), what = WHAT[inv.kind] || 'gặp nhau', where = PLACE[inv.place] || '';
-  if (ph.phase === 'sap') return `<b>${what[0].toUpperCase() + what.slice(1)} với ${nm}</b><p>${where} · bắt đầu sau ${left(inv.start_at, 'c')}</p><p class="muted">Đến giờ, thời thiền tự bắt đầu cho cả hai.</p>` +
+  if (ph.phase === 'sap') return `<b>${what[0].toUpperCase() + what.slice(1)} với ${nm}</b><p>${where} · bắt đầu sau ${left(inv.start_at, 'c')}</p><p class="muted dtx">Đến giờ, thời thiền tự bắt đầu cho cả hai.</p>` +
     `<div class="row"><button class="btn" data-act="dt-go" data-id="${esc(inv.id)}">${inv.place === 'dtd' ? 'Vào Đại Thiền Đường' : 'Đến chỗ ngồi'}</button><button class="ghost" data-act="dt-cancel" data-id="${esc(inv.id)}">Hủy</button></div>`;
   return `<b>${nm} đang ${what} với bạn</b><p>${where}</p><div class="row"><button class="btn" data-act="dt-join" data-id="${esc(inv.id)}">Vào ngồi cùng</button><button class="ghost" data-act="dt-hide" data-id="${esc(inv.id)}">Để sau</button></div>`;
 }
@@ -245,6 +245,20 @@ function card(I = invites()) {
   }
   if (key !== D.cardKey) { D.cardKey = key; el.innerHTML = h; el.hidden = !h; }
 }
+/**
+ * Người ngồi Đài Đồng Tu lúc này (#151): lời mời `thien` · `dtd` đã nhận, từ 60 giây trước giờ tới hết thời thiền. Chủ phiên ngồi trước.
+ * Mình chỉ có `{ key, me: true }`, main.js điền Tịnh danh và hình dáng. Bạn đang thiền, ẩn trạng thái, hoặc còn trước giờ thì coi như đã ngồi;
+ * đã tới giờ mà bạn chưa thiền thì Vân Tọa để trống, nhãn ghi «đang tới».
+ */
+function daisPeople(I) {
+  const x = I.together.find((t) => t.inv.kind === 'thien' && t.inv.place === 'dtd');
+  if (!x) return [];
+  return [x.inv.from, x.inv.to].map((id) => {
+    if (id === acct.uid) return { key: id, me: true };
+    const c = friend(id); if (!c) return null;
+    return { key: id, name: `${c.tinh_danh} · ${c.tag}`, look: c.look || {}, here: x.ph.phase === 'sap' || c.presence == null || c.presence === 'thien' };
+  }).filter(Boolean);
+}
 /** Cập nhật đếm ngược tại chỗ (không dựng lại thẻ/bảng, để nút đang chọn không mất tiêu điểm) */
 function updateLeft() {
   for (const el of document.querySelectorAll('[data-dt-end]')) { const t = fmtLeft(+el.dataset.dtEnd - now(), el.dataset.dtF); if (el.textContent !== t) el.textContent = t; }
@@ -255,7 +269,7 @@ function tick() {
   if (!ctx) return;
   follow();
   setPresence(ctx.presence());
-  if (!dongTu.on) { card(); return; }
+  if (!dongTu.on) { card(); if (ctx.dais) ctx.dais([]); return; }
   // Liên kết mời đã gửi mà sau 15 giây chưa thấy người mời trong danh sách: mô-đun mạng đã xóa mã (mã hỏng, hết lượt, mã của mình)
   // thì báo; còn mã (lỗi tạm) thì chờ tiếp
   if (D.pend && D.pend.on && dongTu.list && Date.now() - D.pend.at > 15_000) {
@@ -270,11 +284,14 @@ function tick() {
     // vừa tới giờ khi máy đang theo dõi đếm ngược: tự bắt đầu cho cả hai; trễ (máy ngủ, mất mạng) thì để người dùng bấm «Vào ngồi cùng»
     if (D.watch.has(inv.id) && !D.hide.has(inv.id) && t - inv.start_at < 10_000) start(inv, t - inv.start_at);
   }
-  // Danh sách tự tải lại: 10 giây khi đang chờ bạn trả lời hoặc sắp bắt đầu, 30 giây khi màn đang mở (hợp đồng §5).
-  // Tab ẩn thì ngừng, để nhiều tab không cùng ăn hạn mức; quay lại thì GET /me của net/account.js và nhịp này tải tiếp.
-  const wait = I.outgoing.length || I.together.some((x) => x.ph.phase === 'sap'), gap = wait ? 10_000 : ctx.viewOpen() ? 30_000 : 0;
+  // Danh sách tự tải lại: 10 giây khi đang chờ bạn trả lời hoặc sắp bắt đầu; 15 giây khi đang cùng thiền (Đài Đồng Tu cần hiện diện mới
+  // để thấy bạn vào muộn, kể cả khi màn Bạn đồng tu đã đóng); 30 giây khi màn đang mở (hợp đồng §5). Tab ẩn thì ngừng, để nhiều tab không
+  // cùng ăn hạn mức; quay lại thì GET /me của net/account.js và nhịp này tải tiếp. loadCompanions đã gộp lượt gọi đang chạy.
+  const wait = I.outgoing.length || I.together.some((x) => x.ph.phase === 'sap'), sit = I.together.some((x) => x.ph.phase === 'dang');
+  const gap = wait ? 10_000 : sit ? 15_000 : ctx.viewOpen() ? 30_000 : 0;
   if (gap && document.visibilityState === 'visible' && Date.now() - D.lastLoad > gap) { D.lastLoad = Date.now(); void loadCompanions().catch(() => {}); }
   card(I);
+  if (ctx.dais) ctx.dais(daisPeople(I));
   const vk = ['together', 'incoming', 'outgoing'].map((k) => I[k].map((x) => x.inv.id + x.ph.phase).join(',')).join('|');
   if (vk !== D.viewKey) { D.viewKey = vk; if (ctx.viewOpen()) ctx.render(); }
   updateLeft();

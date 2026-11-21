@@ -12,6 +12,11 @@ export { groundH };
 const BUD = new THREE.Vector3(0, 0, -760), SEAT = new THREE.Vector3(0, 3, -256);
 // Tôn tượng phóng 1,5 lần và ngự trên đài mây cao BL: vai ≈ 305, mắt ≈ 370, đỉnh đầu ≈ 460 — luôn cao hơn mọi tầng
 export const BS = 1.5, BL = 75, BUD_EYE = BL + 196 * BS, BUD_SHOULDER = BL + 153 * BS;
+// Đài Đồng Tu (#151): phiên đồng tu ở Đại Thiền Đường ngồi trên một đài mây ở trục giữa, ngay trước tòa sen: cách tâm Tôn tượng DAIS_R
+// (mũi cánh sen ngoài cùng ≈ 190 ở độ cao ≈ 105, vành mây đỡ tòa sen tới ≈ 220), cao DAIS_Y ngang tòa sen (đài mây 75, cánh sen trong ≈ 133),
+// cao hơn hội chúng (ngồi ở 3) và dưới tầm mắt Ngài (370). Nhân vật trên đài phóng DAIS_K lần chỉ để còn thấy dáng ngồi khi lùi xa nhìn
+// trọn Tôn tượng; không mang nghĩa phẩm vị.
+export const DAIS_R = 240, DAIS_Y = 100, DAIS_K = 4, DAIS_GAP = 10, DAIS_MAX = 6;
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 // Bloom lọc kép (dual filter kiểu Kawase): tầng đầu lọc sáng (chỉ phần vượt ~1 trong HDR: hào quang, lõi đèn, hạt công đức, viền
 // mây ngược nắng), thu nhỏ dần qua n tầng (5 điểm lấy mẫu), phóng to dần cộng ngược lên (8 điểm), cuối cùng cộng vào ảnh HDR với
@@ -53,6 +58,9 @@ function bloomFx(n) {
       mips.forEach((m, i) => pass(D, i ? mips[i - 1] : src, m, i ? 0 : 1)); for (let i = n - 1; i > 0; i--) pass(U, mips[i], mips[i - 1], 1); pass(U, mips[0], src, this.k); r.autoClear = ac; } };
 }
 const faceBud = (x, z) => Math.atan2(BUD.x - x, BUD.z - z);
+const DAIS_UP = new THREE.Vector3(0, 1, 0);
+/** Chỗ thứ i trong n chỗ của Đài Đồng Tu: xếp cung ngắn quanh Tôn tượng, mọi chỗ quay về Ngài */
+export const daisSeat = (i, n) => { const a = ((i - (n - 1) / 2) * DAIS_GAP) / DAIS_R, x = BUD.x + DAIS_R * Math.sin(a), z = BUD.z + DAIS_R * Math.cos(a); return { x, y: DAIS_Y, z, rot: faceBud(x, z) }; };
 const ease = (k) => k * k * (3 - 2 * k);
 // Đường cong cubic-bezier(x1, y1, x2, y2) như CSS: giải t theo x bằng Newton rồi lấy y
 const bezier = (x1, y1, x2, y2) => (x) => { let t = x; for (let i = 0; i < 6; i++) { const u = 1 - t; t -= (3 * u * u * t * x1 + 3 * u * t * t * x2 + t * t * t - x) / (3 * u * u * x1 + 6 * u * t * (x2 - x1) + 3 * t * t * (1 - x2) || 1e-6); } const u = 1 - t; return 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t; };
@@ -337,6 +345,61 @@ void main(){ float k = clamp(uP*1.7 - aSeed*0.7, 0., 1.); k = k*k*(3.-2.*k); vec
     this.merit.frustumCulled = false; this.merit.renderOrder = 9; this.scene.add(this.merit);
   }
 
+  // ───────── Đài Đồng Tu (#151) ─────────
+  /**
+   * people: [{ key, name, look, me, here }] theo thứ tự chỗ ngồi (chủ phiên trước), tối đa DAIS_MAX; rỗng thì đài tan.
+   * Mình (`me`) dùng chính hallFig: rời chỗ ở hội chúng lên đài, đài tan thì về chỗ cũ. Bạn chưa vào (`here: false`) vẫn có Vân Tọa, chưa có người.
+   * Đài dùng lại hình Vân Tọa và vật liệu ghế (một InstancedMesh, không thêm shader); mỗi bạn một buildFigure như bạn ở Vân Đảo.
+   */
+  setDais(people = []) {
+    const list = people.filter(Boolean).slice(0, DAIS_MAX);
+    const key = list.map((p) => [p.key, p.me ? 1 : 0, p.here === false ? 0 : 1, p.name, JSON.stringify(p.look || {})].join(':')).join('|');
+    if (key === this.daisKey) return false;
+    const had = !!this.dais; this.daisKey = key; this._daisClear();
+    if (!list.length) { if (had && this.mode === 'hall' && !this.dir) this.setMode('hall'); return true; }
+    const n = list.length, g = (this.dais = new THREE.Group()), d = new THREE.Object3D(), seats = list.map((p, i) => daisSeat(i, n));
+    const m = new THREE.InstancedMesh(this.puffGeos[this.quality === 0 ? 0 : 1], this.seatMat, n * 2 + 2), put = (i, x, y, z, rot, k) => { d.position.set(x, y, z); d.rotation.set(0, rot, 0); d.scale.set(k, k * 0.9, k); d.updateMatrix(); m.setMatrixAt(i, d.matrix); };
+    seats.forEach((s, i) => { put(i, s.x, s.y, s.z, s.rot + i * 1.7, DAIS_K); put(n + i, s.x, s.y - 4, s.z + 3, s.rot + i, DAIS_K * 1.9); });   // Vân Tọa + mây đỡ
+    [seats[0], seats[n - 1]].forEach((s, j) => { const o = (j ? 1 : -1) * DAIS_GAP * 0.8; put(2 * n + j, s.x + o * Math.cos(s.rot), s.y - 5, s.z - o * Math.sin(s.rot), s.rot, DAIS_K * 1.5); });
+    g.add(m); this.daisMesh = m;
+    this.daisFigs = list.map((p, i) => {
+      const s = seats[i], here = p.here !== false, mine = !!p.me;
+      let fig = null;
+      if (mine) { this.daisMe = s; this._daisPlaceMe(); }
+      else if (here) { fig = buildFigure(p.look || {}); fig.setPose('sit'); fig.group.position.set(s.x, s.y + 0.55 * DAIS_K, s.z); fig.group.rotation.y = s.rot; fig.group.scale.multiplyScalar(DAIS_K); g.add(fig.group); }
+      const h = (here ? 2.0 * ((p.look && p.look.height) || 1) : 0.6) + 0.55;
+      return { key: p.key, name: p.name, me: mine, here, fig, seat: s, head: V(s.x, s.y + h * DAIS_K + 1.2, s.z) };
+    });
+    this.scene.add(g);
+    if (!this.daisWired) { this.daisWired = true; this.controls.addEventListener('start', () => { this.daisSpin = false; if (this.onDaisSpin) this.onDaisSpin(false); }); }
+    if (!had && this.mode === 'hall' && !this.dir) this.daisShot('near');
+    return true;
+  }
+  _daisPlaceMe() {   // `base`: cỡ gốc của hình theo chiều cao nhân vật (buildFigure); trên đài phóng DAIS_K lần
+    const s = this.daisMe, f = this.hallFig; if (!f) return; if (f.base === undefined) f.base = f.group.scale.x;
+    if (s) { f.group.position.set(s.x, s.y + 0.55 * DAIS_K, s.z); f.group.rotation.y = s.rot; f.group.scale.setScalar(f.base * DAIS_K); } else { f.group.position.set(SEAT.x, SEAT.y + 0.55, SEAT.z); f.group.rotation.y = Math.PI; f.group.scale.setScalar(f.base); } }
+  _daisClear() {
+    if (this.dais) { this.scene.remove(this.dais); (this.daisFigs || []).forEach((x) => x.fig && x.fig.dispose()); if (this.daisMesh) this.daisMesh.dispose(); }
+    this.dais = null; this.daisMesh = null; this.daisFigs = []; this.daisSpin = false;
+    if (this.daisMe) { this.daisMe = null; this._daisPlaceMe(); }
+  }
+  /** Đầu từng người trên đài (nhãn tên ở main.js) */
+  daisHeads() { return this.daisFigs || []; }
+  /**
+   * Góc máy Đài Đồng Tu. 'near' (Cùng ngồi): sau lưng chếch bên, thấy rõ các bạn, Tôn tượng lên tới vai; xoay 360° quanh đài.
+   * 'far' (Toàn cảnh): thấy trọn Tôn tượng cả đầu và đài phía trước; xoay 360° quanh Tôn tượng. Máy quay không lên cao hơn tầm mắt Ngài.
+   */
+  daisShot(kind = this.daisView || 'near') {
+    if (!this.dais) return;
+    this.daisView = kind; const P = this.portrait, z = BUD.z + DAIS_R;
+    // Khung hình tính sẵn (máy tính 16:10 có bảng bên phải: các bạn ở khoảng 38 % chiều ngang; điện thoại dọc: nửa trên màn hình, trên bảng):
+    // Toàn cảnh — đỉnh đầu Tôn tượng ở ~15 % từ trên, hai bạn ở ~72 % (máy tính) / ~57 % (điện thoại); Cùng ngồi — đầu hai bạn ở ~60 % / ~29 %
+    if (kind === 'far') { if (P) this.flyTo(V(30, 125, BUD.z + 700), V(0, 315, BUD.z + 40), 56, 2); else this.flyTo(V(110, 152, BUD.z + 600), V(28, 222, BUD.z + 40), 56, 2); }
+    else if (P) this.flyTo(V(10, DAIS_Y + 12, z + 50), V(0, DAIS_Y + 12, z - 5), 56, 1.6);   // điện thoại: hai bạn ở nửa trên, thẻ hẹn neo trên mép bảng không che
+    else this.flyTo(V(19, DAIS_Y + 7, z + 40), V(5, DAIS_Y + 16, z), 56, 1.6);
+  }
+  set daisSpin(v) { this._spin = !!v; } get daisSpin() { return !!this._spin && !!this.dais; }
+
   _puffs() {
     const items = [], r = this.rnd, add = (x, y, z, size, group) => items.push([x, y, z, size, r(), group, Math.floor(r() * 4)]);
     for (let i = 0; i < 640; i++) { const a = r() * Math.PI * 2, R = 55 + Math.pow(r(), 0.8) * 1000; add(Math.cos(a) * R, -8.5 + r() * 2, Math.sin(a) * R - 220, 30 + r() * 38, 0); }
@@ -434,7 +497,7 @@ void main(){ float n = fbm(vUv*vec2(3.,1.8) + vec2(uTime*.05, uVeil*.6)); vec3 c
     // thú cưng đồng hành (people.buildPet): dựng lại theo diện mạo mới, xuất hiện ngay cạnh chủ
     if (this.pet) { this.scene.remove(this.pet.group); this.pet.dispose(); this.pet = null; }
     if (/^(meo|cho|tho)$/.test(this.look.pet)) { this.pet = buildPet(this.look.pet, this.look.petv); this.scene.add(this.pet.group); }
-    this.hallFig = buildFigure(this.look); this.hallFig.setPose('sit'); this.hallFig.group.position.set(SEAT.x, SEAT.y + 0.55, SEAT.z); this.hallFig.group.rotation.y = Math.PI; this.scene.add(this.hallFig.group);
+    this.hallFig = buildFigure(this.look); this.hallFig.setPose('sit'); this.scene.add(this.hallFig.group); this._daisPlaceMe();   // đang ở Đài Đồng Tu thì giữ chỗ trên đài
     this.av = { pos: keep ? keep.p : (this.startPos ? V(this.startPos.x, floorH(this.startPos.x, this.startPos.z), this.startPos.z) : V(2.6, floorH(2.6, 1.2), 1.2)), rot: keep ? keep.rot : (this.startPos ? this.startPos.rot || 0 : 0.5), state: keep ? keep.st : 'idle', where: keep ? keep.where : 'home', path: [], speed: 0, phase: 0, blink: 3, hold: 0 };
     if (!keep && this.startPos && this.startPos.sit && ANCHORS[this.startPos.sit]) { const an = ANCHORS[this.startPos.sit], nd = NODES[an.node], A = this.av; A.pos.set(nd[0], floorH(nd[0], nd[1]) + seatOf(an), nd[1]); A.state = 'sit'; A.sit = true; A.an = an; A.id = this.startPos.sit; A.rot = this.startPos.rot !== undefined ? this.startPos.rot : an.face || 0; A.restoreSit = true; }
     if (keep) { Object.assign(this.av, keep.go); if (this.av.state === 'walk' && !this.av.path.length) this.av.state = 'idle'; this.fig.setPose(keep.pose); }
@@ -778,7 +841,8 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
   flyTo(p, t, fov = 52, dur = 1.6) { this.tween = { p0: this.camera.position.clone(), t0: this.controls.target.clone(), f0: this.baseFov, p, t, fov, k: this.snap ? 0.999 : 0, dur }; this.controls.enabled = false; }
   setMode(mode, opt = {}) {
     this.mode = mode;
-    if (mode === 'hall') { if (this.portrait) this.flyTo(V(0, 60, -250), V(0, 148, -418), 58, 2); else this.flyTo(V(0, 20, -170), V(0, 60, -352), 58, 2); }
+    if (mode === 'hall' && this.dais) this.daisShot();
+    else if (mode === 'hall') { if (this.portrait) this.flyTo(V(0, 60, -250), V(0, 148, -418), 58, 2); else this.flyTo(V(0, 20, -170), V(0, 60, -352), 58, 2); }
     else if (mode === 'overview') { if (this.portrait) this.flyTo(V(60, 262, 560), V(-190, 244, -470), 58, 2.2); else this.flyTo(V(180, 262, 520), V(-10, 196, -470), 58, 2.2); }
     else if (mode === 'realm') this.flyTo(V(-460, 420, 900), V(40, 210, -450), 60, 3.2);
     else if (mode === 'tier') { const k = opt.tier; if (k === 4) this.flyTo(V(-188, 382, -640), V(-30, 366, -742), 52, 2.2); else { const I = this.isles.find((x) => x.tier === k), s = I.size / 14; this.flyTo(V(I.x + 20 * s * Math.sign(-I.x), I.y + 9 * s, I.z + 30 * s), V(I.x, I.y + 2.5, I.z), 44, 2.2); } }
@@ -790,7 +854,11 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
   }
   setLimits() {
     const m = this.mode, c = this.controls;
-    if (m === 'hall' && this.wide) Object.assign(c, { minDistance: 40, maxDistance: 700, minPolarAngle: 1.0, maxPolarAngle: 2.0 });
+    // Đài Đồng Tu: góc ngẩng giới hạn để máy quay không lên quá tầm mắt Tôn tượng (≤ 360) và không chui dưới đài / mặt mây
+    // (Cùng ngồi: xa tối đa 60 để vòng quay quanh đài không chạm cánh sen; Toàn cảnh quay quanh Tôn tượng ở 300–760)
+    if (m === 'hall' && this.dais && this.daisView === 'far') Object.assign(c, { minDistance: 300, maxDistance: 760, minPolarAngle: 1.52, maxPolarAngle: 2.0 });
+    else if (m === 'hall' && this.dais) Object.assign(c, { minDistance: 14, maxDistance: 60, minPolarAngle: 0.9, maxPolarAngle: 1.72 });
+    else if (m === 'hall' && this.wide) Object.assign(c, { minDistance: 40, maxDistance: 700, minPolarAngle: 1.0, maxPolarAngle: 2.0 });
     else if (m === 'hall') Object.assign(c, { minDistance: 40, maxDistance: 190, minPolarAngle: 1.25, maxPolarAngle: 2.1 });
     else if (m === 'creator') Object.assign(c, { minDistance: 5, maxDistance: 18, minPolarAngle: 0.9, maxPolarAngle: 1.75 });
     else if (m === 'realm') Object.assign(c, { minDistance: 60, maxDistance: 1900, minPolarAngle: 0.4, maxPolarAngle: 1.75 });
@@ -843,11 +911,14 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
       this.camera.position.lerpVectors(tw.p0, tw.p, e); this.controls.target.lerpVectors(tw.t0, tw.t, e); this.baseFov = tw.f0 + (tw.fov - tw.f0) * e; this.applyFov();
       if (tw.glide) u.uVeil.value = Math.max(0, 1 - tw.k * 1.7);
       if (tw.k >= 1) { this.tween = null; this.controls.enabled = true; this.setLimits(); } }
+    // Đài Đồng Tu «Xoay chậm»: một vòng mỗi 2 phút quanh tâm đang nhìn; chạm vào cảnh thì dừng (setDais gắn 'start')
+    if (this.daisSpin && this.mode === 'hall' && !this.tween && !this.dir) { const t = this.controls.target; this.camera.position.sub(t).applyAxisAngle(DAIS_UP, (dt * Math.PI) / 60).add(t); this.camera.lookAt(t); }
     if (!this.tween || !this.tween.glide) u.uVeil.value = Math.max(0, u.uVeil.value - dt * 1.5);   // bị ngắt giữa chừng thì màn mây vẫn tan dần
     this.veil.visible = u.uVeil.value > 0;
     this._avatarStep(dt, s);
     if (this.pet) { const A = this.av, h = this.mode === 'hall', io = A.where === 'home' ? this.home.group.position.y : 0;   // Đại Thiền Đường: ngồi cạnh Vân Tọa của mình
-      this.pet.step(dt, this.time, h ? SEAT : A.pos, h ? Math.PI : A.rot, h || A.state === 'sit' || A.where === 'sky' || this.mode === 'creator', h ? () => SEAT.y + 0.55 : (x, z) => (A.where === 'home' ? floorH(x, z) + io : A.pos.y), isl.lv === undefined ? 1 : isl.lv); }
+      this.pet.step(dt, this.time, h ? SEAT : A.pos, h ? Math.PI : A.rot, h || A.state === 'sit' || A.where === 'sky' || this.mode === 'creator', h ? () => SEAT.y + 0.55 : (x, z) => (A.where === 'home' ? floorH(x, z) + io : A.pos.y), isl.lv === undefined ? 1 : isl.lv);
+      this.pet.group.visible = !(h && this.daisMe); }   // chủ đã lên Đài Đồng Tu: thú cưng không ngồi lại một mình ở hội chúng
     { const K = this.ud.material.uniforms.uK; K.value += ((BIO.mode === 'uddhacca' ? (this.mode === 'hall' ? 1.1 : 0.6) : 0) - K.value) * Math.min(1, dt * 0.8); this.ud.visible = K.value > 0.01;
       if (this.ud.visible) { const h = this.mode === 'hall'; this.ud.position.set(h ? SEAT.x : this.av.pos.x, h ? -2 : this.av.pos.y + 0.5, h ? SEAT.z : this.av.pos.z); this.ud.scale.setScalar(h ? 170 : 16); } }
     this.realm.update(this.time, v.night);
@@ -860,14 +931,14 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
       { const R = this.budFx.material.uniforms.uRain; R.value += ((sm.on ? 1 : 0.45) - R.value) * Math.min(1, dt * 0.5); }   // mưa hoa dày dần khi thuyết giảng
       this.sBow = (this.sBow || 0) + ((sm.bow || 0) - (this.sBow || 0)) * Math.min(1, dt * 7);
       [this.hallCrowd, this.tierCrowd].forEach((c) => { if (c && c.userData.bow) { c.userData.bow.value = this.sBow; c.userData.setAnjali(!!sm.anjali); } });
-      [this.hallFig, ...this.friends.map((f) => f.fig)].forEach((f) => f.bow(this.sBow)); }   // chỗ ngồi của mình và bạn đồng tu cúi lạy cùng hội chúng
+      [this.hallFig, ...this.friends.map((f) => f.fig), ...(this.daisFigs || []).filter((x) => x.fig).map((x) => x.fig)].forEach((f) => f.bow(this.sBow)); }   // chỗ ngồi của mình và bạn đồng tu cúi lạy cùng hội chúng
     if (this.vd && !this.tween) { const w = this.vanduAt(this.vd.k), k = this.snap ? 1 : 1 - Math.exp(-dt * 0.5);   // lướt chậm tới điểm đang muốn: vào Vân Du không giật
       this.controls.enabled = false; this.camera.position.lerp(w.p, k); this.controls.target.lerp(w.t, k); if (Math.abs(this.baseFov - 54) > 0.05) { this.baseFov += (54 - this.baseFov) * k; this.applyFov(); } }
     if (this.tween || !this.controls.enabled) this.camera.lookAt(this.controls.target); else this.controls.update();
     const cam = this.camera.position, q = this.quality, home = this.mode !== 'hall' && cam.distanceTo(H.group.position) < 330;
     [this.hallCrowd, this.tierCrowd].forEach((c) => c && c.userData.lod(cam, q)); this.realm.lod(cam, q); this.puffLod(cam, q); u.uCam.value.copy(cam); this.sky.position.copy(cam);
     // Nhân vật chi tiết ở xa chỉ còn vài điểm ảnh: bạn đồng tu quá 150/200/260 (theo mức) thì không vẽ; mức 0 cũng bỏ nhân vật của mình ở Đại Thiền Đường khi đứng xa
-    this.friends.forEach((f) => { f.fig.group.visible = cam.distanceTo(f.pos) < [150, 200, 260][q]; }); this.hallFig.group.visible = q > 0 || cam.distanceTo(SEAT) < 300;
+    this.friends.forEach((f) => { f.fig.group.visible = cam.distanceTo(f.pos) < [150, 200, 260][q]; }); this.hallFig.group.visible = q > 0 || !!this.daisMe || cam.distanceTo(SEAT) < 300;
     u.uBud.value.set(BUD.x - cam.x, BUD_EYE - cam.y, BUD.z - cam.z).normalize();
     u.uNight.value = v.night; u.uAmber.value = v.amber; u.uJade.value = v.jade; u.uCalm.value = v.calm;
     // Tâm trạng ánh sáng: Trăng Thiền theo đêm của thời thiền, Hoàng Hôn Tím theo sắc hổ phách, Sương Sớm theo mốc «Niệm hơi thở mây»
