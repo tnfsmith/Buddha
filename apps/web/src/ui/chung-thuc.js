@@ -51,10 +51,39 @@ export function atInit(c) {
   return true;
 }
 
+// ───────── Phía chủ: kết quả các tuần (GET /api/v1/attest của #146, chỉ của chính mình, chu kỳ hiện tại) ─────────
+// Máy chủ chưa có route (404) thì im lặng. Tải lại tối đa mỗi phút khi Bia mở, và ngay sau khi tạo lời mời.
+const R = { uid: null, at: 0, busy: false, weeks: null };
+function loadResults(force = false) {
+  if (R.uid !== acct.uid) { R.uid = acct.uid; R.weeks = null; R.at = 0; }
+  if (R.busy || (!force && R.at && Date.now() - R.at < 60_000)) return;
+  R.busy = true; const uid = acct.uid;
+  api('/api/v1/attest').then((r) => {
+    if (acct.uid !== uid) return;
+    const w = r && Array.isArray(r.weeks) ? r.weeks : [], changed = JSON.stringify(w) !== JSON.stringify(R.weeks); R.weeks = w; R.at = Date.now(); if (changed) C.render();
+  }).catch(() => { if (acct.uid === uid) R.at = Date.now(); }).finally(() => { R.busy = false; });
+}
+const labelOf = (k) => (LABELS.find(([v]) => v === k) || [])[1] || 'Người được mời';
+const ST = {
+  cho: (x) => `Đã gửi lời mời, đang chờ${x.expires_at ? ' (hết hạn ngày ' + fmtDay(x.expires_at) + ')' : ''}.`,
+  da_xac_nhan: (x) => `${labelOf(x.attester_label)} đã xác nhận${x.confirmed_at ? ' ngày ' + fmtDay(x.confirmed_at) : ''}.`,
+  tu_choi: () => 'Người được mời chọn không xác nhận. Không sao cả: chứng thực chỉ là tùy chọn.',
+  het_han: () => 'Lời mời đã hết hạn mà chưa ai dùng.',
+};
+/** Khối «Chứng thực các tuần» ở Bia: mọi ngày, khi đã có ít nhất một lời mời trong chu kỳ này */
+function resultsBlock() {
+  const L = (R.weeks || []).filter((x) => x && Number.isInteger(x.week) && ST[x.status]);
+  if (!L.length) return '';
+  return '<div class="note at"><p><b>Chứng thực các tuần</b> · chỉ bạn thấy; không cộng điểm, không ảnh hưởng mở tầng.</p>' +
+    L.map((x) => `<p data-at-week="${x.week}">Tuần ${x.week}: ${esc(ST[x.status](x))}${x.status === 'da_xac_nhan' && x.note ? `<br><span class="muted">«${esc(x.note)}»</span>` : ''}</p>`).join('') + '</div>';
+}
+
 // ───────── Phía chủ: thẻ ở Bia Tích Lũy ─────────
 /** Thẻ «Chứng thực tuần N» ở Bia vào ngày cuối tuần; cần phiên máy chủ (tài khoản hoặc khách đã giữ hành trình) */
 export function atCard(S) {
-  const w = atWeek(S); if (!w || !acct.available || !acct.on) return '';
+  if (!acct.available || !acct.on) return '';
+  loadResults();
+  const w = atWeek(S); if (!w) return resultsBlock();
   const s = store[slotKey(w)], url = O.link[w], live = s && s.exp > Date.now();
   let h = `<div class="note at"><p><b>Chứng thực tuần ${w}</b> · tùy chọn. Mời một người thân hay bạn đồng tu xác nhận điều họ thấy bạn thực hành trong tuần. Không cộng điểm, không ảnh hưởng việc mở tầng.</p>`;
   if (url) {
@@ -62,7 +91,7 @@ export function atCard(S) {
       `<div class="row"><button class="btn alt" data-act="at-copy" data-w="${w}">Sao chép</button>${typeof navigator !== 'undefined' && navigator.share ? `<button class="btn alt" data-act="at-share" data-w="${w}">Chia sẻ</button>` : ''}<button class="ghost" data-act="at-hide" data-w="${w}">Ẩn liên kết</button></div>`;
   } else if (live) h += `<p class="muted">Đã tạo lời mời tuần ${w}, hiệu lực tới ngày ${esc(fmtDay(s.exp))}.</p><div class="row"><button class="btn alt" data-act="at-invite" data-w="${w}"${O.busy ? ' disabled' : ''}>Mở lại liên kết</button></div>`;
   else h += `<div class="row"><button class="btn alt" data-act="at-invite" data-w="${w}"${O.busy ? ' disabled' : ''}>Tạo liên kết mời</button></div>`;
-  return h + (O.err ? `<p class="note warn">${esc(O.err)}</p>` : '') + '</div>';
+  return h + (O.err ? `<p class="note warn">${esc(O.err)}</p>` : '') + '</div>' + resultsBlock();
 }
 
 async function invite(w) {
@@ -73,7 +102,7 @@ async function invite(w) {
     const code = String(r.link || '').replace(/^.*[#&]attest=/, '');
     if (!/^[A-Za-z0-9_-]{43}$/.test(code)) throw Object.assign(new Error('bad link'), { code: 'attest_unavailable' });
     s.exp = r.expires_at; s.h = await sha(code); keep();
-    O.link[w] = `${location.origin}/#attest=${code}`;
+    O.link[w] = `${location.origin}/#attest=${code}`; loadResults(true);
   } catch (e) { O.err = errText(e.code, 'Chưa tạo được liên kết. Thử lại sau.'); }
   O.busy = false; C.render();
 }

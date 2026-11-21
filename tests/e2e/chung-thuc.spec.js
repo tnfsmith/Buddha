@@ -17,9 +17,10 @@ const LOOK = { skin: 2, robe: 1, trim: 0, hairColor: 0, hair: 'ngan', build: 'vu
 const seed = (day) => ({ v: 1, day, lastDate: null, done: {}, tu: {}, viec: {}, nguyen: {}, seed: 42, totals: { duc: 0, thien: 0, tue: 0 }, sacca: 0, sessions: 0, completed: false, open: false, name: 'Tuệ Thái', look: LOOK });
 const UUID4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-async function owner(browser, day, sent) {
+async function owner(browser, day, sent, results = null) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, serviceWorkers: 'block' });
   await ctx.route('**/api/**', (r) => {
+    if (results && r.request().method() === 'GET' && new URL(r.request().url()).pathname === '/api/v1/attest') return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(results) });   // #146: kết quả của chính người mời
     if (r.request().url().endsWith('/api/v1/attest/invite')) { sent.push(JSON.parse(r.request().postData())); return r.fulfill({ status: sent.length > 1 ? 200 : 201, contentType: 'application/json', body: JSON.stringify({ week: day / 7, expires_at: Date.now() + 7 * 86_400_000, link: '/#attest=' + CODE }) }); }
     return r.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: { code: 'not_found' } }) });
   });
@@ -122,4 +123,25 @@ test('người nhận: liên kết hết hạn hoặc đã dùng thì báo khôn
   await P.locator('[data-act="at-no"]').click();
   await slow(P.locator('h2')).toHaveText('Cảm ơn bạn');
   expect(posts).toEqual([{ accept: false, attester_label: 'ban_be' }]);   // không xác nhận thì không gửi lời nhắn
+});
+
+test('chủ: kết quả các tuần theo GET /api/v1/attest — chờ, đã xác nhận kèm lời nhắn, không xác nhận, hết hạn; hiện cả ngày không phải 7k', async ({ browser }) => {
+  test.setTimeout(180_000);
+  const t0 = Date.now(), results = { cycle: 3, weeks: [
+    { week: 1, status: 'da_xac_nhan', expires_at: t0 - 86_400_000, attester_label: 'nguoi_than', note: 'Tôi thấy bạn <b>nói năng</b> nhẹ nhàng hơn.', confirmed_at: t0 - 2 * 86_400_000 },
+    { week: 2, status: 'cho', expires_at: t0 + 5 * 86_400_000, attester_label: null, note: null, confirmed_at: null },
+    { week: 3, status: 'tu_choi', expires_at: t0, attester_label: 'ban_be', note: null, confirmed_at: null },
+    { week: 4, status: 'het_han', expires_at: t0 - 86_400_000, attester_label: null, note: null, confirmed_at: null },
+  ] };
+  const { page } = await owner(browser, 30, [], results);
+  await page.goto(BASE + '#q=0&snap=1'); await booted(page); await signIn(page); await openBia(page);
+  const P = page.locator('#panel');
+  await slow(P).toContainText('Chứng thực các tuần');
+  await expect(P).not.toContainText('Tạo liên kết mời');   // ngày 30 không phải ngày cuối tuần: chỉ xem kết quả
+  await expect(P.locator('[data-at-week="1"]')).toContainText('Người thân đã xác nhận ngày');
+  await expect(P.locator('[data-at-week="1"]')).toContainText('«Tôi thấy bạn <b>nói năng</b> nhẹ nhàng hơn.»');   // lời nhắn hiển thị dạng chữ
+  await expect(P.locator('[data-at-week="2"]')).toContainText('đang chờ (hết hạn ngày');
+  await expect(P.locator('[data-at-week="3"]')).toContainText('chọn không xác nhận');
+  await expect(P.locator('[data-at-week="4"]')).toContainText('đã hết hạn');
+  expect(await page.evaluate(() => !document.querySelector('#panel .at b b'))).toBe(true);
 });
