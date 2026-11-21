@@ -146,10 +146,14 @@ test('xác nhận 18+ đúng phiên bản điều khoản; bảng, lọc, chi ti
   expect(A.errs).toEqual([]);
 });
 
-test('viết bài: kiểm ngay trên máy, gửi thì chờ duyệt; bài của tôi; sàng lọc gián đoạn và giới hạn lượt', async ({ browser }) => {
+test('ngày 1, Cổng Vân Môn chưa mở: vẫn vào Bảng Hộ Trì (chủ dự án 21/11); viết bài kiểm ngay trên máy, gửi thì chờ duyệt; bài của tôi; sàng lọc gián đoạn và giới hạn lượt', async ({ browser }) => {
   test.setTimeout(180_000);
-  const sv = fakeServer(30), A = await device(browser, sv, 'a', { width: 1280, height: 800 }, 30), S = hoTri('me');
+  const sv = fakeServer(1), A = await device(browser, sv, 'a', { width: 1280, height: 800 }, 1), S = hoTri('me');
   await S.install(A, sv);
+  await gateZone(A);
+  await slow(P(A)).toContainText('Phân khu này mở ở ngày 29');
+  await expect(P(A).locator('[data-act="gate"]')).toHaveCount(0);   // cổng chưa mở: chưa đổi Độc cư/Nghênh khách
+  await expect(P(A)).toContainText('cả khi Cổng Vân Môn chưa mở');
   await openBoard(A);
   await tab(A, 'viet');
   await P(A).locator('[data-ht="title"]').fill('Cần');

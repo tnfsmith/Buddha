@@ -1,7 +1,8 @@
 // Bảng Hộ Trì và Sự kiện thiện nguyện ở Cổng Vân Môn (T5.2 #195; hợp đồng docs/contracts/ho-tri.md #191/#194; PROJECT_ROADMAP.md §10).
 // Không tiền, không điểm, không xếp hạng, không cộng Kusala. Chữ người dùng luôn hiển thị dạng văn bản (esc), không chạy HTML.
 // Mã kết bạn không có ở danh sách hay chi tiết: chỉ hiện trong ca nhận giúp đã nhận/xong, cho đúng hai bên (hợp đồng §Nhận giúp).
-// Quyền tham gia (18+, điều khoản, ngưỡng hành trình) do máy chủ tính ở /me.community; UI chỉ đọc `allowed` và `reason`.
+// Quyền tham gia do máy chủ tính ở /me.community; UI chỉ đọc `allowed` và `reason`. Quyết định chủ dự án 21/11/2026: mở ngay sau xác nhận
+// 18+ và điều khoản, kể cả ngày 1, nên lối vào ở màn Cổng Vân Môn có cả khi cổng chưa mở (Du vân vẫn theo hành trình).
 import { api } from '../net/api.js';
 import { acct } from '../net/account.js';
 import { esc } from './dom.js';
@@ -49,7 +50,7 @@ export function htGateLine() {
   follow(); void loadMe();
   const m = H.me; if (!m) return '';
   const n = (Number(m.help_replies) || 0) + (Number(m.help_matches) || 0);
-  return '<h3>Bảng Hộ Trì</h3><p class="muted">Cần giúp, có thể giúp, hỏi Pháp, tùy hỷ và sự kiện thiện nguyện. Chỉ giúp bằng lời khuyên, đồng hành, kỹ năng, sức lực; không kêu gọi tiền hay hiện vật cá nhân.</p>' +
+  return '<h3>Bảng Hộ Trì</h3><p class="muted">Cần giúp, có thể giúp, hỏi Pháp, tùy hỷ và sự kiện thiện nguyện. Chỉ giúp bằng lời khuyên, đồng hành, kỹ năng, sức lực; không kêu gọi tiền hay hiện vật cá nhân. Dùng được ngay sau khi xác nhận đủ 18 tuổi, cả khi Cổng Vân Môn chưa mở.</p>' +
     `<div class="row"><button class="btn alt" data-act="ht-open">Mở Bảng Hộ Trì${n ? ` · ${n} mới` : ''}</button></div>`;
 }
 export function htOpen() { follow(); H.tab = 'bang'; H.det = null; H.err = ''; H.msg = ''; C.show(); void loadMe(true); void loadList(); }
@@ -98,10 +99,10 @@ const opt = (v, label, cur) => `<option value="${esc(v)}"${v === cur ? ' selecte
 const areaOpts = (cur, none) => opt('', none, cur) + Object.entries(HELP_AREAS).map(([k, v]) => opt(k, v, cur)).join('');
 const STATUS = { cho_duyet: 'Đang chờ duyệt', hien: 'Đang hiện', an: 'Đã ẩn', dong: 'Đã đóng' };
 
-/** Chưa được tham gia: xác nhận 18+ và điều khoản đúng phiên bản, hoặc chờ ngưỡng hành trình (máy chủ quyết) */
+/** Chưa được tham gia: xác nhận 18+ và điều khoản đúng phiên bản (lý do khác từ máy chủ thì chỉ báo, vẫn đọc được bảng) */
 function gate(m) {
   if (m.allowed) return '';
-  if (m.reason === 'need_gate') return `<p class="note">${esc(HO_TRI_REASON_TEXT.need_gate)} Bạn vẫn đọc được bảng.</p>`;
+  if (m.reason && m.reason !== 'need_adult_confirmation') return `<p class="note">${esc(HO_TRI_REASON_TEXT[m.reason] || 'Bạn chưa tham gia được lúc này; vẫn đọc được bảng.')}</p>`;
   const again = m.accepted_version && m.accepted_version !== m.terms_version;
   return `<div class="dtf"><p>${esc(again ? HO_TRI_REASON_TEXT.terms_changed : HO_TRI_REASON_TEXT.need_adult_confirmation)}</p>` +
     `<p class="muted">Bảng Hộ Trì dành cho người từ 18 tuổi. Không đăng số điện thoại hay địa chỉ chi tiết; khu vực chỉ tới tỉnh, thành phố; gặp nhau ở nơi công cộng.</p>` +
