@@ -3,7 +3,7 @@
 // Chỉ dùng mô-đun mạng net/dong-tu.js. Không chữ tự do (chỉ lời mẫu), không điểm, không xếp hạng, không hiện số bạn.
 // Lời mời gặp không hiện và không có âm khi đang thiền; xuất thiền rồi mới hiện, kèm dòng «trong lúc bạn thiền».
 import {
-  INVITE_TTL_MS, LINES, MAX_COMPANIONS, MEET_KINDS, PRESENCE_TEXT, REASON_TEXT, SEEN_TEXT,
+  CHEER_LINES, INVITE_TTL_MS, LINES, MAX_COMPANIONS, MEET_KINDS, PRESENCE_TEXT, REASON_TEXT, SEEN_TEXT,
   SESSION_AHEAD_MS, SESSION_MAX, SESSION_MIN_LEAD_MS, SESSION_OPEN_MAX, SESSION_REMIND_MS, SESSION_STEP_MS,
   canMeet, inviteFromHash, isMeetKind, meetPhase, parseFriendQuery, sessionPhase, showInviteCode,
 } from '@vandao/shared/dong-tu.js';
@@ -29,6 +29,7 @@ function resetFor(uid) {
     uid, tab: D.tab === 'loi' ? 'loi' : 'list', sel: null, busy: '', err: '', msg: '', arm: '', link: null, me: null, blocks: null, q: '', peek: null, prog: new Map(), progReq: new Map(), kem: false,
     skew: 0, at: 0, lastLoad: 0, msgInv: null, cardKey: null, viewKey: '', openSynced: false,
     quietSeen: new Set(), chimed: new Set(), watch: new Set(), joined: new Set(), hide: new Set(), answered: new Set(), hen: freshHen(),
+    cheered: new Set(), cheerHold: false, cheerRetry: 0, cheerMark: 0, cheerSeenAt: 0,
   });
 }
 /** Ô hẹn giờ đồng tu: bạn được chọn, «gio» (hẹn giờ) hoặc «ngay», giờ địa phương trong ô datetime-local */
@@ -66,7 +67,7 @@ const ERR = {
   link_invalid: 'Mã mời không còn hiệu lực.', link_expired: 'Mã mời đã hết hạn.', link_used_up: 'Mã mời đã dùng hết lượt.',
   already_companion: 'Hai bạn đã kết nối đồng tu.', self: 'Đây là mã mời của chính bạn.',
   unauthorized: 'Phiên đã hết. Hãy mở Tài khoản để đăng nhập lại.',
-  session_closed: 'Hẹn này đã kết thúc hoặc đã hủy.', invalid_payload: 'Giờ hẹn hoặc danh sách bạn chưa hợp lệ.',
+  session_closed: 'Hẹn này đã kết thúc hoặc đã hủy.', cheer_today: 'Hôm nay bạn đã gửi lời khích lệ cho bạn ấy.', invalid_payload: 'Giờ hẹn hoặc danh sách bạn chưa hợp lệ.',
 };
 const human = (e) => ERR[e && e.code] || REASON_TEXT[e && e.code] || 'Chưa thực hiện được. Hãy thử lại.';
 
@@ -103,6 +104,51 @@ function sessions() {
   }
   return out.sort((a, b) => a.s.start_at - b.s.start_at);
 }
+/**
+ * Khích lệ (#151 §8, hợp đồng §10.3): chỉ lời mẫu, mỗi bạn mỗi ngày một lời, không push, không đếm hay xếp hạng.
+ * Lời nhận trong 7 ngày, mới trước. «Mới»: số lời chưa xem theo `social.cheers` của GET /me (máy chủ giữ mốc đã xem).
+ */
+const ymdLocal = (ms) => { const d = new Date(ms); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+const sentKey = (id) => `${id}|${ymdLocal(now())}`;
+function cheers() {
+  const t = now();
+  return L('cheers').filter((c) => c && c.from && Object.prototype.hasOwnProperty.call(CHEER_LINES, c.line) && Number.isFinite(c.at) && c.at > t - 7 * 86_400_000).sort((a, b) => b.at - a.at);
+}
+// Nguồn duy nhất: social.cheers mà net/dong-tu.js giữ từ GET /me (#185). Sau POST /cheers/seen, giữ 0 tới khi GET /me của chính
+// màn trả về (máy chủ đã tính mốc đã xem); lời đến sau đó thì lần /me kế báo đúng, kể cả khi số đếm bằng số trước (review #184).
+/** Máy chủ có API khích lệ (§10.3) khi GET /companions trả mảng `cheers`; chưa có thì ẩn khối, không gọi route chưa triển khai */
+const hasCheers = () => !!dongTu.list && Array.isArray(dongTu.list.cheers);
+const cheerUnseen = () => (D.cheerHold ? 0 : Number(dongTu.social.cheers) || 0);
+const CHEER_RETRY_MS = 15_000;
+const cheerText = (c) => (c.line !== 'tien_trinh' ? CHEER_LINES[c.line]
+  : c.completed === true ? 'Mình đã hoàn thành chương trình 49 ngày.' : Number.isInteger(c.day) ? `Mình đang ở ngày ${c.day} của hành trình 49 ngày.` : 'Mình đang tiếp tục hành trình 49 ngày.');
+function ago(at) {
+  const a = new Date(now()), b = new Date(at), d = Math.round((new Date(a.getFullYear(), a.getMonth(), a.getDate()) - new Date(b.getFullYear(), b.getMonth(), b.getDate())) / 86_400_000);
+  return d <= 0 ? 'hôm nay' : d === 1 ? 'hôm qua' : `${d} ngày trước`;
+}
+/** Đánh dấu đã xem tới lời mới nhất (POST /cheers/seen, mốc chỉ tăng ở máy chủ); các lời «mới» vẫn ghi «mới» tới khi đóng màn */
+async function cheerSeen(until) {
+  const uid = D.uid; D.cheerSeenAt = until;
+  try {
+    await api('/api/v1/cheers/seen', { method: 'POST', body: { until } });
+    if (!still(uid)) return;
+    D.cheerMark = Math.max(D.cheerMark, cheerUnseen()); D.cheerHold = true; ctx.badge();
+  } catch { if (still(uid)) D.cheerSeenAt = 0; return; }
+  await loadMe();
+}
+function cheerList() {
+  const CH = cheers();
+  if (!hasCheers() || !CH.length) return '';
+  const fresh = Math.max(D.cheerMark, cheerUnseen());
+  if (cheerUnseen() > 0 && CH[0].at > D.cheerSeenAt) void cheerSeen(CH[0].at);
+  return '<h3>Lời khích lệ</h3>' + CH.map((c, i) => `<div class="dtf"><div class="dtn"><b>${who(c.from)}</b><span>«${esc(cheerText(c))}» · ${ago(c.at)}${i < fresh ? ' · <b class="dtnew">mới</b>' : ''}</span></div></div>`).join('');
+}
+function cheerBlock(c) {
+  if (D.cheered.has(sentKey(c.id))) return mu('Hôm nay bạn đã gửi lời khích lệ cho bạn ấy.');
+  const own = (ctx.S.completed ? 'Mình đã hoàn thành chương trình 49 ngày' : `Mình đang ở ngày ${ctx.S.day || 1} của hành trình 49 ngày`) + '.';
+  return '<div class="dtch">' + Object.keys(CHEER_LINES).map((k) => bt('dt-cheer', esc(k === 'tien_trinh' ? own : CHEER_LINES[k]), 'btn alt', di(c.id) + ` data-v="${k}"` + dis())).join('') + '</div>' +
+    mu('Mỗi ngày một lời cho mỗi bạn. Lời tiến trình lấy theo hành trình đã lưu trên máy chủ.');
+}
 const prefs = () => { const s = (D.me && D.me.settings && D.me.settings.dong_tu) || {}; return { hien_trang_thai: s.hien_trang_thai !== false, cho_tim: s.cho_tim !== false, hien_ngay: s.hien_ngay !== false, chia_se_tien_trinh: s.chia_se_tien_trinh === true }; };
 
 /** Số chấm trên nút: lời kết nối và lời mời gặp đang chờ mình. Không bao giờ là số bạn. */
@@ -110,7 +156,7 @@ export function dtBadge() {
   follow();
   if (!dongTu.on) return 0;
   if (!dongTu.list) return (dongTu.social.requests || 0) + (dongTu.social.invites || 0);
-  return L('incoming').length + invites().incoming.length + sessions().filter((x) => x.seat && x.seat.status === 'moi').length;
+  return L('incoming').length + invites().incoming.length + sessions().filter((x) => x.seat && x.seat.status === 'moi').length + cheerUnseen();
 }
 
 // ───────── Các màn ─────────
@@ -176,6 +222,7 @@ function listView() {
   if (!dongTu.list) return h + ms('Đang tải danh sách…') + foot();
   const I = invites(), cs = L('companions'), inc = L('incoming'), og = L('outgoing'), SS = sessions();
   if (I.incoming.length) h += `<h3>Lời mời đang chờ (${I.incoming.length})</h3>` + I.incoming.map(incomingRow).join('');
+  h += cheerList();
   if (SS.length) h += '<h3>Hẹn đồng tu</h3>' + SS.map(sesRow).join('');
   if (inc.length) h += `<h3>Lời kết nối (${inc.length})</h3>` + inc.map(reqRow).join('');
   const than = cs.filter((c) => c.closeness === 'than'), quen = cs.filter((c) => c.closeness !== 'than');
@@ -329,7 +376,7 @@ const sesById = (id) => sessions().find((x) => x.s.id === id) || null;
 function friendView(c) {
   const me = c.me || {}, than = c.closeness === 'than';
   return `<h2>${esc(nm(c))}</h2><p class="pali">ID ${esc(c.tag)} · bạn đồng tu ${than ? 'thân thiết' : 'quen biết'}</p><p>${dot(c)} ${esc(presenceLine(c))}</p>${meetBlock(c, invites())}${status()}
-    <h3>Các kiểu mời</h3>${kinds(c)}<h3>Xem nhanh</h3>${peek(c)}
+    <h3>Các kiểu mời</h3>${kinds(c)}${hasCheers() ? `<h3>Khích lệ</h3>${cheerBlock(c)}` : ''}<h3>Xem nhanh</h3>${peek(c)}
     <h3>Mức gần gũi</h3><label class="chk"><input type="checkbox" data-dt="than"${me.than ? ' checked' : ''}${dis()}> Thân thiết</label>
     ${mu(`Hai người cùng chọn thì thành thân thiết. Không có nấc nào tự lên theo số lần gặp.`)}` +
     (than ? `<label class="chk"><input type="checkbox" data-dt="away"${me.away ? ' checked' : ''}${dis()}> Cho bạn ấy ghé Vân Đảo của mình khi mình vắng</label>${mu(`Chỉ có tác dụng khi Cổng Vân Môn của bạn ở chế độ Nghênh khách.`)}` : '') +
@@ -479,6 +526,7 @@ function tick() {
   follow();
   setPresence(ctx.presence());
   if (!dongTu.on) { card(); if (ctx.dais) ctx.dais([]); return; }
+  if (D.cheerHold && D.cheerRetry && Date.now() >= D.cheerRetry) { D.cheerRetry = 0; void loadMe(); }
   // Liên kết mời đã gửi mà sau 15 giây chưa thấy người mời trong danh sách: mô-đun mạng đã xóa mã (mã hỏng, hết lượt, mã của mình)
   // thì báo; còn mã (lỗi tạm) thì chờ tiếp
   if (D.pend && D.pend.on && dongTu.list && Date.now() - D.pend.at > 15_000) {
@@ -563,7 +611,13 @@ async function loadMe() {
     const me = await getMe();
     if (!still(uid) || !me || !me.user || me.user.id !== uid) return;   // phản hồi chậm của phiên trước
     observeDongTuMe(uid, me); D.me = me.profile || D.me; D.meFail = false;
-  } catch { if (!still(uid)) return; D.meFail = true; }
+    if (D.cheerHold) { D.cheerHold = false; D.cheerRetry = 0; ctx.badge(); }
+  } catch {
+    if (!still(uid)) return;
+    D.meFail = true;
+    // Đang giữ chấm khích lệ ở 0 sau «đã xem» mà GET /me lỗi: thử lại sau, để lời mới đến sau đó không bị giấu mãi (review #151)
+    if (D.cheerHold) D.cheerRetry = Date.now() + CHEER_RETRY_MS;
+  }
   if (D.me && !D.openSynced) syncOpen();
   if (ctx.viewOpen()) ctx.render();
 }
@@ -618,7 +672,7 @@ export function dtAct(act, b) {
   const id = b.dataset.id;
   if (act !== 'renew' && act !== 'remove' && act !== 'block' && act !== 's-cancel') D.arm = '';
   if (act === 'open') return open('list');
-  if (act === 'close') { D.tab = 'list'; return ctx.close(); }
+  if (act === 'close') { D.tab = 'list'; D.cheerMark = 0; return ctx.close(); }
   if (act === 'tab') return open(b.dataset.v);
   if (act === 'ban') { D.sel = id; return open('ban'); }
   if (act === 'me') return run('Đang kiểm tra', () => loadMe());
@@ -660,6 +714,16 @@ export function dtAct(act, b) {
   if (act === 'cancel') return run('Đang hủy lời mời', async (ok) => { await cancelMeet(id); if (!ok()) return; D.hide.add(id); }, !!b.closest('#dtm'));
   if (act === 'go') { const x = b.dataset.s ? sesById(b.dataset.s) : null, inv = x ? x.s : findInv(id); if (inv) ctx.go(inv); return; }
   if (act === 'hen') return henSend();
+  if (act === 'cheer') {
+    const line = b.dataset.v, k = sentKey(id);
+    if (!Object.prototype.hasOwnProperty.call(CHEER_LINES, line) || D.cheered.has(k)) return;
+    return run('Đang gửi lời khích lệ', async (ok) => {
+      try { await api(`/api/v1/companions/${encodeURIComponent(id)}/cheer`, { method: 'POST', body: { line } }); }
+      catch (e) { if (e && e.code === 'cheer_today' && ok()) D.cheered.add(k); throw e; }
+      if (!ok()) return;
+      D.cheered.add(k); D.msg = `Đã gửi lời khích lệ tới ${plainName(id)}.`;
+    });
+  }
   if (act === 's-yes' || act === 's-no' || act === 's-leave') {
     const yes = act === 's-yes';
     return run(yes ? 'Đang nhận lời' : 'Đang trả lời', async (ok) => {
