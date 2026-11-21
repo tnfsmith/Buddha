@@ -12,6 +12,7 @@ import { nv, loadMissions, soNhapView, soNhapAct, todayBox, todayLeft, missionsS
 import { ct, loadVariants, variantsStale, variantHtml, dkCard, dkView, dkAct, dkPull } from './ui/duyen-khoi.js';
 import { ptCard, ptLine, ptView, ptAct, ptSaved } from './ui/phan-tinh.js';
 import { tierOpened, tierMigrate, tierLoad, tierBlock, tierAct } from './ui/tang-1.js';
+import { htInit, htView, htAct, htInput, htGateLine } from './ui/ho-tri.js';   // T5.2 #195: Bảng Hộ Trì
 import { registerPWA, persistStorage } from './boot.js';
 import { startMetrics } from './net/metrics.js';
 import { $, fmt, esc } from './ui/dom.js';
@@ -464,6 +465,8 @@ function render() {
       `<div class="row"><button class="btn alt" data-act="sacca">Sám hối chân thật</button><span class="muted">Hạt Chân thật: ${S.sacca}</span></div>
       <p class="muted">Mỗi ngày chỉ mở một nấc. Các hệ số là tự khai để quán chiếu, không phải phép đo tâm.</p>
       <div class="row"><button class="ghost" data-act="home">← Vân Đảo</button><button class="ghost" data-act="dk-open">Duyên khởi</button><button class="ghost" data-act="reset">${U.resetArm ? 'Bấm lần nữa để xóa hành trình' : 'Bắt đầu lại từ ngày 1'}</button>${d > 1 || accountOn() ? accountHint() : ''}</div>`;
+  } else if (U.view === 'hotri') {
+    h = htView();   // T5.2 #195: Bảng Hộ Trì và Sự kiện (ui/ho-tri.js)
   } else if (U.view === 'zone' && U.zone) {
     const z = ZONES.find((x) => x.id === U.zone), ok = unlocked(z);
     h = `<h2>${esc(z.name)}</h2><p class="pali">${esc(z.pali)}</p><p>${esc(z.text)}</p>` + (z.note ? `<p class="note">${esc(z.note)}</p>` : '') +
@@ -477,7 +480,7 @@ function render() {
       (['kuti', 'pad', 'tea'].includes(z.id) && ok ? `<h3>Vân Du</h3><label class="chk"><input type="checkbox" data-vandu ${S.vandu ? 'checked' : ''}> Khi tọa thiền, máy quay rời chỗ ngồi đi viếng cảnh</label>
         <p class="muted">Ngồi yên càng lâu, cảnh càng xa: ${VD.slice(1).map((v) => v[0] + ' (' + v[1] + '′)').join(', ')}. Vân Du chỉ đếm thời gian ngồi yên; đó không phải thước đo tầng thiền hay quả vị. Chạm vào cảnh để xả thiền hoặc ngồi tiếp.</p>` : '') +
       (z.action === 'gate' && ok ? `<p class="muted">Hiện tại: ${S.open ? 'Nghênh khách. Bấm tên một bạn đồng tu ở đảo bên để chào hoặc sang thăm.' : 'Độc cư.'}</p>` : '') +
-      (z.action === 'gate' ? dtGateLine() + tierBlock(S, ptSaved(S, 7)) : '');
+      (z.action === 'gate' ? dtGateLine() + htGateLine() + tierBlock(S, ptSaved(S, 7)) : '');
   } else {
     const sim = U.sim ?? d;
     h = `<h2>Vân Đảo của ${esc(S.name || 'bạn')}</h2><p class="pali">Sơ nhập Tịnh Cảnh · ngày ${d}/49 · tuần ${wk}: ${esc(W.title)}</p>${bars()}
@@ -522,6 +525,7 @@ panel.addEventListener('input', (e) => {
   if (t.dataset.dt !== undefined) return dtInput(t);
   if (t.dataset.bn !== undefined) { S.birds.n = +t.value; const o = panel.querySelector('[data-bnv]'); if (o) o.textContent = S.birds.n; save(); return; }
   if (t.dataset.bvol !== undefined) { S.birds.vol = +t.value; const o = panel.querySelector('[data-bvv]'); if (o) o.textContent = S.birds.vol > 0 ? Math.round(S.birds.vol * 100) + '%' : 'tắt'; save(); return; }
+  if (t.dataset.ht !== undefined) return htInput(t);   // T5.2 #195: ui/ho-tri.js
   if (t.dataset.tts !== undefined) { S.tts = t.checked; save(); return; }
   if (t.dataset.vandu !== undefined) { S.vandu = t.checked; save(); return; }
   if (t.id === 'sim') { U.sim = +t.value; U.tier = null; $('#simv').textContent = t.value; $('#simt').textContent = WEEKS[Math.ceil(U.sim / 7) - 1].reward; return; }
@@ -558,6 +562,7 @@ panel.addEventListener('click', (e) => {
   if (act.startsWith('dt-')) return dtAct(act.slice(3), b);   // #124: Bạn đồng tu (ui/dong-tu.js)
   if (act === 'nv-jump') { const t = panel.querySelector('#' + b.dataset.to); if (t) t.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
   if (act.startsWith('tg-')) { void tierAct(act, render, toast); return; }   // #107: ui/tang-1.js
+  if (act.startsWith('ht-')) return htAct(act.slice(3), b);   // T5.2 #195: Bảng Hộ Trì (ui/ho-tri.js)
   if (act.startsWith('pt-')) { const r = ptAct(act, b, S, today()); if (r.view) U.view = r.view; if (r.msg) toast(r.msg); render(); return; }   // #104: ui/phan-tinh.js, chỉ trên máy
   if (act.startsWith('td-')) return tdAct(act.slice(3), () => { if (!(U.view === 'zone' && U.zone === 'tea' && world && world.av.state === 'sit')) goZone('tea'); });   // #125: tuần trà (ui/tra-dao.js)
   if (act.startsWith('dk-')) { const end = (r) => { if (r.view) U.view = r.view; if (r.msg) toast(r.msg); save(); render(); }, r = dkAct(act, b, S, today()); if (r && r.then) r.then(end); else end(r); return; }   // #104: ui/duyen-khoi.js
@@ -610,7 +615,7 @@ panel.addEventListener('click', (e) => {
 // ───────── Chuyển không gian ─────────
 function setMode(m) {
   if (U.view === 'creator') closeCreator(false);
-  if (U.view === 'dongtu') U.view = 'home';
+  if (U.view === 'dongtu' || U.view === 'hotri') U.view = 'home';
   if (m !== 'hall' && sermon.on) sermon.stop(); U.mode = m; document.body.classList.toggle('hall', m === 'hall'); document.body.classList.toggle('journey', m === 'journey');
   document.querySelectorAll('#tabs button').forEach((x) => x.classList.toggle('on', x.dataset.m === m));
   if (m !== 'journey') U.tier = null;
@@ -896,6 +901,10 @@ dtMark();
 // #125: tuần trà (ui/tra-dao.js): âm thanh theo âm lượng nhạc, máy quay ngắm mây ở bàn trà nhà mình
 tdInit({ world, sfx: (k, o) => amb.sfx(k, o, S.music.vol), toast, render, gaze: () => { if (world) world.teaGaze(); },
   done: (min, two) => { logTu('tra_dao', min, two ? 'tra-dao-hai' : 'tra-dao'); save(); } });   // nhiem-vu-so-nhap §6: hết một tuần trà (không Kusala)
+// T5.2 #195: Bảng Hộ Trì mở từ màn Cổng Vân Môn, đóng thì về lại màn đó
+htInit({ render, toast, viewOpen: () => U.view === 'hotri',
+  show: () => { U.back = U.view === 'zone' ? 'zone' : 'home'; U.view = 'hotri'; document.body.classList.remove('pmin'); panel.scrollTop = 0; render(); },
+  close: () => { U.view = U.back === 'zone' && U.zone ? 'zone' : 'home'; render(); } });
 // #125: bạn đồng tu thật dựng đảo gần Vân Đảo; danh sách đổi (kết bạn, hiện diện, ngày) thì cập nhật cảnh, giữ đúng bạn đang mở
 if (world) {
   onDongTu(() => { const cur = U.view === 'friend' && world.friends[U.friend], key = cur && (cur.id || 's' + cur.sim);
