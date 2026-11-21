@@ -1486,20 +1486,24 @@ T3.7 đã đạt bộ audio phát hành (Sadaltager/Puck đúng ngoại lệ); #
 ### GĐ5 — Cộng đồng Hộ Trì và xã hội tu tập (≈ 3 tuần)
 | ID | Việc | Làn | Nghiệm thu |
 |---|---|---|---|
-| T5.1 | Migration mới kế tiếp; API help/events/moderation; Llama Guard; Cloudflare Access cho `/admin` | AG | Bài vi phạm mẫu bị giữ lại; tài khoản mới phải qua duyệt |
-| T5.2 | UI Bảng Hộ Trì ở Cổng Vân Môn, sự kiện, đồng tu, thăm đảo (IslandRoom), nhóm, phòng nhóm | C | Hai người thật thăm đảo nhau, cùng an tọa |
-| T5.3 | Tóm tắt kiểm duyệt hằng ngày; xác minh đối tác sự kiện | H + O | Không việc kiểm duyệt nào tồn quá 24 giờ |
+| T5.1 | Migration mới kế tiếp; API help/events/moderation; Llama Guard; Cloudflare Access cho `/admin` | AG | **Đang chốt hợp đồng [#191](https://github.com/tnfsmith/Buddha/issues/191).** Codex giữ help/events/moderation. UI Claude và vận hành Hermes đi sau hợp đồng. |
+| T5.2 | UI Bảng Hộ Trì ở Cổng Vân Môn, sự kiện, đồng tu, thăm đảo (IslandRoom), nhóm, phòng nhóm | C | **Chờ T5.1:** hai người thật thăm đảo, cùng an tọa. Bảng Hộ Trì đi theo Issue và hợp đồng riêng. |
+| T5.3 | Tóm tắt kiểm duyệt hằng ngày; xác minh đối tác sự kiện | H + O | **Chờ luồng kiểm duyệt T5.1:** Hermes và chủ dự án xác minh đối tác, đối chiếu thời gian xử lý; không việc kiểm duyệt tồn quá 24 giờ. |
 
 **Đợt 5A — Bạn đồng tu (§10.4, #121).** Không cần thời gian thực hay kiểm duyệt nên bắt đầu sớm, song song GĐ4: Codex sau #105, Claude sau #104. Hai bên không sửa chung tệp.
 
 | ID | Việc | Làn | Nghiệm thu |
 |---|---|---|---|
-| T5.4 | Thiết kế trải nghiệm, hợp đồng D1/API, luật dùng chung `dong-tu.js` + kiểm thử | C | Codex duyệt hợp đồng; gộp trước T5.5–T5.8 |
-| T5.5 | Migration kế tiếp (`companion` thêm cột, `presence`, `meet_invite`, `island_visit`); API liên kết/tìm/đồng ý/thân thiết/hiện diện/mời gặp/ghé khi vắng/chặn; xuất/xóa | AG | Đủ 10 nhóm ca ở hợp đồng §6 trên D1 cục bộ |
-| T5.6 | `apps/web/src/net/dong-tu.js`: gọi API, nhịp hiện diện, đọc `#ban=`, đẩy cài đặt riêng tư/Nghênh khách lên hồ sơ, đọc `me.social` | AG | Kiểm thử với máy chủ giả; không gửi khi chưa có phiên (tài khoản hoặc khách) hoặc `dong_tu` chưa bật |
-| T5.7 | UI: nút Bạn đồng tu, danh sách + trạng thái, Mời bạn tu cùng (QR), thẻ lời mời, thẻ bạn, cài đặt riêng tư | C | E2E hai thiết bị: kết bạn bằng liên kết, mời thiền, cùng đếm ngược; giao diện điện thoại ≤ 44vh |
-| T5.8 | 3D: đảo bạn thật gần đảo mình (thân thiết/quen biết), đèn hiện diện, ghé thăm/ghé khi vắng, cùng ngồi, Trà Đạo hai người | C | `perf.spec.js` trong ngân sách §12.2; e2e ghé thăm, cùng ngồi |
-| T5.9 | Thử với bạn thật; xác nhận các mặc định ở thiết kế §9 | O | Hai người thật kết bạn và cùng ngồi một thời thiền |
+| T5.4 | Thiết kế trải nghiệm, hợp đồng D1/API, luật dùng chung `dong-tu.js` + kiểm thử | C | **Đã merge:** hợp đồng nền [#126](https://github.com/tnfsmith/Buddha/pull/126), hợp đồng Đồng tu v2 [#152](https://github.com/tnfsmith/Buddha/pull/152). |
+| T5.5 | Migration kế tiếp (`companion` thêm cột, `presence`, `meet_invite`, `island_visit`); API liên kết/tìm/đồng ý/thân thiết/hiện diện/mời gặp/ghé khi vắng/chặn; xuất/xóa | AG | **Đã merge API nền:** migration 0011, hiện diện/ghé đảo [#138](https://github.com/tnfsmith/Buddha/pull/138), nhân vật và chia sẻ tiến trình #158/#159. Kiểm Worker/D1 29/29 đã ghi ở [#122](https://github.com/tnfsmith/Buddha/issues/122). Nghiệm thu với UI staging đạt theo #124, #122 đã đóng. |
+| T5.6 | `apps/web/src/net/dong-tu.js`: gọi API, nhịp hiện diện, đọc `#ban=`, đẩy cài đặt riêng tư/Nghênh khách lên hồ sơ, đọc `me.social` | AG | **Đã merge:** kết nối mạng, liên kết mời #168 và cập nhật số lời hẹn/khích lệ từ /me qua #185. Chờ hai API ghi mới của v2 để kiểm từ đầu đến cuối. |
+| T5.7 | UI: nút Bạn đồng tu, danh sách + trạng thái, Mời bạn tu cùng (QR), thẻ lời mời, thẻ bạn, cài đặt riêng tư | C | **Đã nghiệm thu và đóng #124.** UI nền #148 và hai phiên Worker/D1 staging đạt. Đã kiểm tìm đúng Tịnh danh · mã, bỏ qua/rút lời kết nối, hoãn lời mời trong lúc thiền và cùng bắt đầu. [Bằng chứng Claude 2](https://github.com/tnfsmith/Buddha/issues/124#issuecomment-7062366269) |
+| T5.8 | 3D: đảo bạn thật gần đảo mình (thân thiết/quen biết), đèn hiện diện, ghé thăm/ghé khi vắng, cùng ngồi, Trà Đạo hai người | C | **Đang nghiệm thu:** Claude 2 giữ #177 → #180 → #181 → #186 → #188. #188 kiểm hai phiên bằng Worker/D1 cục bộ. Codex giữ runner #189, đã chạy đủ 3 ca; đổi base sau #188. |
+| T5.9 | Thử với bạn thật; xác nhận các mặc định ở thiết kế §9 | O | **Chờ chủ dự án:** sau khi chuỗi đã merge, hai người thật kết bạn và cùng ngồi thiền trên staging. Kiểm CI đúng main và kiểm khói staging trước khi đề nghị tag. |
+
+**Đồng tu v2 và hàng merge.** Claude giữ #175 (Xem nhanh), #183 (UI hẹn nhóm), #184 (UI khích lệ). Codex giữ API hẹn nhóm [#187](https://github.com/tnfsmith/Buddha/pull/187), migration 0012, và API khích lệ [#192](https://github.com/tnfsmith/Buddha/pull/192), migration 0013, sau đó. #183 đi sau #175 và API #187. #184 đi sau #183 và API khích lệ tương ứng. Preview có migration dùng D1/KV riêng theo [#35](https://github.com/tnfsmith/Buddha/issues/35). Nhánh 3D và kiểm hai phiên thuộc Claude 2, có hàng merge riêng. Xem [mốc bàn giao](docs/COORDINATION.md#28-gđ5-đồng-tu-v2-và-nghiệm-thu-hai-phiên--21112026).
+
+**Phạm vi v0.18.0 đang đề xuất tại [#151](https://github.com/tnfsmith/Buddha/issues/151)** gồm Xem nhanh, hẹn nhóm, đảo bạn và runner Worker/D1. Khích lệ được tính khi API/UI đã tích hợp và nghiệm thu. T5.1–T5.3 đi theo hợp đồng và Issue riêng. Chủ dự án chốt phạm vi phát hành sau T5.9.
 
 ### GĐ6 — Đại Công Đức (≈ 3 tuần; chỉ mở khi xong các việc pháp lý của [O])
 | ID | Việc | Làn | Nghiệm thu |
