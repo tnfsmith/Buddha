@@ -16,7 +16,10 @@ import { registerPWA, persistStorage } from './boot.js';
 import { startMetrics } from './net/metrics.js';
 import { $, fmt, esc } from './ui/dom.js';
 import { accountView, accountAct, accountHint, accountOn, accountInit } from './ui/account.js';
-import { record, recordProfile, recordPractice, syncNow } from './net/account.js';
+import { acct, record, recordProfile, recordPractice, syncNow } from './net/account.js';
+import { onDongTu, meet as dtMeet, visitAway } from './net/dong-tu.js';   // #125: đảo bạn thật (dongTu ở dòng dưới)
+import { tdInit, tdView, tdAct, tdStart, tdOn, tdSkip, tdAt } from './ui/tra-dao.js';
+import { MEET_KINDS, PRESENCE_TEXT, REASON_TEXT } from '@vandao/shared/dong-tu.js';
 import { dtInit, dtView, dtAct, dtInput, dtOpen, dtBadge, dtGateLine, dtSyncOpen } from './ui/dong-tu.js';
 import { dongTu } from './net/dong-tu.js';
 
@@ -191,7 +194,7 @@ function toast(msg) { const el = $('#toast'); el.textContent = msg; el.classList
 const L = $('#labels'), mkLabel = (cls, fn) => { const b = document.createElement('button'); b.className = cls; b.style.opacity = '0'; L.appendChild(b); if (fn) b.addEventListener('click', fn); return b; };
 const zoneLb = {}; ZONES.forEach((z) => (zoneLb[z.id] = mkLabel('zl', () => goZone(z.id))));
 const meLb = mkLabel('zl me', () => openCreator());
-const friendLb = world ? world.friends.map((f, i) => mkLabel('zl fr', () => openFriend(i))) : [];
+const friendLb = world ? Array.from({ length: 8 }, (_, i) => mkLabel('zl fr', () => openFriend(i))) : [];   // #125: tối đa 8 đảo bạn (4 thân thiết + 4 quen biết)
 const tierLb = TIER_LABEL.map((p, i) => mkLabel('tl ladder', () => pickTier(i)));
 const daisLb = Array.from({ length: 6 }, () => mkLabel('zl fr dais'));   // #151: tên người trên Đài Đồng Tu
 function place(el, v, on, margin = 20) {
@@ -208,6 +211,7 @@ function updateLabels() {
   });
   const nm = S.name || 'Bạn'; if (meLb.dataset.k !== nm) { meLb.dataset.k = nm; meLb.textContent = nm; }
   place(meLb, world.headPos().add(new THREE.Vector3(0, 0.9, 0)), isl && !creator && world.av.state !== 'travel');
+  friendLb.forEach((el, i) => { const f = world.friends[i]; if (!f) place(el, null, false); else if (el.textContent !== f.name) el.dataset.k = ''; el.style.visibility = f && f.id && world.camera.position.distanceTo(f.head) > 170 ? 'hidden' : ''; });   // #125: danh sách đổi thì đổi tên; nhãn bạn thật chỉ hiện khi đến gần
   world.friends.forEach((f, i) => { const el = friendLb[i]; if (!el.dataset.k) { el.dataset.k = '1'; el.textContent = f.name; } place(el, f.head, isl && !creator); });
   // Đài Đồng Tu: «Tịnh danh · mã» từng bạn, mình là «Tịnh danh (bạn)», chưa vào thì «đang tới».
   // Toàn cảnh: các bạn chỉ cách nhau vài điểm ảnh, nên gộp thành một nhãn đặt giữa đài
@@ -422,7 +426,7 @@ function render() {
       <div class="row"><button class="btn" data-act="saveLook" ${nb.c.ok ? '' : 'disabled'}>Lưu nhân vật</button><button class="btn alt" data-act="rand">Ngẫu nhiên hài hòa</button><button class="ghost" data-act="home">← Vân Đảo</button></div>`;
   } else if (U.view === 'friend' && world) {
     const f = world.friends[U.friend], away = world.av.where === U.friend, gateOk = islandState().gate >= 0.5, moving = world.av.state === 'travel';
-    h = `<h2>${esc(f.name)}</h2><p class="pali">Bạn đồng tu · Vân Đảo láng giềng${f.day ? ` · ngày ${f.day}/49 của hành trình` : ''}</p>
+    h = f.id ? friendReal(f, away, gateOk, moving) : `<h2>${esc(f.name)}</h2><p class="pali">Bạn đồng tu · Vân Đảo láng giềng${f.day ? ` · ngày ${f.day}/49 của hành trình` : ''}</p>
       <p>${away ? 'Bạn đang ở đảo của ' + esc(f.name) + '. Hãy giữ sự tĩnh lặng của chủ nhà.' : esc(f.name) + ' đang tọa thiền trên đảo bên cạnh. Bạn có thể chào, tùy hỷ, hoặc du vân sang thăm.'}</p>
       <div class="row"><button class="btn" data-act="greet">Chắp tay chào</button><button class="btn alt" data-act="rejoice">Tùy hỷ công đức</button></div><div class="row">` +
       (away ? '<button class="btn alt" data-act="sitwith">Mời cùng tọa thiền</button><button class="btn alt" data-act="gohome">Về đảo của mình</button>' : `<button class="btn alt" data-act="visit" ${gateOk && !moving && world.av.where === 'home' ? '' : 'disabled'}>Du vân sang thăm</button>`) + '</div>' +
@@ -467,7 +471,7 @@ function render() {
       (z.action === 'sit' ? '<button class="btn" data-act="play">Bắt đầu thời thiền</button><button class="btn alt" data-act="hall">Sang Đại Thiền Đường</button>' : '') +
       (z.action === 'gate' && ok ? `<button class="btn" data-act="gate">${S.open ? 'Chuyển sang Độc cư (khép cổng)' : 'Chuyển sang Nghênh khách (mở cổng)'}</button>` : '') +
       (z.id === 'kuti' ? '<button class="btn" data-act="kuti-sit">Tọa thiền tại đây</button>' : '') +
-      (z.action === 'board' ? '<button class="btn" data-act="board">Mở bảng nhiệm vụ</button>' : '') + '<button class="ghost" data-act="home">← Vân Đảo</button></div>' + (z.id === 'kuti' ? '<h3>Hướng ngồi</h3>' + seg('kface', [[0, 'Cửa chính'], [1, 'Bên phải'], [2, 'Vào trong'], [3, 'Bên trái']], S.kface || 0) : '') +
+      (z.action === 'board' ? '<button class="btn" data-act="board">Mở bảng nhiệm vụ</button>' : '') + '<button class="ghost" data-act="home">← Vân Đảo</button></div>' + (z.id === 'tea' && ok ? tdView() : '') + (z.id === 'kuti' ? '<h3>Hướng ngồi</h3>' + seg('kface', [[0, 'Cửa chính'], [1, 'Bên phải'], [2, 'Vào trong'], [3, 'Bên trái']], S.kface || 0) : '') +
       ((z.id === 'kuti' || z.id === 'tea') && ok ? `<h3>Nhạc thiền</h3><div class="row"><button class="btn alt" data-act="mus-toggle">${amb.on ? 'Tạm ngưng nhạc' : 'Mở nhạc thiền'}</button><button class="ghost" data-act="mus-open">Chọn khúc và thời lượng</button></div>
         <p class="muted">${amb.on && amb.cur ? 'Đang phát: ' + esc(SONG[amb.cur].name) + leftTxt() + '.' : 'Nhạc đang tắt.'} ${S.music.len ? 'Mỗi khúc ' + S.music.len + ' phút, ' + ORDER[S.music.order].toLowerCase() + '.' : 'Phát liên tục.'}</p>` : '') +
       (['kuti', 'pad', 'tea'].includes(z.id) && ok ? `<h3>Vân Du</h3><label class="chk"><input type="checkbox" data-vandu ${S.vandu ? 'checked' : ''}> Khi tọa thiền, máy quay rời chỗ ngồi đi viếng cảnh</label>
@@ -555,6 +559,7 @@ panel.addEventListener('click', (e) => {
   if (act === 'nv-jump') { const t = panel.querySelector('#' + b.dataset.to); if (t) t.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
   if (act.startsWith('tg-')) { void tierAct(act, render, toast); return; }   // #107: ui/tang-1.js
   if (act.startsWith('pt-')) { const r = ptAct(act, b, S, today()); if (r.view) U.view = r.view; if (r.msg) toast(r.msg); render(); return; }   // #104: ui/phan-tinh.js, chỉ trên máy
+  if (act.startsWith('td-')) return tdAct(act.slice(3), () => { if (!(U.view === 'zone' && U.zone === 'tea' && world && world.av.state === 'sit')) goZone('tea'); });   // #125: tuần trà (ui/tra-dao.js)
   if (act.startsWith('dk-')) { const end = (r) => { if (r.view) U.view = r.view; if (r.msg) toast(r.msg); save(); render(); }, r = dkAct(act, b, S, today()); if (r && r.then) r.then(end); else end(r); return; }   // #104: ui/duyen-khoi.js
   if (act.startsWith('nv-')) { const msg = soNhapAct(act, b, S, today()); save(); if (msg) { toast(msg); if (world && /cánh sen|Đã giữ|thọ trì|giữ nguyện/.test(msg)) world.burst(0xf3d27a, null, 0.7); } render(); return; }   // đợt C (#91): ui/so-nhap.js
   if (['board', 'sit', 'visit'].includes(act) && meditating()) return move(() => { const again = panel.querySelector('[data-act="' + act + '"]'); if (again) again.click(); });
@@ -586,7 +591,9 @@ panel.addEventListener('click', (e) => {
   else if (act === 'rejoice') { world.rejoice(U.friend); toast('Sādhu! Tùy hỷ công đức của ' + world.friends[U.friend].name + '.'); }
   else if (act === 'visit') { const i = U.friend; world.setMode('island'); world.visit(i, () => { toast('Đã đến đảo của ' + world.friends[i].name + '.'); world.greet(i); render(); }); toast('Du vân theo vân lộ…'); }
   else if (act === 'gohome') { world.goHome(() => { toast('Đã về Vân Đảo của mình.'); U.view = 'home'; world.setMode('island'); render(); }); toast('Du vân trở về…'); }
-  else if (act === 'sitwith') { world.fig.setPose('sit'); world.av.state = 'sit'; world.av.rotTo = Math.atan2(-world.av.pos.x, -760 - world.av.pos.z); if (!player.playing) togglePlay(); U.sit = { at: Date.now(), zone: null }; toast('Hai người cùng an tọa, hướng về Tôn tượng.'); }
+  else if (act === 'xin-tham' || act === 'ghe-vang') void askVisit(world.friends[U.friend], act === 'ghe-vang');   // #125: bạn đồng tu thật
+  else if (act === 'tq') { clearTimeout(tourT); world.tourShow(U.friend, b.dataset.id); render(); } else if (act === 'tq-auto') tourAuto(U.friend, 'Đã tham quan hết các phân khu.');   // #125 §5.5: tham quan
+  else if (act === 'sitwith') { world.sitWith(U.friend, 'thien', () => { if (!player.playing) togglePlay(); U.sit = { at: Date.now(), zone: null }; render(); }); toast('Hai người cùng an tọa, hướng về Tôn tượng.'); }   // #125: tới ngồi cạnh chủ đảo
   else if (act === 'sacca') { S.sacca++; save(); record('sacca.add'); if (world) world.burst(0xbfeee4, null, 0.5); toast('Thành thật nhận lỗi và nguyện phòng hộ ngày mai: mặt hồ trong trở lại.'); }
   else if (act === 'reset') { if (U.resetArm) { const keep = { name: S.name, look: S.look, tier1v: S.tier1v, tier1Legacy: S.tier1Legacy }; resetState(keep); save(); record('journey.reset_cycle'); U.resetArm = false; toast('Đã trở về ngày 1.'); } else U.resetArm = true; }
   else if (act === 'confirm') {
@@ -776,21 +783,103 @@ function dtMark() { const on = dongTu.on, n = dtBadge(); dtBtn.hidden = !on; dtB
 dtBtn.addEventListener('click', () => (U.view === 'dongtu' ? dtAct('close', { dataset: {} }) : dtOpen()));
 /** Hiện diện gửi cho bạn đồng tu: đang thiền / thưởng trà / thăm đảo bạn / ở Vân Đạo */
 function presence() {
+  if (tdOn()) return 'tra';   // #125: đang trong tuần trà
   if (player.playing || meditating()) return U.zone === 'tea' ? 'tra' : 'thien';
   if (world && world.av.where !== 'home') return 'tham';
   return U.view === 'zone' && U.zone === 'tea' ? 'tra' : 'online';
 }
 /** Tới giờ hẹn: cả hai cùng bắt đầu, `ms` là thời gian đã trôi từ giờ hẹn (vào trễ thì bắt kịp đúng chỗ của người kia) */
 function together(inv, ms) {
-  if (inv.kind === 'tra') { if (U.mode !== 'island') setMode('island'); goZone('tea'); return; }
+  // Trà Đạo: tuần trà chung bắt đầu theo giờ hẹn, vào trễ thì bắt kịp (#125); gặp trên đảo thì ở bàn trà của chủ, không thì ở bàn trà của mình
+  if (inv.kind === 'tra') { const two = { two: true, elapsed: ms / 1000, name: otherName(inv) }; if (!(inv.place === 'dao' && islandMeet(inv))) { if (U.mode !== 'island') setMode('island'); goZone('tea'); } tdStart(two); return; }
   goMeet(inv);
   player.seek(Math.min(DUR - 5, ms / 1000)); if (!player.playing) togglePlay(); render();
 }
-// Nơi gặp: Đại Thiền Đường; gặp trên Vân Đảo (du vân sang đảo chủ) thuộc #125, tạm ngồi ở Đài Thiền của mình
+// Nơi gặp: Đại Thiền Đường; hoặc Vân Đảo của chủ (#125, islandMeet); không dựng được đảo chủ thì ngồi ở Đài Thiền của mình như trước
 function goMeet(inv) {
   if (U.view === 'dongtu') { U.view = 'home'; render(); }
   if (inv.place === 'dtd') { if (U.mode !== 'hall') setMode('hall'); if (U.hallTab === 'sermon') { sermonStop(); U.hallTab = 'sit'; render(); } }
-  else { if (U.mode !== 'island') setMode('island'); goZone('pad'); }
+  else if (!islandMeet(inv)) { if (U.mode !== 'island') setMode('island'); goZone('pad'); }
+}
+/**
+ * #125: gặp trên Vân Đảo (place 'dao'), chủ đảo theo MEET_KINDS[kind].host. Mình là khách: du vân sang đảo chủ (bạn ngoài tám ô gần thì tạm dựng
+ * vào ô quen biết cuối); thiền ngồi cạnh chủ, trà ở bàn trà của chủ. Mình là chủ: ở nhà, khách hiện ngồi cạnh (không thời gian thực tới GĐ4).
+ * false: không dựng được (chưa có danh sách, đang ở đảo khác, đang du vân) để goMeet làm như cũ.
+ */
+function islandMeet(inv) {
+  const K = MEET_KINDS[inv.kind]; if (!K || !world || !acct.uid || inv.place !== 'dao') return false;
+  const host = String(K.host === 'from' ? inv.from : inv.to), guest = String(host === String(inv.from) ? inv.to : inv.from), how = inv.kind === 'tra' ? 'tra' : inv.kind === 'thien' ? 'thien' : null;
+  const comps = (dongTu.list && dongTu.list.companions) || [], A = world.av;
+  if (host === String(acct.uid)) {
+    const g = comps.find((c) => String(c.id) === guest); if (U.mode !== 'island') setMode('island');
+    world.setGuest(g ? { look: g.look, name: g.tinh_danh, kind: inv.kind, sec: (K.min || 20) * 60 + 60 } : null);
+    if (how) goZone(how === 'tra' ? 'tea' : 'pad');
+    if (g) toast(how === 'tra' ? `${g.tinh_danh} ngồi đối diện bên bàn trà.` : how ? `${g.tinh_danh} ngồi cạnh bạn ở Đài Thiền.` : `${g.tinh_danh} đang ghé thăm Vân Đảo của bạn.`);
+    return true;
+  }
+  let i = world.friends.findIndex((f) => f.id === host);
+  if (i < 0) { world.setCompanions(comps, host); i = world.friends.findIndex((f) => f.id === host); }
+  if (i < 0 || A.state === 'travel' || (A.where !== 'home' && A.where !== i)) return false;
+  if (U.mode !== 'island') setMode('island');
+  U.friend = i; U.view = 'friend';
+  if (A.where === i) { if (how) world.sitWith(i, how); render(); return true; }
+  world.visit(i, () => { if (how) world.sitWith(i, how); else world.greet(i); toast('Đã đến đảo của ' + world.friends[i].name + '.'); render();
+    if (inv.kind === 'tham_quan') tourT = setTimeout(() => tourAuto(i, 'Đã tham quan đảo của ' + world.friends[i].name + '.'), 2600); }, how);   // chủ mời tham quan: giới thiệu lần lượt
+  toast('Du vân theo vân lộ…'); render(); return true;
+}
+// «Tham quan» đảo bạn (#125 §5.5): các phân khu bạn đã mở theo ngày; bấm để xem, vòng sáng đánh dấu chỗ đang xem; lần lượt thì mỗi chỗ 4,5 giây
+const TOUR_NAME = { mon: 'Vân Môn', toa: 'Vân Tọa', bode: 'Cây Bồ-đề', ao: 'Ao sen ngọc', tra: 'Bàn trà đá', den: 'Đèn đá', loi: 'Lối đá', am: 'Am nhỏ', bia: 'Bia nhỏ' };
+let tourT = 0;
+function tourBlock(i) {
+  const st = world.tourStops(i), at = world.tourAt && world.tourAt.i === i ? world.tourAt.id : null; if (!st.length) return '';
+  return `<h3>Tham quan</h3><div class="seg wrap">${st.map((k) => `<button data-act="tq" data-id="${k}" class="${at === k ? 'on' : ''}">${TOUR_NAME[k]}</button>`).join('')}</div><div class="row"><button class="ghost" data-act="tq-auto">Tham quan lần lượt</button></div>`;
+}
+function tourAuto(i, msg) {
+  clearTimeout(tourT); const st = world.tourStops(i); let k = 0;
+  const next = () => { const A = world.av; if (A.where !== i || A.state === 'travel' || k >= st.length) { world.tourEnd(); render(); if (k >= st.length && msg && A.where === i) toast(msg); return; } world.tourShow(i, st[k++]); render(); tourT = setTimeout(next, 4500); };
+  next();
+}
+/** Tịnh danh của người kia trong một lời mời gặp (để ghi «Tuần trà cùng …») */
+function otherName(inv) { const id = String(String(inv.from) === String(acct.uid) ? inv.to : inv.from), c = ((dongTu.list && dongTu.list.companions) || []).find((x) => String(x.id) === id); return c ? c.tinh_danh : ''; }
+/** #125: màn một bạn đồng tu thật: hiện diện, ngày hành trình bạn cho hiện; Xin ghé thăm khi bạn đang ở Vân Đạo, Ghé khi vắng khi bạn thân thiết cho phép */
+function friendReal(f, away, gateOk, moving) {
+  const c = f.c || {}, open = c.open !== false, home = world.av.where === 'home' && !moving, canAway = !f.here && c.closeness === 'than' && !!(c.them && c.them.away) && open;
+  const act = away ? '<button class="btn alt" data-act="sitwith">Cùng tọa thiền</button><button class="btn alt" data-act="gohome">Về đảo của mình</button>'
+    : f.here ? `<button class="btn alt" data-act="xin-tham" ${gateOk && home && open ? '' : 'disabled'}>Xin ghé thăm</button>`
+      : canAway ? `<button class="btn alt" data-act="ghe-vang" ${gateOk && home ? '' : 'disabled'}>Ghé khi vắng</button>` : '';
+  const note = away ? (f.here ? `Bạn đang ở đảo của ${esc(f.name)}. Hãy giữ sự tĩnh lặng của chủ nhà.` : `${esc(f.name)} đang vắng. Bạn có thể chắp tay, tùy hỷ rồi về.`)
+    : !open ? `${esc(f.name)} đang Độc cư: cổng mây khép.` : !gateOk ? 'Cổng Vân Môn của bạn mở nửa từ ngày 29.' : f.here ? 'Gửi lời xin ghé thăm; khi bạn nhận lời, vân mây sẽ đưa bạn sang.' : canAway ? 'Bạn thân thiết đã cho phép ghé khi vắng.' : '';
+  return `<h2>${esc(f.name)}</h2><p class="pali">Bạn đồng tu · ${esc(PRESENCE_TEXT[f.presence] || PRESENCE_TEXT.vang)}${c.completed ? ' · đã hoàn thành chương trình Sơ nhập' : c.day ? ` · ngày ${c.day}/49 của hành trình` : ''}</p>` +
+    '<div class="row"><button class="btn" data-act="greet">Chắp tay chào</button><button class="btn alt" data-act="rejoice">Tùy hỷ công đức</button></div>' + (act ? `<div class="row">${act}</div>` : '') +
+    (note ? `<p class="muted">${note}</p>` : '') + (!away && f.id && visitLine(f.id) ? `<p class="muted">${esc(visitLine(f.id))}</p>` : '') + (away ? tdView(false) + tourBlock(U.friend) : '') + '<p class="muted">Chào và tùy hỷ ở đây là cử chỉ trên Vân Đảo, không cộng điểm.</p><div class="row"><button class="ghost" data-act="home">← Vân Đảo</button></div>';
+}
+// #125 §5.5: ai đã ghé khi mình vắng (GET /companions → visits: 7 ngày, `day` theo ngày của chủ đảo, mới nhất trước)
+const VISIT_KEY = 'vandao.visits.v1';
+const visitsOf = (id) => ((dongTu.on && dongTu.list && Array.isArray(dongTu.list.visits) && dongTu.list.visits) || []).filter((v) => v && String(v.guest) === String(id));
+function visitLine(id) {
+  const d = String((visitsOf(id)[0] || {}).day || ''); if (!/^\d{4}-\d\d-\d\d$/.test(d)) return '';
+  return d === today() ? 'Đã ghé thăm đảo bạn hôm nay khi bạn vắng.' : `Đã ghé thăm đảo bạn ngày ${+d.slice(8)}/${+d.slice(5, 7)} khi bạn vắng.`;
+}
+/** Báo một lần cho mỗi người mỗi ngày (ghi «tài khoản|khách|ngày» trên máy); đang thiền, đang nghe hay đang du vân thì để lần sau */
+function visitToast() {
+  const L = dongTu.on && dongTu.list, vs = L && Array.isArray(L.visits) ? L.visits : [];
+  if (!vs.length || player.playing || meditating() || U.vd || (world && world.av.state === 'travel')) return '';
+  let seen = []; try { seen = JSON.parse(localStorage.getItem(VISIT_KEY) || '[]'); } catch (e) { void e; } if (!Array.isArray(seen)) seen = [];
+  const key = (v) => acct.uid + '|' + v.guest + '|' + v.day, fresh = vs.filter((v) => v && v.day === today() && !seen.includes(key(v)));
+  if (!fresh.length) return '';
+  try { localStorage.setItem(VISIT_KEY, JSON.stringify([...fresh.map(key), ...seen].slice(0, 60))); } catch (e) { void e; }
+  const comps = L.companions || [], names = [...new Set(fresh.map((v) => (comps.find((c) => String(c.id) === String(v.guest)) || {}).tinh_danh).filter(Boolean))];
+  if (!names.length) return '';
+  const who = names.length > 2 ? `${names.slice(0, 2).join(', ')} và ${names.length - 2} bạn khác` : names.join(' và '), msg = `${who} đã ghé thăm Vân Đảo hôm nay khi bạn vắng.`;
+  toast(msg); return msg;
+}
+/** #125: Xin ghé thăm (lời mời xin_tham, đi khi bạn nhận lời) hoặc Ghé khi vắng (máy chủ kiểm canVisitAway rồi đi ngay) */
+async function askVisit(f, away) {
+  if (!f || !f.id) return;
+  if (!away) { const r = await dtMeet(f.id, 'xin_tham', 'dao').catch((e) => ({ code: e && e.code })); return toast(r && r.invite ? `Đã gửi lời xin ghé thăm ${f.name}. Khi bạn nhận lời, vân mây sẽ đưa bạn sang.` : REASON_TEXT[r && r.code] || 'Chưa gửi được lời xin ghé thăm.'); }
+  const r = await visitAway(f.id), i = world.friends.indexOf(f);
+  if (!r || r.code || i < 0) return toast(REASON_TEXT[r && r.code] || 'Chưa ghé được lúc này.');
+  world.setMode('island'); world.visit(i, () => { world.greet(i); toast(`Đã đến đảo của ${f.name}. Bạn ấy đang vắng: chắp tay, tùy hỷ rồi về.`); render(); }); toast('Du vân theo vân lộ…');
 }
 dtInit({
   S, render, toast, cardEl: $('#dtm'), badge: dtMark, presence, together, go: goMeet,
@@ -804,6 +893,16 @@ dtInit({
   sfx: (k) => amb.sfx(k, { k: 0.4 }, S.music.vol),
 });
 dtMark();
+// #125: tuần trà (ui/tra-dao.js): âm thanh theo âm lượng nhạc, máy quay ngắm mây ở bàn trà nhà mình
+tdInit({ world, sfx: (k, o) => amb.sfx(k, o, S.music.vol), toast, render, gaze: () => { if (world) world.teaGaze(); },
+  done: (min, two) => { logTu('tra_dao', min, two ? 'tra-dao-hai' : 'tra-dao'); save(); } });   // nhiem-vu-so-nhap §6: hết một tuần trà (không Kusala)
+// #125: bạn đồng tu thật dựng đảo gần Vân Đảo; danh sách đổi (kết bạn, hiện diện, ngày) thì cập nhật cảnh, giữ đúng bạn đang mở
+if (world) {
+  onDongTu(() => { const cur = U.view === 'friend' && world.friends[U.friend], key = cur && (cur.id || 's' + cur.sim);
+    world.setCompanions((dongTu.on && dongTu.list && dongTu.list.companions) || []); visitToast();
+    if (key) { const i = world.friends.findIndex((f) => (f.id || 's' + f.sim) === key); if (i >= 0) U.friend = i; else U.view = 'home'; render(); } });
+  Object.assign(window.__app, { goMeet, together, tdSkip, tdAt, acct, dongTu, openFriend, visitToast });   // kiểm thử e2e gặp trên đảo, tuần trà (#125)
+}
 // #93: tải danh mục việc sớm để nhắc việc còn lại trong ngày; quay lại app sau một lúc thì nhắc lại
 stateReady.then(() => { if (S.name) return loadMissions().then(() => setTimeout(remind, 4000)); }).catch(() => {});
 window.addEventListener('focus', () => setTimeout(remind, 1500));

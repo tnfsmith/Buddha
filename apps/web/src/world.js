@@ -5,8 +5,9 @@ import { buildRealm } from './realm.js';
 import { BIO } from './audio.js';
 import { buildBirds } from './birds.js';
 import { NOISE, OUT, rng, puffAtlas, buildBuddha, buddhaFace, lodPair, UNI, moodMix, gfxBackend, tierOf, governor, hue } from './gfx.js';
-import { buildHome, buildNeighbor, bakeLocal, groundH, floorH, pvFloor, DECKS, STAIR, SX, SZ, HILL, POND } from './island.js';
+import { buildHome, buildNeighbor, bakeLocal, cloudLamps, groundH, floorH, pvFloor, DECKS, STAIR, SX, SZ, HILL, POND } from './island.js';
 import { buildFigure, buildPet, makeCrowd, defaultLook, suggestNames } from './people.js';
+import { nearIsles } from '@vandao/shared/dong-tu.js';
 
 export { groundH };
 const BUD = new THREE.Vector3(0, 0, -760), SEAT = new THREE.Vector3(0, 3, -256);
@@ -68,6 +69,17 @@ const GLIDE = bezier(0.2, 0.7, 0.2, 1);
 const ADD = (color, o = {}) => new THREE.MeshBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, ...o });
 const RGB = (r, g, b) => new THREE.Color(r, g, b);
 const FRIEND_DAY = [6, 24, 44];   // ngày trong hành trình 49 ngày của ba bạn đồng tu: đảo của mỗi bạn lớn dần theo đó (#95)
+// #125: tám ô đảo bạn trong TIER_ISLES[0]: bốn ô vòng 0 (thân thiết, sát Vân Đảo) rồi bốn ô vòng 1 (quen biết). Ba bạn mô phỏng mặc định ở ô 0, 1, 4 (đảo 0, 1, 2 như trước).
+const SLOTS = [0, 1, 14, 23, 2, 22, 15, 16];
+// «Tham quan» đảo bạn (#125 §5.5): thứ tự các phân khu chủ đảo giới thiệu (chỉ những gì đảo bạn đã mở theo ngày)
+export const TOUR = ['mon', 'toa', 'bode', 'ao', 'tra', 'den', 'loi', 'am', 'bia'];
+// Đảo bạn lớn theo ngày hành trình bạn cho hiện; đã hoàn thành chương trình thì trọn; ẩn ngày thì là đảo giản dị (không đoán tiến trình)
+const lvOf = (c) => (c.completed ? 1 : Number.isFinite(c.day) && c.day > 0 ? Math.min(1, c.day / 49) : 0.12);
+const LAMP_ON = new THREE.Color(1, 1, 1), LAMP_OFF = new THREE.Color(0.36, 0.36, 0.4);   // tắt: lõi dưới 1 nên không phát sáng
+// Hình dáng của bạn đến từ máy chủ: giá trị lạ thì dùng hình mặc định thay vì làm hỏng cảnh
+function safeFig(look) { try { return buildFigure(look && typeof look === 'object' && !Array.isArray(look) ? look : {}); } catch (e) { void e; return buildFigure({}); } }
+function dropCrowd(g) { g.traverse((o) => { const m = o.material; if (m) { if (m.map) m.map.dispose(); m.dispose(); } if (o.isInstancedMesh) o.dispose(); (o.userData.geos || []).forEach((x) => x.dispose()); }); }
+function dropFig(fig) { fig.group.traverse((o) => { if (o.geometry) o.geometry.dispose(); const m = o.material; (Array.isArray(m) ? m : m ? [m] : []).forEach((x) => { if (x.map) x.map.dispose(); x.dispose(); }); }); }
 
 export const ANCHORS = {
   kuti: { node: 'kuti', label: [-13, -7, 17.5], cam: [[-8.6, 23.4, 7.4], [-13, 22.1, -6.4]], face: 0, sit: true, seatH: 0.36 },
@@ -252,23 +264,16 @@ a*=vA;${OUT}}` }));
   }
 
   _tiers() {
-    this.isles = []; const crowd = []; this.glowSeats = []; this.friends = [];
-    const names = suggestNames(12, rng(99)), root = (this.isleBake = new THREE.Group()); let seed = 1; this.scene.add(root);
+    this.isles = []; this.glowSeats = []; this.friends = []; this.isleDef = []; this.t4 = []; this.simNames = suggestNames(12, rng(99)); let seed = 1;
+    // Thông số mỗi đảo láng giềng tính một lần (độ cao, góc xoay, seed): dựng lại khi danh sách bạn đồng tu đổi (#125) dùng đúng các số này
     TIER_ISLES.forEach((T, tier) => T.list.forEach(([x, z, size], k) => {
-      // đảo bạn đồng tu: Vân Môn quay về phía đoạn vân lộ tới (điểm cuối vòng mép Vân Đảo), đổi sang hệ tọa độ của đảo
-      const fk = tier === 0 && k < 3, y = T.y[0] + (T.y[1] - T.y[0]) * this.rnd(), ry = this.rnd() * 6.28, q = fk && this._arc(x, z).at(-1), hx = q ? q.x - x : 0, hz = q ? q.z - z : 0, hl = Math.hypot(hx, hz) || 1, c = Math.cos(ry), sn = Math.sin(ry);
-      const nb = buildNeighbor(tier, seed++, size, fk ? FRIEND_DAY[k] / 49 : -1, fk ? [(hx * c - hz * sn) / hl, (hx * sn + hz * c) / hl] : null);
-      nb.group.position.set(x, y - nb.top, z); nb.group.rotation.y = ry; root.add(nb.group); nb.group.updateMatrixWorld(true);
-      const Wp = (p) => p && V(...p).applyMatrix4(nb.group.matrixWorld), inv = nb.group.matrixWorld.clone().invert();
-      const isle = { tier, x, y, z, size, nb, seats: nb.seats.map((s) => V(s.x, s.y, s.z).applyMatrix4(nb.group.matrixWorld)), gate: Wp(nb.gate), pad: Wp(nb.pad), ground: (a, b) => { const l = V(a, 0, b).applyMatrix4(inv); return y - nb.top + nb.hf(l.x, l.z); } };
-      this.isles.push(isle);
-      isle.seats.forEach((p, i) => {
-        if (tier === 0 && k < 3 && i === 0) return this.friends.push({ isle, pos: p, name: names[k], day: FRIEND_DAY[k], gate: isle.gate, pad: isle.pad, ground: isle.ground });
-        crowd.push({ x: p.x, y: p.y, z: p.z, rot: faceBud(p.x, p.z) }); if (tier >= 2) this.glowSeats.push({ p, tier });
-      });
+      const y = T.y[0] + (T.y[1] - T.y[0]) * this.rnd(), ry = this.rnd() * 6.28;
+      this.isleDef.push({ tier, x, y, z, size, ry, seed: seed++, slot: tier === 0 ? SLOTS.indexOf(k) : -1 }); this.isles.push({ tier, x, y, z, size, seats: [] });
     }));
-    // T1.2: gộp toàn bộ đảo láng giềng (tĩnh sau khi dựng) theo vật liệu, tán lá gộp theo loại lá → ~1 lệnh vẽ cho mỗi chất liệu
-    bakeLocal(root, [], [], { all: true });
+    this.frLamp = cloudLamps(SLOTS.length); this.frLamp.count = 0; this.scene.add(this.frLamp);
+    // vòng sáng đánh dấu chỗ chủ đảo đang giới thiệu khi tham quan (một lệnh vẽ, chỉ hiện lúc tham quan)
+    { const g = new THREE.RingGeometry(0.78, 1, 40); g.rotateX(-Math.PI / 2); this.tourMark = new THREE.Mesh(g, ADD(new THREE.Color(1.3, 1.05, 0.55), { opacity: 0.7, side: THREE.DoubleSide })); this.tourMark.visible = false; this.tourMark.renderOrder = 4; this.scene.add(this.tourMark); }
+    this.slotKey = null; this._neighbors(this._spec(null));
     // Tầng 4: không còn đảo, chỉ Vân Tọa sáng quanh hào quang
     const T4 = [[-128, 366, -724], [128, 366, -724], [0, 362, -640], [0, 364, -836]];   // hai bên vai, trước mặt, sau lưng
     // vầng quang hình bầu dục ngang tai, chạy dưới bốn cụm Vân Tọa (hai vòng gộp một hình; độ sáng từng vòng nằm ở màu đỉnh)
@@ -280,18 +285,82 @@ a*=vA;${OUT}}` }));
     this.lbMat = ADD(0xffffff, { vertexColors: true, opacity: 0.55 }); this.scene.add(new THREE.Mesh(mergeGeometries(lit), this.lbMat));
     this.homeLbMat = ADD(0xffffff, { vertexColors: true, opacity: 0 });
     this.homeLb = new THREE.Mesh(mergeGeometries([this.isles[0], this.isles[1], { x: 0, y: 4, z: -230 }].map((e) => tube(V(HILL.x, 33, HILL.z), V(e.x, e.y + 4, e.z), 46, 0.7, 60))), this.homeLbMat); this.scene.add(this.homeLb);
-    for (let i = 0; i < 48; i++) { const c = T4[i % 4], j = Math.floor(i / 4), a = j * 2.4 + (i % 4) * 1.1, d = j ? 7.5 + Math.sqrt(j) * 7.2 : 0, x = c[0] + Math.cos(a) * d, y = c[1] + Math.sin(j * 1.7) * 1.2 + (j ? 0 : 0.5), z = c[2] + Math.sin(a) * d * 0.75; crowd.push({ x, y, z, rot: faceBud(x, z), robe: '#9a7436', sc: 2.2 }); this.glowSeats.push({ p: V(x, y, z), tier: 4 }); }
-    this.tierCrowd = makeCrowd(crowd, 5); this.scene.add(this.tierCrowd);
-    // Ba bạn đồng tu ở đảo gần: nhân vật riêng, chào và thăm được
-    const fr = rng(21);
-    this.friends.forEach((f, i) => {
-      const look = { skin: Math.floor(fr() * 5), robe: [2, 3, 4][i], trim: i, hair: ['buithap', 'cao', 'buicao'][i], hairColor: [0, 0, 2][i], age: ['tre', 'trung', 'cao'][i], mood: ['hoa', 'nghiem', 'tuoi'][i], acc: ['hat', 'khong', 'khan'][i] };
-      f.fig = buildFigure(look); f.fig.setPose('sit'); f.fig.group.position.copy(f.pos); f.rot0 = f.fig.group.rotation.y = faceBud(f.pos.x, f.pos.z); this.scene.add(f.fig.group);
-      f.head = f.pos.clone().add(V(0, 2.6, 0)); f.until = 0;
-      f.arrive = f.pos.clone().add(V(Math.sin(f.fig.group.rotation.y + 1.2) * 3.2, 0, Math.cos(f.fig.group.rotation.y + 1.2) * 3.2));
+    for (let i = 0; i < 48; i++) { const c = T4[i % 4], j = Math.floor(i / 4), a = j * 2.4 + (i % 4) * 1.1, d = j ? 7.5 + Math.sqrt(j) * 7.2 : 0, x = c[0] + Math.cos(a) * d, y = c[1] + Math.sin(j * 1.7) * 1.2 + (j ? 0 : 0.5), z = c[2] + Math.sin(a) * d * 0.75; this.t4.push({ x, y, z, rot: faceBud(x, z), robe: '#9a7436', sc: 2.2 }); this.glowSeats.push({ p: V(x, y, z), tier: 4 }); }
+    this.tierCrowd = makeCrowd([...this.crowdIsle, ...this.t4], 5); this.scene.add(this.tierCrowd);
+    // Vầng sáng sát nền quanh Vân Tọa khi bạn đang thiền (đèn mây ở Vân Môn dựng trước _neighbors): một lệnh vẽ cho cả tám ô
+    { const g = new THREE.CircleGeometry(1, 20), p = g.attributes.position, c = new Float32Array(p.count * 3); for (let i = 0; i < p.count; i++) { const k = 1 - Math.hypot(p.getX(i), p.getY(i)); c.set([1.1 * k, 0.86 * k, 0.42 * k], i * 3); } g.setAttribute('color', new THREE.BufferAttribute(c, 3)); g.rotateX(-Math.PI / 2);
+      this.frGlow = new THREE.InstancedMesh(g, ADD(0xffffff, { vertexColors: true, opacity: 0.55 }), SLOTS.length); this.frGlow.count = 0; this.frGlow.visible = false; this.frGlow.renderOrder = 4; this.scene.add(this.frGlow); this._presence(); }
+  }
+  // ───────── Bạn đồng tu thật (#125, thiết kế docs/thiet-ke/ban-dong-tu.md §5.5–5.7, §6.5) ─────────
+  /**
+   * Danh sách bạn (GET /companions → companions) dựng Vân Đảo ở tám ô gần: thân thiết vòng 0, quen biết vòng 1 (nearIsles dùng chung).
+   * Mỗi bạn thật thay một bạn mô phỏng cho tới đủ ba. Người, mức thân, ngày hay hình dáng đổi thì dựng lại tám ô; chỉ đổi hiện diện thì chỉ đổi
+   * đèn, vầng sáng và nhân vật. Đang du vân hay đang ở đảo bạn thì chờ về Vân Đảo mới dựng lại (chỉ số đảo đang đứng phải giữ nguyên).
+   * force: mã bạn cần có đảo dù ngoài tám ô (gặp trên đảo của bạn ấy) — thay ô quen biết cuối.
+   */
+  setCompanions(list, force = null) {
+    this.compList = Array.isArray(list) ? list : []; if (force) this.compForce = String(force);
+    const spec = this._spec(this.compList), key = spec.map((s) => (!s ? '-' : s.c ? [s.c.id, lvOf(s.c).toFixed(2), JSON.stringify(s.c.look || {}), s.c.tinh_danh].join(':') : 's' + s.sim)).join('|');
+    if (key !== this.slotKey) { if (this.av.where === 'home' && this.av.state !== 'travel') this._neighbors(spec); else this.slotPending = true; }
+    else { const by = new Map(this.compList.map((c) => [String(c.id), c])); this.friends.forEach((f) => { if (f.id && by.has(f.id)) f.c = by.get(f.id); }); this._presence(); }
+  }
+  _spec(list) {
+    const by = new Map((list || []).filter((c) => c && c.id).map((c) => [String(c.id), c])), near = nearIsles(list || []).filter((n) => by.has(String(n.id)));
+    const fo = this.compForce; if (fo && by.has(fo) && !near.some((n) => String(n.id) === fo)) { const r1 = near.filter((n) => n.ring === 1); if (r1.length >= 4) near.splice(near.indexOf(r1.at(-1)), 1); near.push({ id: fo, ring: 1 }); }
+    const spec = Array(SLOTS.length).fill(null), put = (from, s) => { for (let i = from; i < SLOTS.length; i++) if (!spec[i]) { spec[i] = s; return; } for (let i = 0; i < from; i++) if (!spec[i]) { spec[i] = s; return; } };
+    near.forEach((n) => put(n.ring ? 4 : 0, { c: by.get(String(n.id)) }));
+    // bạn mô phỏng lấp chỗ cho tới đủ ba đảo bạn: mỗi bạn thật thay một bạn (bỏ bạn mô phỏng đầu trước); bạn còn lại giữ đảo cũ (ô 0, 1, 4) nếu ô còn trống
+    for (let k = Math.min(3, near.length); k < 3; k++) { const want = [0, 1, 4][k], at = !spec[want] ? want : spec.findIndex((x) => !x); if (at >= 0) spec[at] = { sim: k }; }
+    return spec;
+  }
+  // Mọi đảo láng giềng (tầng 0–3) dựng rồi gộp theo vật liệu thành một khối như T1.2: cảnh mặc định không thêm lệnh vẽ nào.
+  // Tám ô bạn: spec[i] = { c } bạn thật · { sim: k } bạn mô phỏng · null đảo thường. Danh sách bạn đổi thì dựng lại cả khối (hiếm: lúc vào app,
+  // khi kết bạn, đổi thân/quen, sang ngày mới). Đảo bạn thật không có người ngồi lạ. Vân Môn quay về phía đoạn vân lộ tới, đổi sang hệ của đảo.
+  _neighbors(spec) {
+    const first = !this.isleBake;
+    if (!first) { this.scene.remove(this.isleBake); this.isleBake.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.isInstancedMesh) o.dispose(); }); this.scene.remove(this.tierCrowd); dropCrowd(this.tierCrowd); }
+    this.friends.forEach((f) => { this.scene.remove(f.fig.group); dropFig(f.fig); });
+    const root = (this.isleBake = new THREE.Group()), fr = rng(21), skin = [0, 1, 2].map(() => Math.floor(fr() * 5)), crowd = (this.crowdIsle = []), list = []; this.scene.add(root); this.slotPending = false;
+    this.slotKey = spec.map((s) => (!s ? '-' : s.c ? [s.c.id, lvOf(s.c).toFixed(2), JSON.stringify(s.c.look || {}), s.c.tinh_danh].join(':') : 's' + s.sim)).join('|');
+    this.isleDef.forEach((D, n) => {
+      const i = D.slot, s = i >= 0 ? spec[i] : null, c = s && s.c, q = s && this._arc(D.x, D.z).at(-1), hx = q ? q.x - D.x : 0, hz = q ? q.z - D.z : 0, hl = Math.hypot(hx, hz) || 1, cs = Math.cos(D.ry), sn = Math.sin(D.ry);
+      const nb = buildNeighbor(D.tier, D.seed, D.size, !s ? -1 : c ? lvOf(c) : FRIEND_DAY[s.sim] / 49, s ? [(hx * cs - hz * sn) / hl, (hx * sn + hz * cs) / hl] : null);
+      nb.group.position.set(D.x, D.y - nb.top, D.z); nb.group.rotation.y = D.ry; root.add(nb.group); nb.group.updateMatrixWorld(true);
+      const Wp = (p) => p && V(...p).applyMatrix4(nb.group.matrixWorld), inv = nb.group.matrixWorld.clone().invert(), y0 = D.y - nb.top;
+      const isle = Object.assign(this.isles[n], { nb, seats: nb.seats.map((p) => V(p.x, p.y, p.z).applyMatrix4(nb.group.matrixWorld)), gate: Wp(nb.gate), pad: Wp(nb.pad), tea: Wp(nb.tea), ground: (a, b) => { const l = V(a, 0, b).applyMatrix4(inv); return y0 + nb.hf(l.x, l.z); } });
+      isle.seats.forEach((p, k) => { if (s && (c || !k)) return; crowd.push({ x: p.x, y: p.y, z: p.z, rot: faceBud(p.x, p.z) }); if (first && D.tier >= 2) this.glowSeats.push({ p, tier: D.tier }); });
+      if (!s) return;
+      const f = { isle, slot: i, ring: i < 4 ? 0 : 1, pos: isle.seats[0], gate: isle.gate, pad: isle.pad, tea: isle.tea, ground: isle.ground, until: 0, feat: (nb.feat || []).map((q) => ({ id: q.id, p: V(...q.p).applyMatrix4(nb.group.matrixWorld) })) };
+      if (c) Object.assign(f, { id: String(c.id), name: c.tinh_danh || 'Bạn đồng tu', c, look: c.look || {} });
+      else { const k = s.sim; Object.assign(f, { sim: k, name: this.simNames[k], day: FRIEND_DAY[k], look: { skin: skin[k], robe: [2, 3, 4][k], trim: k, hair: ['buithap', 'cao', 'buicao'][k], hairColor: [0, 0, 2][k], age: ['tre', 'trung', 'cao'][k], mood: ['hoa', 'nghiem', 'tuoi'][k], acc: ['hat', 'khong', 'khan'][k] } }); }
+      f.fig = safeFig(f.look); f.fig.setPose('sit'); f.fig.group.position.copy(f.pos); f.rot0 = f.fig.group.rotation.y = faceBud(f.pos.x, f.pos.z); this.scene.add(f.fig.group);
+      f.head = f.pos.clone().add(V(0, 2.6, 0));
+      f.arrive = f.pos.clone().add(V(Math.sin(f.rot0 + 1.2) * 3.2, 0, Math.cos(f.rot0 + 1.2) * 3.2));
+      list.push(f);
     });
-    // Vân lộ: từ thềm Cổng Vân Môn tới bãi đáp trước Vân Môn của ba đảo bạn
+    // T1.2: gộp toàn bộ đảo láng giềng (tĩnh sau khi dựng) theo vật liệu, tán lá gộp theo loại lá → ~1 lệnh vẽ cho mỗi chất liệu
+    bakeLocal(root, [], [], { all: true });
+    this.friends = list.sort((a, b) => a.slot - b.slot);
+    if (!first) { this.tierCrowd = makeCrowd([...crowd, ...this.t4], 5); this.scene.add(this.tierCrowd); }
+    // Vân lộ: từ thềm Cổng Vân Môn tới bãi đáp trước Vân Môn của các đảo bạn
     this.bridges = this.friends.map((f) => { const pts = this._arc(f.isle.x, f.isle.z), end = f.pad.clone().add(V(0, 2.4, 0)), mid = pts.at(-1).clone().lerp(end, 0.5); mid.y = Math.min(6, end.y) - 4; return new THREE.CatmullRomCurve3([...pts, mid, end]); });
+    // đèn mây treo dưới vòm Vân Môn, chỉ ở đảo bạn thật (bạn mô phỏng giữ cảnh mặc định như trước)
+    const d = new THREE.Object3D(); let nl = 0; this.friends.forEach((f) => { f.lamp = -1; if (!f.c) return; const S = f.isle.size / 13; d.position.copy(f.gate).add(V(0, 2.75 * S, 0)); d.rotation.set(0, nl * 1.7, 0); d.scale.setScalar(1.5 * S); d.updateMatrix(); f.lamp = nl; this.frLamp.setMatrixAt(nl, d.matrix); this.frLamp.setColorAt(nl++, LAMP_OFF); });
+    this.frLamp.count = nl; this.frLamp.visible = nl > 0; this.frLamp.instanceMatrix.needsUpdate = true; if (nl) this.frLamp.computeBoundingSphere();
+    this._presence();
+  }
+  // Hiện diện (presenceOf): online · thien · tra = đang ở Vân Đạo (đèn sáng, nhân vật ở Vân Tọa); tham (đang thăm đảo khác) · vang · null (tắt hiện trạng thái) = đèn tắt, Vân Tọa trống.
+  // Bạn mô phỏng luôn đang tọa thiền như trước, không đèn, không vầng sáng. Bạn thật đang thiền thì có vầng sáng nằm sát nền quanh Vân Tọa (không phải vầng sau đầu).
+  _presence() {
+    const Gl = this.frGlow, d = new THREE.Object3D(); let ng = 0; if (!Gl) return;
+    this.friends.forEach((f, i) => {
+      const p = f.c ? f.c.presence || 'vang' : 'thien'; f.presence = p; f.here = p === 'thien' || p === 'online' || p === 'tra'; f.pose0 = p === 'online' ? 'stand' : 'sit';
+      if (f.lamp >= 0) this.frLamp.setColorAt(f.lamp, f.here ? LAMP_ON : LAMP_OFF);
+      if (p === 'thien' && f.c) { d.position.copy(f.pos).add(V(0, 0.05, 0)); d.scale.setScalar(Math.max(1.1, 1.6 * f.isle.size / 13)); d.updateMatrix(); Gl.setMatrixAt(ng++, d.matrix); }
+      if (!f.host && !f.until && f.fig.pose !== f.pose0) f.fig.setPose(f.pose0);
+    });
+    if (this.frLamp.instanceColor) this.frLamp.instanceColor.needsUpdate = true;
+    Gl.count = ng; Gl.visible = ng > 0; Gl.instanceMatrix.needsUpdate = true; if (ng) Gl.computeBoundingSphere();
   }
   // vòng theo mép ngoài Vân Đảo (bán kính 50, đảo rộng tối đa ~42) về phía (tx, tz) rồi mới băng qua biển mây: không xuyên qua lòng đảo
   _arc(tx, tz) { const pts = [V(34, 6, 34)], A = Math.PI / 4; let d = Math.atan2(tz, tx) - A, a = A; d = Math.atan2(Math.sin(d), Math.cos(d));
@@ -767,16 +836,17 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
   greet(i) { const f = this.friends[i]; this.av.rotTo = Math.atan2(f.pos.x - this.av.pos.x, f.pos.z - this.av.pos.z); if (this.av.state !== 'walk' && this.av.state !== 'travel') { this.fig.setPose('anjali'); this.av.hold = 2.8; this.av.state = 'idle'; } f.fig.setPose('anjali'); f.fig.eyes(false); f.until = this.time + 3; }
   // Du vân qua Vân Môn (chủ dự án 18/11/2026): đi bộ ra Vân Môn → vân mây từ trời hạ xuống trước mặt → bước lên → vân nâng lên → bay theo vân lộ
   // → dừng trên bãi đáp trước Vân Môn bên kia, hạ xuống → bước xuống → đi qua cổng vào. Máy quay nhìn ngang, đứng xa vừa đủ thấy cảnh quanh; âm thanh theo từng bước.
-  visit(i, done) { this._trip(i, done); }
+  // how ('thien' | 'tra', #125): tới nơi thì đi thẳng tới chỗ ngồi cùng chủ thay vì đứng trước Vân Tọa
+  visit(i, done, how = null) { this._trip(i, done, how); }
   goHome(done) { if (this.av.where !== 'home') this._trip('home', done); }
-  _trip(dest, done) {
+  _trip(dest, done, how = null) {
     const A = this.av; if (A.state === 'travel' || A.where === dest || (A.where !== 'home' && dest !== 'home')) return;   // chỉ đi giữa Vân Đảo và một đảo bạn (vân lộ nối qua Vân Đảo)
     const io = this.home.group.position.y, hp = (x, z) => V(x, floorH(x, z) + io, z), home = A.where === 'home', fs = !home && this.friends[A.where], ts = dest !== 'home' && this.friends[dest];
     const HG = hp(15.5, 15.5), HW = hp(16.2, 16.2), HP = V(17.8, HW.y, 17.8), gA = home ? HG : fs.gate, pA = home ? HP : fs.pad, gB = ts ? ts.gate : HG, pB = ts ? ts.pad : HP, up = V(0, 2.4, 0);
     const br = this.bridges[home ? dest : A.where].getPoints(20), out = pA.clone().sub(gA).setY(0).normalize(), walk = [...(home ? this._route('gate').map(([x, z]) => hp(x, z)) : []), gA, home ? HW : pA.clone().addScaledVector(out, -1.7)];
     const curve = new THREE.CatmullRomCurve3(home ? [pA.clone().add(up), ...br] : [...br.reverse(), pB.clone().add(up)]);
-    A.trip = { st: 'walk', t: 0, i: 0, walk, out, inn: gB.clone().sub(pB).setY(0).normalize(), curve, fly: Math.min(11, Math.max(6.5, curve.getLength() / 20)), pA, pB, gB, end: ts ? ts.arrive : hp(12.5, 12.5), op: 0 };
-    Object.assign(A, { state: 'travel', dest, done, k: 0, hold: 0, wall: performance.now() }); this.fig.setPose('stand');
+    A.trip = { st: 'walk', t: 0, i: 0, walk, out, inn: gB.clone().sub(pB).setY(0).normalize(), curve, fly: Math.min(11, Math.max(6.5, curve.getLength() / 20)), pA, pB, gB, end: ts ? (how ? this._meetSpot(dest, how) : ts.arrive) : hp(12.5, 12.5), op: 0 };
+    Object.assign(A, { state: 'travel', dest, done, k: 0, hold: 0, wall: performance.now() }); this.fig.setPose('stand'); this.tourEnd();
     const P = this._wp(), d = walk[0].clone().sub(P).setY(0); this.tcDir = d.lengthSq() > 1e-4 ? d.normalize() : out.clone(); A.side = V(this.tcDir.z, 0, -this.tcDir.x).dot(this.camera.position.clone().sub(P)) < 0 ? -1 : 1;
     if (this.mode === 'island' || this.mode === 'zone') this.tween = null;
   }
@@ -823,13 +893,61 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     if (A.done) { const d = A.done; A.done = null; d(A.dest); } }
   // Bạn đồng tu đón khách (#95): khách sắp tới thì đứng dậy, quay về phía khách, mỉm cười; ở cùng thì đứng chờ (mời cùng tọa thiền thì ngồi cùng, quay về Tôn tượng);
   // khách về thì chắp tay tiễn rồi ngồi lại thiền
+  // #125: bạn thật vắng mặt thì Vân Tọa trống, không ai đón (khách vẫn chắp tay, tùy hỷ rồi về); gặp Trà Đạo thì chủ sang ghế bàn trà
   _friendStep(dt, breath = 0) {
-    const Av = this.av; this.friends.forEach((f, i) => { const g = f.fig.group, host = (Av.where === i && Av.state !== 'travel') || (Av.state === 'travel' && Av.dest === i && Av.k > 0.72);
-    if (f.until && this.time > f.until) { f.until = 0; if (!host) f.fig.setPose('sit'); }
-    if (host !== !!f.host) { f.host = host; if (host) f.fig.setPose('stand'); else if (Av.state === 'travel' && Av.where === i) { f.fig.setPose('anjali'); f.until = this.time + 2.4; } else f.fig.setPose('sit'); }
+    const Av = this.av; this.friends.forEach((f, i) => { const g = f.fig.group, host = f.here !== false && ((Av.where === i && Av.state !== 'travel') || (Av.state === 'travel' && Av.dest === i && Av.k > 0.72));
+    if (f.until && this.time > f.until) { f.until = 0; if (!host) f.fig.setPose(f.pose0 || 'sit'); }
+    if (host !== !!f.host) { f.host = host; if (host) f.fig.setPose('stand'); else { f.meet = null; if (Av.state === 'travel' && Av.where === i) { f.fig.setPose('anjali'); f.until = this.time + 2.4; } else f.fig.setPose(f.pose0 || 'sit'); } }
     if (host) { const want = Av.state === 'sit' ? 'sit' : f.until ? 'anjali' : 'stand'; if (f.fig.pose !== want) f.fig.setPose(want); }
-    const yaw = (host || (f.until && Av.where === i)) && Av.state !== 'sit' ? Math.atan2(Av.pos.x - f.pos.x, Av.pos.z - f.pos.z) : f.rot0; g.rotation.y += Math.atan2(Math.sin(yaw - g.rotation.y), Math.cos(yaw - g.rotation.y)) * Math.min(1, dt * 4);
+    const at = f.meet === 'tra' && f.teaHost ? f.teaHost : f.pos; if (g.position.distanceToSquared(at) > 1e-4) g.position.lerp(at, Math.min(1, dt * 2.5));
+    const yaw = f.meet === 'tra' && f.teaHost ? Math.atan2(f.tea.x - at.x, f.tea.z - at.z) : (host || (f.until && Av.where === i)) && Av.state !== 'sit' ? Math.atan2(Av.pos.x - at.x, Av.pos.z - at.z) : f.rot0;
+    g.rotation.y += Math.atan2(Math.sin(yaw - g.rotation.y), Math.cos(yaw - g.rotation.y)) * Math.min(1, dt * 4);
+    if (f.here === false) g.visible = false;   // chạy sau lượt ẩn theo khoảng cách trong update()
     f.fig.group.scale.y = f.fig.group.scale.x * (1 + 0.012 * breath); });
+  }
+  /** Tuần trà «ngắm mây» (#125): máy quay ra sau chỗ ngồi bàn trà, nhìn qua bàn trà ra biển mây và Tôn tượng; người dùng đang tự xoay thì để yên */
+  teaGaze() {
+    if ((this.mode !== 'zone' && this.mode !== 'island') || this.av.where !== 'home' || this.dir) return;
+    const io = this.home.group.position.y, y = floorH(5.852, -6.923) + io;
+    this.flyTo(V(3.6, y + 3.2, -2.8), V(9.6, y + 0.9, -24), 54, 4);
+  }
+  /** Các phân khu tham quan được của đảo bạn i, theo thứ tự TOUR */
+  tourStops(i) { const f = this.friends[i]; return f && f.feat ? TOUR.filter((k) => f.feat.some((x) => x.id === k)) : []; }
+  /** Đưa máy quay tới phân khu `id` của đảo bạn i (nhìn từ phía ngoài đảo vào) và đặt vòng sáng đánh dấu */
+  tourShow(i, id) {
+    const f = this.friends[i], x = f && f.feat && f.feat.find((q) => q.id === id); if (!x) return false;
+    const p = x.p, S = Math.max(0.9, f.isle.size / 13), out = p.clone().sub(V(f.isle.x, p.y, f.isle.z)).setY(0); if (out.lengthSq() < 1e-4) out.set(1, 0, 0); out.normalize();
+    const big = id === 'bode' || id === 'am', far = big ? 8.5 : 5.5;   // cây Bồ-đề, am: lùi xa hơn cho thấy cả tán, cả mái
+    this.flyTo(p.clone().addScaledVector(out, far * S).add(V(0, (big ? 4.6 : 3.4) * S, 0)), p.clone().add(V(0, big ? 2 : 0.9, 0)), 50, 1.8);
+    this.tourMark.position.copy(p).add(V(0, 0.08, 0)); this.tourMark.scale.setScalar(1.4 * S); this.tourMark.visible = true; this.tourAt = { i, id }; return true;
+  }
+  tourEnd() { if (this.tourMark) this.tourMark.visible = false; this.tourAt = null; }
+  // Chỗ khách khi gặp trên đảo bạn: thiền ngồi cạnh Vân Tọa của chủ (cùng hướng Tôn tượng); trà ngồi bên kia bàn trà, chủ ngồi bên này
+  _meetSpot(i, how) {
+    const f = this.friends[i], S = f.isle.size / 13, at = (p) => p.setY(f.ground(p.x, p.z));
+    if (how === 'tra' && f.tea) { const u = f.tea.clone().sub(f.pos).setY(0).normalize(), r = 1.15 * Math.max(0.8, S); f.teaHost = at(f.tea.clone().addScaledVector(u, -r)); return at(f.tea.clone().addScaledVector(u, r)); }
+    const y = f.rot0, w = Math.max(1.15, 1.3 * S); return at(f.pos.clone().add(V(Math.cos(y) * w, 0, -Math.sin(y) * w)));
+  }
+  /** Ngồi cùng bạn ở đảo bạn (thiền: cạnh chủ, hướng Tôn tượng; trà: hai bên bàn trà). Đứng xa chỗ ngồi thì đi tới rồi mới ngồi. */
+  sitWith(i, how = 'thien', done) {
+    const A = this.av, f = this.friends[i]; if (!f || A.where !== i || A.state === 'travel') return false;
+    const to = this._meetSpot(i, how), sit = () => { A.state = 'sit'; this.fig.setPose('sit'); f.meet = how === 'tra' && f.teaHost ? 'tra' : 'thien'; A.rotTo = f.meet === 'tra' ? Math.atan2(f.tea.x - A.pos.x, f.tea.z - A.pos.z) : f.rot0; if (done) done(); };
+    if (A.pos.distanceTo(to) < 0.6) { sit(); return true; }
+    A.trip = { st: 'in', t: 0, i: 0, walk: [to], pB: f.pad, op: 0 }; Object.assign(A, { state: 'travel', dest: i, done: sit, k: 1, hold: 0, wall: performance.now() }); this.fig.setPose('stand'); this.tcDir = to.clone().sub(A.pos).setY(0).normalize();
+    return true;
+  }
+  /**
+   * Khách ở Vân Đảo của mình khi gặp trên đảo mà mình là chủ (#125): thiền ngồi cạnh chỗ ngồi Đài Thiền, trà ngồi đối diện ở bàn trà,
+   * thăm thì đứng chắp tay gần Cổng Vân Môn. Không có thời gian thực (GĐ4): chỉ hiện người đã nhận lời, tự về sau `sec` giây. null: khách về.
+   */
+  setGuest(g) {
+    if (this.guest) { this.home.group.remove(this.guest.fig.group); dropFig(this.guest.fig); this.guest = null; }
+    if (!g) return;
+    const fig = safeFig(g.look), how = g.kind === 'tra' || g.kind === 'thien' ? g.kind : 'tham', P = NODES.pad, yp = faceBud(P[0], P[1]);
+    const [x, z, rot, seat] = how === 'thien' ? [P[0] + Math.cos(yp) * 1.3, P[1] - Math.sin(yp) * 1.3, yp, DECKS[0].seat || 0.02]
+      : how === 'tra' ? [7 + Math.cos(5.4) * 1.95, -8.5 + Math.sin(5.4) * 1.95, Math.atan2(-Math.cos(5.4), -Math.sin(5.4)), 0.2] : [13.4, 12.2, Math.atan2(9 - 13.4, 6 - 12.2), 0];
+    fig.setPose(how === 'tham' ? 'anjali' : 'sit'); fig.group.position.set(x, floorH(x, z) + seat, z); fig.group.rotation.y = rot; this.home.group.add(fig.group);
+    this.guest = { fig, how, name: g.name || '', until: this.time + (g.sec || 1200) };
   }
   // góc gặp bạn đồng tu: gần như ở Vân Đảo của mình, qua vai nhân vật nhìn bạn đang đứng đón
   _meet(i, side) { const f = this.friends[i], u = f.pos.clone().sub(f.arrive).setY(0).normalize(), sv = V(u.z, 0, -u.x).multiplyScalar(side); return [f.arrive.clone().addScaledVector(u, -5.5).addScaledVector(sv, 3).add(V(0, 4.2, 0)), f.arrive.clone().lerp(f.pos, 0.65).add(V(0, 2.6, 0))]; }
@@ -969,6 +1087,8 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     // hạt công đức vàng bay lên khắp đảo (nhiều dần theo tiến trình, rộ lên lúc hồi hướng), ánh lấp lánh tán Bồ-đề và mặt hồ: một hệ Points
     H.motes.material.uniforms.uK.value.set((0.3 + 0.7 * isl.bodhi) * (1 + v.merit), (isl.tier >= 2 ? 1 : 0.6 * isl.gold) * (0.6 + 0.4 * Math.sin(this.time * 2)) + 1.3 * jy, isl.water > 0.3 ? isl.water * (1 - 0.3 * v.night) : 0, tg.scale.x);
     H.setLotus(isl.lotus, isl.goldCount);
+    H.teaRitual(this.tea || null);   // #125: tuần trà (ui/tra-dao.js đặt world.tea)
+    if (this.tourMark && this.tourMark.visible) this.tourMark.material.opacity = 0.45 + 0.25 * Math.sin(this.time * 2.2);   // vòng tham quan thở nhẹ
     { const A = this.av; H.reflect(this.refTest || isl.ref, dt, A.state === 'sit' && A.where === 'home' && this.mode !== 'hall' ? A.pos : null); }   // đợt E (#104): đèn mây, nụ sen, hoa sen 10 cánh; refTest chỉ dùng khi kiểm thử
     H.water.uniforms.uClar.value = isl.clarity; H.water.uniforms.uWater.value = isl.water; H.evolve(isl.lv === undefined ? 1 : isl.lv, isl, this.time); this._birds(dt);
     H.tea.visible = isl.tea; DECKS[1].on = !!isl.tea; H.veil.scale.setScalar(Math.max(0.001, 1 - isl.gate * (isl.open ? 1 : 0.35)));
@@ -979,6 +1099,8 @@ gl_FragColor.rgb=g+(fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.0
     H.steleMat.opacity = 0.7 + 0.3 * Math.sin(this.time * 1.5); H.pv.altar.material.emissiveIntensity = 1.6 + 0.5 * Math.sin(this.time * 1.1);
     this.ring.material.opacity = Math.max(0, this.ring.material.opacity - dt * 0.7); this.ring.scale.setScalar(1 + (0.9 - this.ring.material.opacity) * 1.2);
     this._friendStep(dt, s.breath);
+    if (this.slotPending && this.av.where === 'home' && this.av.state !== 'travel') this._neighbors(this._spec(this.compList));   // #125: danh sách bạn đổi lúc đang đi vắng
+    if (this.guest && this.time > this.guest.until) this.setGuest(null);
 
     this._meritStep(dt);
     // vật liệu cộng sáng đang tắt (độ mờ 0) thì bỏ hẳn lượt vẽ: các cột sáng tốn tô điểm ảnh dù không thấy

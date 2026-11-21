@@ -11,6 +11,12 @@ describe('danh mục tự ghi nhận', () => {
     expect(new Set(WEEK_FOCUS.flat())).toEqual(new Set(Object.keys(PARAMI)));
   });
   it('WEEK_PARAMI có 7 tuần, ba trục', () => { expect(WEEK_PARAMI).toHaveLength(7); for (const w of WEEK_PARAMI) expect(Object.keys(w).sort()).toEqual(['duc', 'thien', 'tue']); });
+  it('tra_dao: hết một tuần trà — trì giới, xuất ly (nhiem-vu-so-nhap §6)', () => {
+    expect(PASSIVE.tra_dao).toEqual({ name: 'Trà Đạo Tỉnh Thức', punna: 'sila', parami: ['nekkhamma'] });
+    const L = logPassive(logPassive({}, '2026-11-21', 'tra_dao', { minutes: 10, ref: 'tra-dao' }), '2026-11-21', 'tra_dao', { minutes: 10, ref: 'tra-dao-hai' });
+    expect(L['2026-11-21'].tra_dao).toEqual({ n: 2, min: 20, refs: ['tra-dao', 'tra-dao-hai'] });
+    expect(lotus(L).counts.nekkhamma).toBe(1);   // hai tuần trà một ngày vẫn sáng cánh một lần
+  });
   it('mã nghe theo loạt', () => { expect(listenCode('duong-xua')).toBe('nghe_duong_xua'); expect(listenCode('loi-phat-day')).toBe('nghe_loi_phat_day'); expect(listenCode(undefined)).toBe('nghe_loi_phat_day'); });
 });
 

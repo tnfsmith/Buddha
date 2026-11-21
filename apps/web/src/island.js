@@ -76,6 +76,27 @@ export const terrainMat = () => _terrMat || (_terrMat = VC({ roughness: 1 }, [0.
 // Mesh gọn: hình (tô màu `c` nếu có), vật liệu, vị trí; sh: 1 đổ bóng · 2 nhận bóng · 3 cả hai
 const M = (g, m, c, x = 0, y = 0, z = 0, sh = 3) => { const o = new THREE.Mesh(c ? hue(g, c) : g, m); o.position.set(x, y, z); o.castShadow = !!(sh & 1); o.receiveShadow = sh > 1; return o; };
 
+// ───────── Đèn mây (#104 đợt E, #125): lõi ấm nằm trên hai cụm mây nhỏ, lơ lửng nhịp chậm ─────────
+// Dùng chung cho đèn phản chiếu dọc lối đi Vân Đảo và đèn hiện diện ở Vân Môn đảo bạn. Màu đỉnh của lõi > 1 thành phát sáng (bloom tỏa).
+// uLit: đèn thứ i lớn dần khi uLit đi qua i. instanceColor (nếu có) nhân vào màu đỉnh: 1 = sáng; ≈ 0,42 = tắt (lõi dưới 1, không phát sáng).
+const paintY = (g, f) => { const p = g.attributes.position, c = new Float32Array(p.count * 3); for (let i = 0; i < p.count; i++) c.set(f(p.getY(i)), i * 3); g.setAttribute('color', new THREE.BufferAttribute(c, 3)); return g.index ? g.toNonIndexed() : g; };
+const growGL = (u) => `float li = float(gl_InstanceID), gs = clamp(${u} - li, 0., 1.); gs = gs*gs*(3. - 2.*gs); transformed *= gs;`;
+let LAMP_G = null;
+function lampGeo() {
+  if (LAMP_G) return LAMP_G;
+  const puff = (s, x, y, z) => { const g = mergeVerts(new THREE.IcosahedronGeometry(s, 0)); g.scale(1, 0.62, 1); g.translate(x, y, z); g.computeVertexNormals(); return paintY(g, () => [0.97, 0.95, 0.92]); };
+  const core = mergeVerts(new THREE.IcosahedronGeometry(0.17, 0)); core.scale(1, 1.18, 1); core.translate(0, 0.16, 0); core.computeVertexNormals();
+  return (LAMP_G = mergeGeometries([paintY(core, () => [2.3, 1.62, 0.78]), puff(0.2, -0.13, -0.02, 0.02), puff(0.17, 0.14, -0.04, -0.03)].map((g) => { g.deleteAttribute('uv'); return g; })));
+}
+export function cloudLamps(n, uLit = { value: 1e4 }) {
+  const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 });
+  m.onBeforeCompile = (sh) => { sh.uniforms.uTime = U.uTime; sh.uniforms.uLit = uLit; sh.uniforms.uNight = U.uNight;
+    sh.vertexShader = 'uniform float uTime, uLit; varying float vLi;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>\n ${growGL('uLit')} vLi = li; transformed.y += sin(uTime*.8 + li*1.7)*.07 - (1. - gs)*.5;`);
+    sh.fragmentShader = 'uniform float uTime, uNight; varying float vLi;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n vec3 hot = max(diffuseColor.rgb - 1., 0.); diffuseColor.rgb = min(diffuseColor.rgb, vec3(1.));')
+      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance = hot*(1. + .22*sin(uTime*1.6 + vLi*2.3))*(1. + .8*uNight) + vec3(.05,.045,.04);'); };
+  m.customProgramCacheKey = () => 'vd-den-may';
+  return new THREE.InstancedMesh(lampGeo(), m, n);
+}
 function mergeVerts(g) { // gộp đỉnh trùng để pháp tuyến mịn
   const p = g.attributes.position, map = new Map(), pos = [], idx = [];
   for (let i = 0; i < p.count; i++) { const k = p.getX(i).toFixed(4) + ',' + p.getY(i).toFixed(4) + ',' + p.getZ(i).toFixed(4); if (!map.has(k)) { map.set(k, pos.length / 3); pos.push(p.getX(i), p.getY(i), p.getZ(i)); } idx.push(map.get(k)); }
@@ -432,8 +453,9 @@ vA=smoothstep(0.,.08,f)*(1.-f)*(ty<.5?uOn.x:ty<1.5?uOn.y:uOn.z)*mix(.55,.5,tea);
   const Tea = (H.tea = add(new THREE.Group())); Tea.position.set(7, deckBase(DECKS[1]) + 0.6, -8.5);
   { const dk = (H.teaDeck = deck(DECKS[1])); dk.position.set(0, -0.6, 0); Tea.add(dk); dk.userData.seat.visible = false; }
   add(M(new THREE.CylinderGeometry(1.15, 1.15, 0.14, 28), STONE, '#b9b2a4', 0, 0.52), Tea); add(M(new THREE.CylinderGeometry(0.42, 0.6, 0.46, 14), STONE, '#a39c8e', 0, 0.23), Tea);
-  add(M(new THREE.SphereGeometry(0.19, 12, 8), MATTE, '#7a4a34', 0, 0.74, 0, 0), Tea).scale.y = 0.85;
-  add(M(new THREE.CylinderGeometry(0.02, 0.035, 0.2, 6), MATTE, '#7a4a34', 0.2, 0.78, 0, 0), Tea).rotation.z = -1.0;
+  // ấm trà: thân và vòi một khối, giữ riêng (không gộp) để rót được trong tuần trà (#125, Bạn đồng tu §5.7)
+  { const body = new THREE.SphereGeometry(0.19, 12, 8); body.scale(1, 0.85, 1); const sp = new THREE.CylinderGeometry(0.02, 0.035, 0.2, 6); sp.rotateZ(-1.0); sp.translate(0.2, 0.04, 0);
+    H.teapot = add(new THREE.Mesh(mergeGeometries([hue(body, '#7a4a34'), hue(sp, '#7a4a34')]), MATTE), Tea); H.teapot.position.set(0, 0.74, 0); H.teapot.rotation.order = 'YXZ'; }
   [0.6, 2.2, 3.8, 5.4].forEach((a) => { add(M(new THREE.CylinderGeometry(0.075, 0.05, 0.08, 10), MATTE, '#f2ede2', Math.cos(a) * 0.72, 0.63, Math.sin(a) * 0.72, 0), Tea);
     add(M(new THREE.CylinderGeometry(0.56, 0.5, 0.2, 16), STONE, '#b3ac9e', Math.cos(a) * 1.95, 0.1, Math.sin(a) * 1.95), Tea); });
   // chum nước rửa tay bên bàn trà: cùng mặt nước với Hồ Sen
@@ -459,24 +481,33 @@ vA=smoothstep(0.,.08,f)*(1.-f)*(ty<.5?uOn.x:ty<1.5?uOn.y:uOn.z)*mix(.55,.5,tea);
   add(new THREE.Mesh(new THREE.PlaneGeometry(1.45, 2.9), H.steleMat), St).position.set(0, 1.62, 0.3);
   rock(ROCK[2], 0, 0.05, 0, 1.4, 0.35, 0.8, 0, 0, 0, St);
 
+  // Tuần trà (#125, Bạn đồng tu §5.7): world.js gọi H.teaRitual mỗi khung với world.tea = { cups: [0..1, 0..1], pour: { cup, k } | null } (ui/tra-dao.js).
+  // Ấm nâng lên, quay vòi về chén, nghiêng rót; dòng trà mảnh nối vòi với chén; mặt nước trà dâng dần. Chỉ hiện khi đang có tuần trà.
+  { const CUP = [2.2, 5.4].map((a) => new THREE.Vector3(Math.cos(a) * 0.72, 0.6, Math.sin(a) * 0.72)), TIP = new THREE.Vector3(0.284, 0.094, 0), up = new THREE.Vector3(0, 1, 0);
+    const lg = new THREE.CircleGeometry(0.062, 12); lg.rotateX(-Math.PI / 2);
+    const liq = new THREE.InstancedMesh(lg, new THREE.MeshStandardMaterial({ color: '#b0702a', roughness: 0.25, emissive: '#3a1c06', emissiveIntensity: 0.6 }), 2); liq.visible = false; Tea.add(liq);
+    const sg = new THREE.CylinderGeometry(0.011, 0.007, 1, 5, 1, true); sg.translate(0, -0.5, 0);
+    const stream = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ color: '#c98a3e', transparent: true, opacity: 0.75, depthWrite: false })); stream.visible = false; Tea.add(stream);
+    const d = new THREE.Object3D(), tip = new THREE.Vector3(), dir = new THREE.Vector3(); let pk = 0;
+    H.teaRitual = (st) => {
+      const pot = H.teapot, on = !!st, cups = on ? st.cups || [] : [];
+      liq.visible = on && cups.some((x) => x > 0);
+      if (liq.visible) { CUP.forEach((p, i) => { const k = Math.max(0, Math.min(1, cups[i] || 0)); d.position.set(p.x, p.y + 0.015 + 0.05 * k, p.z); d.scale.setScalar(k > 0 ? 0.55 + 0.45 * k : 0.0001); d.updateMatrix(); liq.setMatrixAt(i, d.matrix); }); liq.instanceMatrix.needsUpdate = true; }
+      const P = on && st.pour, k = P ? Math.max(0, Math.min(1, P.k)) : 0; pk += (k - pk) * 0.25;
+      const c = CUP[P ? P.cup : 0], a = Math.atan2(c.z, c.x);
+      pot.position.set(Math.cos(a) * 0.3 * pk, 0.74 + 0.16 * pk, Math.sin(a) * 0.3 * pk); pot.rotation.set(0, -a * Math.min(1, pk * 3), -0.95 * pk);
+      stream.visible = !!P && pk > 0.85;
+      if (stream.visible) { pot.updateMatrix(); tip.copy(TIP).applyMatrix4(pot.matrix); dir.copy(c).setY(c.y + 0.06 + 0.04 * (cups[P.cup] || 0)).sub(tip); stream.position.copy(tip); stream.scale.set(1, dir.length(), 1); stream.quaternion.setFromUnitVectors(up, dir.normalize().negate()); }
+    };
+    H.teaInfo = () => ({ cups: liq.visible ? CUP.map((_, i) => { liq.getMatrixAt(i, d.matrix); return +new THREE.Vector3().setFromMatrixScale(d.matrix).x.toFixed(2); }) : [0, 0], stream: stream.visible, tilt: +(-H.teapot.rotation.z).toFixed(2) }); }
+
   // Đợt E (#104): Vân Đảo phản chiếu sổ tu tập trên máy (docs/noi-dung/nhiem-vu-so-nhap.md §8). Mỗi loại một InstancedMesh = một lệnh vẽ, không đổ bóng.
   // - Đèn mây dọc lối đi (≤ 33): mỗi chương Đường Xưa đã nghe trọn thắp một đèn, từ chân thềm Tịnh Thất ra Cổng Vân Môn rồi các nhánh.
   // - Nụ sen ở Hồ Sen (≤ 49): mỗi ngày giữ đủ năm giới nở một nụ; khác 12 hoa sen phần thưởng theo tuần.
   // - Hoa sen 10 cánh Ba-la-mật: nhỏ trên đỉnh Bia, và nằm sát nền quanh chỗ ngồi khi thiền. Độ sáng mỗi cánh theo lotus().norm (cân bằng, không phải điểm).
   //   Cánh luôn ở mặt đất hoặc trên Bia, không bao giờ thành vòng sáng sau đầu nhân vật (AGENTS.md 1.6).
   { const LN = 33, BN = 49, uLit = { value: 0 }, uBud = { value: 0 }, v3 = new THREE.Vector3();
-    const paint = (g, f) => { const p = g.attributes.position, c = new Float32Array(p.count * 3); for (let i = 0; i < p.count; i++) c.set(f(p.getY(i)), i * 3); g.setAttribute('color', new THREE.BufferAttribute(c, 3)); return g.index ? g.toNonIndexed() : g; };
-    const grow = (u) => `float li = float(gl_InstanceID), gs = clamp(${u} - li, 0., 1.); gs = gs*gs*(3. - 2.*gs); transformed *= gs;`;
-    // đèn: lõi ấm (màu đỉnh > 1 thành phát sáng, bloom tỏa) nằm trên hai cụm mây nhỏ; lơ lửng nhịp chậm, đèn mới lớn dần rồi sáng
-    const puff = (s, x, y, z) => { const g = mergeVerts(new THREE.IcosahedronGeometry(s, 0)); g.scale(1, 0.62, 1); g.translate(x, y, z); g.computeVertexNormals(); return paint(g, () => [0.97, 0.95, 0.92]); };
-    const core = mergeVerts(new THREE.IcosahedronGeometry(0.17, 0)); core.scale(1, 1.18, 1); core.translate(0, 0.16, 0); core.computeVertexNormals();
-    const lampG = mergeGeometries([paint(core, () => [2.3, 1.62, 0.78]), puff(0.2, -0.13, -0.02, 0.02), puff(0.17, 0.14, -0.04, -0.03)].map((g) => { g.deleteAttribute('uv'); return g; }));
-    const lampM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 });
-    lampM.onBeforeCompile = (sh) => { sh.uniforms.uTime = U.uTime; sh.uniforms.uLit = uLit; sh.uniforms.uNight = U.uNight;
-      sh.vertexShader = 'uniform float uTime, uLit; varying float vLi;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>\n ${grow('uLit')} vLi = li; transformed.y += sin(uTime*.8 + li*1.7)*.07 - (1. - gs)*.5;`);
-      sh.fragmentShader = 'uniform float uTime, uNight; varying float vLi;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n vec3 hot = max(diffuseColor.rgb - 1., 0.); diffuseColor.rgb = min(diffuseColor.rgb, vec3(1.));')
-        .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance = hot*(1. + .22*sin(uTime*1.6 + vLi*2.3))*(1. + .8*uNight) + vec3(.05,.045,.04);'); };
-    lampM.customProgramCacheKey = () => 'vd-den-may';
+    const paint = paintY, grow = growGL;
     // vị trí: so le hai bên lối đi, cách tim lối 1,55; tránh Bia, cổng, các đài, vườn tâm thức, cây và đèn đá
     const ROUTE = [[[-13, 5.2], [-7.5, 3]], [[-7.5, 3], [2, -1]], [[2, -1], [9, 6]], [[9, 6], [14, 14]], [[9, 6], [18, 3]], [[18, 3], [24, 2]], [[2, -1], [6, -6]], [[-7.5, 3], [-13, 8]], [[-13, 8], [-18.6, 6]]];
     const AVOID = [[10.5, 10, 1.9], [15.5, 15.5, 2.8], [-15.6, 7, 1.7], [-18.4, 9.6, 1.5], [-22, 5, 1.6], [-25.6, 1.2, 1.2], [-17.6, 2.6, 1.2], [-24.6, 9.6, 1.2], [-20.4, -0.6, 1.2], [-18.2, 13.2, 1.2], ...DECKS.map((D) => [D.x, D.z, D.r + 1])];
@@ -484,7 +515,7 @@ vA=smoothstep(0.,.08,f)*(1.-f)*(ty<.5?uOn.x:ty<1.5?uOn.y:uOn.z)*mix(.55,.5,tea);
     const spots = [];
     for (const [gap, flip] of [[2.1, 1], [2.1, -1], [1.5, 1]]) { let side = flip; for (const [a, b] of ROUTE) { const L = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.max(1, Math.round(L / gap)), ux = (b[0] - a[0]) / L, uz = (b[1] - a[1]) / L;
       for (let i = 0; i < n && spots.length < LN; i++) { const t = (i + 0.5) / n, x = a[0] + (b[0] - a[0]) * t - uz * 1.55 * side, z = a[1] + (b[1] - a[1]) * t + ux * 1.55 * side; side = -side; if (ok(x, z, spots)) spots.push([x, z]); } } }
-    const lam = add(new THREE.InstancedMesh(lampG, lampM, spots.length));
+    const lam = add(cloudLamps(spots.length, uLit));
     spots.forEach(([x, z], i) => { d.position.set(x, groundH(x, z) + 1.55 + 0.25 * r(), z); d.rotation.set(0, r() * 6.28, 0); d.scale.setScalar(1.3); d.updateMatrix(); lam.setMatrixAt(i, d.matrix); });
     lam.computeBoundingSphere(); lam.count = 0; lam.visible = false;
     // nụ sen: búp hồng gốc xanh trên cuống ngắn, lá nhỏ sát mặt nước; mọc theo xoắn ốc tránh 12 hoa và lá sẵn có, đung đưa như hoa
@@ -565,7 +596,7 @@ void main(){ float sp = 0.5 + 1.1*uFlow; float n = fbm(vec2(vUv.x*3.0, vUv.y*9.0
   bakeLocal(tree.group, [tree.leaves]);
   bakeLocal(H.veil, [], [], { transparent: true }); bakeLocal(Gt, [H.veil], [], { transparent: true });
   bakeLocal(pv.group, [], [pv.mats.roof, pv.mats.wood, pv.altar.material]);
-  bakeLocal(pu.lamps); bakeLocal(pu.flowers); bakeLocal(pu.incense); bakeLocal(Tea, [H.teaDeck]);
+  bakeLocal(pu.lamps); bakeLocal(pu.flowers); bakeLocal(pu.incense); bakeLocal(Tea, [H.teaDeck, H.teapot]);
   bakeLocal(G, [land, pv.group, padDeck, Tea, H.stairs, H.stairPosts, H.stairRough, tree.group, H.veil]);
   return H;
 }
@@ -574,31 +605,34 @@ void main(){ float sp = 0.5 + 1.1*uFlow; float n = fbm(vec2(vUv.x*3.0, vUv.y*9.0
 const GLOW = (r, g, b, o) => new THREE.MeshBasicMaterial({ color: new THREE.Color(r, g, b), transparent: true, opacity: o, blending: o < 0.7 ? THREE.AdditiveBlending : THREE.NormalBlending, depthWrite: o > 0.7 });
 const NB_RING = GLOW(0.45, 1.5, 1.35, 0.5), NB_JADE = GLOW(0.35, 1.05, 0.85, 0.75), NB_LUX = new THREE.MeshStandardMaterial({ color: '#eef5ff', emissive: '#9fc8f0', emissiveIntensity: 0.9, roughness: 0.15, transparent: true, opacity: 0.9, side: THREE.DoubleSide });
 export function buildNeighbor(tier, seed, size, lv = -1, gd = null) {
-  // ba đảo đầu (seed ≤ 3) là đảo bạn đồng tu, có thể tới thăm nên giữ chi tiết; các đảo còn lại chỉ nhìn từ xa.
+  // đảo bạn đồng tu (lv ≥ 0, mọi ô ở #125) và ba đảo đầu (seed ≤ 3) có thể tới thăm nên giữ chi tiết; các đảo còn lại chỉ nhìn từ xa.
   // lv ≥ 0: đảo bạn đồng tu, lv = tiến trình 0..1 trong hành trình 49 ngày của bạn ấy (#95): đảo lớn dần như Vân Đảo của mình.
   // gd: hướng (hệ của đảo) về phía vân lộ tới: Vân Môn đón khách ở đó, bãi đáp vân mây giữa cổng và mép đảo
-  const near = seed <= 3, fr = lv >= 0, S = size / 13, G = new THREE.Group(), r = rng(seed * 31 + tier), N = makeNoise(seed + 50), hf = (x, z) => 0.9 * N.fbm(x * 0.12, 1, z * 0.12, 2) * size * 0.18 + size * 0.06 * Math.exp(-(x * x + z * z) / (size * size * 0.25));
+  const fr = lv >= 0, near = seed <= 3 || fr, S = size / 13, G = new THREE.Group(), r = rng(seed * 31 + tier), N = makeNoise(seed + 50), hf = (x, z) => 0.9 * N.fbm(x * 0.12, 1, z * 0.12, 2) * size * 0.18 + size * 0.06 * Math.exp(-(x * x + z * z) / (size * size * 0.25));
   const T = terrain({ sx: size, sz: size * (0.72 + r() * 0.2), M: near ? 32 : 28, NT: near ? 7 : 6, NS: near ? 6 : 5, depth: size * (1.3 + r() * 0.5), seed: seed + 3, height: hf });
   G.add(M(T.geo, terrainMat(), 0, 0, 0, 0, 0));
   const spot = (fmax) => { for (let k = 0; k < 40; k++) { const a = r() * 6.28, dd = Math.sqrt(r()) * fmax, x = size * dd * Math.cos(a), z = size * 0.8 * dd * Math.sin(a); if (T.frac(x, z) < fmax) return [x, hf(x, z), z]; } return [0, hf(0, 0), 0]; };
   const fc = fr ? spot(0.3) : null, used = fc ? [[fc[0], fc[2], 4]] : [], away = (fmax, rad = 1) => { let p; for (let k = 0; k < 16; k++) { p = spot(fmax); if (used.every(([x, z, q]) => Math.hypot(p[0] - x, p[2] - z) > (q + rad) * S)) break; } used.push([p[0], p[2], rad]); return p; };   // đồ vật tránh chỗ ngồi và tránh nhau
-  let gate = null, pad = null; if (fr && gd) { const at = (q) => { let d = 0; while (d < size * 1.3 && T.frac(gd[0] * d, gd[1] * d) < q) d += 0.25; return [gd[0] * d, gd[1] * d]; }, [gx, gz] = at(0.55), [px, pz] = at(0.84), Gt = new THREE.Group();
-    Gt.position.set(gx, hf(gx, gz), gz); Gt.rotation.y = Math.atan2(gd[0], gd[1]); G.add(Gt); gate = [gx, hf(gx, gz), gz]; pad = [px, hf(px, pz), pz]; used.push([gx, gz, 3], [px, pz, 2.2]);
+  const feat = [], mark = (id, p) => { if (fr) feat.push({ id, p: [p[0], p[1], p[2]] }); };   // phân khu cho «Tham quan» (#125 §5.5)
+  if (fc) mark('toa', fc);
+  let gate = null, pad = null, tea = null; if (fr && gd) { const at = (q) => { let d = 0; while (d < size * 1.3 && T.frac(gd[0] * d, gd[1] * d) < q) d += 0.25; return [gd[0] * d, gd[1] * d]; }, [gx, gz] = at(0.55), [px, pz] = at(0.84), Gt = new THREE.Group();
+    Gt.position.set(gx, hf(gx, gz), gz); Gt.rotation.y = Math.atan2(gd[0], gd[1]); G.add(Gt); gate = [gx, hf(gx, gz), gz]; mark('mon', gate); pad = [px, hf(px, pz), pz]; used.push([gx, gz, 3], [px, pz, 2.2]);
     [-1.9, 1.9].forEach((x) => Gt.add(M(new THREE.CylinderGeometry(0.4 * S, 0.55 * S, 2.6 * S, 7), MOSS, '#8f887c', x * S, 1.3 * S, 0, 1)));   // Vân Môn: hai trụ đá, vòm mây (ít mặt: ngân sách tam giác điện thoại)
     for (let i = 0; i <= 4; i++) { const a = (i / 4) * Math.PI, m = M(new THREE.IcosahedronGeometry(1, 1), MATTE, '#f6f3ee', Math.cos(a) * 1.9 * S, (2.6 + Math.sin(a) * 1.5) * S, 0, 0); m.scale.setScalar((0.62 + 0.12 * Math.sin(i * 2)) * S); Gt.add(m); } }
   const nT = 2 + (seed % 2), kinds = tier === 2 ? ['gold'] : tier === 3 ? ['blossom'] : tier === 1 ? ['blossom', 'bodhi', 'pine'] : ['bodhi', 'pine', 'bodhi'];
   for (let i = 0; i < nT; i++) { const b = fr && !i, [x, y, z] = fr ? away(0.5, 1.5) : spot(0.5), k = (0.75 + r() * 0.5) * S * (b ? 0.55 + 0.8 * lv : 1), kind = b ? 'bodhi' : kinds[(seed + i) % kinds.length];   // bạn đồng tu: cây Bồ-đề lớn dần theo tiến trình
+    if (b) mark('bode', [x, y, z]);
     const t = leafTree({ count: near ? (b ? 110 + Math.round(150 * lv) : 170) : 120, kind, radius: (kind === 'pine' ? 2.3 : 3.3) * k, trunkH: (kind === 'pine' ? 4.6 : 3.4) * k, seed: seed * 7 + i, far: true }); t.group.position.set(x, y - 0.2, z); G.add(t.group); }
   for (let i = 0; i < 9; i++) { const [x, y, z] = spot(0.85), s = (0.35 + r() * 0.9) * S, m = M((near ? ROCK1 : ROCK0)[i % 3], MOSS, 0, x, y + s * 0.2, z, 0); m.scale.set(s, s * 0.7, s); m.rotation.y = r() * 6; G.add(m); }
   // Đảo bạn đồng tu mở dần theo ngày, cùng mốc với Vân Đảo của mình: ao ngọc có sen (ngày 8), bàn trà đá (15), đèn đá (22), lối đá bước (29), Bia nhỏ chữ sáng (40); am nhỏ từ ngày 30
   if (fr) { const d = lv * 49, cyl = (a, b, h, n) => new THREE.CylinderGeometry(a * S, b * S, h * S, n);
-    if (d >= 8) { const r0 = (1.2 + 1.6 * lv) * S, [x, y, z] = away(0.45, r0 / S + 0.5), pond = M(new THREE.CircleGeometry(r0, 18), NB_JADE, 0, x, y + 0.12, z, 0); pond.rotation.x = -Math.PI / 2; G.add(pond);
+    if (d >= 8) { const r0 = (1.2 + 1.6 * lv) * S, [x, y, z] = away(0.45, r0 / S + 0.5), pond = M(new THREE.CircleGeometry(r0, 18), NB_JADE, 0, x, y + 0.12, z, 0); pond.rotation.x = -Math.PI / 2; G.add(pond); mark('ao', [x, y, z]);
       for (let j = 0; j < 2 + Math.round(4 * lv); j++) { const a = j * 2.4 + r(), q = r0 * (0.3 + 0.5 * r()), px = x + Math.cos(a) * q, pz = z + Math.sin(a) * q, pad = M(new THREE.CircleGeometry(0.28 * S, 7), MATTE, '#4f8a3c', px, y + 0.16, pz, 0);
         pad.rotation.x = -Math.PI / 2; G.add(pad); if (!(j % 2)) G.add(M(new THREE.ConeGeometry(0.14 * S, 0.22 * S, 6), MATTE, '#f2b7c6', px, y + 0.27, pz, 0)); } }
-    if (d >= 15) { const [x, y, z] = away(0.5, 1.6); G.add(M(cyl(0.6, 0.45, 0.5, 8), MATTE, '#a9a39a', x, y + 0.25 * S, z, 1)); [0, 2.1, 4.2].forEach((a) => G.add(M(cyl(0.22, 0.22, 0.3, 6), MATTE, '#9a948a', x + Math.cos(a) * 1.1 * S, y + 0.15 * S, z + Math.sin(a) * 1.1 * S, 1))); }
-    if (d >= 22) for (let j = 0; j < 2 + Math.round(2 * lv); j++) { const [x, y, z] = away(0.75); G.add(M(cyl(0.12, 0.18, 0.9, 5), MATTE, '#9d978d', x, y + 0.45 * S, z, 1)); G.add(M(new THREE.BoxGeometry(0.42 * S, 0.34 * S, 0.42 * S), NB_LUX, 0, x, y + 1.05 * S, z, 0)); }
-    if (d >= 29) for (let j = 0; j < 5; j++) { const [x, y, z] = away(0.8); G.add(M(cyl(0.42, 0.46, 0.12, 7), MATTE, '#c9c3b8', x, y + 0.04, z, 2)); }
-    if (d >= 40) { const [x, y, z] = away(0.55); G.add(M(new THREE.BoxGeometry(0.9 * S, 1.6 * S, 0.22 * S), MOSS, '#5a5650', x, y + 0.8 * S, z, 1)); G.add(M(new THREE.PlaneGeometry(0.55 * S, S), NB_JADE, 0, x, y + 0.85 * S, z + 0.12 * S, 0)); } }
+    if (d >= 15) { const [x, y, z] = away(0.5, 1.6); tea = [x, y, z]; mark('tra', tea); G.add(M(cyl(0.6, 0.45, 0.5, 8), MATTE, '#a9a39a', x, y + 0.25 * S, z, 1)); [0, 2.1, 4.2].forEach((a) => G.add(M(cyl(0.22, 0.22, 0.3, 6), MATTE, '#9a948a', x + Math.cos(a) * 1.1 * S, y + 0.15 * S, z + Math.sin(a) * 1.1 * S, 1))); }
+    if (d >= 22) for (let j = 0; j < 2 + Math.round(2 * lv); j++) { const [x, y, z] = away(0.75); if (!j) mark('den', [x, y, z]); G.add(M(cyl(0.12, 0.18, 0.9, 5), MATTE, '#9d978d', x, y + 0.45 * S, z, 1)); G.add(M(new THREE.BoxGeometry(0.42 * S, 0.34 * S, 0.42 * S), NB_LUX, 0, x, y + 1.05 * S, z, 0)); }
+    if (d >= 29) for (let j = 0; j < 5; j++) { const [x, y, z] = away(0.8); if (!j) mark('loi', [x, y, z]); G.add(M(cyl(0.42, 0.46, 0.12, 7), MATTE, '#c9c3b8', x, y + 0.04, z, 2)); }
+    if (d >= 40) { const [x, y, z] = away(0.55); mark('bia', [x, y, z]); G.add(M(new THREE.BoxGeometry(0.9 * S, 1.6 * S, 0.22 * S), MOSS, '#5a5650', x, y + 0.8 * S, z, 1)); G.add(M(new THREE.PlaneGeometry(0.55 * S, S), NB_JADE, 0, x, y + 0.85 * S, z + 0.12 * S, 0)); } }
   if (tier >= 1) {
     const ring = M(new THREE.TorusGeometry(size * 0.46, size * 0.02, 4, 32), NB_RING, 0, 0, hf(size * 0.46, 0) + 0.25, 0, 0); ring.rotation.x = Math.PI / 2; G.add(ring);
     const wf = waterfall(size * 0.14, size * 2.0), a = r() * 6.28; wf.position.set(size * 0.93 * Math.cos(a), hf(0, 0) - 1.2, size * 0.7 * Math.sin(a)); wf.rotation.y = -a + Math.PI / 2; G.add(wf);
@@ -610,10 +644,10 @@ export function buildNeighbor(tier, seed, size, lv = -1, gd = null) {
     [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([x, z]) => kiosk.add(M(new THREE.CylinderGeometry(0.16 * k, 0.16 * k, 3.4 * k, 6), bm, body, x * 1.8 * k, 1.7 * k, z * 1.5 * k, 0)));
     const rf = M(roofGeo([[4.2, 0.3], [3.9, 0.14], [3.0, 0.2], [1.9, 0.7], [0.9, 1.4], [0.25, 2.0]], 0.8), bm, lux ? 0 : tier === 2 ? '#d8b25c' : tier === 1 ? '#3f6f77' : '#4d5f68', 0, 3.4 * k, 0, 0); rf.scale.setScalar(k); kiosk.add(rf);
     kiosk.add(M(new THREE.CylinderGeometry(3 * k, 3.2 * k, 0.3 * k, 8), bm, body, 0, 0.1, 0, 0));
-    const [x, y, z] = fr ? away(0.45, 3.4) : spot(0.3); kiosk.position.set(x, y, z); G.add(kiosk);
+    const [x, y, z] = fr ? away(0.45, 3.4) : spot(0.3); kiosk.position.set(x, y, z); G.add(kiosk); mark('am', [x, y, z]);
   }
   const seats = []; const ns = 4 + Math.floor(r() * 4), [cx, , cz] = fc || spot(0.3), a0 = r() * 6.28;
   for (let i = 0; i < ns; i++) { const ring = i < 5 ? 0 : 1, a = a0 + i * 2.4, d = (2.6 + ring * 2.4 + r() * 0.8) * size / 13, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d * 0.9;
     if (T.frac(x, z) < 0.78) seats.push({ x, y: hf(x, z) + 0.02, z }); else { const [sx, sy, sz] = spot(0.6); seats.push({ x: sx, y: sy + 0.02, z: sz }); } }
-  return { group: G, seats, size, outline: T.outline, top: hf(0, 0), hf, gate, pad };
+  return { group: G, seats, size, outline: T.outline, top: hf(0, 0), hf, gate, pad, tea, feat };   // tea: bàn trà đá (ngày 15), nơi Trà Đạo hai người (#125)
 }
