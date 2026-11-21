@@ -78,3 +78,22 @@ test('chấm khích lệ theo /me: 1 → đã xem → 0 → một lời mới �
   await expect.poll(() => sv.seenPosts.length).toBe(2);
   expect(B.errs).toEqual([]);
 });
+
+test('chấm khích lệ: đã xem → GET /me lỗi → tự thử lại, lời mới sau đó vẫn hiện chấm (review #151)', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const sv = fakeServer(12), { a, b, c } = sv.U;
+  pair(sv, b.id, a.id); pair(sv, b.id, c.id);
+  sv.cheers.push({ from: a.id, to: b.id, day: ymd(Date.now()), line: 'tuy_hy', at: Date.now() - 600_000 });
+  const B = await device(browser, sv, 'b', { width: 412, height: 860 }, 12);
+  const dot = B.locator('#dt .n'), poll = () => B.evaluate(() => window.dispatchEvent(new Event('online')));
+  await slow(dot).toHaveText('1');
+  sv.failMeMs = 6000;   // GET /me ngay sau «đã xem» (và mọi lần poll trong 6 giây) đều lỗi
+  await openList(B);
+  await expect.poll(() => sv.seenPosts.length).toBe(1);
+  await slow(dot).toHaveText('');
+  await closeView(B);
+  await B.waitForTimeout(6500);   // hết khoảng lỗi; các lần poll của tài khoản sau đó đều thành công
+  sv.cheers.push({ from: c.id, to: b.id, day: ymd(Date.now()), line: 'cung_giu', at: Date.now() });
+  await expect.poll(async () => { await poll(); return dot.textContent(); }, { timeout: 45_000, intervals: [3000] }).toBe('1');
+  expect(B.errs).toEqual([]);
+});

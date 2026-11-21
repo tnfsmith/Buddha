@@ -29,7 +29,7 @@ function resetFor(uid) {
     uid, tab: D.tab === 'loi' ? 'loi' : 'list', sel: null, busy: '', err: '', msg: '', arm: '', link: null, me: null, blocks: null, q: '', peek: null, prog: new Map(), progReq: new Map(), kem: false,
     skew: 0, at: 0, lastLoad: 0, msgInv: null, cardKey: null, viewKey: '', openSynced: false,
     quietSeen: new Set(), chimed: new Set(), watch: new Set(), joined: new Set(), hide: new Set(), answered: new Set(), hen: freshHen(),
-    cheered: new Set(), cheerHold: false, cheerMark: 0, cheerSeenAt: 0,
+    cheered: new Set(), cheerHold: false, cheerRetry: 0, cheerMark: 0, cheerSeenAt: 0,
   });
 }
 /** Ô hẹn giờ đồng tu: bạn được chọn, «gio» (hẹn giờ) hoặc «ngay», giờ địa phương trong ô datetime-local */
@@ -117,6 +117,7 @@ function cheers() {
 // Nguồn duy nhất: social.cheers mà net/dong-tu.js giữ từ GET /me (#185). Sau POST /cheers/seen, giữ 0 tới khi GET /me của chính
 // màn trả về (máy chủ đã tính mốc đã xem); lời đến sau đó thì lần /me kế báo đúng, kể cả khi số đếm bằng số trước (review #184).
 const cheerUnseen = () => (D.cheerHold ? 0 : Number(dongTu.social.cheers) || 0);
+const CHEER_RETRY_MS = 15_000;
 const cheerText = (c) => (c.line !== 'tien_trinh' ? CHEER_LINES[c.line]
   : c.completed === true ? 'Mình đã hoàn thành chương trình 49 ngày.' : Number.isInteger(c.day) ? `Mình đang ở ngày ${c.day} của hành trình 49 ngày.` : 'Mình đang tiếp tục hành trình 49 ngày.');
 function ago(at) {
@@ -523,6 +524,7 @@ function tick() {
   follow();
   setPresence(ctx.presence());
   if (!dongTu.on) { card(); if (ctx.dais) ctx.dais([]); return; }
+  if (D.cheerHold && D.cheerRetry && Date.now() >= D.cheerRetry) { D.cheerRetry = 0; void loadMe(); }
   // Liên kết mời đã gửi mà sau 15 giây chưa thấy người mời trong danh sách: mô-đun mạng đã xóa mã (mã hỏng, hết lượt, mã của mình)
   // thì báo; còn mã (lỗi tạm) thì chờ tiếp
   if (D.pend && D.pend.on && dongTu.list && Date.now() - D.pend.at > 15_000) {
@@ -607,8 +609,13 @@ async function loadMe() {
     const me = await getMe();
     if (!still(uid) || !me || !me.user || me.user.id !== uid) return;   // phản hồi chậm của phiên trước
     observeDongTuMe(uid, me); D.me = me.profile || D.me; D.meFail = false;
-    if (D.cheerHold) { D.cheerHold = false; ctx.badge(); }
-  } catch { if (!still(uid)) return; D.meFail = true; }
+    if (D.cheerHold) { D.cheerHold = false; D.cheerRetry = 0; ctx.badge(); }
+  } catch {
+    if (!still(uid)) return;
+    D.meFail = true;
+    // Đang giữ chấm khích lệ ở 0 sau «đã xem» mà GET /me lỗi: thử lại sau, để lời mới đến sau đó không bị giấu mãi (review #151)
+    if (D.cheerHold) D.cheerRetry = Date.now() + CHEER_RETRY_MS;
+  }
   if (D.me && !D.openSynced) syncOpen();
   if (ctx.viewOpen()) ctx.render();
 }

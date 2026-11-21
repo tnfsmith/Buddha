@@ -17,7 +17,7 @@ export function fakeServer(day = 1) {
   };
   // days: ngày hành trình bạn cho hiện (mặc định 1); blank: người chưa tạo nhân vật (#151 §7);
   // noLook: hồ sơ máy chủ có Tịnh danh nhưng chưa có hình dáng; hold[đường dẫn]: Promise thì yêu cầu đó chờ đến khi nó xong (máy chủ chậm)
-  const sv = { U, settings: {}, island: {}, presence: {}, links: {}, pairs: [], requests: [], invites: [], log: [], n: 0, days: {}, blank: new Set(), noLook: new Set(), hold: {}, profiles: [], sessions: [], sessionPosts: [], noSessionsApi: false, cheers: [], cheerSeen: {}, cheerPosts: [], seenPosts: [] };
+  const sv = { U, settings: {}, island: {}, presence: {}, links: {}, pairs: [], requests: [], invites: [], log: [], n: 0, days: {}, blank: new Set(), noLook: new Set(), hold: {}, profiles: [], sessions: [], sessionPosts: [], noSessionsApi: false, cheers: [], cheerSeen: {}, cheerPosts: [], seenPosts: [], meFailUntil: 0, failMeMs: 0 };
   const byId = (id) => Object.values(U).find((u) => u.id === id);
   const prof = (id) => ({ ...byId(id), ...(sv.blank.has(id) ? { tinh_danh: null } : {}), look: sv.blank.has(id) || sv.noLook.has(id) ? {} : LOOK, settings: sv.settings[id] || {}, island: sv.island[id] || {}, tz: 'Asia/Ho_Chi_Minh', visibility: 'dong_tu', pref_seat: null, rev: 3 });
   const journey = { program: 'so-nhap-49', cycle: 1, day, started_on: ymd(), last_done_on: null, completed_at: null, sacca_count: 0, sessions_done: 0, sermons_done: 0, rev: 1 };
@@ -63,6 +63,8 @@ export function fakeServer(day = 1) {
     if (p.startsWith('/api/v1/') && !me) return err('unauthorized', 401);
     if (p.startsWith('/api/v1/')) sv.log.push(`${me.slice(2, 5)} ${m} ${p.slice(7)}`);
     if (sv.hold[p]) await sv.hold[p];
+    // failMeMs: sau POST /cheers/seen, mọi GET /me trong khoảng này trả 503 (mô phỏng mất mạng ngay sau «đã xem»)
+    if (p === '/api/v1/me' && sv.meFailUntil > Date.now()) return err('internal', 503);
     if (p === '/api/v1/me') {
       return json({ user: { id: me, isAnonymous: false }, practice: 1, profile: prof(me), journey: { ...journey }, totals: { duc: 0, thien: 0, tue: 0, all: 0 },
         unlocked_zones: {}, guest_purge_after: null, dong_tu: 1, server_now: now,
@@ -167,7 +169,7 @@ export function fakeServer(day = 1) {
       sv.cheers.push({ from: me, to, day: ymd(now), line: b.line, j_day: b.line === 'tien_trinh' ? journey.day : null, j_done: b.line === 'tien_trinh' ? 0 : null, at: now });
       return json(null, 201);
     }
-    if (p === '/api/v1/cheers/seen' && m === 'POST') { const u = body().until; sv.seenPosts.push(u); sv.cheerSeen[me] = Math.max(sv.cheerSeen[me] || 0, Math.min(u, now)); return json(null, 204); }
+    if (p === '/api/v1/cheers/seen' && m === 'POST') { const u = body().until; sv.seenPosts.push(u); if (sv.failMeMs) { sv.meFailUntil = Date.now() + sv.failMeMs; sv.failMeMs = 0; } sv.cheerSeen[me] = Math.max(sv.cheerSeen[me] || 0, Math.min(u, now)); return json(null, 204); }
     if (p === '/api/v1/blocks') return json({ blocks: [] });
     if (p.startsWith('/api/')) return err('not_found', 404);
     return route.continue();
