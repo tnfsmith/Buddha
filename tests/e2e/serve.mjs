@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 // fileURLToPath, không dùng .pathname: trên Windows .pathname ra "/D:/…" và giữ nguyên %20, %26 nên thư mục có khoảng trắng hoặc dấu & sẽ không tìm thấy
 const ROOT = fileURLToPath(new URL('../../apps/web/public/', import.meta.url));
-const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.webmanifest': 'application/manifest+json' };
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2' };
 const port = +(process.env.PORT || 4173);
 
 createServer(async (req, res) => {

@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { INVITE_TTL_MS, LINK_USES, MEET_LEAD_MS } from '@vandao/shared/dong-tu.js';
+import { INVITE_TTL_MS, LINK_USES, MEET_LEAD_MS, REASON_TEXT } from '@vandao/shared/dong-tu.js';
 import { call, env, guest, json } from './helpers.js';
 
 const base = '/api/v1';
 const db = env.DB;
+const look = { height: 1, hair: 'ngan' };
 async function callAsync(person, path, method, body, headers) {
   return call(base + path, { method, ...(body === undefined ? {} : { body: JSON.stringify(body) }), headers }, person?.token);
 }
@@ -19,8 +20,9 @@ async function link(from, to) {
   expect(result.status).toBe(201);
   return created.data.code;
 }
-async function named(name, tag) {
-  const actor = await guest(name);
+async function named(name = 'Tuệ An', tag) {
+  const actor = await guest();
+  expect((await api(actor, '/profile', 'PATCH', { tinh_danh: name, look })).status).toBe(200);
   if (tag) await db.prepare('UPDATE profile SET tag = ? WHERE user_id = ?').bind(tag, actor.user.id).run();
   return actor;
 }
@@ -37,6 +39,39 @@ const ask = (p, query) => api(p, '/companions/request', 'POST', { query });
 const code = (r) => r.data?.error?.code;
 
 describe('Bạn đồng tu trên Worker/D1 #122', () => {
+  it('chỉ mở lời mời khi nhân vật đã lưu, khách mới vẫn nhận lời', async () => {
+    const host = await named('Tâm An', '6321'), newcomer = await guest();
+    const meeting = (from, to) => api(from, '/meet', 'POST', { to: id(to), kind: 'thien', place: 'dtd' });
+    await link(host, newcomer);
+    await setPresence(newcomer, 'online');
+    const issued = await meeting(host, newcomer);
+    expect(issued.status).toBe(201);
+    expect((await api(newcomer, '/meet/' + issued.data.invite.id + '/respond', 'POST', { accept: true })).status).toBe(200);
+
+    for (const patch of [{ look }, { tinh_danh: 'Tuệ Ý', look: {} }]) {
+      expect((await api(newcomer, '/profile', 'PATCH', patch)).status).toBe(200);
+      const denied = await Promise.all([
+        api(newcomer, '/companions/link', 'POST', {}),
+        ask(newcomer, 'Tuệ Minh · 0202'),
+        meeting(newcomer, host),
+      ]);
+      for (const result of denied) {
+        expect(result).toMatchObject({ status: 409, data: { error: { code: 'need_character', message: REASON_TEXT.need_character } } });
+      }
+    }
+    expect((await list(newcomer)).outgoing).toEqual([]);
+    expect((await api(newcomer, '/profile', 'PATCH', { look })).status).toBe(200);
+    const created = await api(newcomer, '/companions/link', 'POST', {});
+    expect(created.status).toBe(200);
+    expect((await ask(newcomer, 'Tuệ Minh · 0202')).status).toBe(202);
+    await setPresence(host, 'online');
+    expect((await meeting(newcomer, host)).status).toBe(201);
+
+    await api(newcomer, '/profile', 'PATCH', { look: {} });
+    expect(code(await api(newcomer, '/companions/link', 'POST', { renew: true }))).toBe('need_character');
+    expect((await api(null, '/companions/link/' + created.data.code)).status).toBe(200);
+  });
+
   it('mã mời công khai, một mã còn hạn, nhận bởi khách, giới thiệu, hết lượt, hết hạn và đổi mã', async () => {
     const owner = await named('Tuệ Thái', '5696'), receiver = await guest();
     const created = await api(owner, '/companions/link', 'POST', {});
@@ -71,7 +106,7 @@ describe('Bạn đồng tu trên Worker/D1 #122', () => {
   });
 
   it('hai phiên nhận lượt cuối cùng đồng thời chỉ một lần thành bạn', async () => {
-    const owner = await guest(), one = await guest(), two = await guest();
+    const owner = await named(), one = await guest(), two = await guest();
     const key = (await api(owner, '/companions/link', 'POST', {})).data.code;
     await db.prepare('UPDATE invite SET uses_left=1 WHERE code=?').bind(key).run();
     const both = await Promise.all([one, two].map((p) => api(p, '/companions/link/' + key + '/accept', 'POST')));
@@ -107,7 +142,7 @@ describe('Bạn đồng tu trên Worker/D1 #122', () => {
   });
 
   it('đồng ý đúng người, từ chối riêng, gửi lại trong hạn trả dòng cũ và cho phép rút', async () => {
-    const a = await guest(), b = await named('Tâm Hòa','2223'), c = await guest();
+    const a = await named(), b = await named('Tâm Hòa','2223'), c = await guest();
     const first = (await ask(a, 'Tâm Hòa · 2223')).data.request;
     expect((await ask(a, 'Tâm Hòa 2223')).data.request).toEqual(first);
     const path = '/companions/requests/' + first.id;
@@ -121,7 +156,7 @@ describe('Bạn đồng tu trên Worker/D1 #122', () => {
   });
 
   it('thân thiết hai chiều và chỉ ghé khi cổng vẫn mở ở thời điểm ghé', async () => {
-    const host = await guest(), visitor = await guest();
+    const host = await named(), visitor = await guest();
     await link(host, visitor);
     await day(visitor, 29);
     await prefs(host, {}, true);
@@ -140,7 +175,7 @@ describe('Bạn đồng tu trên Worker/D1 #122', () => {
   });
 
   it('mời gặp dùng ngày, cổng và hiện diện ở máy chủ; nhận lời sau một phút hoặc ngay khi ghé', async () => {
-    const host = await guest(), visitor = await guest();
+    const host = await named(), visitor = await guest();
     await link(host, visitor);
     await day(host, 12);
     await day(visitor, 10);
@@ -173,7 +208,7 @@ describe('Bạn đồng tu trên Worker/D1 #122', () => {
   });
 
   it('hiện diện cùng trạng thái không ghi thêm trước một phút và quá ba phút thì vắng', async () => {
-    const viewer = await guest(), actor = await guest();
+    const viewer = await named(), actor = await guest();
     await link(viewer, actor);
     expect((await setPresence(actor, 'thien')).status).toBe(204);
     const first = await db.prepare('SELECT updated_at FROM presence WHERE user_id=?').bind(id(actor)).first();
@@ -187,7 +222,7 @@ describe('Bạn đồng tu trên Worker/D1 #122', () => {
 
   it.each([true,false])('chặn khi đang có lời kết nối chỉ vô hiệu phía nhận (%s)', async (senderBlocks) => {
     const tag = senderBlocks ? '4100' : '4101';
-    const sender = await guest(), target = await named('Tuệ Thái', tag);
+    const sender = await named(), target = await named('Tuệ Thái', tag);
     const req = (await ask(sender, 'Tuệ Thái · ' + tag)).data.request;
     expect((await list(target)).incoming).toHaveLength(1);
     const [blocker, blocked] = senderBlocks ? [sender, target] : [target, sender];
@@ -205,7 +240,7 @@ describe('Bạn đồng tu trên Worker/D1 #122', () => {
   });
 
   it('chặn bỏ cặp đã kết nối và hủy lời mời, báo cáo riêng, kiểm phiên và dữ liệu hỏng', async () => {
-    const a = await guest(), b = await guest();
+    const a = await named(), b = await guest();
     await link(a, b);
     await setPresence(b, 'online');
     const invite = (await api(a, '/meet', 'POST', { to: id(b), kind: 'thien' })).data.invite;
@@ -225,7 +260,7 @@ describe('Bạn đồng tu trên Worker/D1 #122', () => {
   });
 
   it('nhận lời vào đảo phải kiểm cổng lại, nhận ở Đại Thiền Đường và từ chối vẫn dùng được', async () => {
-    const host = await guest(), visitor = await guest();
+    const host = await named(), visitor = await named('Tâm Hòa');
     await link(host, visitor);
     await day(visitor, 29);
     await setPresence(host, 'online');

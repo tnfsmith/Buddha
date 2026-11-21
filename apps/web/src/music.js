@@ -218,6 +218,11 @@ export function sfxVoice(ctx, dest, kind, t, o = {}) {
     strike(ctx, dest, t + 1.55, WIND[2], 0.03, 2, pan); strike(ctx, dest, t + 1.72, WIND[4], 0.028, 2.2, pan + 0.1);
   } else if (kind === 'step') {
     airy(ctx, panTo(ctx, dest, pan), t, t + 0.7, 'lowpass', [[t, 900], [t + 0.35, 280]], 0.6, [[t + 0.05, 0.16], [t + 0.6, 0]], [0, 0]); strike(ctx, dest, t + 0.04, WIND[0], 0.018, 1.2, pan);
+  } else if (kind === 'pour') {   // rót trà (#125): nước chảy róc rách (nhiễu lọc dải, rung nhanh), tiếng cao dần khi chén đầy, chén chạm nhẹ
+    const dur = Math.max(1.5, o.dur || 3), end = t + dur;
+    airy(ctx, panTo(ctx, dest, pan), t, end, 'bandpass', [[t, 850], [end, 1450 + 650 * k]], 2.2, [[t + 0.15, 0.12 * (0.6 + 0.4 * k)], [end - 0.3, 0.09], [end, 0]], [13, 0.55]);
+    airy(ctx, panTo(ctx, dest, pan), t, end, 'highpass', [[t, 3000]], 0.7, [[t + 0.2, 0.025], [end, 0]], [7, 0.4]);
+    strike(ctx, dest, end - 0.05, WIND[1], 0.012, 1.4, pan);
   } else if (kind === 'cloud') {
     const dur = Math.max(3, o.dur || 8), end = t + dur, pn = ctx.createStereoPanner ? ctx.createStereoPanner() : null, out = pn || dest, at = (x) => t + dur * x;
     if (pn) { pn.pan.setValueAtTime(-0.35, t); pn.pan.linearRampToValueAtTime(0.35, end); pn.connect(dest); }
@@ -251,7 +256,7 @@ export class Ambient {
   // tạm ngưng AudioContext khi nhạc đã tắt và không còn hiệu ứng âm nào đang ngân (_busy: mốc performance.now())
   _idle(secs) { clearTimeout(this._sus); this._sus = setTimeout(() => { if (this.on || !this.ctx) return; const left = (this._busy || 0) - performance.now(); if (left > 0) this._idle(left / 1000 + 0.2); else this.ctx.suspend(); }, secs * 1000); }
   // hiệu ứng âm của cảnh (sfxVoice), theo âm lượng nhạc; như tiếng chim, phát cả khi nhạc đang tắt
-  sfx(kind, o = {}, vol = 0.6) { if (vol <= 0.001) return; try { this.ensure(); const ctx = this.ctx, dur = kind === 'cloud' ? Math.max(3, o.dur || 8) : 4.5;
+  sfx(kind, o = {}, vol = 0.6) { if (vol <= 0.001) return; try { this.ensure(); const ctx = this.ctx, dur = kind === 'cloud' || kind === 'pour' ? Math.max(3, o.dur || 8) + 0.5 : 4.5;
       this._busy = Math.max(this._busy || 0, performance.now() + dur * 1000); if (ctx.state !== 'running') ctx.resume(); if (!this.on) this._idle(dur + 0.5);
       if (!this.sfxG) { this.sfxG = ctx.createGain(); this.sfxG.connect(ctx.destination); } this.sfxG.gain.value = Math.min(1, vol * 1.1); sfxVoice(ctx, this.sfxG, kind, ctx.currentTime + 0.04, o); } catch (e) { /* chưa có tương tác: trình duyệt chưa cho phát */ } }
   // Kết một khúc "phát 1 lần": ba tiếng chuông bát cách nhau 4,5 giây, nền lắng dần trong 10 giây rồi im
