@@ -307,15 +307,15 @@ PR81 chưa merge/deploy; #82 phải cập nhật máy quay hướng chúng sanh 
 
 ## 28. GĐ5 Đồng tu v2 và nghiệm thu hai phiên — 21/11/2026
 
-Mốc kiểm `aad383f`. #185 đã vào main, #172 đã merge riêng cho GĐ3. Tình trạng branch, CI, preview và xác nhận máy thật lấy theo commit gần nhất tại từng PR. Chủ dự án thực hiện merge và tag.
+Mốc kiểm `39aca6d` sau khi #175 vào main. #185 đã merge trước đó và #172 đã merge riêng cho GĐ3. Tình trạng branch, CI, preview và xác nhận máy thật lấy theo commit gần nhất tại từng PR. Chủ dự án thực hiện merge và tag.
 
 | Người giữ | Phạm vi | Phụ thuộc và bàn giao |
 |---|---|---|
-| Claude | #175 → #183 → #184, UI Đồng tu v2 | #175 trên `aad383f` đã đạt CI, preview và kiểm điện thoại tại [PR #175](https://github.com/tnfsmith/Buddha/pull/175#issuecomment-7062239731). Gộp #183 sau #175 và API #187. Gộp #184 sau #183 và API khích lệ §10.3. Khi API sẵn sàng, Claude nghiệm thu với Worker/D1 thật. [#151](https://github.com/tnfsmith/Buddha/issues/151) |
+| Claude | #175 → #183 → #184, UI Đồng tu v2 | #175 đã merge sau CI, preview và kiểm điện thoại tại [PR #175](https://github.com/tnfsmith/Buddha/pull/175#issuecomment-7062239731). Gộp #183 sau #175 và API #187. Gộp #184 sau #183 và API khích lệ §10.3. Khi API sẵn sàng, Claude nghiệm thu với Worker/D1 thật. [#151](https://github.com/tnfsmith/Buddha/issues/151) |
 | Claude 2 | #177 → #180 → #181 → #186 → #188, 3D và kiểm Worker thật | Phiên đang giữ chuỗi cập nhật từ #177 theo main, rồi chạy lại CI và preview theo thứ tự. #188 chỉ giữ bài Playwright hai phiên. Trên staging, nghiệm thu giới hạn đến T5.7 theo #124. Runner dùng Worker/D1 cục bộ để chạy toàn bộ ca. [#125](https://github.com/tnfsmith/Buddha/issues/125) · [#124](https://github.com/tnfsmith/Buddha/issues/124) |
-| Codex | Worker/D1 #187 và API khích lệ §10.3 | #187 dùng 0012 và đã ghép UI #183 đạt 19/19 với D1 cục bộ. Preview migration cần cặp D1/KV theo #35. API khích lệ dùng nhánh riêng xếp sau #187 và giữ hợp đồng với #184. [Bàn giao API](https://github.com/tnfsmith/Buddha/issues/151#issuecomment-7062209071) |
+| Codex | Worker/D1 #187 và API khích lệ §10.3 | #187 dùng 0012 và đã ghép UI #183 đạt 19/19 với D1 cục bộ. Preview migration cần cặp D1/KV theo #35. API khích lệ #192 (0013) xếp sau #187, đã kiểm 12/12 ca hẹn nhóm và khích lệ trên Worker/D1. Claude kiểm lại #184 với API thật, gồm ca mất mạng sau khi đánh dấu đã xem. [Bàn giao API](https://github.com/tnfsmith/Buddha/issues/151#issuecomment-7062209071) |
 | Codex | Runner CI #189 và hai tệp tài liệu dùng chung | Runner đạt 3/3 ca Worker/D1 cục bộ, không bỏ qua. Sau #188, đổi base về main và chạy lại CI. Quyền sửa roadmap và tệp này trả khi PR tài liệu merge hoặc đóng. [Bằng chứng runner](https://github.com/tnfsmith/Buddha/pull/189#issuecomment-7062067463) |
 
 - Hai phiên Claude cùng làn `claude/`. Phạm vi giữ theo Issue, nhánh và tệp. Các nhánh có UI dùng chung đi đúng thứ tự trong cùng chuỗi. Ai tiếp quản cần nhận bàn giao rõ về SHA, tệp và ca kiểm trước khi đổi nhánh. Lần kiểm 21/11 ghép #184 và #188 không xung đột tệp. Sau mỗi lượt gộp, phiên giữ chuỗi còn lại cập nhật main và chạy lại CI, preview và ca giao nhau trước khi đề nghị merge.
 - #178 tiếp tục phụ thuộc #146 đang tạm dừng. Migration GĐ3 chưa merge đổi số theo main khi mở lại. Không sửa migration đã merge.
-- T5.9 thực hiện sau khi staging có chuỗi hoàn chỉnh. Kết quả trình duyệt tự động và hai người thật ghi riêng. T5.1–T5.3 giữ trạng thái chờ hợp đồng, API và quy trình kiểm duyệt. Phạm vi tag theo quyết định chủ dự án ở #151.
+- T5.9 thực hiện sau khi staging có chuỗi hoàn chỉnh. Kết quả trình duyệt tự động và hai người thật ghi riêng. T5.1 đang chốt hợp đồng ở [#191](https://github.com/tnfsmith/Buddha/issues/191). T5.2 chờ API, T5.3 chờ luồng kiểm duyệt. Phạm vi tag theo quyết định chủ dự án ở #151.

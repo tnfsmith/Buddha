@@ -1486,7 +1486,7 @@ T3.7 đã đạt bộ audio phát hành (Sadaltager/Puck đúng ngoại lệ); #
 ### GĐ5 — Cộng đồng Hộ Trì và xã hội tu tập (≈ 3 tuần)
 | ID | Việc | Làn | Nghiệm thu |
 |---|---|---|---|
-| T5.1 | Migration mới kế tiếp; API help/events/moderation; Llama Guard; Cloudflare Access cho `/admin` | AG | **Chưa triển khai:** mở Issue và chốt hợp đồng help/events/moderation trước khi tách việc Worker/D1 cho Codex và UI cho Claude. |
+| T5.1 | Migration mới kế tiếp; API help/events/moderation; Llama Guard; Cloudflare Access cho `/admin` | AG | **Đang chốt hợp đồng [#191](https://github.com/tnfsmith/Buddha/issues/191).** Codex giữ help/events/moderation. UI Claude và vận hành Hermes đi sau hợp đồng. |
 | T5.2 | UI Bảng Hộ Trì ở Cổng Vân Môn, sự kiện, đồng tu, thăm đảo (IslandRoom), nhóm, phòng nhóm | C | **Chờ T5.1:** hai người thật thăm đảo, cùng an tọa. Bảng Hộ Trì đi theo Issue và hợp đồng riêng. |
 | T5.3 | Tóm tắt kiểm duyệt hằng ngày; xác minh đối tác sự kiện | H + O | **Chờ luồng kiểm duyệt T5.1:** Hermes và chủ dự án xác minh đối tác, đối chiếu thời gian xử lý; không việc kiểm duyệt tồn quá 24 giờ. |
 
@@ -1501,7 +1501,7 @@ T3.7 đã đạt bộ audio phát hành (Sadaltager/Puck đúng ngoại lệ); #
 | T5.8 | 3D: đảo bạn thật gần đảo mình (thân thiết/quen biết), đèn hiện diện, ghé thăm/ghé khi vắng, cùng ngồi, Trà Đạo hai người | C | **Đang nghiệm thu:** Claude 2 giữ #177 → #180 → #181 → #186 → #188. #188 kiểm hai phiên bằng Worker/D1 cục bộ. Codex giữ runner #189, đã chạy đủ 3 ca; đổi base sau #188. |
 | T5.9 | Thử với bạn thật; xác nhận các mặc định ở thiết kế §9 | O | **Chờ chủ dự án:** sau khi chuỗi đã merge, hai người thật kết bạn và cùng ngồi thiền trên staging. Kiểm CI đúng main và kiểm khói staging trước khi đề nghị tag. |
 
-**Đồng tu v2 và hàng merge.** Claude giữ #175 (Xem nhanh), #183 (UI hẹn nhóm), #184 (UI khích lệ). Codex giữ API hẹn nhóm [#187](https://github.com/tnfsmith/Buddha/pull/187), migration 0012, và API khích lệ §10.3 sau đó. #183 đi sau #175 và API #187. #184 đi sau #183 và API khích lệ tương ứng. Preview có migration dùng D1/KV riêng theo [#35](https://github.com/tnfsmith/Buddha/issues/35). Nhánh 3D và kiểm hai phiên thuộc Claude 2, có hàng merge riêng. Xem [mốc bàn giao](docs/COORDINATION.md#28-gđ5-đồng-tu-v2-và-nghiệm-thu-hai-phiên--21112026).
+**Đồng tu v2 và hàng merge.** Claude giữ #175 (Xem nhanh), #183 (UI hẹn nhóm), #184 (UI khích lệ). Codex giữ API hẹn nhóm [#187](https://github.com/tnfsmith/Buddha/pull/187), migration 0012, và API khích lệ [#192](https://github.com/tnfsmith/Buddha/pull/192), migration 0013, sau đó. #183 đi sau #175 và API #187. #184 đi sau #183 và API khích lệ tương ứng. Preview có migration dùng D1/KV riêng theo [#35](https://github.com/tnfsmith/Buddha/issues/35). Nhánh 3D và kiểm hai phiên thuộc Claude 2, có hàng merge riêng. Xem [mốc bàn giao](docs/COORDINATION.md#28-gđ5-đồng-tu-v2-và-nghiệm-thu-hai-phiên--21112026).
 
 **Phạm vi v0.18.0 đang đề xuất tại [#151](https://github.com/tnfsmith/Buddha/issues/151)** gồm Xem nhanh, hẹn nhóm, đảo bạn và runner Worker/D1. Khích lệ được tính khi API/UI đã tích hợp và nghiệm thu. T5.1–T5.3 đi theo hợp đồng và Issue riêng. Chủ dự án chốt phạm vi phát hành sau T5.9.
 
